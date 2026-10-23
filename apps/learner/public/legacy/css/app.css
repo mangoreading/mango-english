@@ -466,3 +466,6 @@ h1,h2,h3,p{margin:0}
 .fb-l{gap:10px}.fb-l b{font-size:1.1rem}.fb-l span{font-size:.85rem}
 .fbar .btn,.fbar .btn.big{min-height:40px;font-size:.98rem}
 .fbar .btn,.fbar .btn.big{height:39px;min-height:0;padding-top:0;padding-bottom:0;font-size:.95rem;min-width:104px;display:inline-flex;align-items:center;justify-content:center}
+/* 짝 맞추기: 질문과 카드 사이를 띄우고, 틀 안에서 세로 가운데로 */
+.stage:has(> .match){justify-content:center;gap:40px}
+.stage:has(> .match) .hint-t{margin:6px 0 0}
