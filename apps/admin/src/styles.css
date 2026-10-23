@@ -1,7 +1,9 @@
 /* 관리자 UI: 기억숲 Admin과 같은 톤 — 남색 상단 메뉴, 크림 배경, 흰 카드, Pretendard */
 :root { --navy:#152B52; --navy2:#223D6B; --ink:#14284B; --sub:#6b7488; --line:#E8E4DA; --bg:#F7F5EF; --card:#fff; --acc:#152B52; --ok:#17803d; --err:#b42318; --soft:#F3F1EA; }
 * { box-sizing:border-box; }
-body { margin:0; font-family:'Pretendard Variable', Pretendard, -apple-system, 'Segoe UI', 'Malgun Gothic', sans-serif; font-size:15px; line-height:1.5; background:var(--bg); color:var(--ink); }
+button, input, select, textarea { font-family:inherit; }
+code, pre { font-family:ui-monospace, Menlo, Consolas, monospace; }
+body { margin:0; font-family:'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', 'Malgun Gothic', sans-serif; font-size:15px; line-height:1.5; background:var(--bg); color:var(--ink); }
 .mx-app { min-height:100vh; }
 .mx-top { position:sticky; top:0; z-index:5; display:flex; align-items:center; gap:28px; padding:0 clamp(16px,2.5vw,48px); height:64px; background:var(--navy); color:#fff; }
 .mx-brand { display:flex; align-items:center; gap:10px; font-size:19px; font-weight:800; white-space:nowrap; }
@@ -32,7 +34,7 @@ input:focus, select:focus, textarea:focus { outline:2px solid rgba(21,43,82,.25)
 input[type=checkbox], input[type=radio] { padding:0; accent-color:var(--navy); }
 .mx-cell { width:100%; border-color:transparent; background:transparent; padding:5px 8px; }
 .mx-cell:hover { border-color:#d9d4c7; } .mx-cell:focus { background:#fff; }
-textarea { font-family:ui-monospace, Menlo, Consolas, monospace; font-size:13px; width:100%; min-height:340px; }
+textarea { font-size:13px; width:100%; min-height:340px; }
 .mx-btn { font:inherit; font-size:14px; font-weight:700; background:var(--navy); color:#fff; border:1px solid var(--navy); border-radius:10px; padding:7px 16px; cursor:pointer; }
 .mx-btn.sec { background:#fff; color:var(--ink); border-color:#d9d4c7; }
 .mx-btn.sec:hover:not(:disabled) { border-color:var(--navy); }
