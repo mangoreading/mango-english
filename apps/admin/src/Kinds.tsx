@@ -88,11 +88,17 @@ function Detail({ row, use, onSaved }: { row: KindRow; use?: { items: number; un
     <>
       <h3>{row.name_ko} <code className="mx-muted">{row.key}</code></h3>
       <div className="mx-form">
-        {isNativeKind(row.key) && (
-          <button type="button" className="mx-thumb" onClick={sample} title="눌러서 크게 보기" aria-label="샘플 미리보기 화면 (눌러서 크게 보기)">
-            <div className="mx-thumb-in"><NativePlayer key={row.key} title={row.name_ko} items={[NATIVE_SAMPLES[row.key]]} vocab={SAMPLE_VOCAB} onResult={() => {}} onFinish={() => {}} /></div>
-          </button>
-        )}
+        <div className="mx-prev">
+          {isNativeKind(row.key) && (
+            <button type="button" className="mx-thumb" onClick={sample} title="눌러서 크게 보기" aria-label="샘플 미리보기 화면 (눌러서 크게 보기)">
+              <div className="mx-thumb-in"><NativePlayer key={row.key} title={row.name_ko} items={[NATIVE_SAMPLES[row.key]]} vocab={SAMPLE_VOCAB} onResult={() => {}} onFinish={() => {}} /></div>
+            </button>
+          )}
+          <div className="mx-prev-side">
+            <button type="button" className="mx-btn" onClick={sample}>▶ 샘플 미리보기</button>
+            <span className="mx-muted">학습앱과 같은 화면(1280×800)으로 직접 눌러 볼 수 있어요.</span>
+          </div>
+        </div>
         <div className="mx-row">
           <label className="mx-f"><span className="mx-fl">한글 이름</span><input value={f.name_ko} onChange={(e) => setF({ ...f, name_ko: e.target.value })} /></label>
           <label className="mx-f"><span className="mx-fl">영어 이름</span><input value={f.name_en ?? ''} onChange={(e) => setF({ ...f, name_en: e.target.value })} /></label>
@@ -107,7 +113,6 @@ function Detail({ row, use, onSaved }: { row: KindRow; use?: { items: number; un
             <tbody>{fields.map((x, i) => <tr key={i}><td>{x.label}</td><td className="mx-muted">{x.type}</td><td>{x.req ? '●' : ''}</td></tr>)}</tbody></table>
           <span className="mx-muted">입력 항목을 바꾸거나 늘리려면 Claude에게 요청해 주세요. (화면 코드와 함께 바뀌어요)</span>
         </div>
-        <div className="mx-row"><button className="mx-btn" onClick={sample}>▶ 샘플 미리보기</button><span className="mx-muted">학습앱과 같은 화면으로 직접 눌러 볼 수 있어요.</span></div>
         {pmsg && <p className="mx-err">{pmsg}</p>}
         <p className="mx-muted">사용 현황: 문항 {use?.items ?? 0}개 · 단원 {use?.units ?? 0}개</p>
         <div className="mx-row"><button className="mx-btn" disabled={!dirty || !f.name_ko.trim()} onClick={save}>저장</button><button className="mx-btn sec" disabled={!dirty} onClick={() => setF(row)}>되돌리기</button></div>
