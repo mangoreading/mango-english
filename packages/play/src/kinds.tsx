@@ -128,16 +128,23 @@ function MatchBoard({ words, mode, onDone }: { words: KindProps['words']; mode: 
   const [matched, setMatched] = useState<Set<string>>(new Set());
   const [wrongKeys, setWrongKeys] = useState<Set<string>>(new Set());
   const [flash, setFlash] = useState<string[]>([]);
+  const [pop, setPop] = useState<KindProps['words'][number] | null>(null); // 맞췄을 때 가운데에 뜨는 카드
   const fired = useRef(false);
-  useEffect(() => { if (!fired.current && matched.size === words.length) { fired.current = true; onDone(words.map((w) => ({ tag: T, ok: !wrongKeys.has(w.key) }))); } /* eslint-disable-next-line */ }, [matched]);
+  useEffect(() => { if (!fired.current && matched.size === words.length && !pop) { fired.current = true; onDone(words.map((w) => ({ tag: T, ok: !wrongKeys.has(w.key) }))); } /* eslint-disable-next-line */ }, [matched, pop]);
   const textOf = (k: string) => words.find((w) => w.key === k)!;
   function tap(c: Card) {
-    if (matched.has(c.key) || flash.length) return;
+    if (matched.has(c.key) || flash.length || pop) return;
     if (c.t === 'snd' || c.t === 'en') say(textOf(c.key).en);
     if (!sel) { setSel(c); return; }
     if (sel.id === c.id) { setSel(null); return; }
     if (sel.t === c.t) { setSel(c); return; }
-    if (sel.key === c.key) { setMatched(new Set(matched).add(c.key)); setSel(null); return; }
+    if (sel.key === c.key) {
+      const w = textOf(c.key);
+      setMatched(new Set(matched).add(c.key)); setSel(null); setPop(w);
+      setTimeout(() => say(w.en), 350); // 한 번 더 읽어 준다
+      setTimeout(() => setPop(null), 1900);
+      return;
+    }
     setWrongKeys(new Set(wrongKeys).add(sel.key).add(c.key));
     setFlash([sel.id, c.id]); setTimeout(() => { setFlash([]); setSel(null); }, 500);
   }
@@ -152,6 +159,15 @@ function MatchBoard({ words, mode, onDone }: { words: KindProps['words']; mode: 
         })}
       </div>
       <p className="nv-hint">{matched.size}/{words.length} 맞췄어요</p>
+      {pop && (
+        <div className="nv-pop" onClick={() => setPop(null)}>
+          <div className="nv-pop-card">
+            <Pic src={pop.image} cls="nv-img nv-img-lg" />
+            <b className="nv-word">{pop.en}</b><span className="nv-ko">{pop.ko}</span>
+            <span className="nv-pop-snd">🔊</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

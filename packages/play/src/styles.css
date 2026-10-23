@@ -64,4 +64,8 @@
 .nv-result { margin:auto; text-align:center; padding:3em 5em; background:#fff; border:.15em solid var(--nv-frame); border-radius:1.3em; }
 .nv-result h1 { font-size:2.4em; margin:0 0 .2em; } .nv-stars { font-size:3.6em; letter-spacing:.08em; }
 .nv-sum { color:var(--nv-navy); margin:.6em 0 1.6em; font-size:1.1em; } .nv-btns { display:flex; flex-direction:column; gap:.7em; align-items:center; }
+.nv-pop { position:fixed; inset:0; z-index:5; display:flex; align-items:center; justify-content:center; background:rgba(243,247,252,.72); cursor:pointer; animation:nv-fade .2s; }
+.nv-pop-card { display:flex; flex-direction:column; align-items:center; gap:.4em; padding:1.6em 4em; background:#fff; border:.15em solid #7BC89A; border-radius:1.4em; box-shadow:0 .6em 2em rgba(31,42,68,.18); animation:nv-pop .3s cubic-bezier(.2,1.4,.4,1); }
+.nv-pop-snd { font-size:1.6em; }
+@keyframes nv-fade { from { opacity:0; } } @keyframes nv-pop { from { transform:scale(.7); opacity:0; } }
 @media (max-width:760px) { .nv-body { width:calc(100% - 1.6em); padding:2.4em 1em 2.4em; } .nv-head { padding:0 1em; } .nv-grid3 { grid-template-columns:repeat(2, minmax(0,1fr)); } .nv-grid4 { grid-template-columns:repeat(3, minmax(0,1fr)); } .nv-img { width:6em; height:6em; } .nv-img-lg { width:9em; height:9em; } .nv-big { min-width:0; padding:1em 1.4em; } .nv-input { width:12em; } .nv-result { padding:2em 1.6em; } }
