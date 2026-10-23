@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from './supabase';
+import { PageHead } from './ui';
 
 interface Step { id: string; lesson_id: string; pos: number; name_en: string; name_ko: string; minutes: number | null; special: string | null; src_id: string | null }
 interface Lesson { id: string; no: number; en: string; ko: string; goal: string; color: string; src_id: string | null; flow_steps: Step[] }
@@ -150,8 +151,7 @@ export function Templates() {
   if (!list) return <p className="mx-muted">불러오는 중…</p>;
   return (
     <>
-      <h1>흐름 템플릿</h1>
-      <p className="mx-muted">새 단원에 처음 복사되는 기본 흐름이에요. 여기를 고쳐도 이미 만들어진 단원의 흐름은 바뀌지 않아요.</p>
+      <PageHead title="흐름 템플릿" sub="새 단원에 처음 복사되는 기본 흐름이에요. 여기를 고쳐도 이미 만들어진 단원의 흐름은 바뀌지 않아요." />
       <div className="mx-row" style={{ margin: '10px 0' }}>
         <label className="mx-inline">템플릿<select value={sel ?? ''} onChange={(e) => setSel(e.target.value)}>{list.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
         <button className="mx-btn sec" onClick={add}>+ 새 템플릿</button>
@@ -170,8 +170,7 @@ export function Types() {
   if (!rows) return <p className="mx-muted">불러오는 중…</p>;
   return (
     <>
-      <h1>활동 종류</h1>
-      <p className="mx-muted">문항의 종류예요. 새 종류가 필요하면 Claude에게 요청하세요. 활동 하나에는 여러 종류의 문항이 함께 들어갈 수 있어요.</p>
+      <PageHead title="활동 종류" sub="문항의 종류예요. 새 종류가 필요하면 Claude에게 요청하세요. 활동 하나에는 여러 종류의 문항이 함께 들어갈 수 있어요." />
       <table className="mx-box"><thead><tr><th>코드</th><th>이름</th><th>설명</th></tr></thead>
         <tbody>{rows.map((r) => <tr key={r.key}><td><code>{r.key}</code></td><td>{r.name_ko}</td><td>{r.description}</td></tr>)}</tbody></table>
     </>

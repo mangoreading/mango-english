@@ -15,7 +15,7 @@ export const Tag = z.enum(['vocab', 'expr', 'listen', 'speak', 'read', 'write'])
 export type Tag = z.infer<typeof Tag>;
 
 /** 차시 1~8 (6=통합 미션(비점수), 7=Check, 8=맞춤) */
-export const LessonNo = z.number().int().min(1).max(8);
+export const LessonNo = z.number().int().min(1).max(20);
 
 export const Pattern = z.object({ source: z.string(), flags: z.string().default('i') });
 
