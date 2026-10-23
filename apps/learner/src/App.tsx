@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { configProblem, configured, supabase } from './supabase';
 import type { BundleRow, Level } from './types';
+import { lessonMeta, playActivity, type PlayResult } from './legacy';
 
 const LEVELS: Level[] = ['CORE', 'SUPPORT', 'ADVANCED'];
 const LEVEL_KO: Record<Level, string> = { CORE: '기본', SUPPORT: '도움', ADVANCED: '도전' };
@@ -18,19 +19,19 @@ export function App() {
   }, []);
 
   if (!configured) return <Shell><Notice title="설정이 필요해요">{configProblem}</Notice></Shell>;
-  if (!ready) return <Shell><p className="muted">불러오는 중…</p></Shell>;
+  if (!ready) return <Shell><p className="mx-muted">불러오는 중…</p></Shell>;
   return <Shell session={session}>{session ? <Units /> : <Login />}</Shell>;
 }
 
 function Shell({ children, session }: { children: React.ReactNode; session?: Session | null }) {
   return (
-    <div className="shell">
-      <header className="top">
-        <b className="brand">Mango English</b>
+    <div className="mx-shell">
+      <header className="mx-top">
+        <b className="mx-brand">Mango English</b>
         {session && (
-          <span className="who">
+          <span className="mx-who">
             {session.user.email}
-            <button className="link" onClick={() => supabase.auth.signOut()}>로그아웃</button>
+            <button className="mx-link" onClick={() => supabase.auth.signOut()}>로그아웃</button>
           </span>
         )}
       </header>
@@ -40,7 +41,7 @@ function Shell({ children, session }: { children: React.ReactNode; session?: Ses
 }
 
 function Notice({ title, children }: { title: string; children: React.ReactNode }) {
-  return <div className="card"><h2>{title}</h2><p className="muted">{children}</p></div>;
+  return <div className="mx-card"><h2>{title}</h2><p className="mx-muted">{children}</p></div>;
 }
 
 function Login() {
@@ -61,13 +62,13 @@ function Login() {
   }
 
   return (
-    <form className="card login" onSubmit={submit}>
+    <form className="mx-card mx-login" onSubmit={submit}>
       <h2>{mode === 'in' ? '로그인' : '회원가입'}</h2>
       <label>이메일<input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" /></label>
       <label>비밀번호<input type="password" required minLength={6} value={pw} onChange={(e) => setPw(e.target.value)} autoComplete={mode === 'in' ? 'current-password' : 'new-password'} /></label>
-      {msg && <p className="err">{msg}</p>}
-      <button className="btn" disabled={busy}>{mode === 'in' ? '로그인' : '가입하기'}</button>
-      <button type="button" className="link" onClick={() => { setMode(mode === 'in' ? 'up' : 'in'); setMsg(''); }}>
+      {msg && <p className="mx-err">{msg}</p>}
+      <button className="mx-btn" disabled={busy}>{mode === 'in' ? '로그인' : '가입하기'}</button>
+      <button type="button" className="mx-link" onClick={() => { setMode(mode === 'in' ? 'up' : 'in'); setMsg(''); }}>
         {mode === 'in' ? '처음이에요 → 회원가입' : '이미 계정이 있어요 → 로그인'}
       </button>
     </form>
@@ -86,19 +87,19 @@ function Units() {
   }, []);
 
   if (err) return <Notice title="단원을 불러오지 못했어요">{err}</Notice>;
-  if (!rows) return <p className="muted">단원을 불러오는 중…</p>;
+  if (!rows) return <p className="mx-muted">단원을 불러오는 중…</p>;
   if (open) return <UnitView row={open} onBack={() => setOpen(null)} />;
   if (!rows.length) return <Notice title="발행된 단원이 없어요">관리자가 단원을 발행하면 여기에 나타나요.</Notice>;
 
   return (
     <>
       <h1>학습할 Lesson 선택</h1>
-      <div className="grid">
+      <div className="mx-grid">
         {rows.map((r) => (
-          <button key={r.unit_id} className="unit" onClick={() => setOpen(r)}>
-            <span className="chip">LESSON {r.bundle.unit.no}</span>
+          <button key={r.unit_id} className="mx-unit" onClick={() => setOpen(r)}>
+            <span className="mx-chip">LESSON {r.bundle.unit.no}</span>
             <b>{r.bundle.unit.title}</b>
-            <span className="muted">버전 {r.version} · 어휘 {r.bundle.vocab.length}개</span>
+            <span className="mx-muted">버전 {r.version} · 어휘 {r.bundle.vocab.length}개</span>
           </button>
         ))}
       </div>
@@ -106,29 +107,69 @@ function Units() {
   );
 }
 
+type Acts = unknown[][];
+interface LMeta { no: number; en: string; ko: string; goal: string; color: string; acts: { t: string; ko: string; min: number }[] }
+
 function UnitView({ row, onBack }: { row: BundleRow; onBack: () => void }) {
   const [level, setLevel] = useState<Level>('CORE');
+  const [meta, setMeta] = useState<LMeta[]>([]);
+  const [err, setErr] = useState('');
   const b = row.bundle;
-  const lessons = b.items[level] ?? {};
-  const nos = Object.keys(lessons).sort((a, c) => Number(a) - Number(c));
+  const lessons = (b.items[level] ?? {}) as Record<string, Acts>;
+
+  useEffect(() => { lessonMeta().then(setMeta).catch((e) => setErr(String(e.message || e))); }, []);
+
+  async function save(no: number, res: PlayResult) {
+    const { data } = await supabase.auth.getUser();
+    const uid = data.user?.id;
+    if (!uid) return;
+    const rows = res.results.filter((r) => r.tag).map((r) => ({ user_id: uid, unit_id: b.unit.id, lesson: no, tag: r.tag, ok: r.ok, hints: r.hint ?? 0 }));
+    if (rows.length) await supabase.from('attempts').insert(rows);
+  }
+
+  function start(no: number, idx: number) {
+    const acts = lessons[String(no)] ?? [];
+    const m = meta.find((x) => x.no === no);
+    const act = acts[idx];
+    if (!act) return;
+    const hasNext = idx + 1 < acts.length;
+    playActivity({
+      title: `${no}차시 · ${m?.acts[idx]?.t ?? 'Activity'}`, items: act, level, test: no === 7, color: m?.color,
+      nextLabel: hasNext ? m?.acts[idx + 1]?.t ?? '다음 활동' : undefined,
+      onResult: (res) => { void save(no, res); },
+      onFinish: (action) => { if (action === 'next') start(no, idx + 1); else if (action === 'again') start(no, idx); },
+      onExit: () => {},
+    }).catch((e) => setErr(String(e.message || e)));
+  }
+
+  const nos = Object.keys(lessons).map(Number).sort((a, c) => a - c);
   return (
     <>
-      <button className="link" onClick={onBack}>← 목록으로</button>
+      <button className="mx-link" onClick={onBack}>← 목록으로</button>
       <h1>Lesson {b.unit.no} · {b.unit.title}</h1>
-      <div className="tabs">
-        {LEVELS.map((l) => <button key={l} className={l === level ? 'tab on' : 'tab'} onClick={() => setLevel(l)}>{LEVEL_KO[l]} ({l})</button>)}
+      <div className="mx-tabs">
+        {LEVELS.map((l) => <button key={l} className={l === level ? 'mx-tab mx-on' : 'mx-tab'} onClick={() => setLevel(l)}>{LEVEL_KO[l]} ({l})</button>)}
       </div>
-      <div className="card">
-        <h3>차시별 문항 수</h3>
-        <ul className="lessons">
-          {nos.map((n) => <li key={n}><b>{n}차시</b><span>{(lessons[n] as unknown[]).length}문항</span></li>)}
-        </ul>
-        <p className="muted">활동 화면은 다음 단계에서 순서대로 연결돼요. 지금은 DB에서 단원을 잘 받아오는지 확인하는 화면이에요.</p>
-      </div>
-      <div className="card">
-        <h3>이 Lesson의 단어</h3>
-        <div className="vocab">{b.vocab.map((v) => <span key={v.key} className="chip">{v.en} · {v.ko}</span>)}</div>
-      </div>
+      {err && <p className="mx-err">{err}</p>}
+      {nos.map((no) => {
+        const m = meta.find((x) => x.no === no);
+        const acts = lessons[String(no)];
+        return (
+          <div className="mx-card" key={no}>
+            <h3>{no}차시 · {m?.en ?? ''} <span className="mx-muted">{m?.ko}</span></h3>
+            {m && <p className="mx-muted">{m.goal}</p>}
+            <div className="mx-acts">
+              {acts.map((a, i) => (
+                <button key={i} className="mx-act" onClick={() => start(no, i)}>
+                  <b>{m?.acts[i]?.t ?? `활동 ${i + 1}`}</b>
+                  <span className="mx-muted">{m?.acts[i]?.ko} · {a.length}문항</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+      <p className="mx-muted">8차시(맞춤 보강)는 다음 단계에서 연결해요.</p>
     </>
   );
 }
