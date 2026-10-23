@@ -20,8 +20,8 @@ export function VCards({ words, onDone }: KindProps) {
         {words.map((w) => (
           <button key={w.key} className={'nv-card' + (heard.has(w.key) ? ' nv-heard' : '')} onClick={() => { say(w.en); setHeard(new Set(heard).add(w.key)); }}>
             <Pic src={w.image} />
-            <b>{hideEn ? '？' : w.en}</b>
-            <span>{hideKo ? '？' : w.ko}</span>
+            <b className={hideEn ? 'nv-hid' : ''}>{w.en}</b>
+            <span className={hideKo ? 'nv-hid' : ''}>{w.ko}</span>
           </button>
         ))}
       </div>

@@ -30,6 +30,7 @@
 .nv-card { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.35em; padding:.9em .6em; border:.14em solid var(--nv-line); border-radius:1em; background:#fff; font:inherit; cursor:pointer; transition:background .15s, border-color .15s; }
 .nv-card:hover { border-color:var(--nv-blue); }
 .nv-card b { font-size:1.4em; } .nv-card span { color:var(--nv-sub); font-size:1.05em; }
+.nv-hid { visibility:hidden; } /* 가려도 자리는 그대로 */
 .nv-card.nv-heard { border-color:#7BC89A; background:#F2FBF5; }
 .nv-card-w { cursor:default; } .nv-card-w:hover { border-color:var(--nv-line); } .nv-card-w.nv-bad { border-color:#E07B6F; background:#FFF3F1; }
 .nv-grid3 .nv-img { width:100%; height:6.6em; }
