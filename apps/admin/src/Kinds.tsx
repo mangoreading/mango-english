@@ -42,11 +42,11 @@ export function Types() {
         <div className="mx-grid">
           <div className="mx-card">
             <table>
-              <thead><tr><th style={{ width: "1%" }}>No</th><th>영역</th><th>한글 이름</th><th>영어 이름</th><th>코드</th><th>설명</th><th>문항</th><th>단원</th><th>상태</th></tr></thead>
+              <thead><tr><th className="mx-no">No</th><th>영역</th><th>한글 이름</th><th>영어 이름</th><th>코드</th><th>설명</th><th>문항</th><th>단원</th><th>상태</th></tr></thead>
               <tbody>
                 {shown.map((r, n) => (
                   <tr key={r.key} className={'mx-click' + (r.key === selKey ? ' mx-sel' : '')} onClick={() => setSelKey(r.key)}>
-                    <td className="mx-muted">{n + 1}</td><td>{r.category}</td><td><b>{r.name_ko}</b></td><td>{r.name_en}</td><td><code>{r.key}</code></td><td className="mx-muted">{r.description}</td>
+                    <td className="mx-no">{n + 1}</td><td>{r.category}</td><td><b>{r.name_ko}</b></td><td>{r.name_en}</td><td><code>{r.key}</code></td><td className="mx-muted">{r.description}</td>
                     <td>{use[r.key]?.items ?? 0}</td><td>{use[r.key]?.units ?? 0}</td>
                     <td><span className={'mx-chip ' + (r.active ? 'approved' : 'draft')}>{r.active ? '사용' : '숨김'}</span></td>
                   </tr>
