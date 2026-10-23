@@ -6,3 +6,5 @@
 - `apps/` : learner / admin / site (예정)
 
 비밀 키(Secret key, DB 비밀번호)는 절대 저장소에 올리지 않습니다.
+
+배포: Cloudflare Pages (main 브랜치 push 시 자동 빌드). 빌드 명령 'npm install && npm run build', 출력 폴더 'apps/learner/dist'.
