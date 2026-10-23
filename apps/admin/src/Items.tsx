@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from './supabase';
 import { preview } from './legacy';
-import { ItemForm, KIND_NAME, KINDS, defaultItem, validate } from './ItemForm';
+import { ItemForm, KIND_NAME, KINDS, defaultItem, validate, type VocabOpt } from './ItemForm';
 
 export type Status = 'draft' | 'review' | 'approved' | 'rejected';
 const STATUSES: Status[] = ['draft', 'review', 'approved', 'rejected'];
@@ -13,6 +13,8 @@ interface StepInfo { id: string; lessonNo: number; pos: number; name: string }
 type Msg = { t: 'ok' | 'err'; s: string } | null;
 
 function summary(p: Record<string, any>): string {
+  if (Array.isArray(p.words)) return p.words.join(', ');
+  if (typeof p.word === 'string') return p.word;
   const t = (p.q ?? p.title ?? p.prompt ?? p.target ?? p.ko ?? p.text ?? p.ans ?? p.cards?.[0]?.en ?? '') as string;
   return String(t).replace(/\s+/g, ' ').slice(0, 60);
 }
@@ -20,7 +22,8 @@ function summary(p: Record<string, any>): string {
 export function Items({ unitId, uid }: { unitId: string; uid: string }) {
   const [items, setItems] = useState<ItemRow[]>([]);
   const [steps, setSteps] = useState<StepInfo[]>([]);
-  const [keys, setKeys] = useState<string[]>([]);
+  const [vocab, setVocab] = useState<VocabOpt[]>([]);
+  const keys = useMemo(() => vocab.map((v) => v.key), [vocab]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState<Msg>(null);
   const [level, setLevel] = useState('CORE'); const [stepF, setStepF] = useState('all'); const [status, setStatus] = useState('all'); const [q, setQ] = useState('');
@@ -38,8 +41,8 @@ export function Items({ unitId, uid }: { unitId: string; uid: string }) {
     ((fl.data ?? []) as any[]).forEach((l) => (l.flow_steps ?? []).forEach((s: any) => st.push({ id: s.id, lessonNo: l.no, pos: s.pos, name: s.name_ko || s.name_en })));
     st.sort((a, b) => a.lessonNo - b.lessonNo || a.pos - b.pos);
     setSteps(st);
-    const v = await supabase.from('unit_vocab').select('vocab(key)').eq('unit_id', unitId);
-    setKeys(((v.data ?? []) as any[]).map((r) => r.vocab?.key).filter(Boolean));
+    const v = await supabase.from('unit_vocab').select('vocab(key,en,ko)').eq('unit_id', unitId);
+    setVocab(((v.data ?? []) as any[]).map((r) => r.vocab).filter(Boolean).sort((a: VocabOpt, b: VocabOpt) => a.en.localeCompare(b.en)));
     const b = await supabase.from('unit_bundles').select('version').eq('unit_id', unitId).order('version', { ascending: false }).limit(1);
     setBundleVer(b.data?.[0]?.version ?? null);
     setLoading(false);
@@ -123,7 +126,7 @@ export function Items({ unitId, uid }: { unitId: string; uid: string }) {
           {!loading && !shown.length && <p className="mx-muted">조건에 맞는 문항이 없어요.</p>}
         </div>
         <div className="mx-card">
-          {sel ? <Editor key={sel.id + ':' + sel.version} item={sel} siblings={items.filter((i) => i.step_id === sel.step_id && i.level === sel.level)} steps={steps} keys={keys} uid={uid}
+          {sel ? <Editor key={sel.id + ':' + sel.version} item={sel} siblings={items.filter((i) => i.step_id === sel.step_id && i.level === sel.level)} steps={steps} keys={keys} vocab={vocab} uid={uid}
             onSaved={(m, id) => { setMsg(m); if (id === null) setSelId(null); void load(); }} /> : <p className="mx-muted">왼쪽에서 문항을 선택하면 내용을 보고 고칠 수 있어요.</p>}
         </div>
       </div>
@@ -145,7 +148,7 @@ function AddBar({ steps, level, step, onAdd, onCancel }: { steps: StepInfo[]; le
   );
 }
 
-function Editor({ item, siblings, steps, keys, uid, onSaved }: { item: ItemRow; siblings: ItemRow[]; steps: StepInfo[]; keys: string[]; uid: string; onSaved: (m: NonNullable<Msg>, id?: string | null) => void }) {
+function Editor({ item, siblings, steps, keys, vocab, uid, onSaved }: { item: ItemRow; siblings: ItemRow[]; steps: StepInfo[]; keys: string[]; vocab: VocabOpt[]; uid: string; onSaved: (m: NonNullable<Msg>, id?: string | null) => void }) {
   const [obj, setObj] = useState<Record<string, any>>(item.payload);
   const [status, setStatus] = useState<Status>(item.status);
   const [stepId, setStepId] = useState(item.step_id ?? '');
@@ -160,8 +163,15 @@ function Editor({ item, siblings, steps, keys, uid, onSaved }: { item: ItemRow; 
   }
   function check(): Record<string, any> | null {
     const o = current(); if (!o) return null;
-    const v = validate(o); setProblems(v.problems);
-    return v.ok ? o : null;
+    const v = validate(o);
+    const probs = [...v.problems];
+    if (v.ok) {
+      const used: string[] = o.k === 'vspell' ? [o.word] : (['vcards', 'vtype1', 'vmatch', 'vsound', 'vwrite'].includes(o.k) ? o.words : []);
+      const miss = used.filter((k) => !keys.includes(k));
+      if (miss.length) probs.push(`단원 어휘에 없는 단어예요: ${miss.join(', ')} ("단어" 탭에서 추가하세요)`);
+    }
+    setProblems(probs);
+    return probs.length ? null : o;
   }
   async function save() {
     const o = check(); if (!o) return;
@@ -209,7 +219,7 @@ function Editor({ item, siblings, steps, keys, uid, onSaved }: { item: ItemRow; 
         <button className="mx-btn sec" onClick={del}>삭제</button>
       </div>
       {raw === null
-        ? <ItemForm obj={obj} onChange={(o) => { setObj(o); setProblems([]); }} keys={keys} />
+        ? <ItemForm obj={obj} onChange={(o) => { setObj(o); setProblems([]); }} keys={keys} vocab={vocab} />
         : <textarea value={raw} onChange={(e) => setRaw(e.target.value)} spellCheck={false} />}
       {problems.length > 0 && <div className="mx-err">{problems.map((p, i) => <div key={i}>· {p}</div>)}</div>}
       <div className="mx-row" style={{ marginTop: 10 }}>

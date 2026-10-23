@@ -4,7 +4,7 @@ import { ActivityItem, KINDS } from '@mango/schema';
 type Obj = Record<string, any>;
 type Col = { k: string; label: string; t: 'text' | 'area' | 'bool' | 'sel' | 'lines' | 're'; opts?: [string, string][]; w?: number; when?: (r: Obj) => boolean };
 type Field =
-  | { k: string; label: string; t: 'text' | 'area' | 'num' | 'bool' | 'lines' | 'tag' | 'words'; help?: string; req?: boolean }
+  | { k: string; label: string; t: 'text' | 'area' | 'num' | 'bool' | 'lines' | 'tag' | 'words' | 'vwords' | 'vword'; help?: string; req?: boolean }
   | { k: string; label: string; t: 'rows'; cols: Col[]; blank: () => Obj; help?: string; req?: boolean }
   | { k: string; label: string; t: 'choices'; ans?: string; help?: string; req?: boolean }
   | { k: string; label: string; t: 'obj'; fields: Field[]; help?: string; req?: boolean };
@@ -12,7 +12,9 @@ type Field =
 export const KIND_NAME: Record<string, string> = {
   learn: '학습 카드', text: '지문', brief: '미션 안내', choose: '고르기', match: '짝 맞추기', build: '배열하기',
   fill: '빈칸 채우기', write: '쓰기', compose: '작문', speak: '말하기', fade: '점점 지우기', dialog: '대화',
+  vcards: '단어 카드 보기', vtype1: '단어 따라 쓰기', vspell: '철자 완성', vmatch: '단어-뜻 매칭', vsound: '소리-단어 매칭', vwrite: '그림 보고 쓰기',
 };
+export interface VocabOpt { key: string; en: string; ko: string }
 export const TAGS: [string, string][] = [['vocab', '어휘'], ['expr', '표현'], ['listen', '듣기'], ['speak', '말하기'], ['read', '읽기'], ['write', '쓰기']];
 
 const persona = (req: boolean): Field => ({ k: 'persona', label: '말하는 사람', t: 'obj', req, fields: [{ k: 'key', label: '인물 코드', t: 'text', req: true }, { k: 'line', label: '상황 한 줄', t: 'text', req: true }] });
@@ -21,7 +23,15 @@ const typed: Field[] = [
   { k: 'ko', label: '한글 뜻', t: 'text' }, { k: 'fb', label: '정답 후 설명', t: 'text' }, { k: 'wide', label: '넓은 입력칸', t: 'bool' },
 ];
 
+const VINST: Field = { k: 'inst', label: '안내 문구 (비우면 기본 문구)', t: 'text' };
+const VW = (label = '단어 (순서대로)'): Field => ({ k: 'words', label, t: 'vwords', req: true });
 const SPEC: Record<string, Field[]> = {
+  vcards: [VW('카드에 넣을 단어'), VINST],
+  vtype1: [VW('따라 쓸 단어'), VINST],
+  vspell: [{ k: 'word', label: '단어', t: 'vword', req: true }, { k: 'shown', label: '처음부터 보여줄 글자 수 (비우면 절반)', t: 'num' }, { k: 'extra', label: '헷갈리게 섞을 글자 (선택, 예: xz)', t: 'text' }, VINST],
+  vmatch: [VW('매칭할 단어'), VINST],
+  vsound: [VW('매칭할 단어'), VINST],
+  vwrite: [VW('쓸 단어'), VINST],
   learn: [
     { k: 'title', label: '제목', t: 'text', req: true },
     { k: 'cards', label: '카드', t: 'rows', req: true, blank: () => ({ en: '', ko: '' }), cols: [
@@ -89,6 +99,8 @@ export function defaultItem(kind: string): Obj {
     case 'build': return { k: 'build', ans: '', words: [] };
     case 'fill': case 'write': return { k: kind, ans: '' };
     case 'compose': return { k: 'compose', title: '', rules: [{ label: '' }], minSent: 1, sample: '' };
+    case 'vcards': case 'vtype1': case 'vmatch': case 'vsound': case 'vwrite': return { k: kind, tag: 'vocab', words: [] };
+    case 'vspell': return { k: 'vspell', tag: 'vocab', word: '' };
     case 'speak': return { k: 'speak', target: '' };
     case 'fade': return { k: 'fade', target: '' };
     default: return { k: 'dialog', persona: { key: '', line: '' }, turns: [{ who: 'ai', text: '' }, { who: 'me', accept: [] }] };
@@ -127,12 +139,12 @@ export function validate(obj: Obj): { ok: boolean; problems: string[] } {
   return { ok: false, problems: [...new Set(out)].slice(0, 8) };
 }
 
-export function ItemForm({ obj, onChange, keys }: { obj: Obj; onChange: (o: Obj) => void; keys: string[] }) {
+export function ItemForm({ obj, onChange, keys, vocab }: { obj: Obj; onChange: (o: Obj) => void; keys: string[]; vocab: VocabOpt[] }) {
   const set = (k: string, v: unknown) => { const n = { ...obj }; if (blankish(v)) delete n[k]; else n[k] = v; onChange(n); };
   return (
     <div className="mx-form">
       <datalist id="mx-keys">{keys.map((k) => <option key={k} value={k} />)}</datalist>
-      {(SPEC[obj.k] ?? []).map((f) => <FieldRow key={pathOf(f)} f={f} v={obj[f.k]} root={obj} set={set} />)}
+      {(SPEC[obj.k] ?? []).map((f) => <FieldRow key={pathOf(f)} f={f} v={obj[f.k]} root={obj} set={set} vocab={vocab} />)}
       <details className="mx-more"><summary>공통 항목 (영역·학습목표·그림·말하는 사람)</summary>
         {COMMON.map((f) => <FieldRow key={pathOf(f)} f={f} v={obj[f.k]} root={obj} set={set} />)}
       </details>
@@ -140,12 +152,35 @@ export function ItemForm({ obj, onChange, keys }: { obj: Obj; onChange: (o: Obj)
   );
 }
 
-function FieldRow({ f, v, root, set }: { f: Field; v: any; root: Obj; set: (k: string, v: unknown) => void }) {
+function FieldRow({ f, v, root, set, vocab }: { f: Field; v: any; root: Obj; set: (k: string, v: unknown) => void; vocab?: VocabOpt[] }) {
   const lab = <span className="mx-fl">{f.label}{f.req && <em>*</em>}</span>;
   if (f.t === 'bool') return <label className="mx-f mx-chk"><input type="checkbox" checked={!!v} onChange={(e) => set(f.k, e.target.checked ? true : undefined)} />{f.label}</label>;
   if (f.t === 'text') return <label className="mx-f">{lab}<input list={/그림|code|flag|key|인물/i.test(f.label) || f.k === 'flag' ? 'mx-keys' : undefined} value={v ?? ''} onChange={(e) => set(f.k, e.target.value)} /></label>;
   if (f.t === 'area') return <label className="mx-f">{lab}<textarea className="mx-ta" value={v ?? ''} onChange={(e) => set(f.k, e.target.value)} /></label>;
-  if (f.t === 'num') return <label className="mx-f">{lab}<input type="number" min={1} style={{ width: 90 }} value={v ?? ''} onChange={(e) => set(f.k, e.target.value === '' ? undefined : Number(e.target.value))} /></label>;
+  if (f.t === 'vword') return (
+    <label className="mx-f">{lab}<select value={v ?? ''} onChange={(e) => set(f.k, e.target.value || undefined)}>
+      <option value="">(단어 선택)</option>{(vocab ?? []).map((w) => <option key={w.key} value={w.key}>{w.en} · {w.ko}</option>)}
+      {v && !(vocab ?? []).some((w) => w.key === v) && <option value={v}>{v} (단원 어휘에 없음)</option>}</select></label>
+  );
+  if (f.t === 'vwords') {
+    const sel: string[] = v ?? []; const rest = (vocab ?? []).filter((w) => !sel.includes(w.key));
+    const info = (k: string) => (vocab ?? []).find((w) => w.key === k);
+    return (
+      <div className="mx-f">{lab}
+        {!(vocab ?? []).length && <p className="mx-err">이 단원에 등록된 단어가 없어요. "단어" 탭에서 먼저 단어를 추가해 주세요.</p>}
+        <table className="mx-mini"><tbody>{sel.map((k, i) => (
+          <tr key={k + i}><td style={{ width: 28 }}>{i + 1}</td><td>{info(k) ? <>{info(k)!.en} <span className="mx-muted">{info(k)!.ko}</span></> : <span className="mx-err">{k} (단원 어휘에 없음)</span>}</td>
+            <td className="mx-act">
+              <button type="button" className="mx-btn sec" disabled={i === 0} onClick={() => { const n = [...sel]; [n[i - 1], n[i]] = [n[i], n[i - 1]]; set(f.k, n); }}>↑</button>
+              <button type="button" className="mx-btn sec" onClick={() => set(f.k, sel.filter((_, j) => j !== i))}>×</button></td></tr>))}</tbody></table>
+        <div className="mx-row">
+          <select value="" onChange={(e) => { if (e.target.value) set(f.k, [...sel, e.target.value]); }}><option value="">+ 단어 추가…</option>{rest.map((w) => <option key={w.key} value={w.key}>{w.en} · {w.ko}</option>)}</select>
+          <button type="button" className="mx-btn sec" disabled={!rest.length} onClick={() => set(f.k, [...sel, ...rest.map((w) => w.key)])}>남은 단어 모두 추가</button>
+        </div>
+      </div>
+    );
+  }
+  if (f.t === 'num') return <label className="mx-f">{lab}<input type="number" min={0} style={{ width: 90 }} value={v ?? ''} onChange={(e) => set(f.k, e.target.value === '' ? undefined : Number(e.target.value))} /></label>;
   if (f.t === 'tag') return <label className="mx-f">{lab}<select value={v ?? ''} onChange={(e) => set(f.k, e.target.value || undefined)}><option value="">(없음)</option>{TAGS.map(([a, b]) => <option key={a} value={a}>{b}</option>)}</select></label>;
   if (f.t === 'lines') return <label className="mx-f">{lab}<Lines v={v} onChange={(a) => set(f.k, a)} /></label>;
   if (f.t === 'words') return (

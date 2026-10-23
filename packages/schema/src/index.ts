@@ -101,15 +101,35 @@ export const Dialog = z.object({
   free: z.object({ n: z.number().int().min(1) }).nullable().optional(),
 });
 
+
+/* ===== 어휘 활동 템플릿 6종 (Mango English 활동 기획서 p29~34) =====
+ * 단어는 단원 어휘(vocab)의 key 로 참조한다. 그림·한글 뜻은 번들의 vocab 에서 가져온다. */
+const VKeys = z.array(z.string().min(1)).min(2).max(9);
+const vbase = { ...base, inst: z.string().optional() };
+/** 단어 카드 보기 (소리 듣고 따라 하기) */
+export const VCards = z.object({ ...vbase, k: z.literal('vcards'), words: VKeys });
+/** 단어 한 개씩 보고 따라 쓰기 */
+export const VType1 = z.object({ ...vbase, k: z.literal('vtype1'), words: VKeys });
+/** 철자 완성: 앞부분만 보이고 나머지 글자를 눌러 완성 */
+export const VSpell = z.object({ ...vbase, k: z.literal('vspell'), word: z.string().min(1), shown: z.number().int().min(0).optional(), extra: z.string().optional() });
+/** 단어 ↔ 한글 뜻 매칭 */
+export const VMatch = z.object({ ...vbase, k: z.literal('vmatch'), words: VKeys });
+/** 소리 ↔ 단어 매칭 */
+export const VSound = z.object({ ...vbase, k: z.literal('vsound'), words: VKeys });
+/** 그림 보고 쓰기 (여러 단어를 한 화면에서) */
+export const VWrite = z.object({ ...vbase, k: z.literal('vwrite'), words: VKeys });
+
 export const ActivityItem = z.discriminatedUnion('k', [
   Learn, Text, Brief, Choose, Match, Build, Fill, Write, Compose, Speak, Fade, Dialog,
+  VCards, VType1, VSpell, VMatch, VSound, VWrite,
 ]).superRefine((v, ctx) => {
   if (v.k === 'choose' && v.a >= v.opts.length) ctx.addIssue({ code: 'custom', path: ['a'], message: 'a(정답 index)가 opts 범위를 벗어났어요' });
+  if (v.k === 'vspell' && v.shown !== undefined && v.shown >= v.word.length) ctx.addIssue({ code: 'custom', path: ['shown'], message: '보이는 글자 수는 단어 길이보다 작아야 해요' });
   if (v.k === 'build' && v.ans.split(/\s+/).sort().join(' ') !== [...v.words].sort().join(' ')) ctx.addIssue({ code: 'custom', path: ['words'], message: 'words 를 합치면 ans 와 같아야 해요' });
 });
 export type ActivityItem = z.infer<typeof ActivityItem>;
 export type Kind = ActivityItem['k'];
-export const KINDS = ['learn', 'text', 'brief', 'choose', 'match', 'build', 'fill', 'write', 'compose', 'speak', 'fade', 'dialog'] as const;
+export const KINDS = ['learn', 'text', 'brief', 'choose', 'match', 'build', 'fill', 'write', 'compose', 'speak', 'fade', 'dialog', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite'] as const;
 
 /** 아이템 상태 (검수 워크플로) */
 export const ItemStatus = z.enum(['draft', 'review', 'approved', 'rejected']);

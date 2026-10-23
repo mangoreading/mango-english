@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js';
 import { configProblem, configured, supabase } from './supabase';
 import { Templates, Types, UnitFlow } from './Flow';
 import { Items } from './Items';
+import { UnitVocab } from './Vocab';
 import { PageHead } from './ui';
 
 export type Tab = 'units' | 'tpl' | 'types';
@@ -117,15 +118,17 @@ function Units({ uid }: { uid: string }) {
 }
 
 function UnitEditor({ unit, uid, onBack }: { unit: UnitRow; uid: string; onBack: () => void }) {
-  const [tab, setTab] = useState<'flow' | 'items'>('flow');
+  const [tab, setTab] = useState<'flow' | 'vocab' | 'items'>('flow');
   return (
     <>
       <PageHead title={`Lesson ${unit.no} · ${unit.title}`} sub={<button className="mx-link" onClick={onBack}>← 단원 목록</button>} />
       <div className="mx-seg">
         <button className={tab === 'flow' ? 'on' : ''} onClick={() => setTab('flow')}>학습 흐름</button>
+        <button className={tab === 'vocab' ? 'on' : ''} onClick={() => setTab('vocab')}>단어</button>
         <button className={tab === 'items' ? 'on' : ''} onClick={() => setTab('items')}>문항</button>
       </div>
       {tab === 'flow' && <UnitFlow unitId={unit.id} />}
+      {tab === 'vocab' && <UnitVocab unitId={unit.id} />}
       {tab === 'items' && <Items unitId={unit.id} uid={uid} />}
     </>
   );

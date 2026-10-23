@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { configProblem, configured, supabase } from './supabase';
 import type { BundleRow, Level } from './types';
+import { NativePlayer, type NativeResult } from './play/Player';
+import { isNative, type VWord } from './play/common';
 import { books, lesson8, lessonMeta, playActivity, tallyTags, type BookMeta, type PlayResult, type TagStats } from './legacy';
 
 const LEVELS: Level[] = ['CORE', 'SUPPORT', 'ADVANCED'];
@@ -123,6 +125,8 @@ function UnitView({ row, onBack }: { row: BundleRow; onBack: () => void }) {
   const [bk, setBk] = useState<{ list: BookMeta[]; items: (i: number) => unknown[] } | null>(null);
   const [l8, setL8] = useState<{ acts: { t: string; ko: string; min: number }[]; items: (i: number) => unknown[] } | null>(null);
   const b = row.bundle;
+  const hasAdaptive = !!b.flow?.some((l) => l.steps.some((s) => s.special === 'adaptive'));
+  const [nat, setNat] = useState<{ nonce: number; title: string; items: Record<string, any>[]; nextLabel?: string; lesson: number; idx: number; next?: () => void } | null>(null);
   const lessons = (b.items[level] ?? {}) as Record<string, Acts>;
 
   const loadProg = async () => {
@@ -132,12 +136,22 @@ function UnitView({ row, onBack }: { row: BundleRow; onBack: () => void }) {
     (data ?? []).forEach((r: any) => { m[pkey(r.level, r.lesson, r.act_idx)] = { stars: r.stars, ok: r.ok, total: r.total, detail: r.detail }; });
     setProg(m);
   };
-  useEffect(() => { void loadProg(); lessonMeta().then(setMeta).catch((e) => setErr(String(e.message || e))); books().then(setBk).catch(() => {}); /* eslint-disable-next-line */ }, []);
+  useEffect(() => {
+    void loadProg();
+    if (b.flow) {
+      setMeta(b.flow.map((l) => ({ no: l.no, en: l.en, ko: l.ko, goal: l.goal, color: l.color, acts: l.steps.map((s) => ({ t: s.name_en, ko: s.name_ko, min: s.min ?? 0 })) })));
+      if (hasAdaptive) books().then(setBk).catch(() => {});
+    } else {
+      lessonMeta().then(setMeta).catch((e) => setErr(String(e.message || e)));
+      books().then(setBk).catch(() => {});
+    }
+    /* eslint-disable-next-line */
+  }, []);
 
   const test = prog[pkey(level, 7, 0)];
   useEffect(() => {
     setL8(null);
-    if (test?.detail) lesson8(level, test.detail.plan, test.detail.tags).then(setL8).catch((e) => setErr(String(e.message || e)));
+    if (hasAdaptive && test?.detail) lesson8(level, test.detail.plan, test.detail.tags).then(setL8).catch((e) => setErr(String(e.message || e)));
   }, [level, test?.detail]);
 
   async function save(lesson: number, idx: number, res: PlayResult) {
@@ -159,6 +173,10 @@ function UnitView({ row, onBack }: { row: BundleRow; onBack: () => void }) {
   }
 
   function run(lesson: number, idx: number, title: string, items: unknown[], color: string | undefined, next: (() => void) | undefined, nextLabel?: string) {
+    if (items.length && items.every(isNative)) {
+      setNat({ nonce: Date.now(), title, items: items as Record<string, any>[], nextLabel, lesson, idx, next });
+      return;
+    }
     playActivity({
       title, items, level, test: lesson === 7, color, nextLabel,
       onResult: (res) => { void save(lesson, idx, res); },
@@ -172,7 +190,7 @@ function UnitView({ row, onBack }: { row: BundleRow; onBack: () => void }) {
     const m = meta.find((x) => x.no === no);
     if (!acts[idx]) return;
     const hasNext = idx + 1 < acts.length;
-    run(no, idx, `${no}차시 · ${m?.acts[idx]?.t ?? 'Activity'}`, acts[idx], m?.color,
+    run(no, idx, `${no}차시 : ${m?.acts[idx]?.t ?? 'Activity'}`, acts[idx], m?.color,
       hasNext ? () => start(no, idx + 1) : undefined, hasNext ? m?.acts[idx + 1]?.t ?? '다음 활동' : undefined);
   }
   function start8(idx: number) {
@@ -227,7 +245,7 @@ function UnitView({ row, onBack }: { row: BundleRow; onBack: () => void }) {
         );
       })}
 
-      <div className="mx-card">
+      {hasAdaptive && <div className="mx-card">
         <h3>8차시 · Personalized Mastery <span className="mx-muted">내 결과에 맞춘 보강</span></h3>
         {!test ? <p className="mx-muted">7차시 Lesson Check를 마치면 내 결과에 맞는 8차시가 열려요.</p> : !l8 ? <p className="mx-muted">불러오는 중…</p> : (
           <div className="mx-acts">
@@ -241,9 +259,9 @@ function UnitView({ row, onBack }: { row: BundleRow; onBack: () => void }) {
             })}
           </div>
         )}
-      </div>
+      </div>}
 
-      {bk && (
+      {hasAdaptive && bk && (
         <div className="mx-card">
           <h3>Reading Pack <span className="mx-muted">원서 읽기 (차시 학습과 별도)</span></h3>
           <div className="mx-acts">
@@ -257,6 +275,11 @@ function UnitView({ row, onBack }: { row: BundleRow; onBack: () => void }) {
             })}
           </div>
         </div>
+      )}
+      {nat && (
+        <NativePlayer key={nat.nonce} title={nat.title} items={nat.items} vocab={b.vocab as VWord[]} nextLabel={nat.nextLabel}
+          onResult={(r: NativeResult) => { void save(nat.lesson, nat.idx, { results: r.results, total: r.total, scored: r.scored }); }}
+          onFinish={(act) => { const n = nat; setNat(null); if (act === 'next' && n.next) n.next(); else if (act === 'again') run(n.lesson, n.idx, n.title, n.items, undefined, n.next, n.nextLabel); }} />
       )}
     </>
   );
