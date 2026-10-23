@@ -89,6 +89,12 @@ const COMMON: Field[] = [
   { k: 'ctx', label: '말하는 사람 카드', t: 'obj', fields: [{ k: 'key', label: '인물 코드', t: 'text' }, { k: 'line', label: '상황 한 줄', t: 'text' }] },
 ];
 
+/** 한 템플릿의 입력 항목 목록 (관리자 '활동 템플릿' 화면에서 보여 준다) */
+export function specOf(kind: string): { label: string; req: boolean; type: string }[] {
+  const T: Record<string, string> = { text: '한 줄 글', area: '여러 줄 글', num: '숫자', bool: '체크', lines: '여러 줄 목록', tag: '선택', words: '단어 나열', vwords: '단원 단어 고르기', vword: '단원 단어 하나', rows: '표(여러 행)', choices: '보기 목록', obj: '묶음' };
+  return (SPEC[kind] ?? []).map((f) => ({ label: f.label.replace(/\s*\(.*\)\s*$/, ''), req: !!f.req, type: T[f.t] ?? f.t }));
+}
+
 export function defaultItem(kind: string): Obj {
   switch (kind) {
     case 'learn': return { k: 'learn', title: '', cards: [{ en: '', ko: '' }] };

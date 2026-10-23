@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { configProblem, configured, supabase } from './supabase';
-import { Templates, Types, UnitFlow } from './Flow';
+import { Templates, UnitFlow } from './Flow';
+import { Types } from './Kinds';
 import { Items } from './Items';
 import { UnitVocab } from './Vocab';
 import { PageHead } from './ui';
 
 export type Tab = 'units' | 'tpl' | 'types';
-const TABS: [Tab, string][] = [['units', '단원·콘텐츠'], ['tpl', '흐름 템플릿'], ['types', '활동 종류']];
+const TABS: [Tab, string][] = [['units', '단원·콘텐츠'], ['tpl', '흐름 템플릿'], ['types', '활동 템플릿']];
 type Status = 'draft' | 'review' | 'approved' | 'rejected';
 const STATUS_KO: Record<Status, string> = { draft: '초안', review: '검수중', approved: '승인', rejected: '반려' };
 

@@ -1,0 +1,93 @@
+import { useEffect, useMemo, useState } from 'react';
+import { supabase } from './supabase';
+import { PageHead } from './ui';
+import { specOf } from './ItemForm';
+
+export const CATEGORIES = ['어휘', '표현', '듣기', '말하기', '읽기', '쓰기', '공통'];
+export interface KindRow { key: string; name_ko: string; description: string; category: string; sort: number; active: boolean }
+
+/** 활동 템플릿 관리: 목록(영역별), 이름·설명·영역·순서·사용 여부 수정, 입력 항목과 사용 현황 보기 */
+export function Types() {
+  const [rows, setRows] = useState<KindRow[] | null>(null);
+  const [use, setUse] = useState<Record<string, { items: number; units: number }>>({});
+  const [selKey, setSelKey] = useState<string | null>(null);
+  const [cat, setCat] = useState('전체');
+  const [msg, setMsg] = useState<{ t: 'ok' | 'err'; s: string } | null>(null);
+
+  async function load() {
+    const r = await supabase.from('activity_types').select('key,name_ko,description,category,sort,active').order('category').order('sort');
+    if (r.error) { setMsg({ t: 'err', s: r.error.message }); return; }
+    setRows((r.data ?? []) as KindRow[]);
+    const it = await supabase.from('items').select('template,unit_id').limit(20000);
+    const m: Record<string, { items: number; units: Set<string> }> = {};
+    ((it.data ?? []) as { template: string; unit_id: string }[]).forEach((x) => { const e = (m[x.template] ??= { items: 0, units: new Set() }); e.items++; e.units.add(x.unit_id); });
+    setUse(Object.fromEntries(Object.entries(m).map(([k, v]) => [k, { items: v.items, units: v.units.size }])));
+  }
+  useEffect(() => { void load(); }, []);
+
+  const shown = useMemo(() => (rows ?? []).filter((r) => cat === '전체' || r.category === cat), [rows, cat]);
+  const sel = rows?.find((r) => r.key === selKey) ?? null;
+
+  return (
+    <>
+      <PageHead title="활동 템플릿" sub="문항이 쓰는 활동 화면의 종류예요. 이름·설명·영역·사용 여부를 여기서 관리하고, 새 템플릿이 필요하면 Claude에게 요청해 주세요." />
+      {msg && <p className={msg.t === 'ok' ? 'mx-ok' : 'mx-err'}>{msg.s}</p>}
+      <div className="mx-seg">
+        {['전체', ...CATEGORIES].map((c) => <button key={c} className={cat === c ? 'on' : ''} onClick={() => setCat(c)}>{c}</button>)}
+      </div>
+      {!rows ? <p className="mx-muted">불러오는 중…</p> : (
+        <div className="mx-grid">
+          <div className="mx-card">
+            <table>
+              <thead><tr><th>영역</th><th>이름</th><th>코드</th><th>설명</th><th>문항</th><th>단원</th><th>상태</th></tr></thead>
+              <tbody>
+                {shown.map((r) => (
+                  <tr key={r.key} className={'mx-click' + (r.key === selKey ? ' mx-sel' : '')} onClick={() => setSelKey(r.key)}>
+                    <td>{r.category}</td><td><b>{r.name_ko}</b></td><td><code>{r.key}</code></td><td className="mx-muted">{r.description}</td>
+                    <td>{use[r.key]?.items ?? 0}</td><td>{use[r.key]?.units ?? 0}</td>
+                    <td><span className={'mx-chip ' + (r.active ? 'approved' : 'draft')}>{r.active ? '사용' : '숨김'}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {!shown.length && <p className="mx-muted">이 영역에는 템플릿이 없어요.</p>}
+          </div>
+          <div className="mx-card">
+            {sel ? <Detail key={sel.key} row={sel} use={use[sel.key]} onSaved={(m) => { setMsg(m); void load(); }} /> : <p className="mx-muted">왼쪽에서 템플릿을 선택하면 입력 항목과 사용 현황을 보고 고칠 수 있어요.</p>}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function Detail({ row, use, onSaved }: { row: KindRow; use?: { items: number; units: number }; onSaved: (m: { t: 'ok' | 'err'; s: string }) => void }) {
+  const [f, setF] = useState(row);
+  const dirty = JSON.stringify(f) !== JSON.stringify(row);
+  const fields = specOf(row.key);
+  async function save() {
+    const { error } = await supabase.from('activity_types').update({ name_ko: f.name_ko.trim(), description: f.description, category: f.category, sort: f.sort, active: f.active }).eq('key', row.key);
+    onSaved(error ? { t: 'err', s: '저장 실패: ' + error.message } : { t: 'ok', s: '저장했어요.' });
+  }
+  return (
+    <>
+      <h3>{row.name_ko} <code className="mx-muted">{row.key}</code></h3>
+      <div className="mx-form">
+        <label className="mx-f"><span className="mx-fl">이름</span><input value={f.name_ko} onChange={(e) => setF({ ...f, name_ko: e.target.value })} /></label>
+        <label className="mx-f"><span className="mx-fl">설명</span><textarea className="mx-ta" rows={2} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></label>
+        <div className="mx-row">
+          <label className="mx-f"><span className="mx-fl">영역</span><select value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })}>{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select></label>
+          <label className="mx-f"><span className="mx-fl">순서</span><input type="number" style={{ width: 80 }} value={f.sort} onChange={(e) => setF({ ...f, sort: Number(e.target.value) || 0 })} /></label>
+          <label className="mx-f mx-chk" style={{ marginTop: 18 }}><input type="checkbox" checked={f.active} onChange={(e) => setF({ ...f, active: e.target.checked })} />사용 (끄면 새 문항을 만들 때 목록에서 숨겨요)</label>
+        </div>
+        <div className="mx-f"><span className="mx-fl">입력 항목 (이 템플릿으로 문항을 만들 때 채우는 칸)</span>
+          <table className="mx-mini"><thead><tr><th>항목</th><th>형식</th><th style={{ width: 50 }}>필수</th></tr></thead>
+            <tbody>{fields.map((x, i) => <tr key={i}><td>{x.label}</td><td className="mx-muted">{x.type}</td><td>{x.req ? '●' : ''}</td></tr>)}</tbody></table>
+          <span className="mx-muted">입력 항목을 바꾸거나 늘리려면 Claude에게 요청해 주세요. (화면 코드와 함께 바뀌어요)</span>
+        </div>
+        <p className="mx-muted">사용 현황: 문항 {use?.items ?? 0}개 · 단원 {use?.units ?? 0}개</p>
+        <div className="mx-row"><button className="mx-btn" disabled={!dirty || !f.name_ko.trim()} onClick={save}>저장</button><button className="mx-btn sec" disabled={!dirty} onClick={() => setF(row)}>되돌리기</button></div>
+      </div>
+    </>
+  );
+}

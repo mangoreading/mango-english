@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from './supabase';
 import { preview } from './legacy';
-import { ItemForm, KIND_NAME, KINDS, defaultItem, validate, type VocabOpt } from './ItemForm';
+import { ItemForm, KIND_NAME, defaultItem, validate, type VocabOpt } from './ItemForm';
+import type { KindRow } from './Kinds';
 
 export type Status = 'draft' | 'review' | 'approved' | 'rejected';
 const STATUSES: Status[] = ['draft', 'review', 'approved', 'rejected'];
@@ -31,6 +32,7 @@ export function Items({ unitId, uid }: { unitId: string; uid: string }) {
   const [bundleVer, setBundleVer] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [kinds, setKinds] = useState<KindRow[]>([]);
 
   async function load() {
     setLoading(true);
@@ -41,6 +43,8 @@ export function Items({ unitId, uid }: { unitId: string; uid: string }) {
     ((fl.data ?? []) as any[]).forEach((l) => (l.flow_steps ?? []).forEach((s: any) => st.push({ id: s.id, lessonNo: l.no, pos: s.pos, name: s.name_ko || s.name_en })));
     st.sort((a, b) => a.lessonNo - b.lessonNo || a.pos - b.pos);
     setSteps(st);
+    const at = await supabase.from('activity_types').select('key,name_ko,description,category,sort,active').eq('active', true).order('category').order('sort');
+    setKinds((at.data ?? []) as KindRow[]);
     const v = await supabase.from('unit_vocab').select('vocab(key,en,ko)').eq('unit_id', unitId);
     setVocab(((v.data ?? []) as any[]).map((r) => r.vocab).filter(Boolean).sort((a: VocabOpt, b: VocabOpt) => a.en.localeCompare(b.en)));
     const b = await supabase.from('unit_bundles').select('version').eq('unit_id', unitId).order('version', { ascending: false }).limit(1);
@@ -53,6 +57,7 @@ export function Items({ unitId, uid }: { unitId: string; uid: string }) {
   const shown = useMemo(() => items.filter((i) =>
     (level === 'all' || i.level === level) && (stepF === 'all' || (stepF === 'none' ? !i.step_id : i.step_id === stepF)) && (status === 'all' || i.status === status)
     && (!q || JSON.stringify(i.payload).toLowerCase().includes(q.toLowerCase()))), [items, level, stepF, status, q]);
+  const kindName = (k: string) => kinds.find((x) => x.key === k)?.name_ko ?? KIND_NAME[k] ?? k;
   const sel = items.find((i) => i.id === selId) ?? null;
   const counts = useMemo(() => { const c: Record<string, number> = {}; items.forEach((i) => { c[i.status] = (c[i.status] ?? 0) + 1; }); return c; }, [items]);
 
@@ -105,7 +110,7 @@ export function Items({ unitId, uid }: { unitId: string; uid: string }) {
           {(['review', 'approved', 'rejected'] as Status[]).map((s) => <button key={s} className="mx-btn sec" disabled={busy || !shown.length} onClick={() => bulk(s)}>{STATUS_KO[s]}</button>)}
           <button className="mx-btn" onClick={() => setAdding(!adding)}>+ 문항 추가</button>
         </div>
-        {adding && <AddBar steps={steps} level={level === 'all' ? 'CORE' : level} step={stepF} onAdd={create} onCancel={() => setAdding(false)} />}
+        {adding && <AddBar kinds={kinds} steps={steps} level={level === 'all' ? 'CORE' : level} step={stepF} onAdd={create} onCancel={() => setAdding(false)} />}
       </div>
       <div className="mx-grid">
         <div className="mx-card mx-scroll">
@@ -115,7 +120,7 @@ export function Items({ unitId, uid }: { unitId: string; uid: string }) {
               <tbody>
                 {shown.map((i) => (
                   <tr key={i.id} className={'mx-click' + (i.id === selId ? ' mx-sel' : '')} onClick={() => setSelId(i.id)}>
-                    <td>{i.lesson}</td><td>{i.level}</td><td>{i.step_id ? stepOf[i.step_id]?.name : <span className="mx-muted">(연결 안 됨)</span>}</td><td>{KIND_NAME[i.template] ?? i.template}</td>
+                    <td>{i.lesson}</td><td>{i.level}</td><td>{i.step_id ? stepOf[i.step_id]?.name : <span className="mx-muted">(연결 안 됨)</span>}</td><td>{kindName(i.template)}</td>
                     <td className="mx-muted">{summary(i.payload)}</td>
                     <td><span className={`mx-chip ${i.status}`}>{STATUS_KO[i.status]}</span></td>
                   </tr>
@@ -134,14 +139,14 @@ export function Items({ unitId, uid }: { unitId: string; uid: string }) {
   );
 }
 
-function AddBar({ steps, level, step, onAdd, onCancel }: { steps: StepInfo[]; level: string; step: string; onAdd: (lv: string, step: string, kind: string) => void; onCancel: () => void }) {
+function AddBar({ kinds, steps, level, step, onAdd, onCancel }: { kinds: KindRow[]; steps: StepInfo[]; level: string; step: string; onAdd: (lv: string, step: string, kind: string) => void; onCancel: () => void }) {
   const [lv, setLv] = useState(level); const [st, setSt] = useState(steps.find((s) => s.id === step)?.id ?? steps[0]?.id ?? ''); const [kind, setKind] = useState('choose');
   if (!steps.length) return <p className="mx-err">이 단원에는 흐름(활동)이 없어요. "학습 흐름" 탭에서 먼저 활동을 만들어 주세요.</p>;
   return (
     <div className="mx-row" style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--line)' }}>
       <label>레벨<select value={lv} onChange={(e) => setLv(e.target.value)}>{LEVELS.map((l) => <option key={l}>{l}</option>)}</select></label>
       <label>활동<select value={st} onChange={(e) => setSt(e.target.value)}>{steps.map((s) => <option key={s.id} value={s.id}>{s.lessonNo}차시 · {s.name}</option>)}</select></label>
-      <label>문항 종류<select value={kind} onChange={(e) => setKind(e.target.value)}>{KINDS.map((k) => <option key={k} value={k}>{KIND_NAME[k]} ({k})</option>)}</select></label>
+      <label>문항 종류<select value={kind} onChange={(e) => setKind(e.target.value)}>{[...new Set(kinds.map((k) => k.category))].map((c) => <optgroup key={c} label={c}>{kinds.filter((k) => k.category === c).map((k) => <option key={k.key} value={k.key}>{k.name_ko}</option>)}</optgroup>)}</select></label>
       <button className="mx-btn" onClick={() => onAdd(lv, st, kind)}>만들기</button>
       <button className="mx-btn sec" onClick={onCancel}>취소</button>
     </div>

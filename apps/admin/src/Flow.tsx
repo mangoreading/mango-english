@@ -163,20 +163,6 @@ export function Templates() {
   );
 }
 
-/** 활동 종류 목록(읽기 전용) */
-export function Types() {
-  const [rows, setRows] = useState<{ key: string; name_ko: string; description: string; active: boolean }[] | null>(null);
-  useEffect(() => { supabase.from('activity_types').select('key,name_ko,description,active').order('sort').then((r) => setRows((r.data ?? []) as never)); }, []);
-  if (!rows) return <p className="mx-muted">불러오는 중…</p>;
-  return (
-    <>
-      <PageHead title="활동 종류" sub="문항의 종류예요. 새 종류가 필요하면 Claude에게 요청하세요. 활동 하나에는 여러 종류의 문항이 함께 들어갈 수 있어요." />
-      <table className="mx-box"><thead><tr><th>코드</th><th>이름</th><th>설명</th></tr></thead>
-        <tbody>{rows.map((r) => <tr key={r.key}><td><code>{r.key}</code></td><td>{r.name_ko}</td><td>{r.description}</td></tr>)}</tbody></table>
-    </>
-  );
-}
-
 interface TplOpt { id: string; name: string }
 /** 단원에 흐름이 없을 때 템플릿 적용 */
 export function ApplyTemplate({ unitId, onDone }: { unitId: string; onDone: () => void }) {
