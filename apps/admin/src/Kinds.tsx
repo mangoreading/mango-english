@@ -87,44 +87,73 @@ function Detail({ row, use, onSaved }: { row: KindRow; use?: { items: number; un
     const { error } = await supabase.from('activity_types').update({ name_ko: f.name_ko.trim(), name_en: (f.name_en ?? '').trim(), description: f.description, category: f.category, active: f.active }).eq('key', row.key);
     onSaved(error ? { t: 'err', s: '저장 실패: ' + error.message } : { t: 'ok', s: '저장했어요.' });
   }
+  const lvKo = (l: string) => (l === 'breaking' ? '깨지는 변경' : l === 'compatible' ? '호환 변경' : '안전 변경');
   return (
     <>
       <h3>{row.name_ko} <code className="mx-muted">{row.key}</code></h3>
-      <div className="mx-form">
-        <div className="mx-prev">
-          {isNativeKind(row.key) && (
-            <button type="button" className="mx-thumb" onClick={sample} title="눌러서 크게 보기" aria-label="샘플 미리보기 화면 (눌러서 크게 보기)">
-              <div className="mx-thumb-in"><NativePlayer key={row.key} title={row.name_ko} items={[NATIVE_SAMPLES[row.key]]} vocab={SAMPLE_VOCAB} onResult={() => {}} onFinish={() => {}} /></div>
-            </button>
-          )}
-          <div className="mx-prev-side">
-            <button type="button" className="mx-btn" onClick={sample}>▶ 샘플 미리보기</button>
-            <span className="mx-muted">학습앱과 같은 화면(1280×800)으로 직접 눌러 볼 수 있어요.</span>
+
+      <section className="mx-sec">
+        <div className="mx-sec-t">샘플 미리보기</div>
+        <div className="mx-sec-b">
+          <div className="mx-prev">
+            {isNativeKind(row.key) && (
+              <button type="button" className="mx-thumb" onClick={sample} title="눌러서 크게 보기" aria-label="샘플 미리보기 화면 (눌러서 크게 보기)">
+                <div className="mx-thumb-in"><NativePlayer key={row.key} title={row.name_ko} items={[NATIVE_SAMPLES[row.key]]} vocab={SAMPLE_VOCAB} onResult={() => {}} onFinish={() => {}} /></div>
+              </button>
+            )}
+            <div className="mx-prev-side"><button type="button" className="mx-btn" onClick={sample}>▶ 샘플 미리보기</button></div>
+          </div>
+          {pmsg && <p className="mx-err">{pmsg}</p>}
+        </div>
+      </section>
+
+      <section className="mx-sec">
+        <div className="mx-sec-t">한글 이름 / 영어 이름</div>
+        <div className="mx-sec-b mx-form">
+          <div className="mx-row">
+            <label className="mx-f"><span className="mx-fl">한글 이름</span><input value={f.name_ko} onChange={(e) => setF({ ...f, name_ko: e.target.value })} /></label>
+            <label className="mx-f"><span className="mx-fl">영어 이름</span><input value={f.name_en ?? ''} onChange={(e) => setF({ ...f, name_en: e.target.value })} /></label>
           </div>
         </div>
-        <div className="mx-row">
-          <label className="mx-f"><span className="mx-fl">한글 이름</span><input value={f.name_ko} onChange={(e) => setF({ ...f, name_ko: e.target.value })} /></label>
-          <label className="mx-f"><span className="mx-fl">영어 이름</span><input value={f.name_en ?? ''} onChange={(e) => setF({ ...f, name_en: e.target.value })} /></label>
+      </section>
+
+      <section className="mx-sec">
+        <div className="mx-sec-t">설명</div>
+        <div className="mx-sec-b mx-form">
+          <textarea className="mx-ta" rows={2} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} />
         </div>
-        <label className="mx-f"><span className="mx-fl">설명</span><textarea className="mx-ta" rows={2} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></label>
-        <div className="mx-row">
-          <label className="mx-f"><span className="mx-fl">영역</span><select value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })}>{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select></label>
-          <label className="mx-f mx-chk" style={{ marginTop: 18 }}><input type="checkbox" checked={f.active} onChange={(e) => setF({ ...f, active: e.target.checked })} />사용 (끄면 새 문항을 만들 때 목록에서 숨겨요)</label>
+      </section>
+
+      <section className="mx-sec">
+        <div className="mx-sec-t">영역</div>
+        <div className="mx-sec-b mx-form">
+          <div className="mx-row">
+            <select value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })}>{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select>
+            <label className="mx-f mx-chk"><input type="checkbox" checked={f.active} onChange={(e) => setF({ ...f, active: e.target.checked })} />사용 (끄면 새 문항을 만들 때 목록에서 숨겨요)</label>
+          </div>
         </div>
-        <div className="mx-f"><span className="mx-fl">입력 항목 (이 템플릿으로 문항을 만들 때 채우는 칸)</span>
+      </section>
+
+      <div className="mx-row mx-savebar"><button className="mx-btn" disabled={!dirty || !f.name_ko.trim()} onClick={save}>저장</button><button className="mx-btn sec" disabled={!dirty} onClick={() => setF(row)}>되돌리기</button><span className="mx-muted">{dirty ? '이름·설명·영역에 저장하지 않은 변경이 있어요.' : ''}</span></div>
+
+      <section className="mx-sec">
+        <div className="mx-sec-t">입력 항목 <small>이 템플릿으로 문항을 만들 때 채우는 칸</small></div>
+        <div className="mx-sec-b">
           <table className="mx-mini"><thead><tr><th>항목</th><th>형식</th><th style={{ width: 50 }}>필수</th></tr></thead>
             <tbody>{fields.map((x, i) => <tr key={i}><td>{x.label}</td><td className="mx-muted">{x.type}</td><td>{x.req ? '●' : ''}</td></tr>)}</tbody></table>
-          <span className="mx-muted">입력 항목을 바꾸거나 늘리려면 Claude에게 요청해 주세요. (화면 코드와 함께 바뀌어요)</span>
+          <p className="mx-muted mx-note">입력 항목을 바꾸거나 늘리려면 Claude에게 요청해 주세요. (화면 코드와 함께 바뀌어요)</p>
         </div>
-        {pmsg && <p className="mx-err">{pmsg}</p>}
-        <div className="mx-f"><span className="mx-fl">버전과 변경 영향</span>
-          <p className="mx-muted" style={{ margin: 0 }}>현재 v{row.version ?? 1} · 이 템플릿을 쓰는 문항 {use?.items ?? 0}개 · 단원 {use?.units ?? 0}개{use?.old ? ` · 옛 버전 문항 ${use.old}개 (재검토 필요)` : ''}</p>
-          <p className="mx-muted" style={{ margin: 0 }}>입력 항목을 바꾸면 위 범위가 영향을 받아요. 이미 발행된 단원은 다시 발행하기 전까지 학습앱에서 그대로예요.</p>
+      </section>
+
+      <section className="mx-sec">
+        <div className="mx-sec-t">버전과 변경 영향</div>
+        <div className="mx-sec-b">
+          <p className="mx-stat">현재 <b>v{row.version ?? 1}</b> · 문항 <b>{use?.items ?? 0}</b>개 · 단원 <b>{use?.units ?? 0}</b>개{use?.old ? <> · <b className="mx-warn">옛 버전 문항 {use.old}개 (재검토 필요)</b></> : null}</p>
+          <p className="mx-muted mx-note">입력 항목을 바꾸면 위 범위가 영향을 받아요. 이미 발행된 단원은 다시 발행하기 전까지 학습앱에서 그대로예요.</p>
           <table className="mx-mini"><thead><tr><th>버전</th><th>종류</th><th>내용</th><th>날짜</th></tr></thead>
-            <tbody>{hist.map((h) => <tr key={h.version}><td>v{h.version}</td><td>{h.level === 'breaking' ? '깨지는 변경' : h.level === 'compatible' ? '호환 변경' : '안전 변경'}</td><td className="mx-muted">{h.note}</td><td className="mx-muted">{h.created_at.slice(0, 10)}</td></tr>)}</tbody></table>
+            <tbody>{hist.map((h) => <tr key={h.version}><td>v{h.version}</td><td>{lvKo(h.level)}</td><td className="mx-muted">{h.note}</td><td className="mx-muted">{h.created_at.slice(0, 10)}</td></tr>)}</tbody></table>
         </div>
-        <div className="mx-row"><button className="mx-btn" disabled={!dirty || !f.name_ko.trim()} onClick={save}>저장</button><button className="mx-btn sec" disabled={!dirty} onClick={() => setF(row)}>되돌리기</button></div>
-      </div>
+      </section>
     </>
   );
 }

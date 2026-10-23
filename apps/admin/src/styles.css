@@ -81,3 +81,12 @@ td.mx-muted { white-space:normal; min-width:160px; }
 .mx-prev { display:flex; gap:18px; align-items:flex-end; flex-wrap:wrap; }
 .mx-prev-side { display:flex; flex-direction:column; gap:8px; align-items:flex-start; max-width:220px; }
 .mx-no { width:36px; min-width:36px !important; max-width:36px; padding:9px 2px; color:var(--sub); text-align:center; white-space:nowrap; }
+
+/* 상세 화면 구역 구분: 구역 제목은 남색 띠로 */
+.mx-sec { border:1px solid var(--line); border-radius:14px; overflow:hidden; margin:0 0 14px; background:#fff; }
+.mx-sec-t { background:var(--navy); color:#fff; font-weight:800; font-size:14px; padding:8px 14px; display:flex; align-items:baseline; gap:10px; }
+.mx-sec-t small { font-weight:500; font-size:12px; opacity:.75; }
+.mx-sec-b { padding:14px; background:#FCFBF8; display:flex; flex-direction:column; gap:10px; }
+.mx-sec-b.mx-form { gap:12px; }
+.mx-note { margin:0; font-size:13px; } .mx-stat { margin:0; font-size:14px; } .mx-warn { color:var(--err); }
+.mx-savebar { margin:-2px 0 16px; align-items:center; }
