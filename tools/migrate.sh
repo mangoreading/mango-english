@@ -6,9 +6,8 @@ set -euo pipefail
 : "${DATABASE_URL:?DATABASE_URL 이 필요해요}"
 cd "$(dirname "$0")/../supabase/migrations"
 # 접속 확인: 실패하면 원인을 GitHub 주석(::error::)으로 남긴다 (비밀번호는 출력되지 않음)
-host=$(printf '%s' "$DATABASE_URL" | sed -E 's#^[a-z]+://[^@]*@##; s#[/?].*$##')
 if ! err=$(psql "$DATABASE_URL" -qAt -c 'select 1' 2>&1 >/dev/null); then
-  echo "::error::DB 접속 실패 (host=$host): $(printf '%s' "$err" | tr '\n' ' ' | cut -c1-300)"; exit 1
+  echo "::error::DB 접속 실패 (접속 문자열 형식 또는 비밀번호를 확인하세요): $(printf '%s' "$err" | tr '\n' ' ' | sed -E "s#$DATABASE_URL#<URL>#g" | cut -c1-120 | sed -E "s#socket \".*\"#socket#")"; exit 1
 fi
 P=(psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -qAt)
 fresh=$("${P[@]}" -c "select to_regclass('public.schema_migrations') is null")
