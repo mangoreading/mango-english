@@ -10,7 +10,7 @@ const STATUSES: Status[] = ['draft', 'review', 'approved', 'rejected'];
 const STATUS_KO: Record<Status, string> = { draft: '초안', review: '검수중', approved: '승인', rejected: '반려' };
 const LEVELS = ['CORE', 'SUPPORT', 'ADVANCED'];
 
-interface ItemRow { id: string; unit_id: string; lesson: number; act_idx: number; level: string; template: string; tag: string | null; status: Status; version: number; step_id: string | null; payload: Record<string, any> }
+interface ItemRow { id: string; unit_id: string; lesson: number; act_idx: number; level: string; template: string; tag: string | null; status: Status; version: number; step_id: string | null; tpl_ver?: number; payload: Record<string, any> }
 interface StepInfo { id: string; lessonNo: number; pos: number; name: string }
 type Msg = { t: 'ok' | 'err'; s: string } | null;
 
@@ -37,14 +37,14 @@ export function Items({ unitId, uid }: { unitId: string; uid: string }) {
 
   async function load() {
     setLoading(true);
-    const it = await supabase.from('items').select('id,unit_id,lesson,act_idx,level,template,tag,status,version,step_id,payload').eq('unit_id', unitId).order('lesson').order('act_idx').limit(5000);
+    const it = await supabase.from('items').select('id,unit_id,lesson,act_idx,level,template,tag,status,version,step_id,tpl_ver,payload').eq('unit_id', unitId).order('lesson').order('act_idx').limit(5000);
     if (it.error) setMsg({ t: 'err', s: it.error.message }); else setItems((it.data ?? []) as unknown as ItemRow[]);
     const fl = await supabase.from('flow_lessons').select('no, flow_steps(id,pos,name_en,name_ko)').eq('unit_id', unitId).order('no');
     const st: StepInfo[] = [];
     ((fl.data ?? []) as any[]).forEach((l) => (l.flow_steps ?? []).forEach((s: any) => st.push({ id: s.id, lessonNo: l.no, pos: s.pos, name: s.name_ko || s.name_en })));
     st.sort((a, b) => a.lessonNo - b.lessonNo || a.pos - b.pos);
     setSteps(st);
-    const at = await supabase.from('activity_types').select('key,name_ko,description,category,sort,active').eq('active', true).order('category').order('sort');
+    const at = await supabase.from('activity_types').select('key,name_ko,version,description,category,sort,active').eq('active', true).order('category').order('sort');
     setKinds((at.data ?? []) as KindRow[]);
     const v = await supabase.from('unit_vocab').select('vocab(key,en,ko,image_path)').eq('unit_id', unitId);
     setVocab(((v.data ?? []) as any[]).map((r) => r.vocab).filter(Boolean).sort((a: VocabOpt, b: VocabOpt) => a.en.localeCompare(b.en)));
@@ -56,8 +56,9 @@ export function Items({ unitId, uid }: { unitId: string; uid: string }) {
 
   const stepOf = useMemo(() => { const m: Record<string, StepInfo> = {}; steps.forEach((s) => { m[s.id] = s; }); return m; }, [steps]);
   const shown = useMemo(() => items.filter((i) =>
-    (level === 'all' || i.level === level) && (stepF === 'all' || (stepF === 'none' ? !i.step_id : i.step_id === stepF)) && (status === 'all' || i.status === status)
+    (level === 'all' || i.level === level) && (stepF === 'all' || (stepF === 'none' ? !i.step_id : i.step_id === stepF)) && (status === 'all' || (status === 'stale' ? stale(i) : i.status === status))
     && (!q || JSON.stringify(i.payload).toLowerCase().includes(q.toLowerCase()))), [items, level, stepF, status, q]);
+  const stale = (i: ItemRow) => (i.tpl_ver ?? 1) < (kinds.find((x) => x.key === i.template)?.version ?? 1);
   const kindName = (k: string) => kinds.find((x) => x.key === k)?.name_ko ?? KIND_NAME[k] ?? k;
   const sel = items.find((i) => i.id === selId) ?? null;
   const counts = useMemo(() => { const c: Record<string, number> = {}; items.forEach((i) => { c[i.status] = (c[i.status] ?? 0) + 1; }); return c; }, [items]);
@@ -71,7 +72,8 @@ export function Items({ unitId, uid }: { unitId: string; uid: string }) {
     if (error) setMsg({ t: 'err', s: error.message }); else { setMsg({ t: 'ok', s: `${shown.length}개를 "${STATUS_KO[to]}"로 바꿨어요.` }); void load(); }
   }
   async function publish() {
-    if (!window.confirm(`승인된 ${counts.approved ?? 0}개 문항으로 새 버전을 발행할까요? 학습앱에 바로 반영돼요.`)) return;
+    const oldN = items.filter((i) => i.status === 'approved' && stale(i)).length;
+    if (!window.confirm(`승인된 ${counts.approved ?? 0}개 문항으로 새 버전을 발행할까요? 학습앱에 바로 반영돼요.` + (oldN ? `\n\n주의: 템플릿이 바뀐 뒤 확인하지 않은(옛 버전) 승인 문항이 ${oldN}개 있어요. 그래도 발행할까요?` : ''))) return;
     setBusy(true);
     const { data, error } = await supabase.rpc('publish_unit', { p_unit: unitId });
     setBusy(false);
@@ -99,12 +101,13 @@ export function Items({ unitId, uid }: { unitId: string; uid: string }) {
           <button className="mx-btn go" disabled={busy || !(counts.approved ?? 0)} onClick={publish}>발행</button>
         </div>
         {msg && <p className={msg.t === 'ok' ? 'mx-ok' : 'mx-err'}>{msg.s}</p>}
+        {items.some(stale) && <p className="mx-err">템플릿이 바뀐 뒤 확인하지 않은 문항이 {items.filter(stale).length}개 있어요. 상태 필터에서 "옛 버전"을 골라 확인하고 저장하면 최신 버전이 돼요.</p>}
       </div>
       <div className="mx-card">
         <div className="mx-row">
           <label>레벨<select value={level} onChange={(e) => setLevel(e.target.value)}><option value="all">전체</option>{LEVELS.map((l) => <option key={l}>{l}</option>)}</select></label>
           <label>활동<select value={stepF} onChange={(e) => setStepF(e.target.value)}><option value="all">전체</option><option value="none">(연결 안 됨)</option>{steps.map((s) => <option key={s.id} value={s.id}>{s.lessonNo}차시 · {s.name}</option>)}</select></label>
-          <label>상태<select value={status} onChange={(e) => setStatus(e.target.value)}><option value="all">전체</option>{STATUSES.map((s) => <option key={s} value={s}>{STATUS_KO[s]}</option>)}</select></label>
+          <label>상태<select value={status} onChange={(e) => setStatus(e.target.value)}><option value="all">전체</option>{STATUSES.map((s) => <option key={s} value={s}>{STATUS_KO[s]}</option>)}<option value="stale">옛 버전 (재검토 필요)</option></select></label>
           <label>검색<input value={q} onChange={(e) => setQ(e.target.value)} placeholder="문항 내용에서 찾기" /></label>
           <span style={{ flex: 1 }} />
           <span className="mx-muted">목록 {shown.length}개 일괄:</span>
@@ -123,7 +126,7 @@ export function Items({ unitId, uid }: { unitId: string; uid: string }) {
                   <tr key={i.id} className={'mx-click' + (i.id === selId ? ' mx-sel' : '')} onClick={() => setSelId(i.id)}>
                     <td>{i.lesson}</td><td>{i.level}</td><td>{i.step_id ? stepOf[i.step_id]?.name : <span className="mx-muted">(연결 안 됨)</span>}</td><td>{kindName(i.template)}</td>
                     <td className="mx-muted">{summary(i.payload)}</td>
-                    <td><span className={`mx-chip ${i.status}`}>{STATUS_KO[i.status]}</span></td>
+                    <td><span className={`mx-chip ${i.status}`}>{STATUS_KO[i.status]}</span>{stale(i) && <span className="mx-chip review" style={{ marginLeft: 6 }} title="템플릿이 바뀐 뒤 아직 확인하지 않은 문항이에요">옛 버전</span>}</td>
                   </tr>
                 ))}
               </tbody>
