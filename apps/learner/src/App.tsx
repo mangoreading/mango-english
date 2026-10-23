@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { configured, supabase } from './supabase';
+import { configProblem, configured, supabase } from './supabase';
 import type { BundleRow, Level } from './types';
 
 const LEVELS: Level[] = ['CORE', 'SUPPORT', 'ADVANCED'];
@@ -17,7 +17,7 @@ export function App() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  if (!configured) return <Shell><Notice title="설정이 필요해요">VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY 환경변수가 없어요.</Notice></Shell>;
+  if (!configured) return <Shell><Notice title="설정이 필요해요">{configProblem}</Notice></Shell>;
   if (!ready) return <Shell><p className="muted">불러오는 중…</p></Shell>;
   return <Shell session={session}>{session ? <Units /> : <Login />}</Shell>;
 }
