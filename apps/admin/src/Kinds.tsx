@@ -7,6 +7,9 @@ import { NativePlayer } from '@mango/play';
 import { NATIVE_SAMPLES, SAMPLE_VOCAB, isNativeKind } from './samples';
 
 export const CATEGORIES = ['어휘', '표현', '듣기', '말하기', '읽기', '쓰기', '공통'];
+/** 영역 표시 이름 (DB에는 한글 값 그대로 저장) */
+export const CAT_EN: Record<string, string> = { 어휘: 'Vocab', 표현: 'Expression', 듣기: 'Listening', 말하기: 'Speaking', 읽기: 'Reading', 쓰기: 'Writing', 공통: 'Common' };
+export const catLabel = (c: string) => CAT_EN[c] ?? c;
 export interface KindRow { key: string; name_ko: string; name_en?: string; version?: number; description: string; category: string; sort: number; active: boolean }
 
 /** 활동 템플릿 관리: 목록(영역별), 이름·설명·영역·사용 여부 수정, 입력 항목과 사용 현황 보기 */
@@ -37,7 +40,7 @@ export function Types() {
       <PageHead title="활동 템플릿" sub="문항이 쓰는 활동 화면의 종류예요. 이름·설명·영역·사용 여부를 여기서 관리하고, 새 템플릿이 필요하면 Claude에게 요청해 주세요." />
       {msg && <p className={msg.t === 'ok' ? 'mx-ok' : 'mx-err'}>{msg.s}</p>}
       <div className="mx-seg">
-        {['전체', ...CATEGORIES].map((c) => <button key={c} className={cat === c ? 'on' : ''} onClick={() => setCat(c)}>{c}</button>)}
+        {['전체', ...CATEGORIES].map((c) => <button key={c} className={cat === c ? 'on' : ''} onClick={() => setCat(c)}>{c === '전체' ? 'All' : catLabel(c)} ({c === '전체' ? rows?.length ?? 0 : (rows ?? []).filter((x) => x.category === c).length})</button>)}
       </div>
       {!rows ? <p className="mx-muted">불러오는 중…</p> : (
         <div className="mx-grid">
@@ -47,7 +50,7 @@ export function Types() {
               <tbody>
                 {shown.map((r, n) => (
                   <tr key={r.key} className={'mx-click' + (r.key === selKey ? ' mx-sel' : '')} onClick={() => setSelKey(r.key)}>
-                    <td className="mx-no">{n + 1}</td><td>{r.category}</td><td><b>{r.name_ko}</b></td><td>{r.name_en}</td><td><code>{r.key}</code></td><td>v{r.version ?? 1}</td><td className="mx-muted">{r.description}</td>
+                    <td className="mx-no">{n + 1}</td><td>{catLabel(r.category)}</td><td><b>{r.name_ko}</b></td><td>{r.name_en}</td><td><code>{r.key}</code></td><td>v{r.version ?? 1}</td><td className="mx-muted">{r.description}</td>
                     <td>{use[r.key]?.items ?? 0}{use[r.key]?.old ? <span className="mx-chip review" style={{ marginLeft: 6 }}>옛 버전 {use[r.key]!.old}</span> : null}</td><td>{use[r.key]?.units ?? 0}</td>
                     <td><span className={'mx-chip ' + (r.active ? 'approved' : 'draft')}>{r.active ? '사용' : '숨김'}</span></td>
                   </tr>
@@ -128,7 +131,7 @@ function Detail({ row, use, onSaved }: { row: KindRow; use?: { items: number; un
         <div className="mx-sec-t">영역</div>
         <div className="mx-sec-b mx-form">
           <div className="mx-row">
-            <select value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })}>{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select>
+            <select value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })}>{CATEGORIES.map((c) => <option key={c} value={c}>{catLabel(c)}</option>)}</select>
             <label className="mx-f mx-chk"><input type="checkbox" checked={f.active} onChange={(e) => setF({ ...f, active: e.target.checked })} />사용 (끄면 새 문항을 만들 때 목록에서 숨겨요)</label>
           </div>
         </div>

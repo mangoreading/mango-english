@@ -93,3 +93,6 @@ h3 + .mx-sec { border-top:0; padding-top:6px; }
 .mx-sec-b.mx-form { gap:12px; }
 .mx-note { margin:0; font-size:13px; } .mx-stat { margin:0; font-size:14px; } .mx-warn { color:var(--err); }
 .mx-savebar { margin:0 0 4px; align-items:center; padding-top:12px; border-top:1px solid var(--line); }
+
+.mx-seg { gap:6px; padding:5px; }
+.mx-seg button { padding:8px 22px; }

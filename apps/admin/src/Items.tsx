@@ -3,7 +3,7 @@ import { supabase } from './supabase';
 import { openPreview } from './ui';
 import { isNativeKind, nativeVocab } from './samples';
 import { ItemForm, KIND_NAME, defaultItem, validate, type VocabOpt } from './ItemForm';
-import type { KindRow } from './Kinds';
+import { catLabel, type KindRow } from './Kinds';
 
 export type Status = 'draft' | 'review' | 'approved' | 'rejected';
 const STATUSES: Status[] = ['draft', 'review', 'approved', 'rejected'];
@@ -150,7 +150,7 @@ function AddBar({ kinds, steps, level, step, onAdd, onCancel }: { kinds: KindRow
     <div className="mx-row" style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--line)' }}>
       <label>레벨<select value={lv} onChange={(e) => setLv(e.target.value)}>{LEVELS.map((l) => <option key={l}>{l}</option>)}</select></label>
       <label>활동<select value={st} onChange={(e) => setSt(e.target.value)}>{steps.map((s) => <option key={s.id} value={s.id}>{s.lessonNo}차시 · {s.name}</option>)}</select></label>
-      <label>문항 종류<select value={kind} onChange={(e) => setKind(e.target.value)}>{[...new Set(kinds.map((k) => k.category))].map((c) => <optgroup key={c} label={c}>{kinds.filter((k) => k.category === c).map((k) => <option key={k.key} value={k.key}>{k.name_ko}</option>)}</optgroup>)}</select></label>
+      <label>문항 종류<select value={kind} onChange={(e) => setKind(e.target.value)}>{[...new Set(kinds.map((k) => k.category))].map((c) => <optgroup key={c} label={catLabel(c)}>{kinds.filter((k) => k.category === c).map((k) => <option key={k.key} value={k.key}>{k.name_ko}</option>)}</optgroup>)}</select></label>
       <button className="mx-btn" onClick={() => onAdd(lv, st, kind)}>만들기</button>
       <button className="mx-btn sec" onClick={onCancel}>취소</button>
     </div>
