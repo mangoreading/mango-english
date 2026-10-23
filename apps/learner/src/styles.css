@@ -1,0 +1,28 @@
+:root { --frame:#BBD7F2; --blue:#4F7DF0; --navy:#44546A; --cream:#FFF8E4; --bg:#EAF2FC; --ink:#1F2A44; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: 'Pretendard Variable', Pretendard, system-ui, -apple-system, 'Segoe UI', sans-serif; background:var(--bg); color:var(--ink); }
+.shell { max-width: 960px; margin: 0 auto; padding: 0 20px 60px; }
+.top { display:flex; justify-content:space-between; align-items:center; padding:20px 0; }
+.brand { font-size:1.3rem; color:var(--blue); }
+.who { font-size:.9rem; color:var(--navy); display:flex; gap:12px; align-items:center; }
+h1 { font-size:1.6rem; margin:12px 0 20px; }
+.card { background:#fff; border:4px solid var(--frame); border-radius:24px; padding:24px; margin:16px 0; }
+.card h2, .card h3 { margin-top:0; }
+.login { max-width:420px; margin:40px auto; display:flex; flex-direction:column; gap:14px; }
+label { display:flex; flex-direction:column; gap:6px; font-size:.9rem; color:var(--navy); }
+input { font:inherit; padding:12px 14px; border:2px solid #CBD6E6; border-radius:12px; }
+.btn { font:inherit; font-weight:700; background:var(--navy); color:#fff; border:0; border-radius:999px; padding:12px 22px; cursor:pointer; }
+.btn:disabled { opacity:.5; }
+.link { background:none; border:0; color:var(--blue); cursor:pointer; font:inherit; padding:0; }
+.err { color:#C0392B; margin:0; font-size:.9rem; }
+.muted { color:#7a869c; font-size:.9rem; }
+.grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:16px; }
+.unit { text-align:left; background:#fff; border:4px solid var(--frame); border-radius:24px; padding:20px; display:flex; flex-direction:column; gap:8px; cursor:pointer; font:inherit; }
+.unit:hover { border-color: var(--blue); }
+.chip { display:inline-block; background:#E0EAFB; color:var(--blue); border-radius:999px; padding:4px 12px; font-size:.8rem; font-weight:700; width:fit-content; }
+.tabs { display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+.tab { font:inherit; background:#fff; border:2px solid var(--frame); border-radius:999px; padding:8px 16px; cursor:pointer; }
+.tab.on { background:var(--blue); color:#fff; border-color:var(--blue); }
+.lessons { list-style:none; padding:0; margin:0 0 12px; display:grid; gap:8px; }
+.lessons li { display:flex; justify-content:space-between; padding:10px 14px; background:var(--cream); border-radius:12px; }
+.vocab { display:flex; flex-wrap:wrap; gap:8px; }
