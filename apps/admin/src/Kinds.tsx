@@ -7,9 +7,9 @@ import { NativePlayer } from '@mango/play';
 import { NATIVE_SAMPLES, SAMPLE_VOCAB, isNativeKind } from './samples';
 
 export const CATEGORIES = ['어휘', '표현', '듣기', '말하기', '읽기', '쓰기', '공통'];
-export interface KindRow { key: string; name_ko: string; description: string; category: string; sort: number; active: boolean }
+export interface KindRow { key: string; name_ko: string; name_en?: string; description: string; category: string; sort: number; active: boolean }
 
-/** 활동 템플릿 관리: 목록(영역별), 이름·설명·영역·순서·사용 여부 수정, 입력 항목과 사용 현황 보기 */
+/** 활동 템플릿 관리: 목록(영역별), 이름·설명·영역·사용 여부 수정, 입력 항목과 사용 현황 보기 */
 export function Types() {
   const [rows, setRows] = useState<KindRow[] | null>(null);
   const [use, setUse] = useState<Record<string, { items: number; units: number }>>({});
@@ -18,9 +18,9 @@ export function Types() {
   const [msg, setMsg] = useState<{ t: 'ok' | 'err'; s: string } | null>(null);
 
   async function load() {
-    const r = await supabase.from('activity_types').select('key,name_ko,description,category,sort,active').order('category').order('sort');
+    const r = await supabase.from('activity_types').select('key,name_ko,name_en,description,category,sort,active');
     if (r.error) { setMsg({ t: 'err', s: r.error.message }); return; }
-    setRows((r.data ?? []) as KindRow[]);
+    setRows(((r.data ?? []) as KindRow[]).sort((a, b) => CATEGORIES.indexOf(a.category) - CATEGORIES.indexOf(b.category) || a.sort - b.sort));
     const it = await supabase.from('items').select('template,unit_id').limit(20000);
     const m: Record<string, { items: number; units: Set<string> }> = {};
     ((it.data ?? []) as { template: string; unit_id: string }[]).forEach((x) => { const e = (m[x.template] ??= { items: 0, units: new Set() }); e.items++; e.units.add(x.unit_id); });
@@ -42,11 +42,11 @@ export function Types() {
         <div className="mx-grid">
           <div className="mx-card">
             <table>
-              <thead><tr><th>영역</th><th>이름</th><th>코드</th><th>설명</th><th>문항</th><th>단원</th><th>상태</th></tr></thead>
+              <thead><tr><th style={{ width: "1%" }}>No</th><th>영역</th><th>한글 이름</th><th>영어 이름</th><th>코드</th><th>설명</th><th>문항</th><th>단원</th><th>상태</th></tr></thead>
               <tbody>
-                {shown.map((r) => (
+                {shown.map((r, n) => (
                   <tr key={r.key} className={'mx-click' + (r.key === selKey ? ' mx-sel' : '')} onClick={() => setSelKey(r.key)}>
-                    <td>{r.category}</td><td><b>{r.name_ko}</b></td><td><code>{r.key}</code></td><td className="mx-muted">{r.description}</td>
+                    <td className="mx-muted">{n + 1}</td><td>{r.category}</td><td><b>{r.name_ko}</b></td><td>{r.name_en}</td><td><code>{r.key}</code></td><td className="mx-muted">{r.description}</td>
                     <td>{use[r.key]?.items ?? 0}</td><td>{use[r.key]?.units ?? 0}</td>
                     <td><span className={'mx-chip ' + (r.active ? 'approved' : 'draft')}>{r.active ? '사용' : '숨김'}</span></td>
                   </tr>
@@ -81,7 +81,7 @@ function Detail({ row, use, onSaved }: { row: KindRow; use?: { items: number; un
     if (err) setPmsg(err);
   }
   async function save() {
-    const { error } = await supabase.from('activity_types').update({ name_ko: f.name_ko.trim(), description: f.description, category: f.category, sort: f.sort, active: f.active }).eq('key', row.key);
+    const { error } = await supabase.from('activity_types').update({ name_ko: f.name_ko.trim(), name_en: (f.name_en ?? '').trim(), description: f.description, category: f.category, active: f.active }).eq('key', row.key);
     onSaved(error ? { t: 'err', s: '저장 실패: ' + error.message } : { t: 'ok', s: '저장했어요.' });
   }
   return (
@@ -93,11 +93,13 @@ function Detail({ row, use, onSaved }: { row: KindRow; use?: { items: number; un
             <div className="mx-thumb-in"><NativePlayer key={row.key} title={row.name_ko} items={[NATIVE_SAMPLES[row.key]]} vocab={SAMPLE_VOCAB} onResult={() => {}} onFinish={() => {}} /></div>
           </button>
         )}
-        <label className="mx-f"><span className="mx-fl">이름</span><input value={f.name_ko} onChange={(e) => setF({ ...f, name_ko: e.target.value })} /></label>
+        <div className="mx-row">
+          <label className="mx-f"><span className="mx-fl">한글 이름</span><input value={f.name_ko} onChange={(e) => setF({ ...f, name_ko: e.target.value })} /></label>
+          <label className="mx-f"><span className="mx-fl">영어 이름</span><input value={f.name_en ?? ''} onChange={(e) => setF({ ...f, name_en: e.target.value })} /></label>
+        </div>
         <label className="mx-f"><span className="mx-fl">설명</span><textarea className="mx-ta" rows={2} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></label>
         <div className="mx-row">
           <label className="mx-f"><span className="mx-fl">영역</span><select value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })}>{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select></label>
-          <label className="mx-f"><span className="mx-fl">순서</span><input type="number" style={{ width: 80 }} value={f.sort} onChange={(e) => setF({ ...f, sort: Number(e.target.value) || 0 })} /></label>
           <label className="mx-f mx-chk" style={{ marginTop: 18 }}><input type="checkbox" checked={f.active} onChange={(e) => setF({ ...f, active: e.target.checked })} />사용 (끄면 새 문항을 만들 때 목록에서 숨겨요)</label>
         </div>
         <div className="mx-f"><span className="mx-fl">입력 항목 (이 템플릿으로 문항을 만들 때 채우는 칸)</span>
