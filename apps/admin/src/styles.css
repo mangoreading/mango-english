@@ -3,7 +3,7 @@
 * { box-sizing:border-box; }
 body { margin:0; font-family:'Pretendard Variable', Pretendard, -apple-system, 'Segoe UI', 'Malgun Gothic', sans-serif; font-size:15px; line-height:1.5; background:var(--bg); color:var(--ink); }
 .mx-app { min-height:100vh; }
-.mx-top { position:sticky; top:0; z-index:5; display:flex; align-items:center; gap:28px; padding:0 28px; height:64px; background:var(--navy); color:#fff; }
+.mx-top { position:sticky; top:0; z-index:5; display:flex; align-items:center; gap:28px; padding:0 clamp(16px,2.5vw,48px); height:64px; background:var(--navy); color:#fff; }
 .mx-brand { display:flex; align-items:center; gap:10px; font-size:19px; font-weight:800; white-space:nowrap; }
 .mx-brand i { width:26px; height:26px; background:#fff; display:inline-block; border-radius:3px; }
 .mx-menu { display:flex; gap:6px; }
@@ -12,7 +12,7 @@ body { margin:0; font-family:'Pretendard Variable', Pretendard, -apple-system, '
 .mx-menu button.on { background:var(--navy2); opacity:1; }
 .mx-who { display:flex; align-items:center; gap:14px; font-size:13px; font-weight:600; }
 .mx-out { font:inherit; font-size:13px; font-weight:700; color:#fff; background:var(--navy2); border:0; border-radius:10px; padding:7px 16px; cursor:pointer; }
-.mx-main { max-width:1360px; margin:0 auto; padding:0 28px 80px; }
+.mx-main { width:100%; max-width:1920px; margin:0 auto; padding:0 clamp(16px,2.5vw,48px) 80px; }
 .mx-ph { padding:26px 0 18px; margin-bottom:22px; border-bottom:1px solid var(--line); }
 .mx-ph h1 { margin:0 0 4px; font-size:26px; font-weight:800; letter-spacing:-.3px; }
 .mx-ph p { margin:0; color:var(--sub); font-size:14px; }
@@ -53,7 +53,9 @@ tr.mx-sel { background:var(--soft); } tbody tr.mx-click { cursor:pointer; } tbod
 .mx-chip.rejected { background:#fde4e1; color:var(--err); } .mx-chip.draft { background:var(--soft); color:var(--sub); }
 .mx-grid { display:grid; grid-template-columns:1.3fr 1fr; gap:16px; align-items:start; }
 .mx-grid > .mx-card { margin:0; }
-.mx-scroll { max-height:660px; overflow:auto; }
+.mx-scroll { max-height:max(520px,calc(100vh - 250px)); overflow:auto; }
+@media (min-width:1600px) { .mx-grid { grid-template-columns:1.5fr 1fr; gap:20px; } }
+@media (max-width:1280px) { .mx-grid { grid-template-columns:1fr 1fr; } }
 @media (max-width:900px) { .mx-grid { grid-template-columns:1fr; } .mx-top { flex-wrap:wrap; height:auto; padding:10px 16px; gap:10px; } }
 .mx-form { display:flex; flex-direction:column; gap:12px; }
 .mx-f { display:flex; flex-direction:column; gap:5px; }
