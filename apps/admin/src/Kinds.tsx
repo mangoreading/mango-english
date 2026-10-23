@@ -3,6 +3,7 @@ import { supabase } from './supabase';
 import { PageHead } from './ui';
 import { specOf } from './ItemForm';
 import { openPreview } from './ui';
+import { NativePlayer } from '@mango/play';
 import { NATIVE_SAMPLES, SAMPLE_VOCAB, isNativeKind } from './samples';
 
 export const CATEGORIES = ['어휘', '표현', '듣기', '말하기', '읽기', '쓰기', '공통'];
@@ -87,6 +88,11 @@ function Detail({ row, use, onSaved }: { row: KindRow; use?: { items: number; un
     <>
       <h3>{row.name_ko} <code className="mx-muted">{row.key}</code></h3>
       <div className="mx-form">
+        {isNativeKind(row.key) && (
+          <button type="button" className="mx-thumb" onClick={sample} title="눌러서 크게 보기" aria-label="샘플 미리보기 화면 (눌러서 크게 보기)">
+            <div className="mx-thumb-in"><NativePlayer key={row.key} title="미리보기" items={[NATIVE_SAMPLES[row.key]]} vocab={SAMPLE_VOCAB} onResult={() => {}} onFinish={() => {}} /></div>
+          </button>
+        )}
         <label className="mx-f"><span className="mx-fl">이름</span><input value={f.name_ko} onChange={(e) => setF({ ...f, name_ko: e.target.value })} /></label>
         <label className="mx-f"><span className="mx-fl">설명</span><textarea className="mx-ta" rows={2} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></label>
         <div className="mx-row">

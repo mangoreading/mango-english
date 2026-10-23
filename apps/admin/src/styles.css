@@ -72,3 +72,9 @@ td { white-space:nowrap; }
 td.mx-muted { white-space:normal; min-width:160px; }
 .mx-f > .mx-btn { align-self:flex-start; }
 .mx-mini td { white-space:normal; }
+
+/* 활동 템플릿 샘플 축소 화면: 1280×800 실제 화면을 줄여서 보여 준다 */
+.mx-thumb { display:block; width:416px; flex:none; aspect-ratio:8/5; padding:0; border:1px solid var(--line); border-radius:12px; overflow:hidden; position:relative; cursor:pointer; background:#fff; box-shadow:0 1px 3px rgba(21,43,82,.08); }
+.mx-thumb:hover { border-color:var(--navy); }
+.mx-thumb-in { position:absolute; left:0; top:0; width:1280px; height:800px; transform:scale(.325); transform-origin:0 0; pointer-events:none; }
+.mx-thumb-in .nv-overlay { font-size:16px; }
