@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js';
 import { ActivityItem } from '@mango/schema';
 import { configProblem, configured, supabase } from './supabase';
 import { preview } from './legacy';
+import { Templates, Types, UnitFlow } from './Flow';
 
 type Status = 'draft' | 'review' | 'approved' | 'rejected';
 const STATUSES: Status[] = ['draft', 'review', 'approved', 'rejected'];
@@ -66,7 +67,21 @@ function Gate({ session }: { session: Session }) {
   if (role !== 'hq_admin' && role !== 'hq_editor') {
     return <div className="mx-card"><h3>권한이 없어요</h3><p className="mx-muted">이 계정({session.user.email})은 본사 권한이 없어요. 현재 권한: {role ?? '없음'}. 본사 권한 부여는 Supabase SQL Editor에서 할 수 있어요.</p></div>;
   }
-  return <Units uid={session.user.id} />;
+  return <Main uid={session.user.id} />;
+}
+
+function Main({ uid }: { uid: string }) {
+  const [tab, setTab] = useState<'units' | 'tpl' | 'types'>('units');
+  return (
+    <>
+      <nav className="mx-nav">
+        {([['units', '단원·콘텐츠'], ['tpl', '흐름 템플릿'], ['types', '활동 종류']] as const).map(([k, n]) => <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{n}</button>)}
+      </nav>
+      {tab === 'units' && <Units uid={uid} />}
+      {tab === 'tpl' && <Templates />}
+      {tab === 'types' && <Types />}
+    </>
+  );
 }
 
 function Units({ uid }: { uid: string }) {
@@ -89,7 +104,7 @@ function Units({ uid }: { uid: string }) {
           <thead><tr><th>출판사</th><th>교재</th><th>학년</th><th>Lesson</th><th>제목</th><th>상태</th></tr></thead>
           <tbody>
             {units.map((u) => (
-              <tr key={u.id} onClick={() => setOpen(u)}>
+              <tr key={u.id} className="mx-click" onClick={() => setOpen(u)}>
                 <td>{u.books?.publishers?.name}</td><td>{u.books?.title}</td><td>{u.books?.grade}</td><td>{u.no}</td><td>{u.title}</td>
                 <td><span className={`mx-chip ${u.status}`}>{STATUS_KO[u.status as Status] ?? u.status}</span></td>
               </tr>
@@ -110,6 +125,7 @@ function UnitEditor({ unit, uid, onBack }: { unit: UnitRow; uid: string; onBack:
   const [selId, setSelId] = useState<string | null>(null);
   const [bundleVer, setBundleVer] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
+  const [tab, setTab] = useState<'flow' | 'items'>('flow');
 
   async function load() {
     setLoading(true);
@@ -148,6 +164,12 @@ function UnitEditor({ unit, uid, onBack }: { unit: UnitRow; uid: string; onBack:
     <>
       <button className="mx-link" onClick={onBack}>← 단원 목록</button>
       <h1>Lesson {unit.no} · {unit.title}</h1>
+      <nav className="mx-nav">
+        <button className={tab === 'flow' ? 'on' : ''} onClick={() => setTab('flow')}>학습 흐름</button>
+        <button className={tab === 'items' ? 'on' : ''} onClick={() => setTab('items')}>문항</button>
+      </nav>
+      {tab === 'flow' && <UnitFlow unitId={unit.id} />}
+      {tab === 'items' && <>
       <div className="mx-card">
         <div className="mx-row">
           <span>전체 {items.length}문항</span>
@@ -176,7 +198,7 @@ function UnitEditor({ unit, uid, onBack }: { unit: UnitRow; uid: string; onBack:
               <thead><tr><th>차시</th><th>레벨</th><th>활동</th><th>유형</th><th>내용</th><th>상태</th></tr></thead>
               <tbody>
                 {shown.map((i) => (
-                  <tr key={i.id} className={i.id === selId ? 'mx-sel' : ''} onClick={() => setSelId(i.id)}>
+                  <tr key={i.id} className={'mx-click' + (i.id === selId ? ' mx-sel' : '')} onClick={() => setSelId(i.id)}>
                     <td>{i.lesson}</td><td>{i.level}</td><td>{Math.floor(i.act_idx / 100) + 1}-{(i.act_idx % 100) + 1}</td><td>{i.template}</td>
                     <td className="mx-muted">{summary(i.payload)}</td>
                     <td><span className={`mx-chip ${i.status}`}>{STATUS_KO[i.status]}</span></td>
@@ -190,6 +212,7 @@ function UnitEditor({ unit, uid, onBack }: { unit: UnitRow; uid: string; onBack:
           {sel ? <Editor key={sel.id} item={sel} uid={uid} onSaved={(m) => { setMsg(m); void load(); }} /> : <p className="mx-muted">왼쪽에서 문항을 선택하면 내용을 보고 고칠 수 있어요.</p>}
         </div>
       </div>
+      </>}
     </>
   );
 }
