@@ -80,4 +80,4 @@ td.mx-muted { white-space:normal; min-width:160px; }
 .mx-thumb-in .nv-overlay { font-size:16px; }
 .mx-prev { display:flex; gap:18px; align-items:flex-end; flex-wrap:wrap; }
 .mx-prev-side { display:flex; flex-direction:column; gap:8px; align-items:flex-start; max-width:220px; }
-.mx-no { width:36px; min-width:0; padding-right:2px; color:var(--sub); text-align:center; }
+.mx-no { width:1%; min-width:0 !important; padding:9px 4px 9px 12px; color:var(--sub); text-align:center; white-space:nowrap; }
