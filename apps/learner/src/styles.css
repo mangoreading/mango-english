@@ -30,3 +30,7 @@ input { font:inherit; padding:12px 14px; border:2px solid #CBD6E6; border-radius
 .mx-acts { display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:10px; }
 .mx-act { text-align:left; font:inherit; background:var(--cream); border:2px solid transparent; border-radius:14px; padding:12px 14px; display:flex; flex-direction:column; gap:4px; cursor:pointer; }
 .mx-act:hover { border-color:var(--blue); }
+
+.mx-act.mx-done { background:#E7F6EC; }
+.mx-chip.mx-ok { background:#D8F2E0; color:#1E8E4E; }
+.mx-resume { margin:8px 0 4px; font-size:1.05rem; padding:14px 26px; background:#FF9F1C; color:#1F2A44; }

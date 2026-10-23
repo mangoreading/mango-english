@@ -68,3 +68,32 @@ export async function lessonMeta() {
   return (MG.LESSONS as any[]).map((l) => ({ no: l.no, en: l.en, ko: l.ko, goal: l.goal, color: l.c, acts: (l.acts || []).map((a: any) => ({ t: a.t, ko: a.ko, min: a.min })) }))
     .concat([{ no: 7, en: 'Lesson Check', ko: '성취 확인', goal: '새 문항으로 짧게 확인해요.', color: 'sun', acts: [{ t: 'Lesson Check', ko: '성취 확인', min: 10 }] }]);
 }
+
+/* ---------- 7차시 결과 → 8차시 맞춤, Reading Pack (레거시 엔진의 규칙 사용) ---------- */
+export type TagStats = Record<string, { c: number; t: number }>;
+
+export async function tallyTags(results: PlayResult['results']) {
+  const MG = await loadLegacy();
+  const tags: TagStats = {};
+  Object.keys(MG.TAGS).forEach((t) => (tags[t] = { c: 0, t: 0 }));
+  let review = 0;
+  results.forEach((r: any) => { if (r.tag && tags[r.tag]) { tags[r.tag].t++; if (r.ok) tags[r.tag].c++; } if (r.review) review++; });
+  const plan = MG.makePlan(tags);
+  const correct = Object.values(tags).reduce((s, x) => s + x.c, 0);
+  const total = Object.values(tags).reduce((s, x) => s + x.t, 0);
+  return { tags, plan, review, correct, total };
+}
+
+export async function lesson8(level: string, plan: unknown, tags: TagStats) {
+  const MG = await loadLegacy();
+  const acts = (MG.l8Acts(plan, tags) as any[]).map((a) => ({ t: a.t, ko: a.ko, min: a.min }));
+  const items = (idx: number) => MG.actItems({ no: 8 }, idx, level, plan, tags, {}) as unknown[];
+  return { acts, items };
+}
+
+export interface BookMeta { idx: number; id: string; title: string; ko: string; level: string }
+export async function books(): Promise<{ list: BookMeta[]; items: (idx: number) => unknown[] }> {
+  const MG = await loadLegacy();
+  const list = (MG.BOOKS as any[]).map((b, idx) => ({ idx, id: b.id, title: b.title, ko: b.ko, level: b.L }));
+  return { list, items: (idx: number) => MG.bookItems(MG.BOOKS[idx]) as unknown[] };
+}

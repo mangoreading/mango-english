@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { configProblem, configured, supabase } from './supabase';
 import type { BundleRow, Level } from './types';
-import { lessonMeta, playActivity, type PlayResult } from './legacy';
+import { books, lesson8, lessonMeta, playActivity, tallyTags, type BookMeta, type PlayResult, type TagStats } from './legacy';
 
 const LEVELS: Level[] = ['CORE', 'SUPPORT', 'ADVANCED'];
 const LEVEL_KO: Record<Level, string> = { CORE: '기본', SUPPORT: '도움', ADVANCED: '도전' };
@@ -109,40 +109,88 @@ function Units() {
 
 type Acts = unknown[][];
 interface LMeta { no: number; en: string; ko: string; goal: string; color: string; acts: { t: string; ko: string; min: number }[] }
+interface Prog { stars: number; ok: number; total: number; detail?: { tags: TagStats; plan: unknown; review: number; correct: number; total: number } | null }
+const pkey = (lv: string, no: number, i: number) => `${lv}:${no}:${i}`;
+const stars = (n: number) => '★'.repeat(n) + '☆'.repeat(3 - n);
 
 function UnitView({ row, onBack }: { row: BundleRow; onBack: () => void }) {
-  const [level, setLevel] = useState<Level>('CORE');
+  const lvKey = 'mg:level';
+  const [level, setLevelState] = useState<Level>(() => { try { const v = localStorage.getItem(lvKey) as Level; return LEVELS.includes(v) ? v : 'CORE'; } catch { return 'CORE'; } });
+  const setLevel = (l: Level) => { setLevelState(l); try { localStorage.setItem(lvKey, l); } catch { /* 무시 */ } };
   const [meta, setMeta] = useState<LMeta[]>([]);
   const [err, setErr] = useState('');
+  const [prog, setProg] = useState<Record<string, Prog>>({});
+  const [bk, setBk] = useState<{ list: BookMeta[]; items: (i: number) => unknown[] } | null>(null);
+  const [l8, setL8] = useState<{ acts: { t: string; ko: string; min: number }[]; items: (i: number) => unknown[] } | null>(null);
   const b = row.bundle;
   const lessons = (b.items[level] ?? {}) as Record<string, Acts>;
 
-  useEffect(() => { lessonMeta().then(setMeta).catch((e) => setErr(String(e.message || e))); }, []);
+  const loadProg = async () => {
+    const { data, error } = await supabase.from('activity_progress').select('level, lesson, act_idx, stars, ok, total, detail').eq('unit_id', b.unit.id);
+    if (error) { setErr('진도를 불러오지 못했어요: ' + error.message); return; }
+    const m: Record<string, Prog> = {};
+    (data ?? []).forEach((r: any) => { m[pkey(r.level, r.lesson, r.act_idx)] = { stars: r.stars, ok: r.ok, total: r.total, detail: r.detail }; });
+    setProg(m);
+  };
+  useEffect(() => { void loadProg(); lessonMeta().then(setMeta).catch((e) => setErr(String(e.message || e))); books().then(setBk).catch(() => {}); /* eslint-disable-next-line */ }, []);
 
-  async function save(no: number, res: PlayResult) {
+  const test = prog[pkey(level, 7, 0)];
+  useEffect(() => {
+    setL8(null);
+    if (test?.detail) lesson8(level, test.detail.plan, test.detail.tags).then(setL8).catch((e) => setErr(String(e.message || e)));
+  }, [level, test?.detail]);
+
+  async function save(lesson: number, idx: number, res: PlayResult) {
     const { data } = await supabase.auth.getUser();
     const uid = data.user?.id;
     if (!uid) return;
-    const rows = res.results.filter((r) => r.tag).map((r) => ({ user_id: uid, unit_id: b.unit.id, lesson: no, tag: r.tag, ok: r.ok, hints: r.hint ?? 0 }));
-    if (rows.length) await supabase.from('attempts').insert(rows);
+    const scored = res.results.filter((r) => r.tag);
+    const ok = scored.filter((r) => r.ok).length, total = scored.length;
+    const pct = total ? ok / total : 1;
+    const st = lesson === 7 ? 3 : pct >= 0.9 ? 3 : pct >= 0.6 ? 2 : 1;
+    if (scored.length && lesson < 90) {
+      await supabase.from('attempts').insert(scored.map((r) => ({ user_id: uid, unit_id: b.unit.id, lesson, tag: r.tag, ok: r.ok, hints: r.hint ?? 0 })));
+    }
+    const prev = prog[pkey(level, lesson, idx)];
+    const detail = lesson === 7 ? await tallyTags(res.results) : null;
+    const row = { user_id: uid, unit_id: b.unit.id, level, lesson, act_idx: idx, stars: Math.max(st, prev?.stars ?? 0), ok, total, detail };
+    const { error } = await supabase.from('activity_progress').upsert(row);
+    if (error) setErr('진도를 저장하지 못했어요: ' + error.message); else void loadProg();
+  }
+
+  function run(lesson: number, idx: number, title: string, items: unknown[], color: string | undefined, next: (() => void) | undefined, nextLabel?: string) {
+    playActivity({
+      title, items, level, test: lesson === 7, color, nextLabel,
+      onResult: (res) => { void save(lesson, idx, res); },
+      onFinish: (action) => { if (action === 'next' && next) next(); else if (action === 'again') run(lesson, idx, title, items, color, next, nextLabel); },
+      onExit: () => {},
+    }).catch((e) => setErr(String(e.message || e)));
   }
 
   function start(no: number, idx: number) {
     const acts = lessons[String(no)] ?? [];
     const m = meta.find((x) => x.no === no);
-    const act = acts[idx];
-    if (!act) return;
+    if (!acts[idx]) return;
     const hasNext = idx + 1 < acts.length;
-    playActivity({
-      title: `${no}차시 · ${m?.acts[idx]?.t ?? 'Activity'}`, items: act, level, test: no === 7, color: m?.color,
-      nextLabel: hasNext ? m?.acts[idx + 1]?.t ?? '다음 활동' : undefined,
-      onResult: (res) => { void save(no, res); },
-      onFinish: (action) => { if (action === 'next') start(no, idx + 1); else if (action === 'again') start(no, idx); },
-      onExit: () => {},
-    }).catch((e) => setErr(String(e.message || e)));
+    run(no, idx, `${no}차시 · ${m?.acts[idx]?.t ?? 'Activity'}`, acts[idx], m?.color,
+      hasNext ? () => start(no, idx + 1) : undefined, hasNext ? m?.acts[idx + 1]?.t ?? '다음 활동' : undefined);
+  }
+  function start8(idx: number) {
+    if (!l8) return;
+    const hasNext = idx + 1 < l8.acts.length;
+    run(8, idx, `8차시 · ${l8.acts[idx].t}`, l8.items(idx), 'grape', hasNext ? () => start8(idx + 1) : undefined, hasNext ? l8.acts[idx + 1].t : undefined);
+  }
+  function startBook(i: number) {
+    if (!bk) return;
+    run(90, i, bk.list[i].title, bk.items(i), 'leaf', undefined);
   }
 
+  // 이어하기: 가장 먼저 끝내지 못한 활동
   const nos = Object.keys(lessons).map(Number).sort((a, c) => a - c);
+  let resume: { no: number; idx: number } | null = null;
+  for (const no of nos) { const n = lessons[String(no)].length; for (let i = 0; i < n && !resume; i++) if (!prog[pkey(level, no, i)]) resume = { no, idx: i }; if (resume) break; }
+  const doneCount = (no: number) => lessons[String(no)].filter((_, i) => prog[pkey(level, no, i)]).length;
+
   return (
     <>
       <button className="mx-link" onClick={onBack}>← 목록으로</button>
@@ -151,25 +199,65 @@ function UnitView({ row, onBack }: { row: BundleRow; onBack: () => void }) {
         {LEVELS.map((l) => <button key={l} className={l === level ? 'mx-tab mx-on' : 'mx-tab'} onClick={() => setLevel(l)}>{LEVEL_KO[l]} ({l})</button>)}
       </div>
       {err && <p className="mx-err">{err}</p>}
+      {meta.length > 0 && resume && (
+        <button className="mx-btn mx-resume" onClick={() => start(resume!.no, resume!.idx)}>
+          {Object.keys(prog).some((k) => k.startsWith(level + ':')) ? '이어하기' : '시작하기'} → {resume.no}차시 · {meta.find((x) => x.no === resume!.no)?.acts[resume.idx]?.t}
+        </button>
+      )}
       {nos.map((no) => {
         const m = meta.find((x) => x.no === no);
         const acts = lessons[String(no)];
+        const dc = doneCount(no);
         return (
           <div className="mx-card" key={no}>
-            <h3>{no}차시 · {m?.en ?? ''} <span className="mx-muted">{m?.ko}</span></h3>
+            <h3>{no}차시 · {m?.en ?? ''} <span className="mx-muted">{m?.ko}</span> <span className={dc === acts.length ? 'mx-chip mx-ok' : 'mx-chip'}>{dc}/{acts.length}</span></h3>
             {m && <p className="mx-muted">{m.goal}</p>}
             <div className="mx-acts">
-              {acts.map((a, i) => (
-                <button key={i} className="mx-act" onClick={() => start(no, i)}>
-                  <b>{m?.acts[i]?.t ?? `활동 ${i + 1}`}</b>
-                  <span className="mx-muted">{m?.acts[i]?.ko} · {a.length}문항</span>
-                </button>
-              ))}
+              {acts.map((a, i) => {
+                const p = prog[pkey(level, no, i)];
+                return (
+                  <button key={i} className={p ? 'mx-act mx-done' : 'mx-act'} onClick={() => start(no, i)}>
+                    <b>{p ? '✓ ' : ''}{m?.acts[i]?.t ?? `활동 ${i + 1}`}</b>
+                    <span className="mx-muted">{m?.acts[i]?.ko} · {a.length}문항{p && no !== 7 ? ` · ${stars(p.stars)}` : ''}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         );
       })}
-      <p className="mx-muted">8차시(맞춤 보강)는 다음 단계에서 연결해요.</p>
+
+      <div className="mx-card">
+        <h3>8차시 · Personalized Mastery <span className="mx-muted">내 결과에 맞춘 보강</span></h3>
+        {!test ? <p className="mx-muted">7차시 Lesson Check를 마치면 내 결과에 맞는 8차시가 열려요.</p> : !l8 ? <p className="mx-muted">불러오는 중…</p> : (
+          <div className="mx-acts">
+            {l8.acts.map((a, i) => {
+              const p = prog[pkey(level, 8, i)];
+              return (
+                <button key={i} className={p ? 'mx-act mx-done' : 'mx-act'} onClick={() => start8(i)}>
+                  <b>{p ? '✓ ' : ''}{a.t}</b><span className="mx-muted">{a.ko}{p ? ` · ${stars(p.stars)}` : ''}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {bk && (
+        <div className="mx-card">
+          <h3>Reading Pack <span className="mx-muted">원서 읽기 (차시 학습과 별도)</span></h3>
+          <div className="mx-acts">
+            {bk.list.filter((x) => x.level === level).map((x) => {
+              const p = prog[pkey(level, 90, x.idx)];
+              return (
+                <button key={x.id} className={p ? 'mx-act mx-done' : 'mx-act'} onClick={() => startBook(x.idx)}>
+                  <b>{p ? '✓ ' : ''}{x.title}</b><span className="mx-muted">{x.ko}{p ? ` · ${stars(p.stars)}` : ''}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </>
   );
 }
