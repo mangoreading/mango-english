@@ -72,11 +72,11 @@ function Detail({ row, use, onSaved }: { row: KindRow; use?: { items: number; un
   async function sample() {
     setPmsg('');
     const err = await openPreview(async () => {
-      if (isNativeKind(row.key)) return { kind: 'native', items: [NATIVE_SAMPLES[row.key]], vocab: SAMPLE_VOCAB };
+      if (isNativeKind(row.key)) return { kind: 'native', items: [NATIVE_SAMPLES[row.key]], vocab: SAMPLE_VOCAB, title: row.name_ko };
       const r = await supabase.from('items').select('payload').eq('template', row.key).eq('status', 'approved').limit(1);
       const p = r.data?.[0]?.payload;
       if (!p) return '아직 승인된 문항이 없어서 보여줄 샘플이 없어요. 이 템플릿으로 문항을 하나 만들어 승인한 뒤 다시 눌러 주세요.';
-      return { kind: 'legacy', items: [p], level: 'CORE' };
+      return { kind: 'legacy', items: [p], level: 'CORE', title: row.name_ko };
     });
     if (err) setPmsg(err);
   }
@@ -90,7 +90,7 @@ function Detail({ row, use, onSaved }: { row: KindRow; use?: { items: number; un
       <div className="mx-form">
         {isNativeKind(row.key) && (
           <button type="button" className="mx-thumb" onClick={sample} title="눌러서 크게 보기" aria-label="샘플 미리보기 화면 (눌러서 크게 보기)">
-            <div className="mx-thumb-in"><NativePlayer key={row.key} title="미리보기" items={[NATIVE_SAMPLES[row.key]]} vocab={SAMPLE_VOCAB} onResult={() => {}} onFinish={() => {}} /></div>
+            <div className="mx-thumb-in"><NativePlayer key={row.key} title={row.name_ko} items={[NATIVE_SAMPLES[row.key]]} vocab={SAMPLE_VOCAB} onResult={() => {}} onFinish={() => {}} /></div>
           </button>
         )}
         <label className="mx-f"><span className="mx-fl">이름</span><input value={f.name_ko} onChange={(e) => setF({ ...f, name_ko: e.target.value })} /></label>

@@ -132,7 +132,7 @@ export function Items({ unitId, uid }: { unitId: string; uid: string }) {
           {!loading && !shown.length && <p className="mx-muted">조건에 맞는 문항이 없어요.</p>}
         </div>
         <div className="mx-card">
-          {sel ? <Editor key={sel.id + ':' + sel.version} item={sel} siblings={items.filter((i) => i.step_id === sel.step_id && i.level === sel.level)} steps={steps} keys={keys} vocab={vocab} uid={uid}
+          {sel ? <Editor kindName={kindName} key={sel.id + ':' + sel.version} item={sel} siblings={items.filter((i) => i.step_id === sel.step_id && i.level === sel.level)} steps={steps} keys={keys} vocab={vocab} uid={uid}
             onSaved={(m, id) => { setMsg(m); if (id === null) setSelId(null); void load(); }} /> : <p className="mx-muted">왼쪽에서 문항을 선택하면 내용을 보고 고칠 수 있어요.</p>}
         </div>
       </div>
@@ -154,7 +154,7 @@ function AddBar({ kinds, steps, level, step, onAdd, onCancel }: { kinds: KindRow
   );
 }
 
-function Editor({ item, siblings, steps, keys, vocab, uid, onSaved }: { item: ItemRow; siblings: ItemRow[]; steps: StepInfo[]; keys: string[]; vocab: VocabOpt[]; uid: string; onSaved: (m: NonNullable<Msg>, id?: string | null) => void }) {
+function Editor({ kindName, item, siblings, steps, keys, vocab, uid, onSaved }: { kindName: (k: string) => string; item: ItemRow; siblings: ItemRow[]; steps: StepInfo[]; keys: string[]; vocab: VocabOpt[]; uid: string; onSaved: (m: NonNullable<Msg>, id?: string | null) => void }) {
   const [obj, setObj] = useState<Record<string, any>>(item.payload);
   const [status, setStatus] = useState<Status>(item.status);
   const [stepId, setStepId] = useState(item.step_id ?? '');
@@ -207,7 +207,7 @@ function Editor({ item, siblings, steps, keys, vocab, uid, onSaved }: { item: It
   }
   async function doPreview() {
     const o = check(); if (!o) return;
-    const err = await openPreview(() => (isNativeKind(o.k) ? { kind: 'native', items: [o], vocab: nativeVocab(o, vocab) } : { kind: 'legacy', items: [o], level: item.level }));
+    const err = await openPreview(() => (isNativeKind(o.k) ? { kind: 'native', items: [o], vocab: nativeVocab(o, vocab), title: kindName(o.k) } : { kind: 'legacy', items: [o], level: item.level, title: kindName(o.k) }));
     if (err) setProblems([err]);
   }
   function toggleRaw() {

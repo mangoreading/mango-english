@@ -8,7 +8,7 @@ export function PageHead({ title, sub }: { title: string; sub?: ReactNode }) {
 }
 
 /* ===== 활동 미리보기: 1280×800 별도 창에서 학습앱과 같은 화면으로 재생한다 ===== */
-export interface PreviewData { kind: 'native' | 'legacy'; items: Record<string, any>[]; vocab?: VWord[]; level?: string } // eslint-disable-line @typescript-eslint/no-explicit-any
+export interface PreviewData { kind: 'native' | 'legacy'; items: Record<string, any>[]; vocab?: VWord[]; level?: string; title?: string } // eslint-disable-line @typescript-eslint/no-explicit-any
 const KEY = 'mx:preview';
 
 /** 팝업 차단을 피하려고 클릭 직후 창을 먼저 열고, 준비가 끝나면 내용을 채운다. prepare 가 문자열을 돌려주면 그 안내를 창에 보여 주고 닫는다. */
@@ -29,11 +29,11 @@ export function PreviewPage() {
   const [d] = useState<PreviewData | null>(() => { try { return JSON.parse(localStorage.getItem(KEY) ?? 'null'); } catch { return null; } });
   const [n, setN] = useState(0);
   useEffect(() => {
-    document.title = '미리보기';
+    document.title = d?.title ?? '미리보기';
     if (d?.kind === 'legacy') {
       import('./legacy').then(({ loadLegacy }) => loadLegacy()).then((MG) => {
         MG.play({
-          title: '미리보기', items: d.items, level: d.level ?? 'CORE', mode: 'practice', color: 'mango', onExit: () => window.close(),
+          title: d.title ?? '미리보기', items: d.items, level: d.level ?? 'CORE', mode: 'practice', color: 'mango', onExit: () => window.close(),
           onDone: (_r: unknown, root: HTMLElement) => {
             root.innerHTML = '<div class="result"><div class="r-card"><h1 class="disp">미리보기 끝</h1><div class="r-btns"><button class="btn big" id="x">창 닫기</button></div></div></div>';
             (root.querySelector('#x') as HTMLElement).onclick = () => window.close();
@@ -44,5 +44,5 @@ export function PreviewPage() {
   }, [d]);
   if (!d) return <p style={{ padding: 40 }}>미리보기 데이터가 없어요. 관리자 화면에서 미리보기 버튼을 다시 눌러 주세요.</p>;
   if (d.kind === 'legacy') return null;
-  return <NativePlayer key={n} title="미리보기" items={d.items} vocab={d.vocab ?? []} onResult={() => {}} onFinish={(a) => { if (a === 'again') setN(n + 1); else window.close(); }} />;
+  return <NativePlayer key={n} title={d.title ?? '미리보기'} items={d.items} vocab={d.vocab ?? []} onResult={() => {}} onFinish={(a) => { if (a === 'again') setN(n + 1); else window.close(); }} />;
 }
