@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { imgSrc, norm, say, shuffle, type KindProps, type Res } from './common';
+import { imgSrc, norm, say, sayThen, shuffle, type KindProps, type Res } from './common';
 
 const T = 'vocab';
 const Pic = ({ src, cls }: { src: string | null; cls?: string }) => (src ? <img className={cls ?? 'nv-img'} src={imgSrc(src)} alt="" draggable={false} /> : <div className={cls ?? 'nv-img'} />);
@@ -134,15 +134,17 @@ function MatchBoard({ words, mode, onDone }: { words: KindProps['words']; mode: 
   const textOf = (k: string) => words.find((w) => w.key === k)!;
   function tap(c: Card) {
     if (matched.has(c.key) || flash.length || pop) return;
-    if (c.t === 'snd' || c.t === 'en') say(textOf(c.key).en);
+    const isMatch = !!sel && sel.id !== c.id && sel.t !== c.t && sel.key === c.key;
+    if (!isMatch && (c.t === 'snd' || c.t === 'en')) say(textOf(c.key).en); // 맞았을 때는 가운데 카드에서 읽어 준다(끊기지 않게)
     if (!sel) { setSel(c); return; }
     if (sel.id === c.id) { setSel(null); return; }
     if (sel.t === c.t) { setSel(c); return; }
     if (sel.key === c.key) {
       const w = textOf(c.key);
       setMatched(new Set(matched).add(c.key)); setSel(null); setPop(w);
-      setTimeout(() => say(w.en), 350); // 한 번 더 읽어 준다
-      setTimeout(() => setPop(null), 1900);
+      // 가운데 카드가 뜨면 단어를 끝까지 읽어 주고, 다 읽은 뒤(최소 1.6초) 카드를 닫는다
+      const t0 = Date.now();
+      setTimeout(() => sayThen(w.en, () => setTimeout(() => setPop(null), Math.max(600, 1600 - (Date.now() - t0)))), 250);
       return;
     }
     setWrongKeys(new Set(wrongKeys).add(sel.key).add(c.key));

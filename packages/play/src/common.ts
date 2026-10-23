@@ -16,6 +16,18 @@ export function say(text: string) {
   } catch { /* 소리가 안 되는 환경이면 조용히 넘어간다 */ }
 }
 
+/** 읽어 주고, 다 읽으면 done()을 부른다. 소리가 안 되는 환경이거나 끝 신호가 안 오면 3초 뒤에 부른다. */
+export function sayThen(text: string, done: () => void) {
+  let fin = false; const end = () => { if (!fin) { fin = true; done(); } };
+  setTimeout(end, 3000);
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US'; u.rate = 0.85; u.onend = end; u.onerror = end;
+    speechSynthesis.speak(u);
+  } catch { end(); }
+}
+
 export function shuffle<T>(a: T[]): T[] {
   const r = [...a];
   for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; }
