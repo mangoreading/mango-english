@@ -5,7 +5,7 @@ import { Templates, UnitFlow } from './Flow';
 import { Types } from './Kinds';
 import { Items } from './Items';
 import { UnitVocab } from './Vocab';
-import { PageHead } from './ui';
+import { PageHead, PreviewLayer } from './ui';
 
 export type Tab = 'units' | 'tpl' | 'types';
 const TABS: [Tab, string][] = [['units', '단원·콘텐츠'], ['tpl', '흐름 템플릿'], ['types', '활동 템플릿']];
@@ -39,6 +39,7 @@ function Shell({ children, session, tab, setTab }: { children: React.ReactNode; 
         {session && <span className="mx-who"><span>{session.user.email}</span><button className="mx-out" onClick={() => supabase.auth.signOut()}>로그아웃</button></span>}
       </header>
       <main className="mx-main">{children}</main>
+      <PreviewLayer />
     </div>
   );
 }

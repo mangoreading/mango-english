@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { configProblem, configured, supabase } from './supabase';
 import type { BundleRow, Level } from './types';
-import { NativePlayer, type NativeResult } from './play/Player';
-import { isNative, type VWord } from './play/common';
+import { NativePlayer, isNative, type NativeResult, type VWord } from '@mango/play';
+import '@mango/play/styles.css';
 import { books, lesson8, lessonMeta, playActivity, tallyTags, type BookMeta, type PlayResult, type TagStats } from './legacy';
 
 const LEVELS: Level[] = ['CORE', 'SUPPORT', 'ADVANCED'];

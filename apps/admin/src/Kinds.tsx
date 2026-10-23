@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from './supabase';
 import { PageHead } from './ui';
 import { specOf } from './ItemForm';
+import { showNative } from './ui';
+import { preview } from './legacy';
+import { NATIVE_SAMPLES, SAMPLE_VOCAB, isNativeKind } from './samples';
 
 export const CATEGORIES = ['어휘', '표현', '듣기', '말하기', '읽기', '쓰기', '공통'];
 export interface KindRow { key: string; name_ko: string; description: string; category: string; sort: number; active: boolean }
@@ -65,6 +68,15 @@ function Detail({ row, use, onSaved }: { row: KindRow; use?: { items: number; un
   const [f, setF] = useState(row);
   const dirty = JSON.stringify(f) !== JSON.stringify(row);
   const fields = specOf(row.key);
+  const [pmsg, setPmsg] = useState('');
+  async function sample() {
+    setPmsg('');
+    if (isNativeKind(row.key)) { showNative([NATIVE_SAMPLES[row.key]], SAMPLE_VOCAB); return; }
+    const r = await supabase.from('items').select('payload').eq('template', row.key).eq('status', 'approved').limit(1);
+    const p = r.data?.[0]?.payload;
+    if (!p) { setPmsg('아직 승인된 문항이 없어서 보여줄 샘플이 없어요. 이 템플릿으로 문항을 하나 만들어 승인한 뒤 다시 눌러 주세요.'); return; }
+    try { await preview([p], 'CORE'); } catch (e) { setPmsg('미리보기를 열지 못했어요: ' + (e as Error).message); }
+  }
   async function save() {
     const { error } = await supabase.from('activity_types').update({ name_ko: f.name_ko.trim(), description: f.description, category: f.category, sort: f.sort, active: f.active }).eq('key', row.key);
     onSaved(error ? { t: 'err', s: '저장 실패: ' + error.message } : { t: 'ok', s: '저장했어요.' });
@@ -85,6 +97,8 @@ function Detail({ row, use, onSaved }: { row: KindRow; use?: { items: number; un
             <tbody>{fields.map((x, i) => <tr key={i}><td>{x.label}</td><td className="mx-muted">{x.type}</td><td>{x.req ? '●' : ''}</td></tr>)}</tbody></table>
           <span className="mx-muted">입력 항목을 바꾸거나 늘리려면 Claude에게 요청해 주세요. (화면 코드와 함께 바뀌어요)</span>
         </div>
+        <div className="mx-row"><button className="mx-btn" onClick={sample}>▶ 샘플 미리보기</button><span className="mx-muted">학습앱과 같은 화면으로 직접 눌러 볼 수 있어요.</span></div>
+        {pmsg && <p className="mx-err">{pmsg}</p>}
         <p className="mx-muted">사용 현황: 문항 {use?.items ?? 0}개 · 단원 {use?.units ?? 0}개</p>
         <div className="mx-row"><button className="mx-btn" disabled={!dirty || !f.name_ko.trim()} onClick={save}>저장</button><button className="mx-btn sec" disabled={!dirty} onClick={() => setF(row)}>되돌리기</button></div>
       </div>

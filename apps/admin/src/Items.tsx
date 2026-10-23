@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from './supabase';
 import { preview } from './legacy';
+import { showNative } from './ui';
+import { isNativeKind, nativeVocab } from './samples';
 import { ItemForm, KIND_NAME, defaultItem, validate, type VocabOpt } from './ItemForm';
 import type { KindRow } from './Kinds';
 
@@ -45,7 +47,7 @@ export function Items({ unitId, uid }: { unitId: string; uid: string }) {
     setSteps(st);
     const at = await supabase.from('activity_types').select('key,name_ko,description,category,sort,active').eq('active', true).order('category').order('sort');
     setKinds((at.data ?? []) as KindRow[]);
-    const v = await supabase.from('unit_vocab').select('vocab(key,en,ko)').eq('unit_id', unitId);
+    const v = await supabase.from('unit_vocab').select('vocab(key,en,ko,image_path)').eq('unit_id', unitId);
     setVocab(((v.data ?? []) as any[]).map((r) => r.vocab).filter(Boolean).sort((a: VocabOpt, b: VocabOpt) => a.en.localeCompare(b.en)));
     const b = await supabase.from('unit_bundles').select('version').eq('unit_id', unitId).order('version', { ascending: false }).limit(1);
     setBundleVer(b.data?.[0]?.version ?? null);
@@ -204,7 +206,10 @@ function Editor({ item, siblings, steps, keys, vocab, uid, onSaved }: { item: It
     const { error } = await supabase.from('items').delete().eq('id', item.id);
     onSaved(error ? { t: 'err', s: '삭제 실패: ' + error.message } : { t: 'ok', s: '삭제했어요.' }, error ? undefined : null);
   }
-  async function doPreview() { const o = check(); if (o) await preview([o], item.level); }
+  async function doPreview() {
+    const o = check(); if (!o) return;
+    if (isNativeKind(o.k)) showNative([o], nativeVocab(o, vocab)); else await preview([o], item.level);
+  }
   function toggleRaw() {
     if (raw === null) setRaw(JSON.stringify(obj, null, 2));
     else { try { setObj(JSON.parse(raw)); setRaw(null); setProblems([]); } catch (e) { setProblems(['JSON 형식이 올바르지 않아요: ' + (e as Error).message]); } }

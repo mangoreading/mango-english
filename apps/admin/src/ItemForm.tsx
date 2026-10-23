@@ -14,7 +14,7 @@ export const KIND_NAME: Record<string, string> = {
   fill: '빈칸 채우기', write: '쓰기', compose: '작문', speak: '말하기', fade: '점점 지우기', dialog: '대화',
   vcards: '단어 카드 보기', vtype1: '단어 따라 쓰기', vspell: '철자 완성', vmatch: '단어-뜻 매칭', vsound: '소리-단어 매칭', vwrite: '그림 보고 쓰기',
 };
-export interface VocabOpt { key: string; en: string; ko: string }
+export interface VocabOpt { key: string; en: string; ko: string; image_path?: string | null }
 export const TAGS: [string, string][] = [['vocab', '어휘'], ['expr', '표현'], ['listen', '듣기'], ['speak', '말하기'], ['read', '읽기'], ['write', '쓰기']];
 
 const persona = (req: boolean): Field => ({ k: 'persona', label: '말하는 사람', t: 'obj', req, fields: [{ k: 'key', label: '인물 코드', t: 'text', req: true }, { k: 'line', label: '상황 한 줄', t: 'text', req: true }] });
