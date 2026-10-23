@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from './supabase';
-import { preview } from './legacy';
-import { showNative } from './ui';
+import { openPreview } from './ui';
 import { isNativeKind, nativeVocab } from './samples';
 import { ItemForm, KIND_NAME, defaultItem, validate, type VocabOpt } from './ItemForm';
 import type { KindRow } from './Kinds';
@@ -208,7 +207,8 @@ function Editor({ item, siblings, steps, keys, vocab, uid, onSaved }: { item: It
   }
   async function doPreview() {
     const o = check(); if (!o) return;
-    if (isNativeKind(o.k)) showNative([o], nativeVocab(o, vocab)); else await preview([o], item.level);
+    const err = await openPreview(() => (isNativeKind(o.k) ? { kind: 'native', items: [o], vocab: nativeVocab(o, vocab) } : { kind: 'legacy', items: [o], level: item.level }));
+    if (err) setProblems([err]);
   }
   function toggleRaw() {
     if (raw === null) setRaw(JSON.stringify(obj, null, 2));

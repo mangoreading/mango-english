@@ -2,8 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from './supabase';
 import { PageHead } from './ui';
 import { specOf } from './ItemForm';
-import { showNative } from './ui';
-import { preview } from './legacy';
+import { openPreview } from './ui';
 import { NATIVE_SAMPLES, SAMPLE_VOCAB, isNativeKind } from './samples';
 
 export const CATEGORIES = ['어휘', '표현', '듣기', '말하기', '읽기', '쓰기', '공통'];
@@ -71,11 +70,14 @@ function Detail({ row, use, onSaved }: { row: KindRow; use?: { items: number; un
   const [pmsg, setPmsg] = useState('');
   async function sample() {
     setPmsg('');
-    if (isNativeKind(row.key)) { showNative([NATIVE_SAMPLES[row.key]], SAMPLE_VOCAB); return; }
-    const r = await supabase.from('items').select('payload').eq('template', row.key).eq('status', 'approved').limit(1);
-    const p = r.data?.[0]?.payload;
-    if (!p) { setPmsg('아직 승인된 문항이 없어서 보여줄 샘플이 없어요. 이 템플릿으로 문항을 하나 만들어 승인한 뒤 다시 눌러 주세요.'); return; }
-    try { await preview([p], 'CORE'); } catch (e) { setPmsg('미리보기를 열지 못했어요: ' + (e as Error).message); }
+    const err = await openPreview(async () => {
+      if (isNativeKind(row.key)) return { kind: 'native', items: [NATIVE_SAMPLES[row.key]], vocab: SAMPLE_VOCAB };
+      const r = await supabase.from('items').select('payload').eq('template', row.key).eq('status', 'approved').limit(1);
+      const p = r.data?.[0]?.payload;
+      if (!p) return '아직 승인된 문항이 없어서 보여줄 샘플이 없어요. 이 템플릿으로 문항을 하나 만들어 승인한 뒤 다시 눌러 주세요.';
+      return { kind: 'legacy', items: [p], level: 'CORE' };
+    });
+    if (err) setPmsg(err);
   }
   async function save() {
     const { error } = await supabase.from('activity_types').update({ name_ko: f.name_ko.trim(), description: f.description, category: f.category, sort: f.sort, active: f.active }).eq('key', row.key);
