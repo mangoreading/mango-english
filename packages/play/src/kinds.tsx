@@ -111,10 +111,19 @@ export function VSpell({ item, words, onDone }: KindProps) {
 interface Card { id: string; key: string; t: 'en' | 'ko' | 'snd'; label: string }
 /** ④ 단어-뜻 매칭 / ⑤ 소리-단어 매칭: 카드 두 장을 차례로 눌러 짝을 맞춘다. */
 function MatchBoard({ words, mode, onDone }: { words: KindProps['words']; mode: 'ko' | 'snd'; onDone: (r: Res[]) => void }) {
-  const cards = useMemo(() => shuffle<Card>(words.flatMap((w) => [
-    { id: w.key + ':en', key: w.key, t: 'en' as const, label: w.en },
-    mode === 'ko' ? { id: w.key + ':ko', key: w.key, t: 'ko' as const, label: w.ko } : { id: w.key + ':snd', key: w.key, t: 'snd' as const, label: '' },
-  ])), [words, mode]);
+  // 4열 배치: 1열·4열 = 바깥 종류(단어-뜻이면 영어 단어, 소리-단어이면 소리), 2열·3열 = 안쪽 종류(한글 뜻 / 영어 단어)
+  const cards = useMemo(() => {
+    const outer = shuffle<Card>(words.map((w) => mode === 'ko'
+      ? { id: w.key + ':en', key: w.key, t: 'en' as const, label: w.en }
+      : { id: w.key + ':snd', key: w.key, t: 'snd' as const, label: '' }));
+    const inner = shuffle<Card>(words.map((w) => mode === 'ko'
+      ? { id: w.key + ':ko', key: w.key, t: 'ko' as const, label: w.ko }
+      : { id: w.key + ':en', key: w.key, t: 'en' as const, label: w.en }));
+    const rows = Math.ceil(words.length / 2);
+    const out: (Card | null)[] = [];
+    for (let r = 0; r < rows; r++) out.push(outer[r] ?? null, inner[r] ?? null, inner[rows + r] ?? null, outer[rows + r] ?? null);
+    return out;
+  }, [words, mode]);
   const [sel, setSel] = useState<Card | null>(null);
   const [matched, setMatched] = useState<Set<string>>(new Set());
   const [wrongKeys, setWrongKeys] = useState<Set<string>>(new Set());
@@ -135,7 +144,8 @@ function MatchBoard({ words, mode, onDone }: { words: KindProps['words']; mode: 
   return (
     <div className="nv-body">
       <div className={'nv-grid4'}>
-        {cards.map((c) => {
+        {cards.map((c, n) => {
+          if (!c) return <div key={'x' + n} />;
           const cls = ['nv-m', c.t === 'en' ? 'nv-m-en' : c.t === 'snd' ? 'nv-m-snd' : 'nv-m-ko'];
           if (matched.has(c.key)) cls.push('nv-m-done'); if (sel?.id === c.id) cls.push('nv-m-sel'); if (flash.includes(c.id)) cls.push('nv-shake', 'nv-m-bad');
           return <button key={c.id} className={cls.join(' ')} onClick={() => tap(c)}>{c.t === 'snd' ? '🔊' : c.label}</button>;
