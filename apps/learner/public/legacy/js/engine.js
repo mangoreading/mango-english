@@ -379,23 +379,35 @@
     };
     const selfOk = () => { if (done) return; done = true; if (a.test) { a.flagReview(); a.finish(); } else a.finish('잘했어요!', '소리 내어 말했어요'); lockUI(); };
     const lockUI = () => { const m = a.el.querySelector('#mic'); if (m) m.disabled = true; const s = a.el.querySelector('#self'); if (s) s.hidden = true; if (!shown) { shown = true; const t = a.el.querySelector('.target'); t.classList.remove('hidden'); t.textContent = it.target; } };
+    let active = false, lastEnd = 0;
     const listen = () => {
       if (done) return; const S = SRc(); const mic = a.el.querySelector('#mic'), mt = a.el.querySelector('#mt');
-      try {
-        stopSay(); rec = new S(); rec.lang = 'en-US'; rec.maxAlternatives = 3; rec.interimResults = false;
-        rec.onresult = (e) => {
-          mic.classList.remove('rec'); const alts = [...e.results[0]].map((x) => x.transcript);
-          const ok = speechOk(alts, it.accept || [it.target]);
-          mt.textContent = `들린 말: "${alts[0]}"`;
-          if (!ok) { mt.textContent = '다시 한번 말해 보세요'; mt.classList.add('bad'); return; }
-          mt.classList.remove('bad'); done = true; lockUI();
-          if (a.test) { a.finish(); } else a.finish('정확해요!', `"${alts[0]}"`);
-          const pb = a.root.querySelector('#prim'); if (pb && pb.textContent === '계속') pb.textContent = '확인';
-        };
-        rec.onerror = (e) => { mic.classList.remove('rec'); if (['not-allowed', 'service-not-allowed', 'audio-capture'].includes(e.error)) mt.textContent = '마이크 연결을 확인하세요'; else if (e.error === 'network') mt.textContent = '인터넷 연결을 확인하세요'; else mt.textContent = '다시 한번 말해 보세요'; };
-        rec.onend = () => { mic.classList.remove('rec'); if (!done && mt.textContent === '듣고 있어요…') mt.textContent = '다시 한번 말해 보세요'; };
-        mic.classList.add('rec'); mt.textContent = '듣고 있어요…'; rec.start();
-      } catch (e) { mt.textContent = '음성 인식을 시작할 수 없어요'; const s = a.el.querySelector('#self'); if (s) s.hidden = false; }
+      if (active) { try { rec && rec.abort(); } catch (e) {} return; } // 듣는 중에 또 누르면 중단 → 끝난 뒤 다시 누르면 시작
+      const wait = Math.max(0, 450 - (Date.now() - lastEnd)); // 직전 인식이 완전히 끝난 뒤에 시작(크롬 aborted 방지)
+      active = true; mic.classList.add('rec'); mt.classList.remove('bad'); mt.textContent = '듣고 있어요…';
+      const finish = () => { active = false; lastEnd = Date.now(); mic.classList.remove('rec'); mic.disabled = !!done; };
+      setTimeout(() => {
+        try {
+          stopSay(); rec = new S(); rec.lang = 'en-US'; rec.maxAlternatives = 3; rec.interimResults = false; rec.continuous = false;
+          let got = false;
+          rec.onresult = (e) => {
+            got = true; const alts = [...e.results[0]].map((x) => x.transcript);
+            const ok = speechOk(alts, it.accept || [it.target]);
+            if (!ok) { mt.textContent = `다시 한번 말해 보세요 (들린 말: "${alts[0]}")`; mt.classList.add('bad'); return; }
+            mt.textContent = `들린 말: "${alts[0]}"`; done = true; lockUI();
+            if (a.test) { a.finish(); } else a.finish('정확해요!', `"${alts[0]}"`);
+            const pb = a.root.querySelector('#prim'); if (pb && pb.textContent === '계속') pb.textContent = '확인';
+          };
+          rec.onerror = (e) => {
+            got = true;
+            if (['not-allowed', 'service-not-allowed', 'audio-capture'].includes(e.error)) mt.textContent = '마이크 연결을 확인하세요';
+            else if (e.error === 'network') mt.textContent = '인터넷 연결을 확인하세요';
+            else mt.textContent = '다시 한번 말해 보세요';
+          };
+          rec.onend = () => { if (!got && !done) mt.textContent = '다시 한번 말해 보세요'; finish(); };
+          rec.start();
+        } catch (e) { finish(); mt.textContent = '다시 한번 말해 보세요'; }
+      }, wait);
     };
     draw();
     if (it.ask) setTimeout(() => MG.say(it.ask), 350);
