@@ -13,10 +13,23 @@
 
   /* ---------- 음성 (TTS / 음성 인식) ---------- */
   let voice = null;
+  const BADV = /\b(albert|bad news|bahh|bells|boing|bubbles|cellos|deranged|good news|hysterical|junior|kathy|organ|princess|ralph|superstar|trinoids|whisper|wobble|zarvox|fred|eddy|flo|grandma|grandpa|reed|rocko|sandy|shelley)\b/i;
+  function vscore(v) {
+    const n = v.name; let s = 0;
+    if (/^en[-_]US$/i.test(v.lang)) s += 100; else if (/^en/i.test(v.lang)) s += 40; else return -1;
+    if (BADV.test(n)) return -1;
+    if (/natural|neural|online/i.test(n)) s += 60;
+    if (/google us english/i.test(n)) s += 50;
+    if (/premium|enhanced|siri/i.test(n)) s += 45;
+    if (/\b(samantha|ava|allison|zoe|evan|nicky|aria|jenny|ana|emma|michelle)\b/i.test(n)) s += 30;
+    if (/microsoft (zira|david|mark)/i.test(n)) s += 5;
+    if (v.localService === false) s += 5;
+    return s;
+  }
   function pickVoice() {
     try {
       const vs = speechSynthesis.getVoices();
-      voice = vs.find((v) => /en[-_]US/i.test(v.lang) && /(Google|Samantha|Aria|Jenny|Natural)/i.test(v.name)) || vs.find((v) => /en[-_]US/i.test(v.lang)) || vs.find((v) => /^en/i.test(v.lang)) || null;
+      voice = vs.map((v) => ({ v, s: vscore(v) })).filter((x) => x.s >= 0).sort((a, b) => b.s - a.s).map((x) => x.v)[0] || null;
     } catch (e) {}
   }
   try { speechSynthesis.onvoiceschanged = pickVoice; pickVoice(); } catch (e) {}
