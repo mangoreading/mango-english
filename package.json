@@ -1,0 +1,8 @@
+{
+  "name": "mango-english",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "build": "cd apps/learner && npm install && npm run build && rm -rf ../../dist && cp -r dist ../../dist"
+  }
+}
