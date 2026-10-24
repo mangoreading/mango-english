@@ -14,6 +14,7 @@ export const SAMPLE_VOCAB: VWord[] = [
   { key: 'umbrella', en: 'umbrella', ko: '우산', image: 'word/umbrella.svg' }, { key: 'gloves', en: 'gloves', ko: '장갑', image: 'word/gloves.svg' },
   { key: 'watch', en: 'watch', ko: '손목시계', image: 'word/watch.svg' }, { key: 'glasses', en: 'glasses', ko: '안경', image: 'word/glasses.svg' },
   { key: 'jeans', en: 'jeans', ko: '청바지', image: 'word/jeans.svg' },
+  { key: 'jackettag', en: 'jacket', ko: '재킷', image: 'word/jacket_tag.png' }, // 이름표·가격표가 그려진 그림 (그림 보고 말하기·역할극·대화 완성 샘플용)
 ];
 const W = SAMPLE_VOCAB.slice(0, 6).map((v) => v.key);
 /** 어휘 6종의 샘플 문항 */
@@ -21,17 +22,17 @@ export const NATIVE_SAMPLES: Record<string, Record<string, unknown>> = {
   vcards: { k: 'vcards', tag: 'vocab', words: W }, vtype1: { k: 'vtype1', tag: 'vocab', words: W },
   vspell: { k: 'vspell', tag: 'vocab', word: 'sunglasses', shown: 6 }, vmatch: { k: 'vmatch', tag: 'vocab', words: W },
   vsound: { k: 'vsound', tag: 'vocab', words: W }, vwrite: { k: 'vwrite', tag: 'vocab', words: W },
-  lookspeak: { k: 'lookspeak', tag: 'speak', pic: 'jacket', label: 'jacket', price: '$16,000', target: 'How much are these jackets?', hint: ['How much are ~?'] },
+  lookspeak: { k: 'lookspeak', tag: 'speak', pic: 'jackettag', target: 'How much are these jackets?', hint: ['How much are ~?'] },
   saykor: { k: 'saykor', tag: 'speak', ko: '16,000원입니다.', target: "They're sixteen thousand won.", hint: ["They're ~."] },
   lspeak: { k: 'lspeak', tag: 'speak', ask: 'How much are these sunglasses?', ko: 'Ken의 가게 / 선글라스 13,000원', target: "They're thirteen thousand won.", hint: ["They're ~ won."] },
   raloud: { k: 'raloud', tag: 'speak', target: "It's fifteen thousand won.", stars: true, fluency: true },
-  role: { k: 'role', tag: 'speak', pic: 'jacket', price: '$ 6,000', lines: ['A: May I help you?', 'B: Yes, please. How much are {{these jackets}}?', 'A: [[They are two thousand]] dollars.', "B: I'll pick them."] },
+  role: { k: 'role', tag: 'speak', pic: 'jackettag', lines: ['A: May I help you?', 'B: Yes, please. How much are {{these jackets}}?', 'A: [[They are two thousand]] dollars.', "B: I'll pick them."] },
   present: { k: 'present', tag: 'speak', text: ['Do you want [[cool pants]]?', 'These pants are [[blue]] and [[yellow]].', 'Look at the [[beautiful butterflies]].', 'They were [[twenty]] dollars.', 'Now, they are [[ten]] dollars.', 'Take them now!'] },
   aitalk: { k: 'aitalk', tag: 'speak', situation: 'You are Omar. You want to buy the watch.', role: 'a watch shop clerk', open: 'Hello! Can I help you?', script: [{ ai: "It's fifteen thousand won.", hint: 'How much ~~~? 로 시작해보세요' }, { ai: "They're two thousand won.", hint: 'How much are they? 라고 물어보세요' }, { ai: 'Thank you! Here you are.', hint: "I'll take it. 이라고 말해 보세요" }], turns: 3 },
   sbuild: { k: 'sbuild', pic: 'cup', tag: 'write', ko: '이거 얼마예요?', ans: 'How much is it?' },
   swrite: { k: 'swrite', pic: 'socks', tag: 'write', ko: '이 양말은 얼마예요?', ans: 'How much are these socks?', starter: 'How much' },
   sfill: { k: 'sfill', pic: 'socks', tag: 'write', ko: '이 양말은 얼마예요?', tpl: 'How much {} these socks?', ans: 'are' },
-  dfill: { k: 'dfill', tag: 'write', pic: 'jacket', tag2: '$60', lines: ['A: How much are these {}?', 'B: They are {} dollars.'], ans: ['jackets|jacket', 'sixty'] },
+  dfill: { k: 'dfill', tag: 'write', pic: 'jackettag', lines: ['A: How much are these {}?', 'B: They are {} dollars.'], ans: ['jackets|jacket', 'sixty'] },
   sscram: { k: 'sscram', pic: 'shoes', tag: 'write', ko: '신발은 얼마인가요?', ans: 'How much are these shoes?' },
   sorder: { k: 'sorder', pic: 'cap', tag: 'write', items: [{ en: 'How much is it?', ko: '이것은 얼마인가요?' }, { en: "It's five thousand won.", ko: '이것은 5,000원이에요.' }, { en: 'How much are they?', ko: '그것들은 얼마예요?' }, { en: "They're two thousand won.", ko: '이것들은 2,000원이에요.' }, { en: "I'll take it.", ko: '그걸로 할게요.' }] },
   mwbank: { k: 'mwbank', pic: 'shoes', tag: 'write', lines: ['Look at these {} shoes.', 'How much are {}?', "They're {} won.", '{} on sale.'], ans: ['bright', 'these shoes', 'twenty thousand', "They're"], extra: [] },
