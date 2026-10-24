@@ -32,11 +32,13 @@ async function callClaudeOnce(system: string, user: string, maxTokens: number): 
   if (!key) throw new Error('ANTHROPIC_API_KEY 가 설정되어 있지 않아요');
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST', headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-    body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, system, messages: [{ role: 'user', content: user }] }),
+    body: JSON.stringify({ model: MODEL, max_tokens: Math.max(maxTokens, 1000), system, messages: [{ role: 'user', content: user }] }),
   });
   if (!r.ok) throw new Error('AI 응답 오류 ' + r.status + ' ' + cut(await r.text(), 200));
   const d = await r.json();
-  return (d.content ?? []).map((c: { text?: string }) => c.text ?? '').join('').trim();
+  const text = (d.content ?? []).map((c: { type?: string; text?: string }) => (c.type === 'text' || c.text ? c.text ?? '' : '')).join('').trim();
+  if (!text) throw new Error('AI가 빈 답을 보냈어요 (stop=' + d.stop_reason + ', blocks=' + (d.content ?? []).map((c: { type?: string }) => c.type).join(',') + ', model=' + MODEL + ')');
+  return text;
 }
 
 Deno.serve(async (req) => {
