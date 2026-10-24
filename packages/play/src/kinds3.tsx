@@ -194,9 +194,10 @@ export function PRead({ item, onDone }: KindProps) {
 export function MText({ item, onDone }: KindProps) {
   const [tab, setTab] = useState<'ex' | 'ko'>('ex'); const lines: string[] = item.text ?? [];
   useEffect(() => { onDone([]); /* eslint-disable-next-line */ }, []);
-  const side: string[] = tab === 'ex' ? item.explain ?? [] : item.ko ? String(item.ko).split('\n') : [];
+  const sideEx: string[] = item.explain ?? []; const sideKo: string[] = item.ko ? String(item.ko).split('\n') : [];
+  const side = tab === 'ex' ? sideEx : sideKo;
   const tabs = useMemo(() => [item.explain?.length && ['ex', '💡 해설'], item.ko && ['ko', '해석']].filter(Boolean) as [string, string][], [item]);
-  const n = Math.max(lines.length, side.length);
+  const n = Math.max(lines.length, sideEx.length, sideKo.length);
   return (
     <div className="nv-body nv-bodyw nv-mtbody">
       <div className="nv-mtwrap">
@@ -208,7 +209,7 @@ export function MText({ item, onDone }: KindProps) {
         {Array.from({ length: n }).map((_, i) => (
           <div key={i} className="nv-mtrow">
             <div className="nv-mtl"><p className="nv-p-lg">{lines[i] != null && <Rich text={lines[i]} />}</p></div>
-            <div className="nv-mtr"><p className="nv-p-md">{side[i] != null && <Rich text={side[i]} />}</p></div>
+            <div className="nv-mtr nv-mtstack">{[['ex', sideEx], ['ko', sideKo]].map(([k, arr]) => <p key={k as string} className={'nv-p-md' + (tab === k ? '' : ' nv-mtoff')}>{(arr as string[])[i] != null && <Rich text={(arr as string[])[i]} />}</p>)}</div>
           </div>))}
       </div>
       <div className="nv-ptools"><button className="nv-listen nv-listen-s" onClick={() => say(lines.map(plain).join(' '))}>🔊 <b>듣기</b></button></div>
