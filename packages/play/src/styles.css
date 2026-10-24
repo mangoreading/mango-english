@@ -432,22 +432,26 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-hint-in .nv-hintbox { top:calc(100% + 12.5em); left:4%; right:4%; }
 .nv-hint-in .nv-hintbox { top:calc(100% + .5em); left:62%; right:0; }
 
-/* ── 스킨: forest (어휘 템플릿 시범 적용) — gieoksoop.com site.css 기준: 크림 #f5f2ea, 네이비 #142a4a, 1px 선 #dcd8cc, 반경 12/16 ── */
-.nv-overlay[data-skin=forest] { --nv-frame:#DCD8CC; --nv-navy:#142A4A; --nv-blue:#1F3A5F; --nv-line:#DCD8CC; --nv-sub:#656D7A; --nv-yellow:#9A5B00; --nv-ok:#2F6B47; --nv-bad:#B3372B;
-  background:#F5F2EA; color:#12161D; font-family:'Pretendard Variable', Pretendard, system-ui, 'Malgun Gothic', Roboto, sans-serif; }
-[data-skin=forest] .nv-head { background:#F5F2EA; border-bottom:1px solid #DCD8CC; }
-[data-skin=forest] .nv-head b, [data-skin=forest] .nv-inst, [data-skin=forest] .nv-q { color:#142A4A; font-weight:800; }
-[data-skin=forest] .nv-dots i { background:#DCD8CC; } [data-skin=forest] .nv-dots i.d1 { background:#142A4A; } [data-skin=forest] .nv-dots i.d2 { background:#9A5B00; }
-[data-skin=forest] .nv-pts { color:#9A5B00; }
-[data-skin=forest] .nv-body { background:#FBFAF6; border:1px solid #DCD8CC; border-radius:16px; box-shadow:0 1px 2px rgba(20,42,74,.05), 0 6px 20px rgba(20,42,74,.06); }
-[data-skin=forest] .nv-card, [data-skin=forest] .nv-big, [data-skin=forest] .nv-opt, [data-skin=forest] .nv-prompt { background:#fff; border:1px solid #DCD8CC; border-radius:12px; }
-[data-skin=forest] .nv-card:hover, [data-skin=forest] .nv-opt:hover:not(:disabled), [data-skin=forest] .nv-tile:hover:not(:disabled) { border-color:#142A4A; background:#fff; }
-[data-skin=forest] .nv-card.nv-heard { border-color:#2F6B47; box-shadow:0 0 0 1px #2F6B47 inset; }
-[data-skin=forest] .nv-card-w.nv-bad { border-color:#B3372B; box-shadow:0 0 0 1px #B3372B inset; }
-[data-skin=forest] .nv-card span, [data-skin=forest] .nv-ko, [data-skin=forest] .nv-hint { color:#656D7A; }
-[data-skin=forest] .nv-input { border:1px solid #DCD8CC; border-radius:12px; background:#fff; }
-[data-skin=forest] .nv-tile { border:1px solid #DCD8CC; border-radius:12px; background:#fff; color:#142A4A; }
-[data-skin=forest] .nv-arrow { border:1.5px solid #142A4A; background:transparent; color:#142A4A; }
-[data-skin=forest] .nv-btn { background:#142A4A; border-radius:12px; }
-[data-skin=forest] .nv-ghost { background:transparent; color:#142A4A; border:1.5px solid #142A4A; }
-[data-skin=forest] .nv-chip { background:#fff; border:1px solid #DCD8CC; color:#142A4A; }
+/* ── 스킨: forest (어휘 템플릿 시범 적용) — 변수 하나로 색 조합을 바꾼다. 플랫·한 가지 포인트색·가는 선 ── */
+.nv-overlay[data-skin=forest] { --sk-bg:#FFFFFF; --sk-panel:#FFFFFF; --sk-ink:#111111; --sk-sub:#8B8B8B; --sk-line:#E6E6E6; --sk-acc:#111111; --sk-ok:#1E8E5A; --sk-bad:#D14B3C; --sk-star:#B9770E;
+  --nv-frame:var(--sk-line); --nv-navy:var(--sk-ink); --nv-blue:var(--sk-acc); --nv-line:var(--sk-line); --nv-sub:var(--sk-sub);
+  background:var(--sk-bg); color:var(--sk-ink); font-family:'Pretendard Variable', Pretendard, system-ui, 'Malgun Gothic', Roboto, sans-serif; }
+.nv-overlay[data-skin=forest][data-v=b] { --sk-bg:#FFFBF2; --sk-ink:#2B2118; --sk-sub:#9A8B77; --sk-line:#F0E4CC; --sk-acc:#F59E0B; }
+.nv-overlay[data-skin=forest][data-v=c] { --sk-bg:#F7F9FC; --sk-ink:#1B2A41; --sk-sub:#7C8AA0; --sk-line:#E3E9F2; --sk-acc:#3B6FE0; }
+[data-skin=forest] .nv-head { background:transparent; border-bottom:1px solid var(--sk-line); }
+[data-skin=forest] .nv-head b, [data-skin=forest] .nv-inst, [data-skin=forest] .nv-q { color:var(--sk-ink); font-weight:700; }
+[data-skin=forest] .nv-dots i { background:var(--sk-line); } [data-skin=forest] .nv-dots i.d1 { background:var(--sk-ink); } [data-skin=forest] .nv-dots i.d2 { background:var(--sk-acc); }
+[data-skin=forest] .nv-pts { color:var(--sk-star); font-weight:600; }
+[data-skin=forest] .nv-body { background:var(--sk-panel); border:1px solid var(--sk-line); border-radius:20px; box-shadow:none; }
+[data-skin=forest] .nv-card, [data-skin=forest] .nv-big, [data-skin=forest] .nv-opt, [data-skin=forest] .nv-prompt { background:var(--sk-panel); border:1px solid var(--sk-line); border-radius:14px; }
+[data-skin=forest] .nv-card:hover, [data-skin=forest] .nv-opt:hover:not(:disabled), [data-skin=forest] .nv-tile:hover:not(:disabled) { border-color:var(--sk-acc); background:var(--sk-panel); }
+[data-skin=forest] .nv-card.nv-heard { border-color:var(--sk-ok); box-shadow:0 0 0 1px var(--sk-ok) inset; }
+[data-skin=forest] .nv-card-w.nv-bad { border-color:var(--sk-bad); box-shadow:0 0 0 1px var(--sk-bad) inset; }
+[data-skin=forest] .nv-card span, [data-skin=forest] .nv-ko, [data-skin=forest] .nv-hint { color:var(--sk-sub); }
+[data-skin=forest] .nv-input { border:1px solid var(--sk-line); border-radius:14px; background:var(--sk-panel); }
+[data-skin=forest] .nv-input:focus { border-color:var(--sk-acc); outline:0; }
+[data-skin=forest] .nv-tile { border:1px solid var(--sk-line); border-radius:14px; background:var(--sk-panel); color:var(--sk-ink); }
+[data-skin=forest] .nv-arrow { border:1px solid var(--sk-line); background:var(--sk-panel); color:var(--sk-ink); }
+[data-skin=forest] .nv-btn { background:var(--sk-acc); color:#fff; border-radius:999px; font-weight:600; }
+[data-skin=forest] .nv-ghost { background:transparent; color:var(--sk-ink); border:1px solid var(--sk-line); }
+[data-skin=forest] .nv-chip { background:transparent; border:1px solid var(--sk-line); color:var(--sk-sub); }
