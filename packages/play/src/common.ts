@@ -77,6 +77,7 @@ export interface KindProps {
 /** AI 연동 자리: 학습앱이 서버 함수를 연결해 두면 AI 대화·힌트가 동작하고, 없으면 문항에 적힌 내용으로 대신한다 */
 export interface AiHandlers {
   chat?: (req: { situation: string; role?: string; history: { who: 'ai' | 'me'; text: string }[] }) => Promise<string>;
+  check?: (req: { text: string; rules: string[] }) => Promise<boolean[]>;
   hint?: (req: { kind: string; item: unknown; input: string; wrong: number; given: number }) => Promise<string>;
 }
 export const aiHandlers: AiHandlers = {};

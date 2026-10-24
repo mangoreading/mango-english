@@ -10,7 +10,9 @@ export function Hint({ lines, kind, item, ctx }: { lines?: string[]; kind?: stri
     if (busy || !aiHandlers.hint) return; setBusy(true); setErr('');
     try {
       const c = ctx?.() ?? { input: '', wrong: 0 };
-      const t = await aiHandlers.hint({ kind: kind!, item, input: c.input, wrong: c.wrong, given: given.current });
+      const req = { kind: kind!, item, input: c.input, wrong: c.wrong, given: given.current };
+      let t: string;
+      try { t = await aiHandlers.hint(req); } catch { await new Promise((r) => setTimeout(r, 700)); t = await aiHandlers.hint(req); } // 일시 오류면 한 번 더
       given.current += 1; setAi((a) => [...a, t]);
     } catch (e) { setErr('AI 선생님이 지금은 답하지 못해요. 위 힌트를 먼저 봐 주세요. [' + String((e as Error)?.message ?? e).slice(0, 160) + ']'); }
     setBusy(false);

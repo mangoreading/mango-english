@@ -16,5 +16,6 @@ async function call(body: Record<string, unknown>): Promise<string> {
 }
 registerAi({
   hint: (r) => call({ action: 'hint', ...r }),
+  check: async (r) => { const t = await call({ action: 'check', ...r }); const a = JSON.parse(t); if (!Array.isArray(a)) throw new Error('bad'); return r.rules.map((_, i) => !!a[i]); },
   chat: (r) => call({ action: 'chat', ...r }),
 });

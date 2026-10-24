@@ -61,6 +61,8 @@ const INST: Record<string, string> = {
   sqmulti: '글을 읽고, 질문에 답해 보세요.',
 };
 /** 그림을 문항 화면 안에서 직접 그리는 템플릿 (그 밖의 템플릿은 오른쪽 위에 보조 그림으로 보인다) */
+/** 기획안에 보조 그림이 없는 템플릿(쓰기류): 문항에 pic 이 있어도 우상단 그림을 그리지 않는다 */
+const NO_SIDE = ['sbuild', 'swrite', 'sfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'mfree', 'swrt', 'mtext', 'lwrite'];
 const OWN_PIC = ['lookspeak', 'role', 'pchoice', 'dchoice', 'dfill', 'goal', 'lcardp', 'lchpic', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat'];
 /** 듣고 고르기: 질문을 맨 위 안내 자리에 보여 준다 */
 const LCH = ['lchtext', 'lchpic', 'lchlist', 'lwrite'];
@@ -121,7 +123,7 @@ export function NativePlayer({ title, items, vocab, nextLabel, onResult, onFinis
         ? <p className="nv-hint">이 문항에 쓰인 단어가 단원 어휘에 없어요. 관리자에서 단어를 확인해 주세요. ({keys.filter((k) => !byKey.has(k)).join(', ')})</p>
         : <Comp key={i} item={it} words={words} vocab={vocab} pic={(k) => (k ? byKey.get(k)?.image ?? null : null)} onDone={onDone} />}
       </FbSlot.Provider>
-      {it.pic && !OWN_PIC.includes(it.k) && byKey.get(it.pic)?.image && <img className="nv-sidepic" src={imgSrc(byKey.get(it.pic)!.image)} alt="" draggable={false} />}
+      {it.pic && !OWN_PIC.includes(it.k) && !NO_SIDE.includes(it.k) && byKey.get(it.pic)?.image && <img className="nv-sidepic" src={imgSrc(byKey.get(it.pic)!.image)} alt="" draggable={false} />}
       <div className="nv-foot"><span className="nv-fbslot" ref={setSlot} /><button className="nv-btn nv-btn-lg" disabled={!done} onClick={next}>{last ? '결과 보기' : '다음'}</button></div>
     </div>
   );

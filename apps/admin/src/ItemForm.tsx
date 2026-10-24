@@ -55,7 +55,7 @@ const SPEC2: Record<string, Field[]> = {
 const ANSW = (label = '정답 (여러 정답은 | 로 구분)'): Field => ({ k: 'ans', label, t: 'text', req: true });
 const SPEC3: Record<string, Field[]> = {
   sbuild: [{ k: 'ko', label: '우리말 문장', t: 'text' }, ANSW('정답 문장'), { k: 'alts', label: '다른 정답 (한 줄에 하나)', t: 'lines' }, { k: 'hint', label: '힌트 (비우면 첫 글자 힌트 자동)', t: 'lines' }, VINST],
-  swrite: [{ k: 'ko', label: '우리말 문장', t: 'text' }, ANSW('정답 문장'), { k: 'alts', label: '다른 정답 (한 줄에 하나)', t: 'lines' }, { k: 'starter', label: '시작 힌트 (예: How much~)', t: 'text' }, { k: 'hint', label: '힌트 (비우면 자동)', t: 'lines' }, VINST],
+  swrite: [{ k: 'ko', label: '우리말 문장', t: 'text' }, { k: 'tpl', label: '문장 틀 (캡슐에 보임, 빈칸은 {} 예: How much {} these socks?)', t: 'text' }, ANSW('정답 문장'), { k: 'alts', label: '다른 정답 (한 줄에 하나)', t: 'lines' }, { k: 'starter', label: '시작 힌트 (예: How much~)', t: 'text' }, { k: 'hint', label: '힌트 (비우면 자동)', t: 'lines' }, VINST],
   sfill: [{ k: 'ko', label: '우리말 뜻', t: 'text' }, { k: 'tpl', label: '문장 ({} 가 빈칸, 예: How much {} these socks?)', t: 'text', req: true }, ANSW('빈칸 정답'), { k: 'hint', label: '힌트 (비우면 자동)', t: 'lines' }, VINST],
   dfill: [{ k: 'pic', label: '그림(단원 단어, 선택)', t: 'vword' }, { k: 'tag2', label: '가격표 글자 (선택, 예: $60)', t: 'text' }, { k: 'lines', label: '대화 (한 줄에 한 문장, {} 가 빈칸)', t: 'lines', req: true }, { k: 'ans', label: '빈칸 정답 (빈칸 순서대로 한 줄에 하나, 여러 정답은 |)', t: 'lines', req: true }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
   sscram: [{ k: 'ko', label: '우리말 문장', t: 'text' }, ANSW('정답 문장'), { k: 'extra', label: '헷갈리게 섞을 단어 (한 줄에 하나, 선택)', t: 'lines' }, { k: 'alts', label: '다른 정답 (한 줄에 하나)', t: 'lines' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
@@ -64,7 +64,7 @@ const SPEC3: Record<string, Field[]> = {
   scloze: [{ k: 'lines', label: '글 (한 줄에 한 문장, {} 가 빈칸)', t: 'lines', req: true }, { k: 'ans', label: '빈칸 정답 (빈칸 순서대로 한 줄에 하나)', t: 'lines', req: true }, { k: 'extra', label: '오답 보기 (한 줄에 하나, 선택)', t: 'lines' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
   lwrite: [{ k: 'q', label: '질문', t: 'text' }, { k: 'say', label: '들려줄 글 (전체)', t: 'area', req: true }, { k: 'h1', label: '왼쪽 열 제목 (비우면 시간)', t: 'text' }, { k: 'h2', label: '오른쪽 열 제목 (비우면 일과)', t: 'text' },
     { k: 'rows', label: '표 (오른쪽 글 · 왼쪽 정답)', t: 'rows', req: true, blank: () => ({ label: '', ans: '' }), cols: [{ k: 'label', label: '오른쪽 글', t: 'text' }, { k: 'ans', label: '정답 (예: 7:30)', t: 'text', w: 140 }] }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
-  mfree: [{ k: 'topic', label: '주제 (예: pants)', t: 'text' }, { k: 'topicLabel', label: '주제 이름표 (비우면 상품)', t: 'text' }, { k: 'lines', label: '글의 틀 (한 줄에 한 문장, {} 가 쓸 자리)', t: 'lines', req: true }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
+  mfree: [{ k: 'topicLabel', label: '주제 칸 이름표 (비우면 상품, 학생이 직접 씀)', t: 'text' }, { k: 'lines', label: '글의 틀 (한 줄에 한 문장, {} 가 쓸 자리)', t: 'lines', req: true }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
   swrt: [{ k: 'title', label: '체크리스트 제목', t: 'text' }, { k: 'rules', label: '체크 규칙 (쓰면 자동으로 켜져요)', t: 'rows', req: true, blank: () => ({ label: '' }), cols: [{ k: 'label', label: '규칙 설명', t: 'text' }, { k: 're', label: '찾을 패턴 (정규식, 예: how much)', t: 'text', w: 220 }] },
     { k: 'minSent', label: '최소 문장 수', t: 'num' }, { k: 'starter', label: '입력칸 안내 글', t: 'text' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
 };

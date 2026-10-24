@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState } from 'react';
-import { imgSrc, say, shuffle, type KindProps } from './common';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { aiHandlers, imgSrc, say, shuffle, type KindProps } from './common';
 import { Rich } from './kinds3';
 import { Hint } from './hint';
 import { Fb } from './fb';
@@ -12,7 +12,7 @@ export const initials = (s: string) => s.split(' ').map((w) => { const m = w.mat
 const plain = (t: string) => t.replace(/\[\[|\]\]|\{\{|\}\}/g, '');
 
 function HintBox({ lines, item, ctx }: { lines: string[]; item?: Record<string, any>; ctx?: () => { input: string; wrong: number } }) { return <Hint lines={lines} kind={item?.k} item={item} ctx={ctx} />; } // eslint-disable-line @typescript-eslint/no-explicit-any
-const Ko = ({ t }: { t?: string }) => (t ? <div className="nv-kobar">{t}</div> : null);
+const Ko = ({ t }: { t?: string }) => <div className="nv-koslot">{t ? <div className="nv-kobar">{t}</div> : null}</div>;
 const Msg = ({ ok, bad }: { ok: boolean; bad: boolean }) => <Fb className={'nv-fbmsg' + (ok || bad ? ' on' : '') + (bad ? ' nv-fbbad' : '')}>{ok ? '정답이에요! 👏' : bad ? '다시 한번 써 보세요' : ''}</Fb>;
 
 /** 우리말을 보고 영어 문장 쓰기. mode=cap: 캡슐 안에 쓰기(M29) / box: 문장 틀(빈칸) + 아래 입력칸(M31). 확인 버튼 없이 맞으면 바로, 틀리면 Enter·칸 이탈 때 알려 준다 */
@@ -30,11 +30,12 @@ function SB({ item, onDone, mode }: KindProps & { mode: 'cap' | 'box' }) {
     onChange={(e) => judge(e.target.value, false)} onBlur={(e) => judge(e.target.value, true)} onKeyDown={(e) => { if (e.key === 'Enter') judge(v, true); }} />;
   const tpl: string = item.tpl ?? '';
   return (
-    <div className="nv-body nv-wbody">
-      {mode === 'box' && tpl && <div className="nv-capsule nv-capsule-tpl">{tpl.replace('{}', '__________')}</div>}
-      {item.ko && <Ko t={item.ko} />}
-      {mode === 'cap' ? <div className={'nv-capsule nv-capsule-in' + (ok ? ' nv-okc' : '') + (bad ? ' nv-shake nv-badc' : '')}>{input}</div> : <div className={'nv-pillin' + (bad ? ' nv-shake' : '')}>{input}</div>}
-      <HintBox lines={item.hint?.length ? item.hint : [initials(ans), item.starter ? `${item.starter} 로 시작해 보세요` : ''].filter(Boolean)} item={item} ctx={() => ({ input: v, wrong: wrong.current ? 1 : 0 })} />
+    <div className="nv-body nv-wbody nv-wtop">
+      <Ko t={item.ko} />
+      {mode === 'box' && tpl && <div className="nv-capsule nv-capsule-tpl nv-main">{tpl.replace('{}', '__________')}</div>}
+      {mode === 'cap' ? <div className={'nv-capsule nv-capsule-in nv-main' + (ok ? ' nv-okc' : '') + (bad ? ' nv-shake nv-badc' : '')}>{input}</div> : null}
+      <div className="nv-subslot">{mode === 'box' && <div className={'nv-pillin' + (bad ? ' nv-shake' : '')}>{input}</div>}
+        <HintBox lines={item.hint?.length ? item.hint : [initials(ans), item.starter ? `${item.starter} 로 시작해 보세요` : ''].filter(Boolean)} item={item} ctx={() => ({ input: v, wrong: wrong.current ? 1 : 0 })} /></div>
     </div>
   );
 }
@@ -55,7 +56,7 @@ function Blanks({ lines, ans, big, cap, box, onDone, tag }: { lines: string[]; a
   }
   let bi = 0;
   return (
-    <div className={'nv-bl' + (big ? ' nv-bl-big' : '') + (cap ? ' nv-capsule nv-capsule-bl' : '') + (box ? ' nv-bl-box' : '')}>
+    <div className={'nv-bl' + (big ? ' nv-bl-big' : '') + (cap ? ' nv-capsule nv-capsule-bl nv-main' : '') + (box ? ' nv-bl-box' : '')}>
       {lines.map((l, li) => (
         <p key={li}>{l.split('{}').map((seg, si, arr) => {
           const idx = si < arr.length - 1 ? bi++ : -1;
@@ -70,10 +71,10 @@ function Blanks({ lines, ans, big, cap, box, onDone, tag }: { lines: string[]; a
 /** 빈칸 단어 쓰기: 한글 뜻 줄 + 문장 캡슐(빈칸) + 힌트 */
 export function SFill({ item, onDone }: KindProps) {
   return (
-    <div className="nv-body nv-wbody">
-      {item.ko && <Ko t={item.ko} />}
+    <div className="nv-body nv-wbody nv-wtop">
+      <Ko t={item.ko} />
       <Blanks lines={[item.tpl ?? '{}']} ans={[item.ans ?? '']} big cap onDone={onDone} tag="write" />
-      <HintBox lines={item.hint?.length ? item.hint : [initials(String(item.tpl ?? '').replace('{}', (item.ans ?? '').split('|')[0]))]} item={item} />
+      <div className="nv-subslot"><HintBox lines={item.hint?.length ? item.hint : [initials(String(item.tpl ?? '').replace('{}', (item.ans ?? '').split('|')[0]))]} item={item} /></div>
     </div>
   );
 }
@@ -83,7 +84,7 @@ export function DFill({ item, pic, onDone }: KindProps) {
   return (
     <div className="nv-body nv-wbody">
       <div className="nv-picwrap nv-dfpic">{src && <img className="nv-img nv-img-md" src={imgSrc(src)} alt="" draggable={false} />}{src && item.tag2 && <span className="nv-price">{item.tag2}</span>}</div>
-      <Blanks lines={item.lines ?? []} ans={item.ans ?? []} big onDone={onDone} tag="write" />
+      <Blanks lines={item.lines ?? []} ans={item.ans ?? []} big box onDone={onDone} tag="write" />
       <HintBox lines={item.hint ?? []} item={item} />
     </div>
   );
@@ -104,13 +105,13 @@ export function SScram({ item, onDone }: KindProps) {
     }
   }
   return (
-    <div className="nv-body nv-wbody">
-      {item.ko && <Ko t={item.ko} />}
-      <div className={'nv-capsule nv-capsule-chips' + (ok ? ' nv-okc' : '') + (bad ? ' nv-shake nv-badc' : '')}>
+    <div className="nv-body nv-wbody nv-wtop">
+      <Ko t={item.ko} />
+      <div className={'nv-capsule nv-capsule-chips nv-main' + (ok ? ' nv-okc' : '') + (bad ? ' nv-shake nv-badc' : '')}>
         {seq.map((id) => <button key={id} className="nv-chipb nv-placed" onClick={() => !ok && !bad && setSeq(seq.filter((x) => x !== id))}>{chips.find((c) => c.id === id)!.t}</button>)}
       </div>
-      <div className="nv-chips nv-chips-bank">{chips.map((c) => <button key={c.id} className="nv-chipb" disabled={seq.includes(c.id)} onClick={() => tap(c.id)}>{c.t}</button>)}</div>
-      <HintBox lines={item.hint ?? []} item={item} />
+      <div className="nv-subslot"><div className="nv-chips nv-chips-bank">{chips.map((c) => <button key={c.id} className="nv-chipb" disabled={seq.includes(c.id)} onClick={() => tap(c.id)}>{c.t}</button>)}</div>
+        <HintBox lines={item.hint ?? []} item={item} /></div>
     </div>
   );
 }
@@ -206,21 +207,22 @@ export function LWrite({ item, onDone }: KindProps) {
   );
 }
 
-/** 모범 글 따라 쓰기(자유): 문장 틀의 빈칸을 자기 말로 채운다. 모든 칸에 2자 이상 쓰고 칸을 벗어나면 완료 (평가는 AI 힌트와 함께 확장) */
+/** 모범 글 따라 쓰기(자유): 위의 '상품' 칸은 학생이 직접 쓰고, 문장 틀의 빈칸도 자기 말로 채운다. 모든 칸에 2자 이상 쓰고 칸을 벗어나면 완료 */
 export function MFree({ item, onDone }: KindProps) {
   const lines: string[] = item.lines ?? []; const n = lines.join(' ').split('{}').length - 1;
-  const [v, setV] = useState<string[]>(Array(n).fill('')); const [ok, setOk] = useState(false); const fired = useRef(false);
+  const [v, setV] = useState<string[]>(Array(n).fill('')); const [topic, setTopic] = useState(''); const [ok, setOk] = useState(false); const fired = useRef(false);
   let bi = 0;
-  function settle(vals: string[]) { if (!fired.current && vals.every((x) => x.trim().length >= 2)) { fired.current = true; setOk(true); onDone([{ tag: 'write', ok: true }]); } }
+  function settle(vals: string[], t: string) { if (!fired.current && t.trim().length >= 2 && vals.every((x) => x.trim().length >= 2)) { fired.current = true; setOk(true); onDone([{ tag: 'write', ok: true }]); } }
   return (
     <div className="nv-body nv-wbody">
-      {item.topic && <div className="nv-topic">{item.topicLabel || '상품'} : <b>{item.topic}</b></div>}
-      <div className="nv-bl nv-bl-box nv-bl-fix">
+      <div className="nv-topic">{item.topicLabel || '상품'} : <input className="nv-topicin" value={topic} disabled={ok} autoCapitalize="off" spellCheck={false}
+        onChange={(e) => setTopic(e.target.value)} onBlur={() => settle(v, topic)} onKeyDown={(e) => { if (e.key === 'Enter') settle(v, topic); }} /></div>
+      <div className="nv-bl nv-bl-box nv-bl-fix nv-bl-thick">
         {lines.map((l, li) => (
           <p key={li}>{l.split('{}').map((seg, si, arr) => {
             const idx = si < arr.length - 1 ? bi++ : -1;
             return <span key={si}><Rich text={seg} />{idx >= 0 && <input className={'nv-blank nv-blank-w' + (ok ? ' nv-bok' : '')} disabled={ok} value={v[idx]} autoCapitalize="off" spellCheck={false}
-              onChange={(e) => setV(v.map((x, k) => (k === idx ? e.target.value : x)))} onBlur={() => settle(v)} onKeyDown={(e) => { if (e.key === 'Enter') settle(v); }} />}</span>;
+              onChange={(e) => setV(v.map((x, k) => (k === idx ? e.target.value : x)))} onBlur={() => settle(v, topic)} onKeyDown={(e) => { if (e.key === 'Enter') settle(v, topic); }} />}</span>;
           })}</p>))}
       </div>
       <HintBox lines={item.hint ?? []} item={item} />
@@ -228,18 +230,27 @@ export function MFree({ item, onDone }: KindProps) {
   );
 }
 
-/** 글 쓰기 + 체크리스트: 쓰는 동안 규칙(체크 항목)이 하나씩 켜지고, 모두 켜지면 바로 완료 */
+/** 글 쓰기 + 체크리스트: 학생이 쓴 글을 AI가 읽고 체크 항목을 켠다(AI가 없으면 찾을 패턴으로 대신). 모두 켜지고 문장이 끝나면 바로 완료 */
 export function SWrt({ item, onDone }: KindProps) {
   const rules: { label: string; re?: string }[] = item.rules ?? []; const [v, setV] = useState(''); const [ok, setOk] = useState(false); const fired = useRef(false);
-  const hit = rules.map((r) => { try { return r.re ? new RegExp(r.re, 'i').test(v) : false; } catch { return false; } });
-  const sents = v.split(/[.!?]+/).filter((s) => s.trim().length > 1).length;
-  const need = item.minSent ?? 1;
-  function change(t: string) {
-    setV(t);
-    const h = rules.map((r) => { try { return r.re ? new RegExp(r.re, 'i').test(t) : false; } catch { return false; } });
-    const sn = t.split(/[.!?]+/).filter((x) => x.trim().length > 1).length;
-    if (!fired.current && h.every(Boolean) && sn >= need && /[.!?]\s*$/.test(t.trim())) { fired.current = true; setOk(true); onDone([{ tag: 'write', ok: true }]); }
+  const [ai, setAi] = useState<boolean[] | null>(null); const seq = useRef(0);
+  const reHit = (t: string) => rules.map((r) => { try { return r.re ? new RegExp(r.re, 'i').test(t) : false; } catch { return false; } });
+  const sentsOf = (t: string) => t.split(/[.!?]+/).filter((x) => x.trim().length > 1).length;
+  const hit = ai ?? reHit(v); const sents = sentsOf(v); const need = item.minSent ?? 1;
+  function finish(h: boolean[], t: string) {
+    if (!fired.current && h.every(Boolean) && sentsOf(t) >= need && /[.!?]\s*$/.test(t.trim())) { fired.current = true; setOk(true); onDone([{ tag: 'write', ok: true }]); }
   }
+  useEffect(() => {
+    if (!aiHandlers.check || !v.trim() || ok) return;
+    const my = ++seq.current;
+    const id = setTimeout(async () => {
+      try { const r = await aiHandlers.check!({ text: v, rules: rules.map((x) => x.label) }); if (my === seq.current) { setAi(r); finish(r, v); } }
+      catch { if (my === seq.current) setAi(null); }
+    }, 1100);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line
+  }, [v]);
+  function change(t: string) { setV(t); if (!aiHandlers.check) finish(reHit(t), t); }
   return (
     <div className="nv-body nv-wbody nv-bodyw">
       <div className="nv-split nv-split-w">
@@ -250,7 +261,7 @@ export function SWrt({ item, onDone }: KindProps) {
         </div>
         <textarea className="nv-wta" disabled={ok} value={v} placeholder={item.starter ?? '여기에 써 보세요'} onChange={(e) => change(e.target.value)} />
       </div>
-      <HintBox lines={item.hint ?? []} item={item} />
+      <HintBox lines={item.hint ?? []} item={item} ctx={() => ({ input: v, wrong: 0 })} />
     </div>
   );
 }

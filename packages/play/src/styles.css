@@ -317,3 +317,36 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-spstat p.nv-heard { min-height:0; }
 .nv-bl .nv-spstat, .nv-body > .nv-spstat { order:0; }
 .nv-img[src*="_tag."] { width:16em; height:8em; }
+
+/* ===== Writing 레이아웃 통일: 한글줄(고정칸) → 메인 캡슐(고정 크기) → 보조칸(고정) → 힌트(고정). 비슷한 템플릿은 같은 자리·같은 크기 ===== */
+.nv-wbody::before { flex:1.35 0 0; } .nv-wbody::after { flex:1 0 0; }
+.nv-koslot { width:100%; min-height:4em; display:flex; align-items:center; justify-content:center; }
+.nv-koslot .nv-kobar { max-width:40em; font-size:1.25em; }
+.nv-main { width:100%; max-width:50em; min-height:4.6em; height:4.6em; box-sizing:border-box; padding-top:0; padding-bottom:0; }
+.nv-capsule-chips.nv-main { max-width:50em; }
+.nv-subslot { width:100%; min-height:5.6em; display:flex; align-items:flex-start; justify-content:center; }
+.nv-capsule-bl.nv-main p { font-size:1.3em; margin:0; } .nv-capsule-tpl.nv-main { font-size:1.4em; }
+.nv-capsule-in .nv-winput-cap { font-size:1.35em; }
+.nv-bl-box.nv-bl-fix { max-width:46em; } .nv-bl-box.nv-bl-fix p { font-size:1.2em; }
+.nv-bl-thick { border-width:.2em !important; border-color:#9AA6BD !important; }
+.nv-bl-box { text-align:left; } .nv-bl-box p { text-align:left !important; }
+.nv-bl.nv-bl-box:not(.nv-bl-fix) { width:100%; max-width:36em; padding:1.1em 2.4em; box-sizing:border-box; border-width:.15em; border-color:#9AA6BD; }
+.nv-chips-bank { margin-bottom:1.2em; max-width:46em; } .nv-subslot .nv-chips-bank { margin-bottom:0; }
+.nv-wbody .nv-toolrow { margin-bottom:-.7em; }
+.nv-topic { display:flex; align-items:center; gap:.5em; align-self:center; font-size:1.1em; }
+.nv-topicin { font:inherit; width:12em; padding:.25em .8em; text-align:center; background:#FFF1CC; border:.08em solid #E0C27A; border-radius:.5em; color:#1F2A44; } .nv-topicin:focus { outline:none; border-color:var(--nv-blue); } .nv-topicin:disabled { color:#1E8E4E; }
+.nv-pillin { width:min(24em,100%); }
+
+.nv-subslot { flex-direction:column; align-items:center; min-height:0; gap:.9em; }
+.nv-subslot .nv-hintwrap { max-width:50em; padding-left:2.4em; box-sizing:border-box; min-height:7em; }
+.nv-subslot .nv-chips-bank { margin-bottom:0; }
+/* 쓰기류는 위에서부터 같은 자리에 쌓는다(가운데 정렬 X) → 비슷한 템플릿끼리 요소 위치·크기가 같다 */
+.nv-wbody { justify-content:flex-start; padding-top:11vh; }
+.nv-wbody::before, .nv-wbody::after { flex:0 0 0; }
+.nv-wbody.nv-bodyw { padding-top:8vh; }
+.nv-wbody .nv-main { width:min(100%,50em) !important; max-width:none !important; box-sizing:border-box; }
+.nv-wbody { padding-top:14vh; }
+.nv-wbody { padding-top:5vh; } .nv-wbody.nv-wtop { padding-top:14vh; }
+.nv-bl-box.nv-bl-fix { min-height:0; height:auto; padding:1.3em 2.6em; } .nv-bl-box.nv-bl-fix p { margin:.35em 0; }
+.nv-wbody .nv-bl-box.nv-bl-fix { flex:none; }
+.nv-wbody > .nv-chips-bank { margin-bottom:2em; } .nv-wbody .nv-toolrow { margin-bottom:-1.3em; }
