@@ -199,6 +199,7 @@ export function MText({ item, onDone }: KindProps) {
   const n = Math.max(lines.length, side.length);
   return (
     <div className="nv-body nv-bodyw nv-mtbody">
+      <div className="nv-mtwrap">
       <div className="nv-mtgrid">
         <div className="nv-mtrow nv-mthead">
           <div className="nv-mtl">{item.title && <h3 className="nv-sale">{item.title}</h3>}</div>
@@ -211,6 +212,7 @@ export function MText({ item, onDone }: KindProps) {
           </div>))}
       </div>
       <div className="nv-ptools"><button className="nv-listen nv-listen-s" onClick={() => say(lines.map(plain).join(' '))}>🔊 <b>듣기</b></button></div>
+      </div>
     </div>
   );
 }
