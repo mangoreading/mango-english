@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { TEXT_KINDS, type Res, type VWord } from './common';
 import { VCards, VMatch, VSound, VSpell, VType1, VWrite } from './kinds';
+import { AiTalk, LookSpeak, LSpeak, Present, RAloud, Role, SayKor } from './kinds5';
 import { DFill, LWrite, MFree, MWBank, SBuild, SCloze, SFill, SOrder, SScram, SWrite, SWrt } from './kinds4';
 import { Goal, KExp, LCardP, LCardT, LSent, MText, PRead, SDrill, TapL, WRepeat } from './kinds3';
 import { DChoice, LChList, LChPic, LChText, LMatch, PChoice, SqChoice, SqMulti, SqTF, TrueFalse, WChoice } from './kinds2';
@@ -18,6 +19,13 @@ const INST: Record<string, string> = {
   vmatch: '단어와 한글 뜻을 매칭해 보세요.',
   vsound: '소리를 듣고 단어를 매칭해 보세요.',
   vwrite: '단어를 직접 써보며 익히세요.',
+  lookspeak: '그림을 보고 말해 보세요.',
+  saykor: '다음의 문장을 영어로 말해 보세요.',
+  lspeak: '질문을 듣고 대답해 보세요.',
+  raloud: '아래 문장을 듣고 따라 읽어보세요.',
+  role: '다음 대화를 역할을 나눠 말해 보세요.',
+  present: '내가 쓴 글을 발표해 보세요.',
+  aitalk: '아래 상황에 맞게 대화를 진행해 보세요.',
   sbuild: '다음 문장을 영어로 써 보세요.',
   swrite: '다음 문장을 영어로 써 보세요.',
   sfill: '다음 문장에 들어갈 단어를 써 보세요.',
@@ -51,7 +59,7 @@ const INST: Record<string, string> = {
   sqtf: '글을 읽고, 질문에 답해 보세요.',
   sqmulti: '글을 읽고, 질문에 답해 보세요.',
 };
-const KIND = { sbuild: SBuild, swrite: SWrite, sfill: SFill, dfill: DFill, sscram: SScram, sorder: SOrder, mwbank: MWBank, scloze: SCloze, lwrite: LWrite, mfree: MFree, swrt: SWrt, goal: Goal, kexp: KExp, tapl: TapL, lsent: LSent, lcardp: LCardP, lcardt: LCardT, sdrill: SDrill, pread: PRead, mtext: MText, wrepeat: WRepeat, vcards: VCards, vtype1: VType1, vspell: VSpell, vmatch: VMatch, vsound: VSound, vwrite: VWrite,
+const KIND = { lookspeak: LookSpeak, saykor: SayKor, lspeak: LSpeak, raloud: RAloud, role: Role, present: Present, aitalk: AiTalk, sbuild: SBuild, swrite: SWrite, sfill: SFill, dfill: DFill, sscram: SScram, sorder: SOrder, mwbank: MWBank, scloze: SCloze, lwrite: LWrite, mfree: MFree, swrt: SWrt, goal: Goal, kexp: KExp, tapl: TapL, lsent: LSent, lcardp: LCardP, lcardt: LCardT, sdrill: SDrill, pread: PRead, mtext: MText, wrepeat: WRepeat, vcards: VCards, vtype1: VType1, vspell: VSpell, vmatch: VMatch, vsound: VSound, vwrite: VWrite,
   wchoice: WChoice, pchoice: PChoice, dchoice: DChoice, tf: TrueFalse, lchtext: LChText, lchpic: LChPic, lchlist: LChList, lmatch: LMatch,
   sqchoice: SqChoice, sqtf: SqTF, sqmulti: SqMulti } as const;
 

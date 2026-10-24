@@ -3,7 +3,7 @@ export interface Res { tag?: string; ok: boolean; hint?: number }
 /** 어휘 활동 6종의 종류 코드 (기획서 p29~34). 이 종류는 React 정식 화면으로 재생한다. */
 export const VOCAB_KINDS = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wrepeat'];
 /** 1단계 문장·읽기·듣기 템플릿 (문항 안에 글이 그대로 들어 있다) */
-export const TEXT_KINDS = ['sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'mfree', 'swrt', 'goal', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'sdrill', 'pread', 'mtext', 'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti'];
+export const TEXT_KINDS = ['lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'aitalk', 'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'mfree', 'swrt', 'goal', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'sdrill', 'pread', 'mtext', 'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti'];
 export const NATIVE_KINDS = [...VOCAB_KINDS, ...TEXT_KINDS];
 export const isNative = (it: unknown) => NATIVE_KINDS.includes((it as { k?: string })?.k ?? '');
 
@@ -72,3 +72,11 @@ export interface KindProps {
   pic: (key?: string | null) => string | null; // 단원 단어 key → 그림 경로
   onDone: (res: Res[]) => void;
 }
+
+/** AI 연동 자리: 학습앱이 서버 함수를 연결해 두면 AI 대화·힌트가 동작하고, 없으면 문항에 적힌 내용으로 대신한다 */
+export interface AiHandlers {
+  chat?: (req: { situation: string; role?: string; history: { who: 'ai' | 'me'; text: string }[] }) => Promise<string>;
+  hint?: (req: { kind: string; item: unknown; input: string; wrong: number }) => Promise<string>;
+}
+export const aiHandlers: AiHandlers = {};
+export const registerAi = (h: AiHandlers) => Object.assign(aiHandlers, h);
