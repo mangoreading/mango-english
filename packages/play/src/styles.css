@@ -228,3 +228,32 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 /* 그림 보고 쓰기: 판정할 때 칸 크기가 변하지 않게 */
 .nv-card-w { height:11.4em; box-sizing:border-box; } .nv-input-s { height:2.3em; box-sizing:border-box; font-weight:700; } .nv-input-s:disabled { font-weight:700; }
 .nv-hint { min-height:1.4em; }
+
+/* ===== 표현 템플릿(학습목표 · 핵심 표현) — 기획서 p3~4 ===== */
+.nv-ibtns { display:flex; gap:.5em; align-items:center; } .nv-ibtns .nv-kobtn { margin:0; }
+.nv-icb { font:inherit; width:2.1em; height:2.1em; border-radius:50%; border:.1em solid var(--nv-line); background:#fff; cursor:pointer; padding:0; font-size:1em; }
+.nv-icb:hover { border-color:var(--nv-blue); }
+.nv-tapwrap { display:flex; flex-direction:column; gap:.7em; width:100%; align-items:center; } .nv-tapwrap-stack { max-width:40em; }
+.nv-tapwrap .nv-toolrow { order:0; justify-content:flex-end; } .nv-tapwrap .nv-stack, .nv-tapwrap .nv-grid3 { width:100%; }
+/* Key Expression */
+.nv-kx { display:grid; grid-template-columns:minmax(0,34em); justify-content:center; gap:.8em 1.4em; width:100%; }
+.nv-kx.nv-kx-lab { grid-template-columns:minmax(0,34em) 14em; }
+.nv-kx-tools { grid-column:1; display:flex; justify-content:flex-end; }
+.nv-kx-row { display:contents; }
+.nv-kx .nv-tap-kexp { justify-content:flex-start; text-align:left; border-radius:1.6em; padding:.55em 1.2em; } .nv-kx .nv-tt { align-items:flex-start; }
+.nv-kx-l { align-self:center; color:var(--nv-navy); font-weight:600; font-size:1.02em; }
+/* 학습목표 */
+.nv-goal { grid-template-columns:.9fr 1.1fr; align-items:stretch; min-height:28em; }
+.nv-goal .nv-goalL { align-items:flex-start; justify-content:flex-start; text-align:left; padding:.2em 1.8em .2em .6em; gap:.7em; }
+.nv-gh { margin:0; font-size:1.15em; font-weight:800; color:#111; }
+.nv-gtext { margin:.4em 0 0; color:var(--nv-blue); font-size:1.3em; line-height:1.55; font-weight:500; max-width:15em; }
+.nv-gimg { margin-top:auto; align-self:center; max-width:100%; max-height:13em; object-fit:contain; }
+.nv-goalR { border-left:.1em solid var(--nv-line); padding:.2em .4em .2em 1.8em; display:flex; flex-direction:column; gap:.5em; }
+.nv-gr-head { display:flex; justify-content:space-between; align-items:center; }
+.nv-gr-list { display:flex; flex-direction:column; gap:.45em; }
+.nv-grp { margin:.5em 0 .3em; font-size:1em; color:#2B3550; }
+.nv-tap-goal { width:100%; justify-content:flex-start; text-align:left; border-radius:1em; background:#E0E8F8; border-color:#E0E8F8; padding:.4em 1em; }
+.nv-tap-goal .nv-tt b { font-size:1.15em; font-weight:500; } .nv-tap-goal .nv-tt { align-items:flex-start; } .nv-tap-goal .nv-tt i { font-size:.8em; }
+.nv-tap-goal.nv-cur { background:#FFE9A6; border-color:#E0A100; }
+@media (max-width:760px) { .nv-kx.nv-kx-lab { grid-template-columns:minmax(0,1fr); } .nv-goal { grid-template-columns:1fr; } .nv-goalR { border-left:0; padding-left:0; } }
+.nv-inst small { display:block; font-weight:500; color:var(--nv-sub); font-size:.8em; margin-top:.15em; }

@@ -145,7 +145,7 @@ export const SqMulti = z.object({ ...sq, k: z.literal('sqmulti'), items: z.array
 
 /* ===== 2단계: 듣고 익히기 · 따라 말하기 · 학습목표 · 문장 바꿔 말하기 · 글 듣고 읽기 · 모범 글 =====
  * 강조 표기: [[파랑]] {{빨강}}. 본문의 '---' 줄은 쪽 나눔. */
-const Ex = z.object({ en: z.string().min(1), ko: z.string().optional(), pic: z.string().optional(), label: z.string().optional() });
+const Ex = z.object({ en: z.string().min(1), ko: z.string().optional(), pic: z.string().optional(), label: z.string().optional(), group: z.string().optional() });
 const exs = (n: number) => z.array(Ex).min(n).max(8);
 export const Goal = z.object({ ...T1, k: z.literal('goal'), title: z.string().min(1), ko: z.string().optional(), pic: z.string().optional(), head: z.string().optional(), items: exs(1) });
 export const KExp = z.object({ ...T1, k: z.literal('kexp'), items: exs(1) });

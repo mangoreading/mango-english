@@ -37,12 +37,12 @@ const OPTS: Field = { k: 'opts', label: '보기 (정답 선택)', t: 'choices', 
 const STORY: Field[] = [
   { k: 'title', label: '글 제목', t: 'text' }, { k: 'text', label: '본문 (한 줄에 한 문장)', t: 'lines', req: true }, { k: 'ko', label: '한글 번역 (있으면 "해석 보기" 버튼)', t: 'area' },
 ];
-const EXROWS = (label: string, pic = false, lab = false): Field => ({ k: 'items', label, t: 'rows', req: true, blank: () => ({ en: '', ko: '' }), cols: [
+const EXROWS = (label: string, pic = false, lab = false, grp = false): Field => ({ k: 'items', label, t: 'rows', req: true, blank: () => ({ en: '', ko: '' }), cols: [
   { k: 'en', label: '영어 (강조: [[파랑]] {{빨강}})', t: 'text' }, { k: 'ko', label: '한글', t: 'text' },
-  ...(pic ? [{ k: 'pic', label: '그림(단원 단어)', t: 'text' as const, w: 120 }] : []), ...(lab ? [{ k: 'label', label: '설명 꼬리표', t: 'text' as const, w: 150 }] : [])] });
+  ...(pic ? [{ k: 'pic', label: '그림(단원 단어)', t: 'text' as const, w: 120 }] : []), ...(lab ? [{ k: 'label', label: '설명 (오른쪽에 표시, 선택)', t: 'text' as const, w: 170 }] : []), ...(grp ? [{ k: 'group', label: '소제목 (같은 소제목끼리 묶임)', t: 'text' as const, w: 190 }] : [])] });
 const SPEC2: Record<string, Field[]> = {
-  goal: [{ k: 'title', label: '학습목표 문장 (강조: [[파랑]])', t: 'text', req: true }, { k: 'ko', label: '학습목표 한글 설명', t: 'text' }, { k: 'pic', label: '그림(단원 단어, 선택)', t: 'vword' }, { k: 'head', label: '오른쪽 제목 (비우면 "핵심 표현")', t: 'text' }, EXROWS('핵심 표현'), VINST],
-  kexp: [EXROWS('핵심 표현 (말풍선)', false, true), VINST],
+  goal: [{ k: 'title', label: '학습목표 (2~3줄 분량, 강조: [[파랑]])', t: 'area', req: true }, { k: 'ko', label: '학습목표 보충 설명 (선택)', t: 'text' }, { k: 'pic', label: '왼쪽 아래 그림 (선택: 단원 단어 key 또는 이미지 주소)', t: 'text' }, { k: 'head', label: '오른쪽 제목 (비우면 "핵심표현")', t: 'text' }, EXROWS('핵심표현 (최대 5~6개)', false, false, true), VINST],
+  kexp: [EXROWS('핵심 표현 (말풍선, 최대 5개)', false, true), VINST],
   tapl: [EXROWS('문장 (눌러서 듣기)'), VINST],
   lsent: [EXROWS('문장 카드'), VINST],
   lcardp: [EXROWS('카드 (그림+문장, 최대 6개 권장)', true), VINST],

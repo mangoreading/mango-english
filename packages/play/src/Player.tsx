@@ -37,7 +37,7 @@ const INST: Record<string, string> = {
   lwrite: '잘 듣고, 알맞게 적어 봅시다.',
   mfree: '글을 완성해 보세요.',
   swrt: '글을 읽고, 내 글을 써 보세요.',
-  goal: '이번 차시에서 배울 내용을 확인해 보세요.',
+  goal: '',
   kexp: '핵심 표현을 듣고 따라 읽어 보세요.',
   tapl: '문장을 눌러 듣고 소리 내어 읽어 보세요.',
   lsent: '핵심 표현을 눌러서 들어 보세요.',
@@ -61,6 +61,7 @@ const INST: Record<string, string> = {
 };
 /** 그림을 문항 화면 안에서 직접 그리는 템플릿 (그 밖의 템플릿은 오른쪽 위에 보조 그림으로 보인다) */
 const OWN_PIC = ['lookspeak', 'role', 'pchoice', 'dchoice', 'dfill', 'goal', 'lcardp', 'lchpic', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat'];
+const INST_SUB: Record<string, string> = { kexp: '(3번 반복해서 들어주세요)' };
 const KIND = { lookspeak: LookSpeak, saykor: SayKor, lspeak: LSpeak, raloud: RAloud, role: Role, present: Present, aitalk: AiTalk, sbuild: SBuild, swrite: SWrite, sfill: SFill, dfill: DFill, sscram: SScram, sorder: SOrder, mwbank: MWBank, scloze: SCloze, lwrite: LWrite, mfree: MFree, swrt: SWrt, goal: Goal, kexp: KExp, tapl: TapL, lsent: LSent, lcardp: LCardP, lcardt: LCardT, sdrill: SDrill, pread: PRead, mtext: MText, wrepeat: WRepeat, vcards: VCards, vtype1: VType1, vspell: VSpell, vmatch: VMatch, vsound: VSound, vwrite: VWrite,
   wchoice: WChoice, pchoice: PChoice, dchoice: DChoice, tf: TrueFalse, lchtext: LChText, lchpic: LChPic, lchlist: LChList, lmatch: LMatch,
   sqchoice: SqChoice, sqtf: SqTF, sqmulti: SqMulti } as const;
@@ -110,7 +111,7 @@ export function NativePlayer({ title, items, vocab, nextLabel, onResult, onFinis
         <span className="nv-dots">{items.map((_, k) => <i key={k} className={k < i ? 'd1' : k === i ? 'd2' : ''} />)}</span>
         <span className="nv-pts">★ 포인트 : +{pts}</span>
       </div>
-      <p className="nv-inst">{it.inst || INST[it.k] || ''}</p>
+      <p className="nv-inst">{it.inst || INST[it.k] || ''}{INST_SUB[it.k] && <small>{INST_SUB[it.k]}</small>}</p>
       {!Comp || words.length !== keys.length
         ? <p className="nv-hint">이 문항에 쓰인 단어가 단원 어휘에 없어요. 관리자에서 단어를 확인해 주세요. ({keys.filter((k) => !byKey.has(k)).join(', ')})</p>
         : <Comp key={i} item={it} words={words} vocab={vocab} pic={(k) => (k ? byKey.get(k)?.image ?? null : null)} onDone={onDone} />}
