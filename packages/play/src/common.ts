@@ -3,7 +3,7 @@ export interface Res { tag?: string; ok: boolean; hint?: number }
 /** 어휘 활동 6종의 종류 코드 (기획서 p29~34). 이 종류는 React 정식 화면으로 재생한다. */
 export const VOCAB_KINDS = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wrepeat'];
 /** 1단계 문장·읽기·듣기 템플릿 (문항 안에 글이 그대로 들어 있다) */
-export const TEXT_KINDS = ['goal', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'sdrill', 'pread', 'mtext', 'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti'];
+export const TEXT_KINDS = ['sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'mfree', 'swrt', 'goal', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'sdrill', 'pread', 'mtext', 'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti'];
 export const NATIVE_KINDS = [...VOCAB_KINDS, ...TEXT_KINDS];
 export const isNative = (it: unknown) => NATIVE_KINDS.includes((it as { k?: string })?.k ?? '');
 

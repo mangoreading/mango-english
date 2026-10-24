@@ -14,6 +14,8 @@ export const KIND_NAME: Record<string, string> = {
   fill: '빈칸 채우기', write: '쓰기', compose: '작문', speak: '말하기', fade: '점점 지우기', dialog: '대화',
   vcards: '단어 카드 보기', vtype1: '단어 따라 쓰기', vspell: '철자 완성', vmatch: '단어-뜻 매칭', vsound: '소리-단어 매칭', vwrite: '그림 보고 쓰기',
   wchoice: '뜻 고르기', pchoice: '그림 보고 고르기', dchoice: '대화 고르기', tf: 'True or False', lchtext: '듣고 고르기 (글 4칸)', lchpic: '듣고 고르기 (그림 4칸)', lchlist: '듣고 고르기 (세로형)',
+  sbuild: '문장 쓰기 (우리말→영어)', swrite: '정답 써 보기', sfill: '빈칸 단어 쓰기', dfill: '대화 완성하기', sscram: '문장 만들기', sorder: '문장 순서 맞추기',
+  mwbank: '모범 글 완성 (보기)', scloze: '글 빈칸 채우기', lwrite: '듣고 쓰기', mfree: '나만의 글 쓰기', swrt: '글 요약·쓰기',
   goal: '학습목표', kexp: '핵심표현 듣고 따라 읽기', tapl: '문장 눌러 듣기', lsent: '문장 듣고 고르기(카드)', lcardp: '듣고 익히기 (그림)', lcardt: '듣고 익히기 (글)',
   wrepeat: '단어 듣고 따라 말하기', sdrill: '문장 바꿔 말하기', pread: '글 듣고 읽기', mtext: '모범 글 읽기',
   lmatch: '듣고 짝짓기', sqchoice: '글 읽고 답하기 (선택)', sqtf: '글 읽고 답하기 (T/F)', sqmulti: '글 읽고 답하기 (복수선택)',
@@ -49,8 +51,25 @@ const SPEC2: Record<string, Field[]> = {
   pread: [{ k: 'text', label: '본문 (한 줄에 한 문장, "---" 줄은 쪽 나눔)', t: 'lines', req: true }, { k: 'ko', label: '해설·번역 (쪽 나눔은 "---" 한 줄)', t: 'area' }, VINST],
   mtext: [{ k: 'title', label: '제목 (예: SALE)', t: 'text' }, { k: 'text', label: '본문 (한 줄에 한 문장, 강조 [[파랑]] {{빨강}})', t: 'lines', req: true }, { k: 'explain', label: '해설 (한 줄에 하나, 강조 가능)', t: 'lines' }, { k: 'ko', label: '해석(한글 번역)', t: 'area' }, VINST],
 };
+const ANSW = (label = '정답 (여러 정답은 | 로 구분)'): Field => ({ k: 'ans', label, t: 'text', req: true });
+const SPEC3: Record<string, Field[]> = {
+  sbuild: [{ k: 'ko', label: '우리말 문장', t: 'text' }, ANSW('정답 문장'), { k: 'alts', label: '다른 정답 (한 줄에 하나)', t: 'lines' }, { k: 'hint', label: '힌트 (비우면 첫 글자 힌트 자동)', t: 'lines' }, VINST],
+  swrite: [{ k: 'ko', label: '우리말 문장', t: 'text' }, ANSW('정답 문장'), { k: 'alts', label: '다른 정답 (한 줄에 하나)', t: 'lines' }, { k: 'starter', label: '시작 힌트 (예: How much~)', t: 'text' }, { k: 'hint', label: '힌트 (비우면 자동)', t: 'lines' }, VINST],
+  sfill: [{ k: 'ko', label: '우리말 뜻', t: 'text' }, { k: 'tpl', label: '문장 ({} 가 빈칸, 예: How much {} these socks?)', t: 'text', req: true }, ANSW('빈칸 정답'), { k: 'hint', label: '힌트 (비우면 자동)', t: 'lines' }, VINST],
+  dfill: [{ k: 'pic', label: '그림(단원 단어, 선택)', t: 'vword' }, { k: 'tag2', label: '가격표 글자 (선택, 예: $60)', t: 'text' }, { k: 'lines', label: '대화 (한 줄에 한 문장, {} 가 빈칸)', t: 'lines', req: true }, { k: 'ans', label: '빈칸 정답 (빈칸 순서대로 한 줄에 하나, 여러 정답은 |)', t: 'lines', req: true }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
+  sscram: [{ k: 'ko', label: '우리말 문장', t: 'text' }, ANSW('정답 문장'), { k: 'extra', label: '헷갈리게 섞을 단어 (한 줄에 하나, 선택)', t: 'lines' }, { k: 'alts', label: '다른 정답 (한 줄에 하나)', t: 'lines' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
+  sorder: [EXROWS('올바른 순서대로 입력 (화면에서는 섞여요)'), VINST],
+  mwbank: [{ k: 'lines', label: '글 (한 줄에 한 문장, {} 가 빈칸)', t: 'lines', req: true }, { k: 'ans', label: '빈칸 정답 (빈칸 순서대로 한 줄에 하나)', t: 'lines', req: true }, { k: 'extra', label: '오답 보기 (한 줄에 하나, 선택)', t: 'lines' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
+  scloze: [{ k: 'lines', label: '글 (한 줄에 한 문장, {} 가 빈칸)', t: 'lines', req: true }, { k: 'ans', label: '빈칸 정답 (빈칸 순서대로 한 줄에 하나)', t: 'lines', req: true }, { k: 'extra', label: '오답 보기 (한 줄에 하나, 선택)', t: 'lines' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
+  lwrite: [{ k: 'q', label: '질문', t: 'text' }, { k: 'say', label: '들려줄 글 (전체)', t: 'area', req: true }, { k: 'h1', label: '왼쪽 열 제목 (비우면 시간)', t: 'text' }, { k: 'h2', label: '오른쪽 열 제목 (비우면 일과)', t: 'text' },
+    { k: 'rows', label: '표 (오른쪽 글 · 왼쪽 정답)', t: 'rows', req: true, blank: () => ({ label: '', ans: '' }), cols: [{ k: 'label', label: '오른쪽 글', t: 'text' }, { k: 'ans', label: '정답 (예: 7:30)', t: 'text', w: 140 }] }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
+  mfree: [{ k: 'topic', label: '주제 (예: pants)', t: 'text' }, { k: 'topicLabel', label: '주제 이름표 (비우면 상품)', t: 'text' }, { k: 'lines', label: '글의 틀 (한 줄에 한 문장, {} 가 쓸 자리)', t: 'lines', req: true }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
+  swrt: [{ k: 'title', label: '체크리스트 제목', t: 'text' }, { k: 'rules', label: '체크 규칙 (쓰면 자동으로 켜져요)', t: 'rows', req: true, blank: () => ({ label: '' }), cols: [{ k: 'label', label: '규칙 설명', t: 'text' }, { k: 're', label: '찾을 패턴 (정규식, 예: how much)', t: 'text', w: 220 }] },
+    { k: 'minSent', label: '최소 문장 수', t: 'num' }, { k: 'starter', label: '입력칸 안내 글', t: 'text' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
+};
 const SPEC: Record<string, Field[]> = {
   ...SPEC2,
+  ...SPEC3,
   wchoice: [{ k: 'word', label: '단어', t: 'vword', req: true }, { k: 'dir', label: '방향 (ko2en: 뜻→영어, en2ko: 영어→뜻)', t: 'text' }, { k: 'wrong', label: '오답 보기 (한 줄에 하나, 1~5개)', t: 'lines', req: true }, VINST],
   pchoice: [{ k: 'pic', label: '그림(단원 단어)', t: 'vword', req: true }, { k: 'q', label: '질문 (비우면 기본 문구)', t: 'text' }, OPTS, HINT, VINST],
   dchoice: [{ k: 'q', label: '질문', t: 'text' }, { k: 'pic', label: '그림(단원 단어, 선택)', t: 'vword' }, { k: 'lines', label: '대화 (한 줄에 한 문장)', t: 'lines' }, OPTS, VINST],
@@ -143,6 +162,15 @@ export function defaultItem(kind: string): Obj {
     case 'compose': return { k: 'compose', title: '', rules: [{ label: '' }], minSent: 1, sample: '' };
     case 'vcards': case 'vtype1': case 'vmatch': case 'vsound': case 'vwrite': return { k: kind, tag: 'vocab', words: [] };
     case 'vspell': return { k: 'vspell', tag: 'vocab', word: '' };
+    case 'sbuild': case 'swrite': return { k: kind, tag: 'write', ans: '' };
+    case 'sfill': return { k: 'sfill', tag: 'write', tpl: '{}', ans: '' };
+    case 'dfill': return { k: 'dfill', tag: 'write', lines: [], ans: [] };
+    case 'sscram': return { k: 'sscram', tag: 'write', ans: '' };
+    case 'sorder': return { k: 'sorder', tag: 'write', items: [{ en: '', ko: '' }, { en: '', ko: '' }] };
+    case 'mwbank': case 'scloze': return { k: kind, tag: kind === 'scloze' ? 'read' : 'write', lines: [], ans: [] };
+    case 'lwrite': return { k: 'lwrite', tag: 'listen', say: '', rows: [{ label: '', ans: '' }] };
+    case 'mfree': return { k: 'mfree', tag: 'write', lines: [] };
+    case 'swrt': return { k: 'swrt', tag: 'write', rules: [{ label: '' }] };
     case 'goal': return { k: 'goal', tag: 'expr', title: '', items: [{ en: '', ko: '' }] };
     case 'kexp': case 'tapl': case 'lsent': case 'lcardp': case 'lcardt': return { k: kind, tag: kind === 'tapl' ? 'speak' : 'listen', items: [{ en: '', ko: '' }, { en: '', ko: '' }] };
     case 'wrepeat': return { k: 'wrepeat', tag: 'vocab', words: [] };

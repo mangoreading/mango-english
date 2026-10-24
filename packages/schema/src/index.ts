@@ -158,14 +158,32 @@ export const SDrill = z.object({ ...T1, k: z.literal('sdrill'), tpl: z.string().
 export const PRead = z.object({ ...T1, k: z.literal('pread'), text: z.array(z.string().min(1)).min(1), ko: z.string().optional() });
 export const MText = z.object({ ...T1, k: z.literal('mtext'), title: z.string().optional(), text: z.array(z.string().min(1)).min(1), explain: z.array(z.string()).optional(), ko: z.string().optional() });
 
+/* ===== 3단계: 쓰기류 =====  빈칸은 {} (정답은 ans 에 순서대로, "|" 로 여러 정답) */
+const alts = z.array(z.string()).optional();
+export const SBuild = z.object({ ...T1, k: z.literal('sbuild'), ko: z.string().optional(), ans: z.string().min(1), alts, hint, starter: z.string().optional() });
+export const SWrite = z.object({ ...T1, k: z.literal('swrite'), ko: z.string().optional(), ans: z.string().min(1), alts, hint, starter: z.string().optional() });
+export const SFill = z.object({ ...T1, k: z.literal('sfill'), ko: z.string().optional(), tpl: z.string().refine((v) => v.includes('{}'), '문장에 {} (빈칸)가 있어야 해요'), ans: z.string().min(1), hint });
+export const DFill = z.object({ ...T1, k: z.literal('dfill'), pic: z.string().optional(), tag2: z.string().optional(), lines: z.array(z.string().min(1)).min(1), ans: z.array(z.string().min(1)).min(1), hint });
+export const SScram = z.object({ ...T1, k: z.literal('sscram'), ko: z.string().optional(), ans: z.string().min(1), extra: z.array(z.string()).optional(), alts, hint });
+export const SOrder = z.object({ ...T1, k: z.literal('sorder'), items: z.array(z.object({ en: z.string().min(1), ko: z.string().optional() })).min(2).max(8) });
+export const MWBank = z.object({ ...T1, k: z.literal('mwbank'), lines: z.array(z.string().min(1)).min(1), ans: z.array(z.string().min(1)).min(1), extra: z.array(z.string()).optional(), hint });
+export const SCloze = z.object({ ...T1, k: z.literal('scloze'), lines: z.array(z.string().min(1)).min(1), ans: z.array(z.string().min(1)).min(1), extra: z.array(z.string()).optional(), hint });
+export const LWrite = z.object({ ...T1, k: z.literal('lwrite'), q: z.string().optional(), say: z.string().min(1), h1: z.string().optional(), h2: z.string().optional(), rows: z.array(z.object({ label: z.string().min(1), ans: z.string().min(1) })).min(1).max(6), hint });
+export const MFree = z.object({ ...T1, k: z.literal('mfree'), topic: z.string().optional(), topicLabel: z.string().optional(), lines: z.array(z.string().min(1)).min(1), hint });
+export const SWrt = z.object({ ...T1, k: z.literal('swrt'), title: z.string().optional(), rules: z.array(z.object({ label: z.string().min(1), re: z.string().optional() })).min(1), minSent: z.number().int().min(1).optional(), starter: z.string().optional(), hint });
+
 export const ActivityItem = z.discriminatedUnion('k', [
   Learn, Text, Brief, Choose, Match, Build, Fill, Write, Compose, Speak, Fade, Dialog,
   VCards, VType1, VSpell, VMatch, VSound, VWrite,
+  SBuild, SWrite, SFill, DFill, SScram, SOrder, MWBank, SCloze, LWrite, MFree, SWrt,
   Goal, KExp, TapL, LSent, LCardP, LCardT, WRepeat, SDrill, PRead, MText,
   WChoice, PChoice, DChoice, TrueFalse, LChText, LChPic, LChList, LMatch, SqChoice, SqTF, SqMulti,
 ]).superRefine((v, ctx) => {
   if (v.k === 'choose' && v.a >= v.opts.length) ctx.addIssue({ code: 'custom', path: ['a'], message: 'a(정답 index)가 opts 범위를 벗어났어요' });
   if ((v.k === 'pchoice' || v.k === 'dchoice' || v.k === 'lchtext' || v.k === 'lchpic' || v.k === 'lchlist' || v.k === 'sqchoice') && v.a >= v.opts.length) ctx.addIssue({ code: 'custom', path: ['a'], message: '정답 번호가 보기 범위를 벗어났어요' });
+  const blanks = (ls: string[]) => ls.join('\n').split('{}').length - 1;
+  if ((v.k === 'dfill' || v.k === 'mwbank' || v.k === 'scloze') && blanks(v.lines) !== v.ans.length) ctx.addIssue({ code: 'custom', path: ['ans'], message: `빈칸({}) ${blanks(v.lines)}개와 정답 ${v.ans.length}개가 달라요` });
+  if (v.k === 'mfree' && blanks(v.lines) < 1) ctx.addIssue({ code: 'custom', path: ['lines'], message: '빈칸 {} 이 하나 이상 있어야 해요' });
   if (v.k === 'sqmulti' && !v.items.some((x) => x.ok)) ctx.addIssue({ code: 'custom', path: ['items'], message: '정답이 하나 이상 있어야 해요' });
   if (v.k === 'vspell' && v.shown !== undefined && v.shown >= v.word.length) ctx.addIssue({ code: 'custom', path: ['shown'], message: '보이는 글자 수는 단어 길이보다 작아야 해요' });
   if (v.k === 'build' && v.ans.split(/\s+/).sort().join(' ') !== [...v.words].sort().join(' ')) ctx.addIssue({ code: 'custom', path: ['words'], message: 'words 를 합치면 ans 와 같아야 해요' });
@@ -173,6 +191,7 @@ export const ActivityItem = z.discriminatedUnion('k', [
 export type ActivityItem = z.infer<typeof ActivityItem>;
 export type Kind = ActivityItem['k'];
 export const KINDS = ['learn', 'text', 'brief', 'choose', 'match', 'build', 'fill', 'write', 'compose', 'speak', 'fade', 'dialog', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite',
+  'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'mfree', 'swrt',
   'goal', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext',
   'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti'] as const;
 

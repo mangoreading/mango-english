@@ -97,7 +97,7 @@
 .nv-opt-tile { min-height:5.2em; font-size:1.15em; font-weight:800; background:#F1F3F7; }
 .nv-opt-pic { display:flex; flex-direction:column; align-items:center; gap:.3em; padding:.6em .4em; font-size:1.05em; }
 .nv-opt-pic .nv-img { width:100%; height:6.4em; }
-.nv-hintwrap { order:1; display:flex; align-items:flex-start; gap:.7em; width:100%; max-width:34em; }
+.nv-hintwrap { order:1; margin:0 auto; display:flex; align-items:flex-start; gap:.7em; width:100%; max-width:34em; }
 .nv-hintbtn { font:inherit; font-size:.8em; font-weight:700; background:#FFF1CC; color:#7A5A00; border:.1em solid var(--nv-navy); border-radius:999px; padding:.25em .9em; cursor:pointer; flex:none; }
 .nv-hintbox { display:none; flex:1; padding:.5em .9em; border:.1em dashed #8A94A8; border-radius:.6em; color:#6C7690; font-size:.95em; background:#FCFDFF; } .nv-hintbox.on { display:block; } .nv-hintbox p { margin:.1em 0; }
 .nv-lm { display:grid; grid-template-columns:1fr 1fr; gap:4em; width:100%; max-width:46em; }
@@ -148,3 +148,33 @@
 .nv-p-lg { font-size:1.35em !important; margin:.5em 0 !important; } .nv-p-md { margin:.5em 0; font-size:1.1em; line-height:1.5; }
 .nv-hintbtn.on { background:#FFE39A; } .nv-listen:disabled { opacity:.4; cursor:default; }
 .nv-tabs { justify-content:flex-start; }
+
+/* ===== 3단계 템플릿 (쓰기류) ===== */
+.nv-kobar { width:100%; max-width:34em; padding:.7em 1em; border-top:.08em solid #C5CEDC; border-bottom:.08em solid #C5CEDC; text-align:center; color:#C0392B; font-size:1.3em; }
+.nv-winput { font:inherit; font-size:1.3em; width:min(24em,100%); padding:.7em 1em; text-align:center; color:#1F2A44; background:#fff; border:.11em solid var(--nv-line); border-radius:.9em; }
+.nv-winput:focus, .nv-blank:focus { outline:none; border-color:var(--nv-blue); box-shadow:0 0 0 .18em rgba(79,125,240,.18); }
+.nv-winput:disabled { background:#F2FBF5; color:#1E8E4E; font-weight:700; border-color:#7BC89A; }
+.nv-capsule-in { padding:.5em 1.6em; } .nv-winput-cap { width:100%; border:0; background:transparent; font-size:1em; font-weight:700; padding:.3em; } .nv-winput-cap:disabled { background:transparent; }
+.nv-okc { border-color:var(--nv-ok); background:#F2FBF5; } .nv-badc { border-color:var(--nv-bad); }
+.nv-fbbad { color:var(--nv-bad); }
+.nv-bl { width:100%; max-width:44em; } .nv-bl p { margin:.5em 0; font-size:1.25em; line-height:1.9; text-align:center; } .nv-bl-big p { font-size:1.55em; }
+.nv-bl-box { border:.1em solid var(--nv-line); border-radius:.4em; padding:1.1em 2em; background:#fff; } .nv-bl-box p { text-align:left; }
+.nv-blank { font:inherit; font-size:.95em; text-align:center; padding:.1em .3em; margin:0 .25em; border:0; border-bottom:.1em solid #8A94A8; border-radius:.2em .2em 0 0; background:#F5F7FB; color:#1F2A44; }
+.nv-blank:disabled { background:#F2FBF5; color:#1E8E4E; font-weight:700; border-bottom-color:#7BC89A; }
+.nv-blank-w { width:12em; } .nv-bok { background:#F2FBF5 !important; color:#1E8E4E !important; border-bottom-color:#7BC89A !important; }
+.nv-bbad { background:#FFE3E0 !important; border-bottom-color:var(--nv-bad) !important; }
+.nv-capsule-bl { padding:.3em 1.6em; } .nv-capsule-bl .nv-bl p { font-size:1em; } .nv-bl.nv-capsule-bl { max-width:46em; } .nv-bl.nv-capsule-bl p { margin:.2em 0; font-size:1.6em; text-align:center; }
+.nv-picwrap { position:relative; display:inline-block; } .nv-price { position:absolute; right:-4.4em; top:1em; font-size:.95em; background:#fff; border:.08em solid #CBD3E1; padding:.25em .9em .25em 1.1em; clip-path:polygon(12% 0,100% 0,100% 100%,12% 100%,0 50%); }
+.nv-capsule-chips { min-height:3.6em; display:flex; gap:.6em; align-items:center; justify-content:center; flex-wrap:wrap; padding:.5em 1.6em; border-color:#4C74C9; }
+.nv-placed { background:#fff; border-color:#4C74C9; } .nv-chipb:disabled { opacity:.25; cursor:default; }
+.nv-ord { display:flex; flex-direction:column; gap:.5em; width:100%; max-width:40em; }
+.nv-ordi { display:flex; align-items:center; gap:.9em; padding:.55em 1em; background:#EFF1F5; border:.1em solid #CED5E2; border-radius:.4em; cursor:grab; user-select:none; }
+.nv-ordi.nv-drag { opacity:.4; background:#FFE9A6; } .nv-ordi.nv-right { background:#E4F6EA; border-color:var(--nv-ok); }
+.nv-grip { color:#9AA5BA; letter-spacing:-.15em; } .nv-ordi .nv-tt { flex:1; display:flex; flex-direction:column; gap:.1em; } .nv-ordi .nv-tt b { font-size:1.2em; } .nv-ordi .nv-tt i { font-style:normal; color:var(--nv-sub); font-size:.9em; }
+.nv-ud { display:flex; flex-direction:column; gap:.1em; } .nv-ud button { font:inherit; font-size:.7em; width:2.2em; height:1.5em; padding:0; border:.08em solid var(--nv-line); background:#fff; border-radius:.3em; cursor:pointer; } .nv-ud button:disabled { opacity:.25; cursor:default; }
+.nv-slotb { font:inherit; min-width:6em; height:1.7em; margin:0 .25em; padding:0 .5em; border:0; border-bottom:.1em solid #8A94A8; background:#F5F7FB; color:#1F2A44; border-radius:.2em .2em 0 0; cursor:pointer; vertical-align:middle; } .nv-slotb.filled { background:#EAF2FB; font-weight:700; }
+.nv-ltab { border-collapse:collapse; min-width:26em; border:.1em solid #C5CEDC; background:#fff; } .nv-ltab th { padding:.5em 1em; border-bottom:.1em dashed #98A3B7; font-size:1.15em; } .nv-ltab td { padding:.45em 1em; font-size:1.2em; text-align:center; }
+.nv-time { width:5.6em !important; margin:0; border:.1em solid var(--nv-line); border-radius:.5em; padding:.3em; }
+.nv-topic { align-self:flex-start; font-size:1.1em; margin-left:6em; } .nv-topic b { display:inline-block; margin-left:.4em; padding:.15em 1.2em; background:#FFF1CC; border:.08em solid #E0C27A; border-radius:.5em; }
+.nv-split-w { grid-template-columns:.42fr .58fr; gap:1.2em; } .nv-chk { border:.1em dashed #98A3B7; border-radius:.5em; padding:1em 1.2em; color:#7C8AA5; display:flex; flex-direction:column; gap:.3em; } .nv-chk p { margin:.1em 0; } .nv-chk p.on { color:#1E5FD0; font-weight:700; } .nv-chkt { color:#55627D; margin-bottom:.4em; }
+.nv-wta { font:inherit; font-size:1.1em; line-height:1.7; min-height:12em; padding:1em 1.2em; border:.1em solid #CBD3E1; border-radius:.4em; background:#F4F5F7; color:#1F2A44; resize:none; } .nv-wta:focus { outline:none; border-color:var(--nv-blue); }

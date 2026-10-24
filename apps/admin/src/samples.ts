@@ -1,7 +1,7 @@
 import type { VWord } from '@mango/play';
 import type { VocabOpt } from './ItemForm';
 
-const NATIVE = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti', 'goal', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext'];
+const NATIVE = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti', 'goal', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext', 'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'mfree', 'swrt'];
 export const isNativeKind = (k: string) => NATIVE.includes(k);
 
 /** 샘플 미리보기용 단어 (앱에 들어 있는 그림 사용) */
@@ -16,6 +16,17 @@ export const NATIVE_SAMPLES: Record<string, Record<string, unknown>> = {
   vcards: { k: 'vcards', tag: 'vocab', words: W }, vtype1: { k: 'vtype1', tag: 'vocab', words: W },
   vspell: { k: 'vspell', tag: 'vocab', word: 'sunglasses', shown: 6 }, vmatch: { k: 'vmatch', tag: 'vocab', words: W },
   vsound: { k: 'vsound', tag: 'vocab', words: W }, vwrite: { k: 'vwrite', tag: 'vocab', words: W },
+  sbuild: { k: 'sbuild', tag: 'write', ko: '이거 얼마예요?', ans: 'How much is it?' },
+  swrite: { k: 'swrite', tag: 'write', ko: '이 양말은 얼마예요?', ans: 'How much are these socks?', starter: 'How much' },
+  sfill: { k: 'sfill', tag: 'write', ko: '이 양말은 얼마예요?', tpl: 'How much {} these socks?', ans: 'are' },
+  dfill: { k: 'dfill', tag: 'write', pic: 'jacket', tag2: '$60', lines: ['A: How much are these {}?', 'B: They are {} dollars.'], ans: ['jackets|jacket', 'sixty'] },
+  sscram: { k: 'sscram', tag: 'write', ko: '신발은 얼마인가요?', ans: 'How much are these shoes?' },
+  sorder: { k: 'sorder', tag: 'write', items: [{ en: 'How much is it?', ko: '이것은 얼마인가요?' }, { en: "It's five thousand won.", ko: '이것은 5,000원이에요.' }, { en: 'How much are they?', ko: '그것들은 얼마예요?' }, { en: "They're two thousand won.", ko: '이것들은 2,000원이에요.' }, { en: "I'll take it.", ko: '그걸로 할게요.' }] },
+  mwbank: { k: 'mwbank', tag: 'write', lines: ['Look at these {} shoes.', 'How much are {}?', "They're {} won.", '{} on sale.'], ans: ['bright', 'these shoes', 'twenty thousand', "They're"], extra: [] },
+  scloze: { k: 'scloze', tag: 'read', lines: ["That's too bad, Emily.", 'You bought many cookies yesterday.', 'Use a money {}.', 'You can check and {} your money.'], ans: ['planner', 'save'], extra: ['want', 'sale'], hint: ['save : 절약하다'] },
+  lwrite: { k: 'lwrite', tag: 'listen', q: 'Siya의 일과에 맞게 시각을 적어 봅시다.', say: 'Siya goes to school at eight thirty. She has a violin class at four. She goes home at five fifteen.', rows: [{ label: 'go to school', ans: '8:30' }, { label: 'have a violin class', ans: '4:00' }, { label: 'go home', ans: '5:15' }], hint: ['go to school → 학교에 가요', 'go home → 집에 가요'] },
+  mfree: { k: 'mfree', tag: 'write', topic: 'pants', lines: ['Look at {}.', 'How much {}?', '{} won.', '{} on sale.'], hint: ['Look at these cool pants.'] },
+  swrt: { k: 'swrt', tag: 'write', title: '내 글 체크리스트', rules: [{ label: '물건 이름 (book)', re: 'book' }, { label: '가격 (…won)', re: 'won' }, { label: "사겠다고 말하기 (I'll take…)", re: "i'?ll take" }], minSent: 3, starter: 'I want to buy a book.', hint: ['How much ~? 로 시작해 보세요'] },
   goal: { k: 'goal', tag: 'expr', title: 'Ask and answer about [[prices]].', ko: '물건의 가격을 묻고 답할 수 있어요.', pic: 'shoes', items: [{ en: 'How much are these socks?', ko: '이 양말은 얼마예요?' }, { en: "They're two thousand won.", ko: '2,000원이에요.' }, { en: 'May I help you?', ko: '도와 드릴까요?' }] },
   kexp: { k: 'kexp', tag: 'listen', items: [{ en: 'How much is it?', ko: '이것은 얼마예요?', label: '가격 묻기' }, { en: "It's five thousand won.", ko: '5,000원이에요.', label: '가격 답하기' }, { en: 'How much are they?', ko: '그것들은 얼마예요?' }, { en: "They're two thousand won.", ko: '2,000원이에요.' }, { en: "I'll take it.", ko: '그걸로 할게요.' }] },
   tapl: { k: 'tapl', tag: 'speak', items: [{ en: 'How much is it?', ko: '이것은 얼마예요?' }, { en: "It's five thousand won.", ko: '5,000원이에요.' }, { en: 'How much are they?', ko: '그것들은 얼마예요?' }, { en: "They're two thousand won.", ko: '2,000원이에요.' }, { en: "I'll take it.", ko: '그걸로 할게요.' }] },

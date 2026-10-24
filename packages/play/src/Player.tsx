@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { TEXT_KINDS, type Res, type VWord } from './common';
 import { VCards, VMatch, VSound, VSpell, VType1, VWrite } from './kinds';
+import { DFill, LWrite, MFree, MWBank, SBuild, SCloze, SFill, SOrder, SScram, SWrite, SWrt } from './kinds4';
 import { Goal, KExp, LCardP, LCardT, LSent, MText, PRead, SDrill, TapL, WRepeat } from './kinds3';
 import { DChoice, LChList, LChPic, LChText, LMatch, PChoice, SqChoice, SqMulti, SqTF, TrueFalse, WChoice } from './kinds2';
 
@@ -17,6 +18,17 @@ const INST: Record<string, string> = {
   vmatch: '단어와 한글 뜻을 매칭해 보세요.',
   vsound: '소리를 듣고 단어를 매칭해 보세요.',
   vwrite: '단어를 직접 써보며 익히세요.',
+  sbuild: '다음 문장을 영어로 써 보세요.',
+  swrite: '다음 문장을 영어로 써 보세요.',
+  sfill: '다음 문장에 들어갈 단어를 써 보세요.',
+  dfill: '다음 그림을 보고 대화를 완성해 보세요.',
+  sscram: '단어나 청크를 올바른 순서로 배열하여 문장을 완성해 봅시다.',
+  sorder: '문장을 순서대로 나열해 보세요.',
+  mwbank: '보기에서 알맞은 단어를 골라 글을 완성하세요.',
+  scloze: '글을 읽고, 빈칸에 들어갈 내용을 채우세요.',
+  lwrite: '잘 듣고, 알맞게 적어 봅시다.',
+  mfree: '글을 완성해 보세요.',
+  swrt: '글을 읽고, 내 글을 써 보세요.',
   goal: '이번 차시에서 배울 내용을 확인해 보세요.',
   kexp: '핵심 표현을 듣고 따라 읽어 보세요.',
   tapl: '문장을 눌러 듣고 소리 내어 읽어 보세요.',
@@ -39,7 +51,7 @@ const INST: Record<string, string> = {
   sqtf: '글을 읽고, 질문에 답해 보세요.',
   sqmulti: '글을 읽고, 질문에 답해 보세요.',
 };
-const KIND = { goal: Goal, kexp: KExp, tapl: TapL, lsent: LSent, lcardp: LCardP, lcardt: LCardT, sdrill: SDrill, pread: PRead, mtext: MText, wrepeat: WRepeat, vcards: VCards, vtype1: VType1, vspell: VSpell, vmatch: VMatch, vsound: VSound, vwrite: VWrite,
+const KIND = { sbuild: SBuild, swrite: SWrite, sfill: SFill, dfill: DFill, sscram: SScram, sorder: SOrder, mwbank: MWBank, scloze: SCloze, lwrite: LWrite, mfree: MFree, swrt: SWrt, goal: Goal, kexp: KExp, tapl: TapL, lsent: LSent, lcardp: LCardP, lcardt: LCardT, sdrill: SDrill, pread: PRead, mtext: MText, wrepeat: WRepeat, vcards: VCards, vtype1: VType1, vspell: VSpell, vmatch: VMatch, vsound: VSound, vwrite: VWrite,
   wchoice: WChoice, pchoice: PChoice, dchoice: DChoice, tf: TrueFalse, lchtext: LChText, lchpic: LChPic, lchlist: LChList, lmatch: LMatch,
   sqchoice: SqChoice, sqtf: SqTF, sqmulti: SqMulti } as const;
 
