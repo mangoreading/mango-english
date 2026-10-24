@@ -350,3 +350,15 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-bl-box.nv-bl-fix { min-height:0; height:auto; padding:1.3em 2.6em; } .nv-bl-box.nv-bl-fix p { margin:.35em 0; }
 .nv-wbody .nv-bl-box.nv-bl-fix { flex:none; }
 .nv-wbody > .nv-chips-bank { margin-bottom:2em; } .nv-wbody .nv-toolrow { margin-bottom:-1.3em; }
+/* 모범 글 읽기: 왼쪽 문장과 오른쪽 해설/해석이 같은 줄에 놓이도록 줄 단위 격자, 폭은 좁게 */
+.nv-mtbody { gap:1em; }
+.nv-mtgrid { width:100%; max-width:44em; display:flex; flex-direction:column; }
+.nv-mtrow { display:grid; grid-template-columns:1fr 1fr; align-items:stretch; }
+.nv-mtl, .nv-mtr { display:flex; align-items:center; min-height:3em; }
+.nv-mtl { padding:.2em 1.4em .2em 0; } .nv-mtr { padding:.2em 0 .2em 1.4em; border-left:.08em solid #C5CEDC; }
+.nv-mtl p, .nv-mtr p { margin:0; }
+.nv-mthead .nv-mtl, .nv-mthead .nv-mtr { min-height:3.4em; } .nv-mthead .nv-mtr { border-left-color:transparent; }
+.nv-mtgrid .nv-sale { margin:0; }
+.nv-mtgrid .nv-tabs { gap:.5em; justify-content:flex-start; order:0; }
+.nv-mtgrid .nv-tabs .nv-hintbtn { width:auto; }
+.nv-mtbody .nv-ptools { width:100%; max-width:44em; }
