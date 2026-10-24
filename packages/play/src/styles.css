@@ -404,3 +404,30 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-ordi.nv-right.nv-landed { background:#FFE9A6; }
 .nv-wbody .nv-split-w { width:80%; margin:0 auto; }
 .nv-wbody .nv-split-w ~ .nv-hintwrap { width:80%; max-width:none; }
+
+/* ===== Speaking 레이아웃: Writing 과 같은 방식(위에서부터 같은 자리), 그림 보고 말하기·우리말 보고 말하기·듣고 대답하기는 캡슐 위치 동일 ===== */
+.nv-wbody.nv-spz { padding-top:calc(5.4em + 1vh); }
+.nv-sptop { width:100%; height:9.4em; flex:none; display:flex; align-items:center; justify-content:center; }
+.nv-sptop .nv-kobar { max-width:34em; font-size:1.25em; }
+.nv-capsule-sp.nv-main { position:relative; font-size:1.5em; padding:0 1.6em; gap:1em; justify-content:center; }
+.nv-capsule-sp.nv-main b { font-size:1em; } .nv-capsule-sp.nv-main .nv-spk { font-size:1em; position:absolute; right:1.2em; top:50%; transform:translateY(-50%); }
+.nv-gw .bad { background:none; text-decoration:underline wavy #D64545; text-underline-offset:.2em; color:#9A3B00; }
+/* 힌트 버튼은 기획서처럼 캡슐 안 왼쪽, 열리면 캡슐 아래에 겹쳐 보임(레이아웃 안 밀림) */
+.nv-hintwrap.nv-hint-in { position:static; width:0; height:0; min-height:0; max-width:none; margin:0; display:block; order:0; }
+.nv-hint-in .nv-hintbtn { position:absolute; left:1.4em; top:50%; transform:translateY(-50%); font-size:.5em; }
+.nv-hint-in .nv-hintbox { position:absolute; left:0; right:0; top:calc(100% + .4em); z-index:6; font-size:.6em; text-align:left; background:#fff; box-shadow:0 .2em .8em rgba(68,84,106,.18); }
+/* 따라 읽기 */
+.nv-ra-body .nv-ra { width:min(100%,40em); max-width:none; }
+.nv-ra-body .nv-ra-t { font-size:1.5em; height:3.2em; padding:0 1em; display:flex; align-items:center; justify-content:center; box-sizing:border-box; }
+.nv-ra-body .nv-ra-r { min-height:8em; }
+/* 역할극 */
+.nv-wbody.nv-spz .nv-dlgbig { width:fit-content; max-width:100%; }
+/* AI 대화: 마이크는 입력칸 안 오른쪽 */
+.nv-wbody .nv-chat, .nv-wbody .nv-chatin { max-width:38em; }
+.nv-chatin { position:relative; } .nv-chatin input { padding-right:3.6em; } .nv-chatin input:focus { outline:none; border-color:#CBD3E1; }
+.nv-chatin .nv-mic-s { position:absolute; right:3.6em; top:50%; transform:translateY(-50%); }
+.nv-wbody .nv-pres { max-width:46em; }
+.nv-wbody .nv-sit { max-width:34em; font-size:1.25em; }
+.nv-wbody.nv-spz.nv-sprole { padding-top:1.2em; } .nv-sprole .nv-sptop { height:8.4em; }
+.nv-hint-in .nv-hintbox { top:calc(100% + 12.5em); left:4%; right:4%; }
+.nv-hint-in .nv-hintbox { top:calc(100% + .5em); left:62%; right:0; }

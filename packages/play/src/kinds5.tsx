@@ -62,12 +62,16 @@ function Speak({ item, pic, onDone, mode }: KindProps & { mode: 'look' | 'kor' |
   });
   const src = pic(item.pic);
   const self = () => { setOk(true); onDone([{ tag: 'speak', ok: true }]); };
+  const missed = g?.filter((x) => !x.ok).map((x) => x.w.replace(/[^\w']/g, '')).filter(Boolean) ?? [];
   return (
-    <div className={'nv-body' + (mode === 'listen' ? ' nv-hasl' : '')}>
+    <div className={'nv-body nv-wbody nv-spz' + (mode === 'listen' ? ' nv-hasl' : '')}>
       {mode === 'listen' && <button type="button" className="nv-listen nv-listen-top" onClick={() => say(item.ask ?? target)}>🔊 <b>듣기</b></button>}
-      {mode === 'look' && src && <div className="nv-picwrap"><img className="nv-img nv-img-md" src={imgSrc(src)} alt="" draggable={false} />{item.label && <span className="nv-pill">{item.label}</span>}{item.price && <span className="nv-price">{item.price}</span>}</div>}
-      {mode !== 'look' && item.ko && <div className="nv-kobar">{item.ko}</div>}
-      <div className={'nv-capsule nv-capsule-sp' + (ok ? ' nv-okc' : '')}>
+      <div className="nv-sptop">
+        {mode === 'look' ? (src && <div className="nv-picwrap"><img className="nv-img nv-img-md" src={imgSrc(src)} alt="" draggable={false} />{item.label && <span className="nv-pill">{item.label}</span>}{item.price && <span className="nv-price">{item.price}</span>}</div>)
+          : item.ko && <div className="nv-kobar">{item.ko}</div>}
+      </div>
+      <div className={'nv-capsule nv-capsule-sp nv-main' + (ok ? ' nv-okc' : '')}>
+        <Hint inline lines={item.hint ?? []} kind={item.k} item={item} ctx={() => ({ input: `Student must say: "${target}" (${mode === 'look' ? 'looking at a picture' : mode === 'kor' ? 'translating the Korean line' : 'answering a question they listened to'}).\n` + (tries ? `Attempts: ${tries}. Speech recognised: "${heard}". Words not recognised: ${missed.join(', ') || 'none'}.` : 'No attempt yet.'), wrong: tries })} />
         <b>{g ? <Words g={g} /> : target}</b>
         {mode === 'look' && <button className="nv-spk" onClick={() => say(target)} aria-label="듣기">🔊</button>}
       </div>
@@ -77,7 +81,6 @@ function Speak({ item, pic, onDone, mode }: KindProps & { mode: 'look' | 'kor' |
         <button className="nv-btn nv-ghost nv-selfbtn" style={{ visibility: !ok && (mic.err === 'nosupport' || mic.err === 'denied' || tries >= 3) ? 'visible' : 'hidden' }} onClick={self}>소리 내어 말했어요</button>
       </div>
       {ok ? <Fb className="nv-fbmsg on">잘했어요! 👏</Fb> : mic.err && <Fb className="nv-fbmsg on nv-fbbad">{ERRMSG[mic.err]}</Fb>}
-      <Hint lines={item.hint ?? []} kind={item.k} item={item} ctx={() => ({ input: heard, wrong: tries })} />
     </div>
   );
 }
@@ -100,7 +103,7 @@ export function RAloud({ item, onDone }: KindProps) {
   useEffect(() => { const id = setTimeout(() => say(target), 500); return () => clearTimeout(id); /* 열릴 때 한 번 들려줌 */ // eslint-disable-next-line
   }, []);
   return (
-    <div className="nv-body">
+    <div className="nv-body nv-wbody nv-wtop nv-ra-body">
       <div className="nv-ra">
         <div className="nv-ra-t">{g ? <Words g={g} /> : target}</div>
         <div className="nv-ra-r">{g && <>
@@ -136,8 +139,8 @@ export function Role({ item, pic, onDone }: KindProps) {
   function advFrom(from: number, r: string) { setG(null); const n = from + 1; setPos(n); if (n >= lines.length) { if (!fired.current) { fired.current = true; onDone([{ tag: 'speak', ok: true }]); } return; } if (lines[n].who !== r) { setWait(true); sayThen(lines[n].text, () => { setWait(false); advFrom(n, r); }); } }
   const src = pic(item.pic);
   if (!me) return (
-    <div className="nv-body">
-      {src && <div className="nv-picwrap"><img className="nv-img nv-img-md" src={imgSrc(src)} alt="" draggable={false} />{item.price && <span className="nv-price">{item.price}</span>}</div>}
+    <div className="nv-body nv-wbody nv-spz nv-sprole">
+      <div className="nv-sptop">{src && <div className="nv-picwrap"><img className="nv-img nv-img-md" src={imgSrc(src)} alt="" draggable={false} />{item.label && <span className="nv-pill">{item.label}</span>}{item.price && <span className="nv-price">{item.price}</span>}</div>}</div>
       <div className="nv-dlgbig">
         {lines.map((l, i) => <p key={i}><b>{l.who ? l.who + ' :' : ''}</b> <Rich2 t={l.text} /></p>)}
       </div>
@@ -145,8 +148,8 @@ export function Role({ item, pic, onDone }: KindProps) {
     </div>
   );
   return (
-    <div className="nv-body">
-      {src && <div className="nv-picwrap"><img className="nv-img nv-img-md" src={imgSrc(src)} alt="" draggable={false} />{item.price && <span className="nv-price">{item.price}</span>}</div>}
+    <div className="nv-body nv-wbody nv-spz nv-sprole">
+      <div className="nv-sptop">{src && <div className="nv-picwrap"><img className="nv-img nv-img-md" src={imgSrc(src)} alt="" draggable={false} />{item.label && <span className="nv-pill">{item.label}</span>}{item.price && <span className="nv-price">{item.price}</span>}</div>}</div>
       <div className="nv-dlgbig">
         {lines.map((l, i) => (
           <p key={i} className={(i === pos ? 'cur ' : '') + (l.who === me ? 'me' : '') + (i > pos ? ' later' : '')}><b>{l.who ? l.who + ' :' : ''}</b> {i === pos && g && l.who === me ? <Words g={g} /> : <Rich2 t={l.text} />}</p>))}
@@ -174,7 +177,7 @@ export function Present({ item, onDone }: KindProps) {
     setSec(0); r.start(); setState('rec'); }
   const mm = (n: number) => String(Math.floor(n / 60)).padStart(2, '0') + ':' + String(n % 60).padStart(2, '0');
   return (
-    <div className="nv-body nv-bodyw">
+    <div className="nv-body nv-wbody nv-bodyw nv-wtop">
       <div className="nv-pres">
         <div className="nv-script">{lines.map((l, i) => <p key={i}><Rich2 t={l} /></p>)}</div>
         <div className="nv-cam">
@@ -213,7 +216,7 @@ export function AiTalk({ item, onDone }: KindProps) {
   }
   const nextHint = item.hints?.[n] ?? script[n - 1]?.hint;
   return (
-    <div className="nv-body nv-bodyw">
+    <div className="nv-body nv-wbody nv-wtop">
       {item.situation && <div className="nv-kobar nv-sit">{item.situation}</div>}
       <div className="nv-chat">
         {msgs.map((m, i) => <div key={i} className={'nv-msg ' + m.who}>{m.who === 'me' && <em>me</em>}<span>{m.text}</span></div>)}
