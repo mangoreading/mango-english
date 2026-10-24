@@ -362,3 +362,11 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-mtgrid .nv-tabs { gap:.5em; justify-content:flex-start; order:0; }
 .nv-mtgrid .nv-tabs .nv-hintbtn { width:auto; }
 .nv-mtbody .nv-ptools { width:100%; max-width:44em; }
+/* 한글 줄을 위로, 영문 캡슐·입력칸은 폭을 줄여 (문장 쓰기 · 정답 써 보기 · 빈칸 쓰기 · 문장 만들기 공통) */
+.nv-wbody.nv-wtop { padding-top:11vh; }
+.nv-wbody.nv-wtop .nv-koslot { min-height:5.5em; align-items:flex-start; padding-top:.6em; box-sizing:border-box; }
+.nv-wbody .nv-koslot .nv-kobar { max-width:34em; }
+.nv-wbody .nv-main { width:min(100%,40em) !important; }
+.nv-subslot .nv-hintwrap { max-width:40em; }
+.nv-pillin { width:min(20em,100%); }
+.nv-capsule-tpl.nv-main { font-size:1.5em !important; }
