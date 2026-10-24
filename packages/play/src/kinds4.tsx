@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { imgSrc, say, shuffle, type KindProps } from './common';
 import { Rich } from './kinds3';
+import { Hint } from './hint';
 
 /* ===== 3단계 템플릿: 쓰기류 (듣고 쓰기 · 문장 쓰기 · 빈칸 쓰기 · 문장 만들기 · 대화 완성 · 문장 순서 · 보기로 글 완성 · 글 쓰기) ===== */
 const cmp = (s: string) => s.toLowerCase().replace(/[’‘`]/g, "'").replace(/[.?!,]/g, '').replace(/\s+/g, ' ').trim();
@@ -9,15 +10,7 @@ const accepts = (v: string, ans: string) => ans.split('|').some((a) => cmp(a) ==
 export const initials = (s: string) => s.split(' ').map((w) => { const m = w.match(/^([A-Za-z']+)(.*)$/); return m && m[1].length >= 3 ? m[1][0] + '_'.repeat(m[1].length - 1) + m[2] : w; }).join(' ');
 const plain = (t: string) => t.replace(/\[\[|\]\]|\{\{|\}\}/g, '');
 
-function HintBox({ lines }: { lines: string[] }) {
-  const [on, setOn] = useState(false);
-  return (
-    <div className="nv-hintwrap">
-      <button type="button" className="nv-hintbtn" onClick={() => setOn(!on)} aria-expanded={on}>💡 Hint</button>
-      <div className={'nv-hintbox' + (on ? ' on' : '')}>{lines.map((l, i) => <p key={i}>{l}</p>)}</div>
-    </div>
-  );
-}
+function HintBox({ lines, item, ctx }: { lines: string[]; item?: Record<string, any>; ctx?: () => { input: string; wrong: number } }) { return <Hint lines={lines} kind={item?.k} item={item} ctx={ctx} />; } // eslint-disable-line @typescript-eslint/no-explicit-any
 const Ko = ({ t }: { t?: string }) => (t ? <div className="nv-kobar">{t}</div> : null);
 const Msg = ({ ok, bad }: { ok: boolean; bad: boolean }) => <p className={'nv-fbmsg' + (ok || bad ? ' on' : '') + (bad ? ' nv-fbbad' : '')}>{ok ? '정답이에요! 👏' : bad ? '다시 한번 써 보세요' : ''}</p>;
 
@@ -39,7 +32,7 @@ function SB({ item, onDone, mode }: KindProps & { mode: 'cap' | 'box' }) {
       {mode === 'cap' ? <div className={'nv-capsule nv-capsule-in' + (ok ? ' nv-okc' : '') + (bad ? ' nv-shake' : '')}>{input}</div> : <div className={bad ? 'nv-shake' : ''}>{input}</div>}
       <button className="nv-btn" disabled={ok || !v.trim()} onClick={check}>확인</button>
       <Msg ok={ok} bad={bad} />
-      <HintBox lines={item.hint?.length ? item.hint : [initials(ans), item.starter ? `${item.starter} 로 시작해 보세요` : ''].filter(Boolean)} />
+      <HintBox lines={item.hint?.length ? item.hint : [initials(ans), item.starter ? `${item.starter} 로 시작해 보세요` : ''].filter(Boolean)} item={item} ctx={() => ({ input: v, wrong: wrong.current ? 1 : 0 })} />
     </div>
   );
 }
@@ -80,7 +73,7 @@ export function SFill({ item, onDone }: KindProps) {
   return (
     <div className="nv-body"><Ko t={item.ko} />
       <BlankLine item={item} onDone={onDone} />
-      {item.hint?.length ? <HintBox lines={item.hint} /> : <HintBox lines={[initials(String(item.tpl ?? '').replace('{}', (item.ans ?? '').split('|')[0]))]} />}
+      <HintBox lines={item.hint?.length ? item.hint : [initials(String(item.tpl ?? '').replace('{}', (item.ans ?? '').split('|')[0]))]} item={item} />
     </div>
   );
 }
@@ -92,7 +85,7 @@ export function DFill({ item, pic, onDone }: KindProps) {
     <div className="nv-body">
       {src && <div className="nv-picwrap"><img className="nv-img nv-img-md" src={imgSrc(src)} alt="" draggable={false} />{item.tag2 && <span className="nv-price">{item.tag2}</span>}</div>}
       <Blanks lines={item.lines ?? []} ans={item.ans ?? []} big onDone={onDone} tag="write" />
-      {item.hint?.length ? <HintBox lines={item.hint} /> : null}
+      <HintBox lines={item.hint ?? []} item={item} />
     </div>
   );
 }
@@ -118,7 +111,7 @@ export function SScram({ item, onDone }: KindProps) {
       </div>
       <div className="nv-chips">{chips.map((c) => <button key={c.id} className="nv-chipb" disabled={seq.includes(c.id)} onClick={() => tap(c.id)}>{c.t}</button>)}</div>
       <Msg ok={ok} bad={bad} />
-      {item.hint?.length ? <HintBox lines={item.hint} /> : null}
+      <HintBox lines={item.hint ?? []} item={item} />
     </div>
   );
 }
@@ -179,7 +172,7 @@ function WB({ item, onDone, tag }: KindProps & { tag: string }) {
           })}</p>))}
       </div>
       <Msg ok={ok} bad={bad.some(Boolean)} />
-      {item.hint?.length ? <HintBox lines={item.hint} /> : null}
+      <HintBox lines={item.hint ?? []} item={item} />
     </div>
   );
 }
@@ -209,7 +202,7 @@ export function LWrite({ item, onDone }: KindProps) {
             onChange={(e) => setV(v.map((x, k) => (k === i ? e.target.value : x)))} onKeyDown={(e) => { if (e.key === 'Enter') check(); }} /></td><td>{r.label}</td></tr>))}</tbody></table>
       <button className="nv-btn" disabled={done || v.every((x) => !x.trim())} onClick={check}>확인</button>
       <Msg ok={done} bad={bad.some(Boolean)} />
-      {item.hint?.length ? <HintBox lines={item.hint} /> : null}
+      <HintBox lines={item.hint ?? []} item={item} />
     </div>
   );
 }
@@ -232,7 +225,7 @@ export function MFree({ item, onDone }: KindProps) {
       </div>
       <button className="nv-btn" disabled={ok || v.every((x) => !x.trim())} onClick={submit}>다 썼어요</button>
       <Msg ok={ok} bad={bad} />
-      {item.hint?.length ? <HintBox lines={item.hint} /> : null}
+      <HintBox lines={item.hint ?? []} item={item} />
     </div>
   );
 }
@@ -255,7 +248,7 @@ export function SWrt({ item, onDone }: KindProps) {
       </div>
       <button className="nv-btn" disabled={ok || !all} onClick={() => { setOk(true); onDone([{ tag: 'write', ok: true }]); }}>제출하기</button>
       <Msg ok={ok} bad={false} />
-      {item.hint?.length ? <HintBox lines={item.hint} /> : null}
+      <HintBox lines={item.hint ?? []} item={item} />
     </div>
   );
 }

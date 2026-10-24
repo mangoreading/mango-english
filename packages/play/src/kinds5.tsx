@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { aiHandlers, imgSrc, say, sayThen, type KindProps } from './common';
+import { Hint } from './hint';
 
 /* ===== 4단계 템플릿: 말하기 (그림 보고 말하기 · 우리말 보고 말하기 · 듣고 대답하기 · 따라 읽기 · 역할극 · 발표 · AI 대화) =====
    말소리 인식은 브라우저의 음성 인식(SpeechRecognition)을 쓴다. 지원하지 않는 브라우저에서는 '말했어요' 버튼으로 대신한다. */
@@ -42,11 +43,6 @@ const MicBtn = ({ on, onClick, label }: { on: boolean; onClick: () => void; labe
   </div>
 );
 const Words = ({ g }: { g: { w: string; ok: boolean }[] }) => <span className="nv-gw">{g.map((x, i) => <span key={i} className={x.ok ? 'ok' : 'bad'}>{x.w} </span>)}</span>;
-function Hint({ lines }: { lines: string[] }) {
-  const [on, setOn] = useState(false);
-  if (!lines.length) return null;
-  return <div className="nv-hintwrap"><button type="button" className="nv-hintbtn" onClick={() => setOn(!on)}>💡 Hint</button><div className={'nv-hintbox' + (on ? ' on' : '')}>{lines.map((l, i) => <p key={i}>{l}</p>)}</div></div>;
-}
 
 /** 말하기 3종: lookspeak(그림) / saykor(우리말) / lspeak(듣고 대답) */
 function Speak({ item, pic, onDone, mode }: KindProps & { mode: 'look' | 'kor' | 'listen' }) {
@@ -72,7 +68,7 @@ function Speak({ item, pic, onDone, mode }: KindProps & { mode: 'look' | 'kor' |
       {!ok && <MicBtn on={mic.on} onClick={mic.on ? mic.stop : mic.start} />}
       {ok ? <p className="nv-fbmsg on">잘했어요! 👏</p> : mic.err && <p className="nv-fbmsg on nv-fbbad">{ERRMSG[mic.err]}</p>}
       {!ok && (mic.err === 'nosupport' || mic.err === 'denied' || tries >= 3) && <button className="nv-btn nv-ghost" onClick={self}>소리 내어 말했어요</button>}
-      <Hint lines={item.hint ?? []} />
+      <Hint lines={item.hint ?? []} kind={item.k} item={item} ctx={() => ({ input: heard, wrong: tries })} />
     </div>
   );
 }

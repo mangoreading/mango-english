@@ -202,3 +202,4 @@
 .nv-send { font:inherit; font-size:1.2em; width:2.4em; height:2.2em; background:#FF9F1C; color:#fff; border:0; border-radius:.5em; cursor:pointer; } .nv-send:disabled { opacity:.4; }
 .nv-chathint { margin:0; font-size:.95em; } .nv-chathint b { color:#C0392B; }
 @media (max-width:760px) { .nv-pres { grid-template-columns:1fr; } }
+.nv-aihint { color:#2F4F9E !important; } .nv-aibtn { font:inherit; font-size:.85em; margin-top:.4em; padding:.3em 1em; border-radius:999px; border:.1em solid #8FA9E0; background:#EEF3FF; color:#2F4F9E; cursor:pointer; font-weight:700; } .nv-aibtn:disabled { opacity:.5; }

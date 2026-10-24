@@ -1,22 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { imgSrc, say, shuffle, type KindProps, type Res } from './common';
+import { Hint } from './hint';
 
 /* ===== 1단계 템플릿: 고르기 · True/False · 듣고 고르기 · 짝짓기 · 글 읽고 답하기 =====
    문항 데이터는 문항 안에 글이 그대로 들어 있고, 그림은 단원 어휘의 key(pic / opts[].flag)로 가리킨다. */
 type O = { t: string; flag?: string };
 const Img = ({ src, cls }: { src: string | null; cls: string }) => (src ? <img className={cls} src={imgSrc(src)} alt="" draggable={false} /> : null);
 
-/** 말하기 힌트 버튼: 누르면 점선 상자로 스크립트/도움말이 열린다 */
-function Hint({ lines }: { lines?: string[] }) {
-  const [on, setOn] = useState(false);
-  if (!lines?.length) return null;
-  return (
-    <div className="nv-hintwrap">
-      <button type="button" className="nv-hintbtn" onClick={() => setOn(!on)} aria-expanded={on}>💡 Hint</button>
-      <div className={'nv-hintbox' + (on ? ' on' : '')}>{lines.map((l, i) => <p key={i}>{l}</p>)}</div>
-    </div>
-  );
-}
 const Listen = ({ text }: { text: string }) => <button type="button" className="nv-listen" onClick={() => say(text)}>🔊 <b>듣기</b></button>;
 const Lines = ({ lines, cls }: { lines: string[]; cls?: string }) => <div className={cls ?? 'nv-dlg'}>{lines.map((l, i) => <p key={i}>{l}</p>)}</div>;
 
@@ -25,15 +15,16 @@ function useSingle(a: number, tag: string, onDone: (r: Res[]) => void) {
   const [sel, setSel] = useState<number | null>(null);
   const [bad, setBad] = useState<number | null>(null);
   const [ok, setOk] = useState(false);
-  const wrong = useRef(false);
+  const wrong = useRef(false); const nw = useRef(0); const last = useRef(-1);
   function pick(i: number, spoken?: string) {
     if (ok) return;
     if (spoken) say(spoken);
     if (i === a) { setSel(i); setBad(null); setOk(true); onDone([{ tag, ok: !wrong.current }]); }
-    else { wrong.current = true; setBad(i); setTimeout(() => setBad(null), 500); }
+    else { wrong.current = true; nw.current += 1; last.current = i; setBad(i); setTimeout(() => setBad(null), 500); }
   }
   const cls = (i: number) => (ok && i === a ? ' nv-right' : bad === i ? ' nv-wrong nv-shake' : sel === i ? ' nv-on' : '');
-  return { pick, cls, ok };
+  const ctx = () => ({ input: last.current >= 0 ? `선택한 보기: ${last.current + 1}번` : '', wrong: nw.current });
+  return { pick, cls, ok, ctx };
 }
 const Msg = ({ ok }: { ok: boolean }) => <p className={'nv-fbmsg' + (ok ? ' on' : '')}>{ok ? '정답이에요! 👏' : ''}</p>;
 
@@ -64,7 +55,7 @@ export function PChoice({ item, pic, onDone }: KindProps) {
       {item.q && <p className="nv-q">{item.q}</p>}
       <Img src={pic(item.pic)} cls="nv-img nv-img-md" />
       <div className="nv-list">{opts.map((o, i) => <button key={i} className={'nv-opt' + s.cls(i)} onClick={() => s.pick(i, o.t)}>{o.t}</button>)}</div>
-      <Msg ok={s.ok} /><Hint lines={item.hint} />
+      <Msg ok={s.ok} /><Hint lines={item.hint} kind={item.k} item={item} ctx={s.ctx} />
     </div>
   );
 }
@@ -92,7 +83,7 @@ export function TrueFalse({ item, onDone }: KindProps) {
         <button className={'nv-opt nv-tf' + s.cls(0)} onClick={() => s.pick(0)}>True (맞아요)</button>
         <button className={'nv-opt nv-tf' + s.cls(1)} onClick={() => s.pick(1)}>False (달라요)</button>
       </div>
-      <Msg ok={s.ok} /><Hint lines={item.hint} />
+      <Msg ok={s.ok} /><Hint lines={item.hint} kind={item.k} item={item} ctx={s.ctx} />
     </div>
   );
 }
@@ -111,7 +102,7 @@ function LChoose({ item, pic, onDone, mode }: KindProps & { mode: 'row' | 'pic' 
           </button>
         ))}
       </div>
-      <Msg ok={s.ok} /><Hint lines={item.hint} />
+      <Msg ok={s.ok} /><Hint lines={item.hint} kind={item.k} item={item} ctx={s.ctx} />
     </div>
   );
 }
@@ -175,7 +166,7 @@ export function SqChoice({ item, onDone }: KindProps) {
     <div className="nv-body nv-bodyw"><Story item={item} side={<>
       <p className="nv-qt">Q. {item.q}</p>
       <div className="nv-list nv-list-s">{opts.map((o, i) => <button key={i} className={'nv-opt' + s.cls(i)} onClick={() => s.pick(i)}>{o.t}</button>)}</div>
-      <Msg ok={s.ok} /><Hint lines={item.hint} />
+      <Msg ok={s.ok} /><Hint lines={item.hint} kind={item.k} item={item} ctx={s.ctx} />
     </>} /></div>
   );
 }
@@ -197,7 +188,7 @@ export function SqTF({ item, onDone }: KindProps) {
         <div key={i} className="nv-tfr"><span>{mark(i)} {r.t}</span>
           {[true, false].map((v) => <button key={String(v)} className={'nv-tfb' + (res[i] === v ? ' nv-right' : '') + (bad === i + (v ? 'T' : 'F') ? ' nv-wrong nv-shake' : '')} onClick={() => pick(i, v)}>{v ? 'T' : 'F'}</button>)}
         </div>))}</div>
-      <Msg ok={rows.length > 0 && rows.every((_, i) => res[i] != null)} /><Hint lines={item.hint} />
+      <Msg ok={rows.length > 0 && rows.every((_, i) => res[i] != null)} /><Hint lines={item.hint} kind={item.k} item={item} />
     </>} /></div>
   );
 }
@@ -217,7 +208,7 @@ export function SqMulti({ item, onDone }: KindProps) {
         <button key={i} disabled={ok} className={'nv-opt nv-opt-l' + (ok ? (r.ok ? ' nv-right' : '') : sel.has(i) ? ' nv-on' : '')}
           onClick={() => { const n = new Set(sel); if (n.has(i)) n.delete(i); else n.add(i); setSel(n); }}>{mark(i)} {r.t}</button>))}</div>
       <div className="nv-center"><button className="nv-btn" disabled={ok || !sel.size} onClick={check}>확인</button></div>
-      <Msg ok={ok} /><Hint lines={item.hint} />
+      <Msg ok={ok} /><Hint lines={item.hint} kind={item.k} item={item} />
     </>} /></div>
   );
 }
