@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { TEXT_KINDS, type Res, type VWord } from './common';
+import { imgSrc, TEXT_KINDS, type Res, type VWord } from './common';
 import { VCards, VMatch, VSound, VSpell, VType1, VWrite } from './kinds';
 import { AiTalk, LookSpeak, LSpeak, Present, RAloud, Role, SayKor } from './kinds5';
 import { DFill, LWrite, MFree, MWBank, SBuild, SCloze, SFill, SOrder, SScram, SWrite, SWrt } from './kinds4';
@@ -59,6 +59,8 @@ const INST: Record<string, string> = {
   sqtf: '글을 읽고, 질문에 답해 보세요.',
   sqmulti: '글을 읽고, 질문에 답해 보세요.',
 };
+/** 그림을 문항 화면 안에서 직접 그리는 템플릿 (그 밖의 템플릿은 오른쪽 위에 보조 그림으로 보인다) */
+const OWN_PIC = ['lookspeak', 'role', 'pchoice', 'dchoice', 'dfill', 'goal', 'lcardp', 'lchpic', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat'];
 const KIND = { lookspeak: LookSpeak, saykor: SayKor, lspeak: LSpeak, raloud: RAloud, role: Role, present: Present, aitalk: AiTalk, sbuild: SBuild, swrite: SWrite, sfill: SFill, dfill: DFill, sscram: SScram, sorder: SOrder, mwbank: MWBank, scloze: SCloze, lwrite: LWrite, mfree: MFree, swrt: SWrt, goal: Goal, kexp: KExp, tapl: TapL, lsent: LSent, lcardp: LCardP, lcardt: LCardT, sdrill: SDrill, pread: PRead, mtext: MText, wrepeat: WRepeat, vcards: VCards, vtype1: VType1, vspell: VSpell, vmatch: VMatch, vsound: VSound, vwrite: VWrite,
   wchoice: WChoice, pchoice: PChoice, dchoice: DChoice, tf: TrueFalse, lchtext: LChText, lchpic: LChPic, lchlist: LChList, lmatch: LMatch,
   sqchoice: SqChoice, sqtf: SqTF, sqmulti: SqMulti } as const;
@@ -112,6 +114,7 @@ export function NativePlayer({ title, items, vocab, nextLabel, onResult, onFinis
       {!Comp || words.length !== keys.length
         ? <p className="nv-hint">이 문항에 쓰인 단어가 단원 어휘에 없어요. 관리자에서 단어를 확인해 주세요. ({keys.filter((k) => !byKey.has(k)).join(', ')})</p>
         : <Comp key={i} item={it} words={words} pic={(k) => (k ? byKey.get(k)?.image ?? null : null)} onDone={onDone} />}
+      {it.pic && !OWN_PIC.includes(it.k) && byKey.get(it.pic)?.image && <img className="nv-sidepic" src={imgSrc(byKey.get(it.pic)!.image)} alt="" draggable={false} />}
       <div className="nv-foot"><button className="nv-btn nv-btn-lg" disabled={!done} onClick={next}>{last ? '결과 보기' : '다음'}</button></div>
     </div>
   );

@@ -14,6 +14,12 @@ export function grade(target: string, heard: string): { w: string; ok: boolean }
   const pool = words(heard);
   return target.split(/\s+/).filter(Boolean).map((t) => { const c = clean(t); const i = pool.indexOf(c); if (i >= 0) { pool.splice(i, 1); return { w: t, ok: true }; } return { w: t, ok: !c }; });
 }
+/** 유창성 별점(추정): 빠뜨리지 않고(완성도) 알맞은 속도로(단어당 0.3~0.9초) 이어 읽었는지. 출시 전 Azure 발음평가의 실제 유창성 점수로 교체 예정 */
+export function fluency(cover: number, target: string, ms: number): number {
+  const n = Math.max(1, target.split(/\s+/).filter(Boolean).length); const per = Math.max(0, ms - 700) / n / 1000; // 시작 지연 0.7초 제외
+  const pace = per < 0.15 ? 0.5 : per < 0.3 ? 0.5 + ((per - 0.15) / 0.15) * 0.5 : per <= 0.9 ? 1 : per <= 1.6 ? 1 - ((per - 0.9) / 0.7) * 0.5 : 0.5;
+  return Math.max(1, Math.min(5, Math.round(5 * cover * pace)));
+}
 const pct = (g: { ok: boolean }[]) => (g.length ? g.filter((x) => x.ok).length / g.length : 0);
 
 /** 마이크 훅: start() 하면 한 번 듣고 결과 문장을 돌려준다 */
@@ -80,24 +86,27 @@ export const LSpeak = (p: KindProps) => <Speak {...p} mode="listen" />;
 export function RAloud({ item, onDone }: KindProps) {
   const target: string = item.target ?? ''; const [round, setRound] = useState(1); const [g, setG] = useState<{ w: string; ok: boolean }[] | null>(null);
   const [fin, setFin] = useState(false); const firstOk = useRef(true);
+  const t0 = useRef(0); const [flu, setFlu] = useState(0);
   const mic = useMic((t) => {
-    const opts = t.split(' | '); const best = opts.map((o) => grade(target, o)).sort((a, b) => pct(b) - pct(a))[0]; setG(best);
+    const opts = t.split(' | '); const best = opts.map((o) => grade(target, o)).sort((a, b) => pct(b) - pct(a))[0]; setG(best); setFlu(fluency(pct(best), target, Date.now() - t0.current));
     if (round === 1) { firstOk.current = pct(best) >= 0.7; if (pct(best) >= 0.95) { setFin(true); onDone([{ tag: 'speak', ok: true }]); } else setRound(2); }
     else { setFin(true); onDone([{ tag: 'speak', ok: firstOk.current }]); }
   });
   const bads = g?.filter((x) => !x.ok).map((x) => x.w.replace(/[^\w']/g, '')) ?? []; const stars = g ? Math.round(pct(g) * 5) : 0;
+  const startMic = () => { t0.current = Date.now(); mic.start(); };
   return (
     <div className="nv-body">
       <div className="nv-ra">
         <div className="nv-ra-t">{g ? <Words g={g} /> : target}</div>
         {g && <div className="nv-ra-r">
           {item.stars && <p className="nv-stars5">정확도 : {[1, 2, 3, 4, 5].map((n) => <span key={n} className={n <= stars ? 'on' : ''}>★</span>)}</p>}
+          {item.fluency && <p className="nv-stars5">유창성 : {[1, 2, 3, 4, 5].map((n) => <span key={n} className={n <= flu ? 'on' : ''}>★</span>)}</p>}
           <p className="nv-ra-m">{fin ? (bads.length ? <>잘했어요! 다음에는 <b>{bads.join(', ')}</b> 를 더 또박또박 말해 봐요.</> : '아주 정확해요! 👏') : <>문장을 다시 한번 들어보면서 {bads.map((b) => <b key={b}>{b} </b>)}를 정확히 발음해 보세요.</>}</p>
         </div>}
       </div>
       <div className="nv-ra-btns">
         <button className="nv-spkc" onClick={() => say(target)} aria-label="듣기">🔊<sup>{fin ? '' : round === 1 ? '1st' : '2nd'}</sup></button>
-        {!fin && <MicBtn on={mic.on} onClick={mic.on ? mic.stop : mic.start} label={round === 1 ? '먼저 들어 본 뒤, 마이크를 눌러 따라 읽어요' : '한 번 더 읽어 볼까요?'} />}
+        {!fin && <MicBtn on={mic.on} onClick={mic.on ? mic.stop : startMic} label={round === 1 ? '먼저 들어 본 뒤, 마이크를 눌러 따라 읽어요' : '한 번 더 읽어 볼까요?'} />}
       </div>
       {!fin && mic.err && <p className="nv-fbmsg on nv-fbbad">{ERRMSG[mic.err]}</p>}
       {!fin && (mic.err === 'nosupport' || mic.err === 'denied') && <button className="nv-btn nv-ghost" onClick={() => { setFin(true); onDone([{ tag: 'speak', ok: true }]); }}>소리 내어 읽었어요</button>}

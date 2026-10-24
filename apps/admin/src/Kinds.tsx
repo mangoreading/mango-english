@@ -32,7 +32,8 @@ export function Types() {
   }
   useEffect(() => { void load(); }, []);
 
-  const shown = useMemo(() => (rows ?? []).filter((r) => cat === '전체' || r.category === cat), [rows, cat]);
+  const visible = useMemo(() => (rows ?? []).filter((r) => !OLD12.includes(r.key)), [rows]);
+  const shown = useMemo(() => visible.filter((r) => cat === '전체' || r.category === cat), [rows, cat]);
   const sel = rows?.find((r) => r.key === selKey) ?? null;
 
   return (
@@ -40,18 +41,18 @@ export function Types() {
       <PageHead title="활동 템플릿" sub="문항이 쓰는 활동 화면의 종류예요. 이름·설명·영역·사용 여부를 여기서 관리하고, 새 템플릿이 필요하면 Claude에게 요청해 주세요." />
       {msg && <p className={msg.t === 'ok' ? 'mx-ok' : 'mx-err'}>{msg.s}</p>}
       <div className="mx-seg">
-        {['전체', ...CATEGORIES].map((c) => <button key={c} className={cat === c ? 'on' : ''} onClick={() => setCat(c)}>{c === '전체' ? 'All' : catLabel(c)} ({c === '전체' ? rows?.length ?? 0 : (rows ?? []).filter((x) => x.category === c).length})</button>)}
+        {['전체', ...CATEGORIES].map((c) => <button key={c} className={cat === c ? 'on' : ''} onClick={() => setCat(c)}>{c === '전체' ? 'All' : catLabel(c)} ({c === '전체' ? visible.length : visible.filter((x) => x.category === c).length})</button>)}
       </div>
       {!rows ? <p className="mx-muted">불러오는 중…</p> : (
         <div className="mx-grid">
           <div className="mx-card">
             <table>
-              <thead><tr><th className="mx-no">No</th><th>영역</th><th>한글 이름</th><th>영어 이름</th><th>코드</th><th>버전</th><th>설명</th><th>문항</th><th>단원</th><th>상태</th></tr></thead>
+              <thead><tr><th className="mx-no">No</th><th>영역</th><th>한글 이름</th><th>영어 이름</th><th>코드</th><th>버전</th><th>설명</th><th>상태</th></tr></thead>
               <tbody>
                 {shown.map((r, n) => (
                   <tr key={r.key} className={'mx-click' + (r.key === selKey ? ' mx-sel' : '')} onClick={() => setSelKey(r.key)}>
                     <td className="mx-no">{n + 1}</td><td>{catLabel(r.category)}</td><td><b>{r.name_ko}</b></td><td>{r.name_en}</td><td><code>{r.key}</code></td><td>v{r.version ?? 1}</td><td className="mx-muted">{r.description}</td>
-                    <td>{use[r.key]?.items ?? 0}{use[r.key]?.old ? <span className="mx-chip review" style={{ marginLeft: 6 }}>옛 버전 {use[r.key]!.old}</span> : null}</td><td>{use[r.key]?.units ?? 0}</td>
+                    
                     <td><span className={'mx-chip ' + (r.active ? 'approved' : 'draft')}>{r.active ? '사용' : '숨김'}</span></td>
                   </tr>
                 ))}
@@ -68,6 +69,8 @@ export function Types() {
   );
 }
 
+/** 기획서(PDF) 밖의 옛 12종: 목록에서 숨긴다(기존 Unit 2 문항이 아직 쓰고 있어 삭제하지 않음) */
+const OLD12 = ['learn', 'text', 'brief', 'choose', 'match', 'build', 'fill', 'write', 'compose', 'speak', 'fade', 'dialog'];
 function Detail({ row, use, onSaved }: { row: KindRow; use?: { items: number; units: number; old: number }; onSaved: (m: { t: 'ok' | 'err'; s: string }) => void }) {
   const [f, setF] = useState(row);
   const dirty = JSON.stringify(f) !== JSON.stringify(row);

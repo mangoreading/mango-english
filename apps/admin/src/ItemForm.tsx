@@ -72,7 +72,7 @@ const SPEC4: Record<string, Field[]> = {
   lookspeak: [{ k: 'pic', label: '그림(단원 단어)', t: 'vword' }, { k: 'label', label: '그림 이름표 (예: jacket)', t: 'text' }, { k: 'price', label: '가격표 글자 (예: $16,000)', t: 'text' }, { k: 'target', label: '말할 문장', t: 'text', req: true }, { k: 'pass', label: '통과 기준 0.3~1 (비우면 0.7)', t: 'num' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
   saykor: [{ k: 'ko', label: '우리말 문장', t: 'text', req: true }, { k: 'target', label: '말할 영어 문장', t: 'text', req: true }, { k: 'pass', label: '통과 기준 0.3~1 (비우면 0.7)', t: 'num' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
   lspeak: [{ k: 'ask', label: '들려줄 질문 (비우면 말할 문장)', t: 'text' }, { k: 'ko', label: '상황 설명 (예: Ken의 가게 / 선글라스 13,000원)', t: 'text' }, { k: 'target', label: '말할 대답 문장', t: 'text', req: true }, { k: 'pass', label: '통과 기준 0.3~1 (비우면 0.7)', t: 'num' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
-  raloud: [{ k: 'target', label: '따라 읽을 문장', t: 'text', req: true }, { k: 'stars', label: '정확도 별점 보이기 (옵션)', t: 'bool' }, VINST],
+  raloud: [{ k: 'target', label: '따라 읽을 문장', t: 'text', req: true }, { k: 'stars', label: '정확도 별점 보이기 (옵션)', t: 'bool' }, { k: 'fluency', label: '유창성 별점 보이기 (옵션)', t: 'bool' }, VINST],
   role: [{ k: 'pic', label: '그림(단원 단어, 선택)', t: 'vword' }, { k: 'price', label: '가격표 글자 (선택)', t: 'text' }, { k: 'lines', label: '대화 (한 줄에 한 문장, "A: May I help you?" 형식, 강조 [[파랑]] {{빨강}})', t: 'lines', req: true }, VINST],
   present: [{ k: 'text', label: '발표 글 (한 줄에 한 문장, 강조 [[파랑]])', t: 'lines', req: true }, VINST],
   aitalk: [{ k: 'situation', label: '상황 (학생에게 보이는 글)', t: 'text', req: true }, { k: 'role', label: 'AI 역할 (예: 시계 가게 점원)', t: 'text' }, { k: 'open', label: 'AI 첫 말 (선택)', t: 'text' }, { k: 'turns', label: '대화 횟수 (비우면 대본 수)', t: 'num' },
@@ -151,6 +151,9 @@ const SPEC: Record<string, Field[]> = {
     { k: 'free', label: '자유 대화', t: 'obj', fields: [{ k: 'n', label: '자유 대화 횟수', t: 'num' }] },
   ],
 };
+/** 오른쪽 위 보조 그림(선택)을 쓸 수 있는 템플릿 */
+for (const k of ['tf', 'lchtext', 'lchlist', 'sqchoice', 'sqtf', 'sqmulti', 'pread', 'mtext', 'aitalk', 'mfree', 'saykor', 'lspeak', 'raloud', 'sbuild', 'swrite', 'sscram', 'sfill', 'mwbank', 'scloze', 'swrt', 'sdrill', 'present', 'lwrite', 'sorder'])
+  if (SPEC[k] && !SPEC[k].some((f) => f.k === 'pic')) SPEC[k] = [...SPEC[k], { k: 'pic', label: '보조 그림 (단원 단어, 선택)', t: 'vword' }];
 const COMMON: Field[] = [
   { k: 'tag', label: '영역', t: 'tag' }, { k: 'lo', label: '학습목표 코드', t: 'text' }, { k: 'flag', label: '상황 그림 코드', t: 'text' },
   { k: 'ctx', label: '말하는 사람 카드', t: 'obj', fields: [{ k: 'key', label: '인물 코드', t: 'text' }, { k: 'line', label: '상황 한 줄', t: 'text' }] },

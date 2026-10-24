@@ -121,7 +121,7 @@ export const VWrite = z.object({ ...vbase, k: z.literal('vwrite'), words: VKeys 
 
 /* ===== 1단계: 고르기 · True/False · 듣고 고르기 · 짝짓기 · 글 읽고 답하기 ===== */
 const hint = z.array(z.string()).optional();
-const T1 = { ...base, inst: z.string().optional() };
+const T1 = { ...base, inst: z.string().optional(), /** 화면 오른쪽 위에 보이는 그림(단원 단어 key, 선택) */ pic: z.string().optional() };
 /** 뜻 고르기: 단원 단어 1개 + 오답 보기. dir=ko2en 이면 한글 뜻을 보고 영어를, en2ko 면 반대로 */
 export const WChoice = z.object({ ...T1, k: z.literal('wchoice'), word: z.string().min(1), dir: z.enum(['ko2en', 'en2ko']).optional(), wrong: z.array(z.string().min(1)).min(1).max(5) });
 /** 그림 보고 고르기 */
@@ -177,7 +177,7 @@ const sp = { ...T1, target: z.string().min(1), pass: z.number().min(0.3).max(1).
 export const LookSpeak = z.object({ ...sp, k: z.literal('lookspeak'), pic: z.string().optional(), label: z.string().optional(), price: z.string().optional() });
 export const SayKor = z.object({ ...sp, k: z.literal('saykor'), ko: z.string().min(1) });
 export const LSpeak = z.object({ ...sp, k: z.literal('lspeak'), ask: z.string().optional(), ko: z.string().optional() });
-export const RAloud = z.object({ ...T1, k: z.literal('raloud'), target: z.string().min(1), stars: z.boolean().optional() });
+export const RAloud = z.object({ ...T1, k: z.literal('raloud'), target: z.string().min(1), stars: z.boolean().optional(), fluency: z.boolean().optional() });
 export const Role = z.object({ ...T1, k: z.literal('role'), pic: z.string().optional(), price: z.string().optional(), lines: z.array(z.string().regex(/^\s*[A-Za-z]+\s*[:：]/, '"A: 문장" 형식이어야 해요')).min(2).max(10) });
 export const Present = z.object({ ...T1, k: z.literal('present'), text: z.array(z.string().min(1)).min(1) });
 export const AiTalk = z.object({ ...T1, k: z.literal('aitalk'), situation: z.string().min(1), role: z.string().optional(), open: z.string().optional(), turns: z.number().int().min(1).max(10).optional(), script: z.array(z.object({ ai: z.string().min(1), hint: z.string().optional() })).optional(), hints: z.array(z.string()).optional() });
