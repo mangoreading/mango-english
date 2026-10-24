@@ -43,8 +43,8 @@ function useMic(onText: (t: string) => void) {
 }
 const ERRMSG: Record<string, string> = { nosupport: '이 브라우저는 말소리 인식을 지원하지 않아요. 소리 내어 읽고 아래 버튼을 눌러 주세요.', denied: '마이크 사용이 막혀 있어요. 주소창의 마이크 허용을 눌러 주세요.', nospeech: '소리가 들리지 않았어요. 다시 말해 보세요.', error: '잘 듣지 못했어요. 다시 한번 말해 보세요.' };
 
-const MicBtn = ({ on, onClick, label }: { on: boolean; onClick: () => void; label?: string }) => (
-  <div className="nv-micwrap">
+const MicBtn = ({ on, onClick, label, dim }: { on: boolean; onClick: () => void; label?: string; dim?: boolean }) => (
+  <div className={'nv-micwrap' + (dim ? ' nv-dim' : '')}>
     <button type="button" className={'nv-mic' + (on ? ' on' : '')} onClick={onClick} aria-label="말하기">🎤</button>
     <span>{on ? '듣고 있어요… 말해 보세요' : label ?? '버튼을 눌러 소리내어 말해보세요'}</span>
   </div>
@@ -69,12 +69,14 @@ function Speak({ item, pic, onDone, mode }: KindProps & { mode: 'look' | 'kor' |
       {mode !== 'look' && item.ko && <div className="nv-kobar">{item.ko}</div>}
       <div className={'nv-capsule nv-capsule-sp' + (ok ? ' nv-okc' : '')}>
         <b>{g ? <Words g={g} /> : target}</b>
-        <button className="nv-spk" onClick={() => say(target)} aria-label="듣기">🔊</button>
+        {mode === 'look' && <button className="nv-spk" onClick={() => say(target)} aria-label="듣기">🔊</button>}
       </div>
-      {g && <p className="nv-heard">들린 말: “{heard}” · 일치 {Math.round(pct(g) * 100)}%</p>}
-      {!ok && <MicBtn on={mic.on} onClick={mic.on ? mic.stop : mic.start} />}
+      <MicBtn on={mic.on} onClick={ok ? () => undefined : mic.on ? mic.stop : mic.start} dim={ok} />
+      <div className="nv-spstat">
+        <p className="nv-heard">{g ? <>들린 말: “{heard}” · 일치 {Math.round(pct(g) * 100)}%</> : '\u00a0'}</p>
+        <button className="nv-btn nv-ghost nv-selfbtn" style={{ visibility: !ok && (mic.err === 'nosupport' || mic.err === 'denied' || tries >= 3) ? 'visible' : 'hidden' }} onClick={self}>소리 내어 말했어요</button>
+      </div>
       {ok ? <Fb className="nv-fbmsg on">잘했어요! 👏</Fb> : mic.err && <Fb className="nv-fbmsg on nv-fbbad">{ERRMSG[mic.err]}</Fb>}
-      {!ok && (mic.err === 'nosupport' || mic.err === 'denied' || tries >= 3) && <button className="nv-btn nv-ghost" onClick={self}>소리 내어 말했어요</button>}
       <Hint lines={item.hint ?? []} kind={item.k} item={item} ctx={() => ({ input: heard, wrong: tries })} />
     </div>
   );
@@ -95,22 +97,24 @@ export function RAloud({ item, onDone }: KindProps) {
   });
   const bads = g?.filter((x) => !x.ok).map((x) => x.w.replace(/[^\w']/g, '')) ?? []; const stars = g ? Math.round(pct(g) * 5) : 0;
   const startMic = () => { t0.current = Date.now(); mic.start(); };
+  useEffect(() => { const id = setTimeout(() => say(target), 500); return () => clearTimeout(id); /* 열릴 때 한 번 들려줌 */ // eslint-disable-next-line
+  }, []);
   return (
     <div className="nv-body">
       <div className="nv-ra">
         <div className="nv-ra-t">{g ? <Words g={g} /> : target}</div>
-        {g && <div className="nv-ra-r">
+        <div className="nv-ra-r">{g && <>
           {item.stars && <p className="nv-stars5">정확도 : {[1, 2, 3, 4, 5].map((n) => <span key={n} className={n <= stars ? 'on' : ''}>★</span>)}</p>}
           {item.fluency && <p className="nv-stars5">유창성 : {[1, 2, 3, 4, 5].map((n) => <span key={n} className={n <= flu ? 'on' : ''}>★</span>)}</p>}
           <p className="nv-ra-m">{fin ? (bads.length ? <>잘했어요! 다음에는 <b>{bads.join(', ')}</b> 를 더 또박또박 말해 봐요.</> : '아주 정확해요! 👏') : <>문장을 다시 한번 들어보면서 {bads.map((b) => <b key={b}>{b} </b>)}를 정확히 발음해 보세요.</>}</p>
-        </div>}
+        </>}</div>
       </div>
       <div className="nv-ra-btns">
         <button className="nv-spkc" onClick={() => say(target)} aria-label="듣기">🔊<sup>{fin ? '' : round === 1 ? '1st' : '2nd'}</sup></button>
-        {!fin && <MicBtn on={mic.on} onClick={mic.on ? mic.stop : startMic} label={round === 1 ? '먼저 들어 본 뒤, 마이크를 눌러 따라 읽어요' : '한 번 더 읽어 볼까요?'} />}
+        <MicBtn dim={fin} on={mic.on} onClick={fin ? () => undefined : mic.on ? mic.stop : startMic} label={fin ? '\u00a0' : round === 1 ? '먼저 들어 본 뒤, 마이크를 눌러 따라 읽어요' : '한 번 더 읽어 볼까요?'} />
       </div>
       {!fin && mic.err && <Fb className="nv-fbmsg on nv-fbbad">{ERRMSG[mic.err]}</Fb>}
-      {!fin && (mic.err === 'nosupport' || mic.err === 'denied') && <button className="nv-btn nv-ghost" onClick={() => { setFin(true); onDone([{ tag: 'speak', ok: true }]); }}>소리 내어 읽었어요</button>}
+      <div className="nv-spstat"><button className="nv-btn nv-ghost nv-selfbtn" style={{ visibility: !fin && (mic.err === 'nosupport' || mic.err === 'denied') ? 'visible' : 'hidden' }} onClick={() => { setFin(true); onDone([{ tag: 'speak', ok: true }]); }}>소리 내어 읽었어요</button></div>
     </div>
   );
 }
@@ -134,8 +138,10 @@ export function Role({ item, pic, onDone }: KindProps) {
   if (!me) return (
     <div className="nv-body">
       {src && <div className="nv-picwrap"><img className="nv-img nv-img-md" src={imgSrc(src)} alt="" draggable={false} />{item.price && <span className="nv-price">{item.price}</span>}</div>}
-      <p className="nv-q">내가 맡을 역할을 골라 보세요</p>
-      <div className="nv-tfrow">{roles.map((r) => <button key={r} className="nv-opt nv-tf" onClick={() => begin(r)}>{r} 역할</button>)}</div>
+      <div className="nv-dlgbig">
+        {lines.map((l, i) => <p key={i}><b>{l.who ? l.who + ' :' : ''}</b> <Rich2 t={l.text} /></p>)}
+      </div>
+      <div className="nv-rolebar"><span>내가 맡을 역할을 골라 보세요</span>{roles.map((r) => <button key={r} className="nv-opt nv-tf nv-rolebtn" onClick={() => begin(r)}>{r} 역할</button>)}</div>
     </div>
   );
   return (
@@ -145,11 +151,9 @@ export function Role({ item, pic, onDone }: KindProps) {
         {lines.map((l, i) => (
           <p key={i} className={(i === pos ? 'cur ' : '') + (l.who === me ? 'me' : '') + (i > pos ? ' later' : '')}><b>{l.who ? l.who + ' :' : ''}</b> {i === pos && g && l.who === me ? <Words g={g} /> : <Rich2 t={l.text} />}</p>))}
       </div>
-      {pos >= lines.length ? <Fb className="nv-fbmsg on">역할극을 마쳤어요! 👏</Fb> : mine ? <>
-        <MicBtn on={mic.on} onClick={mic.on ? mic.stop : mic.start} label="내 차례예요. 마이크를 누르고 말해 보세요" />
-        {mic.err && <Fb className="nv-fbmsg on nv-fbbad">{ERRMSG[mic.err]}</Fb>}
-        {(mic.err === 'nosupport' || mic.err === 'denied') && <button className="nv-btn nv-ghost" onClick={() => adv(pos)}>말했어요</button>}
-      </> : <p className="nv-hint">{wait ? '상대 차례예요. 잘 들어 보세요…' : ''}</p>}
+      <MicBtn dim={!mine} on={mic.on} onClick={mine ? (mic.on ? mic.stop : mic.start) : () => undefined} label={pos >= lines.length ? '\u00a0' : mine ? '내 차례예요. 마이크를 누르고 말해 보세요' : wait ? '상대 차례예요. 잘 들어 보세요…' : '\u00a0'} />
+      {pos >= lines.length ? <Fb className="nv-fbmsg on">역할극을 마쳤어요! 👏</Fb> : mine && mic.err ? <Fb className="nv-fbmsg on nv-fbbad">{ERRMSG[mic.err]}</Fb> : null}
+      <div className="nv-spstat"><button className="nv-btn nv-ghost nv-selfbtn" style={{ visibility: mine && (mic.err === 'nosupport' || mic.err === 'denied') ? 'visible' : 'hidden' }} onClick={() => adv(pos)}>말했어요</button></div>
     </div>
   );
 }
@@ -175,14 +179,15 @@ export function Present({ item, onDone }: KindProps) {
         <div className="nv-script">{lines.map((l, i) => <p key={i}><Rich2 t={l} /></p>)}</div>
         <div className="nv-cam">
           {state === 'done' ? <video src={url} controls playsInline /> : <video ref={vid} muted playsInline />}
-          {state === 'idle' && <div className="nv-camph">카메라를 켜고 발표해 볼까요?</div>}
+          {state === 'idle' && <div className="nv-camph">빨간 버튼을 눌러 카메라를 켜고 발표해 볼까요?</div>}
           {state === 'rec' && <span className="nv-rect">● {mm(sec)}</span>}
         </div>
       </div>
       <div className="nv-ra-btns">
-        {state === 'idle' && <button className="nv-btn" onClick={open}>카메라 켜기</button>}
+        {state === 'idle' && <button className="nv-recb" onClick={open} aria-label="카메라 켜기" />}
         {state === 'ready' && <button className="nv-recb" onClick={start} aria-label="녹화 시작" />}
         {state === 'rec' && <button className="nv-recb on" onClick={() => rec.current?.stop()} aria-label="녹화 끝내기" />}
+        {state === 'done' && <span />}
         {state === 'done' && <Fb className="nv-fbmsg on">발표를 마쳤어요! 👏 (영상은 이 기기에만 있어요)</Fb>}
         {(state === 'idle' || state === 'ready') && err && <button className="nv-btn nv-ghost" onClick={() => { setState('done'); onDone([{ tag: 'speak', ok: true }]); }}>건너뛰기</button>}
       </div>
@@ -219,7 +224,7 @@ export function AiTalk({ item, onDone }: KindProps) {
         {micSupported() && <button type="button" className={'nv-mic nv-mic-s' + (mic.on ? ' on' : '')} onClick={mic.on ? mic.stop : mic.start} aria-label="말하기">🎤</button>}
         <button type="button" className="nv-send" disabled={!v.trim() || busy} onClick={() => void send()} aria-label="보내기">➤</button>
       </div> : <Fb className="nv-fbmsg on">대화를 잘 마쳤어요! 👏</Fb>}
-      {nextHint && !fin && <p className="nv-chathint">💡 <b>{nextHint}</b></p>}
+      <p className="nv-chathint">{nextHint && !fin ? <>💡 <b>{nextHint}</b></> : '\u00a0'}</p>
     </div>
   );
 }
