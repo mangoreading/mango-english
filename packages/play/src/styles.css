@@ -396,3 +396,5 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 /* 해설/해석 탭을 바꿔도 좌우 폭이 움직이지 않게: 두 내용을 같은 칸에 겹쳐 두고 보이는 쪽만 바꾼다 */
 .nv-mtstack { display:grid; align-items:center; } .nv-mtstack > p { grid-area:1 / 1; } .nv-mtstack > p.nv-mtoff { visibility:hidden; }
 .nv-pillin { width:min(21em,100%); }
+.nv-bl.nv-bl-box:not(.nv-bl-fix) { min-width:36em; }
+.nv-bl.nv-bl-box:not(.nv-bl-fix) ~ .nv-hintwrap { padding-left:1em; box-sizing:border-box; }
