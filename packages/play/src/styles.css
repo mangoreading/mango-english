@@ -391,3 +391,4 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-pillin { width:min(34em,100%); }
 /* 대화 완성: 문장 길이에 맞춰 감싸는 박스 폭이 늘고 줄어든다 (줄바꿈 없음) */
 .nv-bl.nv-bl-box:not(.nv-bl-fix) { width:fit-content; max-width:100%; min-width:16em; } .nv-bl.nv-bl-box:not(.nv-bl-fix) p { white-space:nowrap; }
+.nv-capsule-chips.nv-main { justify-content:center; align-items:center; }
