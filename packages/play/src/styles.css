@@ -395,3 +395,4 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-slotb.nv-over { border-bottom-color:#E0A100; box-shadow:0 .15em 0 #E0A100; } .nv-chips-bank .nv-chipb[draggable="true"] { cursor:grab; }
 /* 해설/해석 탭을 바꿔도 좌우 폭이 움직이지 않게: 두 내용을 같은 칸에 겹쳐 두고 보이는 쪽만 바꾼다 */
 .nv-mtstack { display:grid; align-items:center; } .nv-mtstack > p { grid-area:1 / 1; } .nv-mtstack > p.nv-mtoff { visibility:hidden; }
+.nv-pillin { width:min(21em,100%); }
