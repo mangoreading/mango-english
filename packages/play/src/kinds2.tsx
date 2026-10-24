@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { imgSrc, say, shuffle, type KindProps, type Res } from './common';
 import { Hint } from './hint';
+import { Fb } from './fb';
 
 /* ===== 1단계 템플릿: 고르기 · True/False · 듣고 고르기 · 짝짓기 · 글 읽고 답하기 =====
    문항 데이터는 문항 안에 글이 그대로 들어 있고, 그림은 단원 어휘의 key(pic / opts[].flag)로 가리킨다. */
@@ -26,7 +27,7 @@ function useSingle(a: number, tag: string, onDone: (r: Res[]) => void) {
   const ctx = () => ({ input: last.current >= 0 ? `선택한 보기: ${last.current + 1}번` : '', wrong: nw.current });
   return { pick, cls, ok, ctx };
 }
-const Msg = ({ ok }: { ok: boolean }) => <p className={'nv-fbmsg' + (ok ? ' on' : '')}>{ok ? '정답이에요! 👏' : ''}</p>;
+const Msg = ({ ok }: { ok: boolean }) => <Fb className={'nv-fbmsg' + (ok ? ' on' : '')}>{ok ? '정답이에요! 👏' : ''}</Fb>;
 
 /* ---------- 뜻 고르기 (wchoice) ---------- */
 /** 한글 뜻 ↔ 영어 단어: 문제 상자 오른쪽 위 토글로 바꾼다 (위에 단어가 나오면 보기는 한글 뜻, 위에 뜻이 나오면 보기는 영어 단어). 보기는 2×2 */
@@ -109,7 +110,6 @@ function LChoose({ item, pic, onDone, mode }: KindProps & { mode: 'row' | 'pic' 
   const opts: O[] = item.opts ?? []; const s = useSingle(item.a ?? 0, 'listen', onDone);
   return (
     <div className="nv-body">
-      {item.q && <p className="nv-q">{item.q}</p>}
       <Listen text={item.say ?? ''} />
       <div className={mode === 'list' ? 'nv-list' : 'nv-row4'}>
         {opts.map((o, i) => (

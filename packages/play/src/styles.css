@@ -20,7 +20,8 @@
   display:flex; flex-direction:column; align-items:center; gap:1.2em; overflow:auto; }
 .nv-body::before, .nv-body::after { content:''; flex:1 0 0; }
 .nv-body::after { order:2; }
-.nv-foot { flex:none; height:6em; display:flex; align-items:center; justify-content:center; }
+.nv-foot { flex:none; height:6em; display:flex; align-items:center; justify-content:flex-end; gap:1.6em; padding:0 2.6em; }
+.nv-fbslot { display:flex; align-items:center; }
 .nv-opts { order:-1; align-self:flex-end; display:flex; gap:1.2em; font-size:.9em; color:var(--nv-navy); }
 .nv-opts label { display:flex; flex-direction:row; align-items:center; gap:.4em; font-size:1em; font-weight:600; color:inherit; cursor:pointer; }
 .nv-opts input { padding:0; width:1.1em; height:1.1em; }
@@ -97,7 +98,7 @@
 .nv-opt-tile { min-height:5.2em; font-size:1.15em; font-weight:800; background:#F1F3F7; }
 .nv-opt-pic { display:flex; flex-direction:column; align-items:center; gap:.3em; padding:.6em .4em; font-size:1.05em; }
 .nv-opt-pic .nv-img { width:100%; height:6.4em; }
-.nv-hintwrap { order:1; margin:0 auto; display:flex; align-items:flex-start; gap:.7em; width:100%; max-width:34em; }
+.nv-hintwrap { min-height:8.6em; order:1; margin:0 auto; display:flex; align-items:flex-start; gap:.7em; width:100%; max-width:34em; }
 .nv-hintbtn { font:inherit; font-size:.8em; font-weight:700; background:#FFF1CC; color:#7A5A00; border:.1em solid var(--nv-navy); border-radius:999px; padding:.25em .9em; cursor:pointer; flex:none; }
 .nv-hintbox { display:none; flex:1; padding:.5em .9em; border:.1em dashed #8A94A8; border-radius:.6em; color:#6C7690; font-size:.95em; background:#FCFDFF; } .nv-hintbox.on { display:block; } .nv-hintbox p { margin:.1em 0; }
 .nv-lm { display:grid; grid-template-columns:1fr 1fr; gap:4em; width:100%; max-width:46em; }
@@ -224,7 +225,7 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-card-w { padding:.6em .6em .7em; gap:.5em; } .nv-grid3 .nv-card-w .nv-img { height:5.2em; }
 /* 정답 안내("정답이에요!")는 모든 템플릿에서 패널 왼쪽 아래에 고정: 위치가 움직이지 않는다 */
 .nv-body { position:relative; }
-.nv-body .nv-fbmsg { position:absolute; left:1.6em; bottom:1.2em; margin:0; text-align:left; min-height:0; }
+.nv-foot .nv-fbmsg { order:0; margin:0; opacity:1; font-size:1.15em; white-space:nowrap; }
 /* 그림 보고 쓰기: 판정할 때 칸 크기가 변하지 않게 */
 .nv-card-w { height:11.4em; box-sizing:border-box; } .nv-input-s { height:2.3em; box-sizing:border-box; font-weight:700; } .nv-input-s:disabled { font-weight:700; }
 .nv-hint { min-height:1.4em; }

@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { imgSrc, say, shuffle, type KindProps } from './common';
 import { Rich } from './kinds3';
 import { Hint } from './hint';
+import { Fb } from './fb';
 
 /* ===== 3단계 템플릿: 쓰기류 (듣고 쓰기 · 문장 쓰기 · 빈칸 쓰기 · 문장 만들기 · 대화 완성 · 문장 순서 · 보기로 글 완성 · 글 쓰기) ===== */
 const cmp = (s: string) => s.toLowerCase().replace(/[’‘`]/g, "'").replace(/[.?!,]/g, '').replace(/\s+/g, ' ').trim();
@@ -12,7 +13,7 @@ const plain = (t: string) => t.replace(/\[\[|\]\]|\{\{|\}\}/g, '');
 
 function HintBox({ lines, item, ctx }: { lines: string[]; item?: Record<string, any>; ctx?: () => { input: string; wrong: number } }) { return <Hint lines={lines} kind={item?.k} item={item} ctx={ctx} />; } // eslint-disable-line @typescript-eslint/no-explicit-any
 const Ko = ({ t }: { t?: string }) => (t ? <div className="nv-kobar">{t}</div> : null);
-const Msg = ({ ok, bad }: { ok: boolean; bad: boolean }) => <p className={'nv-fbmsg' + (ok || bad ? ' on' : '') + (bad ? ' nv-fbbad' : '')}>{ok ? '정답이에요! 👏' : bad ? '다시 한번 써 보세요' : ''}</p>;
+const Msg = ({ ok, bad }: { ok: boolean; bad: boolean }) => <Fb className={'nv-fbmsg' + (ok || bad ? ' on' : '') + (bad ? ' nv-fbbad' : '')}>{ok ? '정답이에요! 👏' : bad ? '다시 한번 써 보세요' : ''}</Fb>;
 
 /** 우리말을 보고 영어 문장 쓰기. mode=cap: 캡슐 안에 쓰기 / box: 아래 입력칸에 쓰기 */
 function SB({ item, onDone, mode }: KindProps & { mode: 'cap' | 'box' }) {
