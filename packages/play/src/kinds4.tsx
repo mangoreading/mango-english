@@ -152,9 +152,13 @@ function WB({ item, onDone, tag }: KindProps & { tag: string }) {
   const [slots, setSlots] = useState<(number | null)[]>(ans.map(() => null)); const [bad, setBad] = useState<boolean[]>(ans.map(() => false));
   const [ok, setOk] = useState(false); const wrong = useRef<boolean[]>(ans.map(() => false));
   const txt = (id: number | null) => (id == null ? '' : bank.find((b) => b.id === id)!.t);
-  function put(id: number) {
-    if (ok || slots.includes(id) || bad.some(Boolean)) return; const k = slots.indexOf(null); if (k < 0) return;
-    const n = [...slots]; n[k] = id; setSlots(n);
+  const [dragId, setDragId] = useState<number | null>(null); const [over, setOver] = useState<number | null>(null);
+  /** 보기를 칸에 넣는다. at 이 없으면 비어 있는 첫 칸(위에서부터), 있으면 그 칸(이미 찬 칸이면 바꿔 넣음) */
+  function put(id: number, at?: number) {
+    if (ok || bad.some(Boolean)) return;
+    const n0 = slots.map((x) => (x === id ? null : x)); // 이미 다른 칸에 있던 보기는 옮긴다
+    const k = at ?? n0.indexOf(null); if (k == null || k < 0) return;
+    const n = [...n0]; n[k] = id; setSlots(n);
     if (!n.includes(null)) {
       const b = n.map((x, i) => !accepts(txt(x), ans[i]));
       if (b.some(Boolean)) { b.forEach((x, i) => { if (x) wrong.current[i] = true; }); setBad(b); setTimeout(() => { setBad(ans.map(() => false)); setSlots(n.map((x, i) => (b[i] ? null : x))); }, 800); }
@@ -164,12 +168,12 @@ function WB({ item, onDone, tag }: KindProps & { tag: string }) {
   let bi = 0;
   return (
     <div className="nv-body nv-wbody">
-      <div className="nv-chips nv-chips-bank">{bank.map((c) => <button key={c.id} className="nv-chipb" disabled={slots.includes(c.id)} onClick={() => put(c.id)}>{c.t}</button>)}</div>
+      <div className="nv-chips nv-chips-bank">{bank.map((c) => <button key={c.id} className="nv-chipb" draggable={!slots.includes(c.id) && !ok} onDragStart={() => setDragId(c.id)} onDragEnd={() => { setDragId(null); setOver(null); }} disabled={slots.includes(c.id)} onClick={() => put(c.id)}>{c.t}</button>)}</div>
       <div className="nv-bl nv-bl-box nv-bl-fix">
         {lines.map((l, li) => (
           <p key={li}>{l.split('{}').map((seg, si, arr) => {
             const idx = si < arr.length - 1 ? bi++ : -1;
-            return <span key={si}><Rich text={seg} />{idx >= 0 && <button className={'nv-slotb' + (slots[idx] != null ? ' filled' : '') + (bad[idx] ? ' nv-bbad nv-shake' : '') + (ok ? ' nv-bok' : '')} onClick={() => !ok && slots[idx] != null && setSlots(slots.map((x, k) => (k === idx ? null : x)))}>{txt(slots[idx])}</button>}</span>;
+            return <span key={si}><Rich text={seg} />{idx >= 0 && <button onDragOver={(e) => { e.preventDefault(); setOver(idx); }} onDragLeave={() => setOver(null)} onDrop={(e) => { e.preventDefault(); if (dragId != null) put(dragId, idx); setDragId(null); setOver(null); }} className={'nv-slotb' + (over === idx ? ' nv-over' : '') + (slots[idx] != null ? ' filled' : '') + (bad[idx] ? ' nv-bbad nv-shake' : '') + (ok ? ' nv-bok' : '')} onClick={() => !ok && slots[idx] != null && setSlots(slots.map((x, k) => (k === idx ? null : x)))}>{txt(slots[idx])}</button>}</span>;
           })}</p>))}
       </div>
       <HintBox lines={item.hint ?? []} item={item} />
