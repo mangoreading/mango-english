@@ -260,3 +260,7 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-inst small { display:block; font-weight:500; color:var(--nv-sub); font-size:.8em; margin-top:.15em; }
 .nv-ltab { width:70%; max-width:46em; min-width:0; }
 .nv-ltab th { text-align:center; }
+
+/* 정답 안내는 아래 줄 가운데, 버튼은 오른쪽 */
+.nv-foot { position:relative; } .nv-fbslot { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); }
+.nv-body > .nv-listen { margin-bottom:1.6em; }
