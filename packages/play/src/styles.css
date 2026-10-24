@@ -431,3 +431,24 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-wbody.nv-spz.nv-sprole { padding-top:1.2em; } .nv-sprole .nv-sptop { height:8.4em; }
 .nv-hint-in .nv-hintbox { top:calc(100% + 12.5em); left:4%; right:4%; }
 .nv-hint-in .nv-hintbox { top:calc(100% + .5em); left:62%; right:0; }
+
+/* ── 스킨: forest (어휘 템플릿 시범 적용) — 크림 바탕, 짙은 숲 녹색, 가는 선, 세리프 제목 ── */
+.nv-overlay[data-skin=forest] { --nv-frame:#D9D2BF; --nv-navy:#2F4A3A; --nv-blue:#3E6B4F; --nv-line:#D9D2BF; --nv-sub:#8A8573; --nv-yellow:#C99A2E; --nv-ok:#3E6B4F; --nv-bad:#B4553F;
+  background:#F5F2EA; color:#27302A; font-family:'Pretendard Variable', Pretendard, system-ui, sans-serif; }
+[data-skin=forest] .nv-head { background:#F5F2EA; border-bottom:.07em solid #CFC8B3; }
+[data-skin=forest] .nv-head b, [data-skin=forest] .nv-inst, [data-skin=forest] .nv-q, [data-skin=forest] .nv-word { font-family:'Noto Serif KR','Nanum Myeongjo',Georgia,serif; font-weight:600; letter-spacing:-.01em; }
+[data-skin=forest] .nv-inst { color:#2F4A3A; font-size:1.25em; }
+[data-skin=forest] .nv-dots i { background:#DDD6C3; } [data-skin=forest] .nv-dots i.d1 { background:#3E6B4F; } [data-skin=forest] .nv-dots i.d2 { background:#C99A2E; }
+[data-skin=forest] .nv-pts { color:#8A6A1E; font-weight:600; }
+[data-skin=forest] .nv-body { background:#FBF9F3; border:.07em solid #CFC8B3; border-radius:.5em; box-shadow:none; }
+[data-skin=forest] .nv-card, [data-skin=forest] .nv-big, [data-skin=forest] .nv-opt, [data-skin=forest] .nv-prompt { background:#fff; border:.07em solid #CFC8B3; border-radius:.35em; }
+[data-skin=forest] .nv-card:hover, [data-skin=forest] .nv-opt:hover:not(:disabled), [data-skin=forest] .nv-tile:hover:not(:disabled) { border-color:#3E6B4F; background:#fff; }
+[data-skin=forest] .nv-card.nv-heard { border-color:#3E6B4F; box-shadow:none; border-width:.12em; }
+[data-skin=forest] .nv-card-w.nv-bad { border-color:#B4553F; box-shadow:none; }
+[data-skin=forest] .nv-card span, [data-skin=forest] .nv-ko, [data-skin=forest] .nv-hint { color:#8A8573; }
+[data-skin=forest] .nv-input { border:0; border-bottom:.08em solid #2F4A3A; border-radius:0; background:transparent; }
+[data-skin=forest] .nv-tile { border:.07em solid #CFC8B3; border-radius:.3em; background:#fff; color:#2F4A3A; font-family:'Noto Serif KR',Georgia,serif; }
+[data-skin=forest] .nv-arrow { border:.06em solid #CFC8B3; background:transparent; color:#2F4A3A; }
+[data-skin=forest] .nv-btn { background:#2F4A3A; border-radius:.3em; font-weight:600; }
+[data-skin=forest] .nv-ghost { background:transparent; color:#2F4A3A; border:.07em solid #2F4A3A; }
+[data-skin=forest] .nv-chip { background:transparent; border:.07em solid #2F4A3A; color:#2F4A3A; border-radius:.25em; }
