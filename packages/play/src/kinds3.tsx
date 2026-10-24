@@ -83,23 +83,22 @@ export function Goal({ item, pic, onDone }: KindProps) {
 
 /** 단어 듣고 따라 말하기: 카드 한 장씩 넘기며 듣고 따라 말한다 */
 export function WRepeat({ words, onDone }: KindProps) {
-  const [i, setI] = useState(0); const [seen, setSeen] = useState<Set<number>>(new Set([0])); const [said, setSaid] = useState<Set<number>>(new Set());
+  const [i, setI] = useState(0); const [seen, setSeen] = useState<Set<number>>(new Set([0]));
   const fired = useRef(false); const w = words[i];
-  useEffect(() => { if (!fired.current && said.size === words.length) { fired.current = true; onDone([]); } /* eslint-disable-next-line */ }, [said]);
+  useEffect(() => { say(w.en); /* 카드가 열리면 자동으로 소리 */ }, [i]); // eslint-disable-line
+  useEffect(() => { if (!fired.current && seen.size === words.length) { fired.current = true; onDone([]); } /* eslint-disable-next-line */ }, [seen]);
   const go = (n: number) => { if (n >= 0 && n < words.length) { setI(n); setSeen(new Set(seen).add(n)); } };
   return (
     <div className="nv-body">
-      <div className="nv-row">
+      <div className="nv-row nv-row-far">
         <button className="nv-arrow" disabled={i === 0} onClick={() => go(i - 1)} aria-label="이전">‹</button>
-        <div className={'nv-big' + (said.has(i) ? ' nv-ok' : '')}>
+        <button type="button" className="nv-big nv-bigbtn" onClick={() => say(w.en)} aria-label="다시 듣기">
           {w.image ? <img className="nv-img nv-img-lg" src={imgSrc(w.image)} alt="" draggable={false} /> : <div className="nv-img nv-img-lg" />}
           <b className="nv-word">{w.en}</b><span className="nv-ko">{w.ko}</span>
-          <button className="nv-listen nv-listen-s" onClick={() => say(w.en)}>🔊 <b>듣기</b></button>
-        </div>
+        </button>
         <button className="nv-arrow" disabled={i === words.length - 1} onClick={() => go(i + 1)} aria-label="다음">›</button>
       </div>
-      <button className={'nv-btn' + (said.has(i) ? ' nv-ghost' : '')} onClick={() => setSaid(new Set(said).add(i))}>{said.has(i) ? '따라 말했어요 ✓' : '소리 내어 따라 말했어요'}</button>
-      <p className="nv-hint">{i + 1} / {words.length} · 따라 말한 단어 {said.size}/{words.length}</p>
+      <p className="nv-hint">{i + 1} / {words.length} · 카드를 누르면 소리를 다시 들려줘요</p>
     </div>
   );
 }

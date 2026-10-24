@@ -113,7 +113,7 @@ export function NativePlayer({ title, items, vocab, nextLabel, onResult, onFinis
       <p className="nv-inst">{it.inst || INST[it.k] || ''}</p>
       {!Comp || words.length !== keys.length
         ? <p className="nv-hint">이 문항에 쓰인 단어가 단원 어휘에 없어요. 관리자에서 단어를 확인해 주세요. ({keys.filter((k) => !byKey.has(k)).join(', ')})</p>
-        : <Comp key={i} item={it} words={words} pic={(k) => (k ? byKey.get(k)?.image ?? null : null)} onDone={onDone} />}
+        : <Comp key={i} item={it} words={words} vocab={vocab} pic={(k) => (k ? byKey.get(k)?.image ?? null : null)} onDone={onDone} />}
       {it.pic && !OWN_PIC.includes(it.k) && byKey.get(it.pic)?.image && <img className="nv-sidepic" src={imgSrc(byKey.get(it.pic)!.image)} alt="" draggable={false} />}
       <div className="nv-foot"><button className="nv-btn nv-btn-lg" disabled={!done} onClick={next}>{last ? '결과 보기' : '다음'}</button></div>
     </div>

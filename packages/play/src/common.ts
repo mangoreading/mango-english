@@ -69,6 +69,7 @@ export const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ');
 export interface KindProps {
   item: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
   words: VWord[];            // item.words / item.word 에 해당하는 단어(순서 유지)
+  vocab?: VWord[];           // 단원 어휘 전체 (보기·오답 후보로 쓴다)
   pic: (key?: string | null) => string | null; // 단원 단어 key → 그림 경로
   onDone: (res: Res[]) => void;
 }

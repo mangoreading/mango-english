@@ -38,6 +38,7 @@ export function VType1({ words, onDone }: KindProps) {
   const [wrong, setWrong] = useState<Record<string, boolean>>({});
   const [shake, setShake] = useState(false);
   const w = words[i];
+  useEffect(() => { say(w.en); /* 카드가 열리면 자동으로 소리 */ }, [i]); // eslint-disable-line
   const finish = (d: Record<string, boolean>) => { if (words.every((x) => d[x.key])) onDone(words.map((x) => ({ tag: T, ok: !wrong[x.key] }))); };
   function check() {
     if (done[w.key]) return;
@@ -52,19 +53,20 @@ export function VType1({ words, onDone }: KindProps) {
   function go(n: number) { if (n < 0 || n >= words.length) return; setI(n); setVal(''); }
   return (
     <div className="nv-body">
-      <div className="nv-row">
+      <div className="nv-row nv-row-far">
         <button className="nv-arrow" disabled={i === 0} onClick={() => go(i - 1)} aria-label="이전">‹</button>
-        <div className={'nv-big' + (shake ? ' nv-shake' : '') + (done[w.key] ? ' nv-ok' : '')}>
-          <Pic src={w.image} cls="nv-img nv-img-lg" />
-          <b className="nv-word">{w.en}</b><span className="nv-ko">{w.ko}</span>
+        <div className="nv-col">
+          <div className={'nv-big' + (shake ? ' nv-shake' : '') + (done[w.key] ? ' nv-ok' : '')}>
+            <Pic src={w.image} cls="nv-img nv-img-lg" />
+            <b className="nv-word">{w.en}</b><span className="nv-ko">{w.ko}</span>
+          </div>
+          <div className="nv-inputrow">
+            <input className="nv-input" value={done[w.key] ? w.en : val} disabled={!!done[w.key]} placeholder="단어를 따라 써 보세요" autoCapitalize="off" autoCorrect="off" spellCheck={false}
+              onChange={(e) => setVal(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') check(); }} />
+            <button className="nv-btn" disabled={!!done[w.key] || !val.trim()} onClick={check}>확인</button>
+          </div>
         </div>
         <button className="nv-arrow" disabled={i === words.length - 1} onClick={() => go(i + 1)} aria-label="다음">›</button>
-      </div>
-      <div className="nv-inputrow">
-        <button className="nv-spk" onClick={() => say(w.en)} aria-label="듣기">🔊</button>
-        <input className="nv-input" value={done[w.key] ? w.en : val} disabled={!!done[w.key]} placeholder="단어를 따라 써 보세요" autoCapitalize="off" autoCorrect="off" spellCheck={false}
-          onChange={(e) => setVal(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') check(); }} />
-        <button className="nv-btn" disabled={!!done[w.key] || !val.trim()} onClick={check}>확인</button>
       </div>
       <p className="nv-hint">{Object.keys(done).length}/{words.length} 완료</p>
     </div>
@@ -103,7 +105,6 @@ export function VSpell({ item, words, onDone }: KindProps) {
       <div className="nv-tiles">
         {tiles.map((t) => <button key={t.id} className="nv-tile" disabled={slots.includes(t.id)} onClick={() => tap(t.id)}>{t.c}</button>)}
       </div>
-      <p className="nv-hint"><button className="nv-spk" onClick={() => say(w.en)} aria-label="듣기">🔊</button> 글자를 눌러 단어를 완성해 보세요</p>
     </div>
   );
 }
@@ -166,7 +167,6 @@ function MatchBoard({ words, mode, onDone }: { words: KindProps['words']; mode: 
           <div className="nv-pop-card">
             <Pic src={pop.image} cls="nv-img nv-img-lg" />
             <b className="nv-word">{pop.en}</b><span className="nv-ko">{pop.ko}</span>
-            <span className="nv-pop-snd">🔊</span>
           </div>
         </div>
       )}
@@ -176,21 +176,24 @@ function MatchBoard({ words, mode, onDone }: { words: KindProps['words']; mode: 
 export const VMatch = ({ words, onDone }: KindProps) => <MatchBoard words={words} mode="ko" onDone={onDone} />;
 export const VSound = ({ words, onDone }: KindProps) => <MatchBoard words={words} mode="snd" onDone={onDone} />;
 
-/** ⑥ 그림 보고 쓰기: 여러 단어를 한 화면에서 쓰고 한꺼번에 확인한다. */
+/** ⑥ 그림 보고 쓰기: 여러 단어를 한 화면에서 쓴다. 맞게 쓰면 바로 확인되고, 확인 버튼은 없다. */
 export function VWrite({ words, onDone }: KindProps) {
   const [vals, setVals] = useState<Record<string, string>>({});
   const [ok, setOk] = useState<Record<string, boolean>>({});
   const [bad, setBad] = useState<Record<string, boolean>>({});
-  const [wrong, setWrong] = useState<Record<string, boolean>>({});
+  const wrong = useRef<Record<string, boolean>>({});
   const fired = useRef(false);
-  function check() {
-    const o = { ...ok }, b: Record<string, boolean> = {}, wr = { ...wrong };
-    words.forEach((w) => {
-      if (o[w.key]) return;
-      if (norm(vals[w.key] ?? '') === norm(w.en)) o[w.key] = true; else { b[w.key] = true; wr[w.key] = true; }
-    });
-    setOk(o); setBad(b); setWrong(wr);
-    if (!fired.current && words.every((w) => o[w.key])) { fired.current = true; onDone(words.map((w) => ({ tag: T, ok: !wr[w.key] }))); }
+  function update(w: KindProps['words'][number], v: string, final: boolean) {
+    setVals((x) => ({ ...x, [w.key]: v }));
+    if (norm(v) === norm(w.en)) {
+      setBad((b) => ({ ...b, [w.key]: false }));
+      setOk((o) => {
+        const n = { ...o, [w.key]: true };
+        if (!fired.current && words.every((x) => n[x.key])) { fired.current = true; setTimeout(() => onDone(words.map((x) => ({ tag: T, ok: !wrong.current[x.key] }))), 0); }
+        return n;
+      });
+    } else if (v.trim() && (final || v.trim().length >= w.en.length)) { wrong.current[w.key] = true; setBad((b) => ({ ...b, [w.key]: true })); }
+    else setBad((b) => ({ ...b, [w.key]: false }));
   }
   return (
     <div className="nv-body">
@@ -199,12 +202,11 @@ export function VWrite({ words, onDone }: KindProps) {
           <div key={w.key} className={'nv-card nv-card-w' + (ok[w.key] ? ' nv-heard' : '') + (bad[w.key] ? ' nv-bad' : '')}>
             <Pic src={w.image} />
             <input className="nv-input nv-input-s" value={ok[w.key] ? w.en : vals[w.key] ?? ''} disabled={!!ok[w.key]} autoCapitalize="off" autoCorrect="off" spellCheck={false}
-              onChange={(e) => { setVals({ ...vals, [w.key]: e.target.value }); setBad({ ...bad, [w.key]: false }); }} onKeyDown={(e) => { if (e.key === 'Enter') check(); }} />
-            <span>{w.ko}</span>
+              onChange={(e) => update(w, e.target.value, false)} onBlur={(e) => update(w, e.target.value, true)} />
+            <span className="nv-ko-k">{w.ko}</span>
           </div>
         ))}
       </div>
-      <div className="nv-center"><button className="nv-btn" disabled={words.every((w) => ok[w.key])} onClick={check}>확인</button></div>
       <p className="nv-hint">{Object.keys(ok).length}/{words.length} 맞췄어요</p>
     </div>
   );

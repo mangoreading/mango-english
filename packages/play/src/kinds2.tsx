@@ -29,22 +29,38 @@ function useSingle(a: number, tag: string, onDone: (r: Res[]) => void) {
 const Msg = ({ ok }: { ok: boolean }) => <p className={'nv-fbmsg' + (ok ? ' on' : '')}>{ok ? '정답이에요! 👏' : ''}</p>;
 
 /* ---------- 뜻 고르기 (wchoice) ---------- */
-export function WChoice({ item, words, onDone }: KindProps) {
-  const w = words[0]; const ko2en = (item.dir ?? 'ko2en') === 'ko2en';
-  const opts = useMemo(() => shuffle([{ t: ko2en ? w.en : w.ko, c: true }, ...(item.wrong ?? []).map((t: string) => ({ t, c: false }))]), [item]); // eslint-disable-line
+/** 한글 뜻 ↔ 영어 단어: 문제 상자 오른쪽 위 토글로 바꾼다 (위에 단어가 나오면 보기는 한글 뜻, 위에 뜻이 나오면 보기는 영어 단어). 보기는 2×2 */
+function WChoiceBody({ item, words, vocab, ko2en, onPick, toggle, onDone }: KindProps & { ko2en: boolean; onPick: () => void; toggle: ReactNode }) {
+  const w = words[0];
+  const opts = useMemo(() => {
+    const pool = (vocab ?? []).filter((v) => v.key !== w.key).map((v) => (ko2en ? v.en : v.ko));
+    const given: string[] = item.dir === (ko2en ? 'ko2en' : 'en2ko') || (!item.dir && ko2en) ? item.wrong ?? [] : [];
+    const wr = [...new Set([...given, ...shuffle(pool)])].filter((t) => t !== (ko2en ? w.en : w.ko)).slice(0, 3);
+    return shuffle([{ t: ko2en ? w.en : w.ko, c: true }, ...wr.map((t) => ({ t, c: false }))]);
+  }, [item, ko2en]); // eslint-disable-line
   const a = opts.findIndex((o) => o.c);
   const s = useSingle(a, 'vocab', onDone);
+  useEffect(() => { say(w.en); /* 단어 소리는 문제가 열리면 자동 재생 */ }, [ko2en]); // eslint-disable-line
   return (
     <div className="nv-body">
       <div className="nv-prompt">
-        <span className="nv-chip">{ko2en ? '한글 뜻 → 영어 단어' : '영어 단어 → 한글 뜻'}</span>
+        {toggle}
         <b className={ko2en ? 'nv-ko-lg' : 'nv-en-lg'}>{ko2en ? w.ko : w.en}</b>
-        {!ko2en && <button className="nv-spk" onClick={() => say(w.en)} aria-label="듣기">🔊</button>}
+        <button className="nv-spk" onClick={() => say(w.en)} aria-label="다시 듣기">🔊</button>
       </div>
-      <div className="nv-list">{opts.map((o, i) => <button key={i} className={'nv-opt' + s.cls(i)} onClick={() => s.pick(i, ko2en ? o.t : undefined)}>{o.t}</button>)}</div>
+      <div className="nv-grid22">{opts.map((o, i) => <button key={i} className={'nv-opt nv-opt-c' + s.cls(i)} onClick={() => { onPick(); s.pick(i, ko2en ? o.t : undefined); }}>{o.t}</button>)}</div>
       <Msg ok={s.ok} />
     </div>
   );
+}
+export function WChoice(p: KindProps) {
+  const [ko2en, setK] = useState((p.item.dir ?? 'ko2en') === 'ko2en'); const [touched, setT] = useState(false);
+  const toggle = (
+    <button type="button" className="nv-swap" disabled={touched} onClick={() => setK(!ko2en)} aria-label="한글 뜻과 영어 단어 바꾸기" title="문제 방향 바꾸기">
+      <span className={ko2en ? 'on' : ''}>가</span><i>⇄</i><span className={ko2en ? '' : 'on'}>A</span>
+    </button>
+  );
+  return <WChoiceBody key={String(ko2en)} {...p} ko2en={ko2en} onPick={() => setT(true)} toggle={toggle} />;
 }
 
 /* ---------- 그림 보고 고르기 (pchoice) · 대화 고르기 (dchoice) ---------- */
