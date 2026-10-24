@@ -160,7 +160,7 @@ export const MText = z.object({ ...T1, k: z.literal('mtext'), title: z.string().
 
 /* ===== 3단계: 쓰기류 =====  빈칸은 {} (정답은 ans 에 순서대로, "|" 로 여러 정답) */
 const alts = z.array(z.string()).optional();
-export const SBuild = z.object({ ...T1, k: z.literal('sbuild'), ko: z.string().optional(), ans: z.string().min(1), alts, hint, starter: z.string().optional() });
+export const SBuild = z.object({ ...T1, k: z.literal('sbuild'), ko: z.string().optional(), ans: z.string().min(1), alts, hint, starter: z.string().optional(), tpl: z.string().optional() });
 export const SWrite = z.object({ ...T1, k: z.literal('swrite'), ko: z.string().optional(), ans: z.string().min(1), alts, hint, starter: z.string().optional() });
 export const SFill = z.object({ ...T1, k: z.literal('sfill'), ko: z.string().optional(), tpl: z.string().refine((v) => v.includes('{}'), '문장에 {} (빈칸)가 있어야 해요'), ans: z.string().min(1), hint });
 export const DFill = z.object({ ...T1, k: z.literal('dfill'), pic: z.string().optional(), tag2: z.string().optional(), lines: z.array(z.string().min(1)).min(1), ans: z.array(z.string().min(1)).min(1), hint });
@@ -169,7 +169,7 @@ export const SOrder = z.object({ ...T1, k: z.literal('sorder'), items: z.array(z
 export const MWBank = z.object({ ...T1, k: z.literal('mwbank'), lines: z.array(z.string().min(1)).min(1), ans: z.array(z.string().min(1)).min(1), extra: z.array(z.string()).optional(), hint });
 export const SCloze = z.object({ ...T1, k: z.literal('scloze'), lines: z.array(z.string().min(1)).min(1), ans: z.array(z.string().min(1)).min(1), extra: z.array(z.string()).optional(), hint });
 export const LWrite = z.object({ ...T1, k: z.literal('lwrite'), q: z.string().optional(), say: z.string().min(1), h1: z.string().optional(), h2: z.string().optional(), rows: z.array(z.object({ label: z.string().min(1), ans: z.string().min(1) })).min(1).max(6), hint });
-export const MFree = z.object({ ...T1, k: z.literal('mfree'), topic: z.string().optional(), topicLabel: z.string().optional(), lines: z.array(z.string().min(1)).min(1), hint });
+export const MFree = z.object({ ...T1, k: z.literal('mfree'), topic: z.string().optional(), topicLabel: z.string().optional(), lines: z.array(z.string().min(1)).min(1), lineHints: z.array(z.string()).optional(), hint });
 export const SWrt = z.object({ ...T1, k: z.literal('swrt'), title: z.string().optional(), rules: z.array(z.object({ label: z.string().min(1), re: z.string().optional() })).min(1), minSent: z.number().int().min(1).optional(), starter: z.string().optional(), hint });
 
 /* ===== 4단계: 말하기 ===== */

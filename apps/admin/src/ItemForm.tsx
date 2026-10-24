@@ -64,7 +64,7 @@ const SPEC3: Record<string, Field[]> = {
   scloze: [{ k: 'lines', label: '글 (한 줄에 한 문장, {} 가 빈칸)', t: 'lines', req: true }, { k: 'ans', label: '빈칸 정답 (빈칸 순서대로 한 줄에 하나)', t: 'lines', req: true }, { k: 'extra', label: '오답 보기 (한 줄에 하나, 선택)', t: 'lines' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
   lwrite: [{ k: 'q', label: '질문', t: 'text' }, { k: 'say', label: '들려줄 글 (전체)', t: 'area', req: true }, { k: 'h1', label: '왼쪽 열 제목 (비우면 시간)', t: 'text' }, { k: 'h2', label: '오른쪽 열 제목 (비우면 일과)', t: 'text' },
     { k: 'rows', label: '표 (오른쪽 글 · 왼쪽 정답)', t: 'rows', req: true, blank: () => ({ label: '', ans: '' }), cols: [{ k: 'label', label: '오른쪽 글', t: 'text' }, { k: 'ans', label: '정답 (예: 7:30)', t: 'text', w: 140 }] }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
-  mfree: [{ k: 'topicLabel', label: '주제 칸 이름표 (비우면 상품, 학생이 직접 씀)', t: 'text' }, { k: 'lines', label: '글의 틀 (한 줄에 한 문장, {} 가 쓸 자리)', t: 'lines', req: true }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
+  mfree: [{ k: 'topicLabel', label: '주제 칸 이름표 (비우면 상품, 학생이 직접 씀)', t: 'text' }, { k: 'lines', label: '글의 틀 (한 줄에 한 문장, {} 가 쓸 자리)', t: 'lines', req: true }, { k: 'lineHints', label: '줄별 힌트 (글의 틀과 같은 순서로 한 줄에 하나. 학생이 그 줄을 쓸 때 보여요)', t: 'lines' }, { k: 'hint', label: '전체 힌트 (줄별 힌트가 없을 때 보여요)', t: 'lines' }, VINST],
   swrt: [{ k: 'title', label: '체크리스트 제목', t: 'text' }, { k: 'rules', label: '체크 규칙 (쓰면 자동으로 켜져요)', t: 'rows', req: true, blank: () => ({ label: '' }), cols: [{ k: 'label', label: '규칙 설명', t: 'text' }, { k: 're', label: '찾을 패턴 (정규식, 예: how much)', t: 'text', w: 220 }] },
     { k: 'minSent', label: '최소 문장 수', t: 'num' }, { k: 'starter', label: '입력칸 안내 글', t: 'text' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
 };

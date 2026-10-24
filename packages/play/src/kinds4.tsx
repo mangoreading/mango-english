@@ -218,6 +218,12 @@ export function LWrite({ item, onDone }: KindProps) {
 export function MFree({ item, onDone }: KindProps) {
   const lines: string[] = item.lines ?? []; const n = lines.join(' ').split('{}').length - 1;
   const [v, setV] = useState<string[]>(Array(n).fill('')); const [topic, setTopic] = useState(''); const [ok, setOk] = useState(false); const fired = useRef(false);
+  const [foc, setFoc] = useState<number | null>(null); // 지금 쓰고 있는 칸
+  const lineOf: number[] = []; lines.forEach((l, li) => { for (let k = 0; k < l.split('{}').length - 1; k++) lineOf.push(li); });
+  const lineHints: string[] = item.lineHints ?? []; const fl = foc != null ? lineOf[foc] : null;
+  /** 힌트: 쓰고 있는 줄의 힌트(없으면 글 전체 힌트). AI 힌트에는 그 줄의 틀과 지금까지 쓴 내용을 함께 보낸다 */
+  const hintLines = fl != null && lineHints[fl] ? [lineHints[fl]] : item.hint?.length ? item.hint : lineHints.filter(Boolean);
+  const filled = () => { let q = 0; return lines.map((l) => l.split('{}').map((seg, si, arr) => seg + (si < arr.length - 1 ? (v[q++] || '____') : '')).join('')); };
   let bi = 0;
   function settle(vals: string[], t: string) { if (!fired.current && t.trim().length >= 2 && vals.every((x) => x.trim().length >= 2)) { fired.current = true; setOk(true); onDone([{ tag: 'write', ok: true }]); } }
   return (
@@ -229,10 +235,10 @@ export function MFree({ item, onDone }: KindProps) {
           <p key={li}>{l.split('{}').map((seg, si, arr) => {
             const idx = si < arr.length - 1 ? bi++ : -1;
             return <span key={si}><Rich text={seg} />{idx >= 0 && <input className={'nv-blank nv-blank-w' + (ok ? ' nv-bok' : '')} disabled={ok} value={v[idx]} autoCapitalize="off" spellCheck={false}
-              onChange={(e) => setV(v.map((x, k) => (k === idx ? e.target.value : x)))} onBlur={() => settle(v, topic)} onKeyDown={(e) => { if (e.key === 'Enter') settle(v, topic); }} />}</span>;
+              onFocus={() => setFoc(idx)} onChange={(e) => setV(v.map((x, k) => (k === idx ? e.target.value : x)))} onBlur={() => settle(v, topic)} onKeyDown={(e) => { if (e.key === 'Enter') settle(v, topic); }} />}</span>;
           })}</p>))}
       </div>
-      <HintBox lines={item.hint ?? []} item={item} />
+      <HintBox lines={hintLines} item={item} ctx={() => ({ input: `Product: ${topic || '(not written yet)'}\nStudent is writing line ${fl != null ? fl + 1 : '?'}: "${fl != null ? lines[fl] : ''}"\nLine hint from teacher: ${fl != null ? lineHints[fl] ?? '' : ''}\nText so far:\n${filled().join('\n')}`, wrong: 0 })} />
     </div>
   );
 }
