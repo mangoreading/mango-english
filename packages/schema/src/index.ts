@@ -143,9 +143,25 @@ export const SqChoice = z.object({ ...sq, k: z.literal('sqchoice'), q: z.string(
 export const SqTF = z.object({ ...sq, k: z.literal('sqtf'), items: z.array(z.object({ t: z.string().min(1), a: z.boolean().optional() })).min(1).max(6) });
 export const SqMulti = z.object({ ...sq, k: z.literal('sqmulti'), items: z.array(z.object({ t: z.string().min(1), ok: z.boolean().optional() })).min(2).max(6) });
 
+/* ===== 2단계: 듣고 익히기 · 따라 말하기 · 학습목표 · 문장 바꿔 말하기 · 글 듣고 읽기 · 모범 글 =====
+ * 강조 표기: [[파랑]] {{빨강}}. 본문의 '---' 줄은 쪽 나눔. */
+const Ex = z.object({ en: z.string().min(1), ko: z.string().optional(), pic: z.string().optional(), label: z.string().optional() });
+const exs = (n: number) => z.array(Ex).min(n).max(8);
+export const Goal = z.object({ ...T1, k: z.literal('goal'), title: z.string().min(1), ko: z.string().optional(), pic: z.string().optional(), head: z.string().optional(), items: exs(1) });
+export const KExp = z.object({ ...T1, k: z.literal('kexp'), items: exs(1) });
+export const TapL = z.object({ ...T1, k: z.literal('tapl'), items: exs(1) });
+export const LSent = z.object({ ...T1, k: z.literal('lsent'), items: exs(1) });
+export const LCardP = z.object({ ...T1, k: z.literal('lcardp'), items: exs(1) });
+export const LCardT = z.object({ ...T1, k: z.literal('lcardt'), items: exs(1) });
+export const WRepeat = z.object({ ...vbase, k: z.literal('wrepeat'), words: VKeys });
+export const SDrill = z.object({ ...T1, k: z.literal('sdrill'), tpl: z.string().refine((v) => v.includes('{}'), '문장에 {} (바꿀 자리)가 있어야 해요'), words: z.array(z.string().min(1)).min(2).max(10) });
+export const PRead = z.object({ ...T1, k: z.literal('pread'), text: z.array(z.string().min(1)).min(1), ko: z.string().optional() });
+export const MText = z.object({ ...T1, k: z.literal('mtext'), title: z.string().optional(), text: z.array(z.string().min(1)).min(1), explain: z.array(z.string()).optional(), ko: z.string().optional() });
+
 export const ActivityItem = z.discriminatedUnion('k', [
   Learn, Text, Brief, Choose, Match, Build, Fill, Write, Compose, Speak, Fade, Dialog,
   VCards, VType1, VSpell, VMatch, VSound, VWrite,
+  Goal, KExp, TapL, LSent, LCardP, LCardT, WRepeat, SDrill, PRead, MText,
   WChoice, PChoice, DChoice, TrueFalse, LChText, LChPic, LChList, LMatch, SqChoice, SqTF, SqMulti,
 ]).superRefine((v, ctx) => {
   if (v.k === 'choose' && v.a >= v.opts.length) ctx.addIssue({ code: 'custom', path: ['a'], message: 'a(정답 index)가 opts 범위를 벗어났어요' });
@@ -157,6 +173,7 @@ export const ActivityItem = z.discriminatedUnion('k', [
 export type ActivityItem = z.infer<typeof ActivityItem>;
 export type Kind = ActivityItem['k'];
 export const KINDS = ['learn', 'text', 'brief', 'choose', 'match', 'build', 'fill', 'write', 'compose', 'speak', 'fade', 'dialog', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite',
+  'goal', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext',
   'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti'] as const;
 
 /** 아이템 상태 (검수 워크플로) */

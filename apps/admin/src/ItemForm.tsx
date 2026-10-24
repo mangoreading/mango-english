@@ -14,6 +14,8 @@ export const KIND_NAME: Record<string, string> = {
   fill: '빈칸 채우기', write: '쓰기', compose: '작문', speak: '말하기', fade: '점점 지우기', dialog: '대화',
   vcards: '단어 카드 보기', vtype1: '단어 따라 쓰기', vspell: '철자 완성', vmatch: '단어-뜻 매칭', vsound: '소리-단어 매칭', vwrite: '그림 보고 쓰기',
   wchoice: '뜻 고르기', pchoice: '그림 보고 고르기', dchoice: '대화 고르기', tf: 'True or False', lchtext: '듣고 고르기 (글 4칸)', lchpic: '듣고 고르기 (그림 4칸)', lchlist: '듣고 고르기 (세로형)',
+  goal: '학습목표', kexp: '핵심표현 듣고 따라 읽기', tapl: '문장 눌러 듣기', lsent: '문장 듣고 고르기(카드)', lcardp: '듣고 익히기 (그림)', lcardt: '듣고 익히기 (글)',
+  wrepeat: '단어 듣고 따라 말하기', sdrill: '문장 바꿔 말하기', pread: '글 듣고 읽기', mtext: '모범 글 읽기',
   lmatch: '듣고 짝짓기', sqchoice: '글 읽고 답하기 (선택)', sqtf: '글 읽고 답하기 (T/F)', sqmulti: '글 읽고 답하기 (복수선택)',
 };
 export interface VocabOpt { key: string; en: string; ko: string; image_path?: string | null }
@@ -32,7 +34,23 @@ const OPTS: Field = { k: 'opts', label: '보기 (정답 선택)', t: 'choices', 
 const STORY: Field[] = [
   { k: 'title', label: '글 제목', t: 'text' }, { k: 'text', label: '본문 (한 줄에 한 문장)', t: 'lines', req: true }, { k: 'ko', label: '한글 번역 (있으면 "해석 보기" 버튼)', t: 'area' },
 ];
+const EXROWS = (label: string, pic = false, lab = false): Field => ({ k: 'items', label, t: 'rows', req: true, blank: () => ({ en: '', ko: '' }), cols: [
+  { k: 'en', label: '영어 (강조: [[파랑]] {{빨강}})', t: 'text' }, { k: 'ko', label: '한글', t: 'text' },
+  ...(pic ? [{ k: 'pic', label: '그림(단원 단어)', t: 'text' as const, w: 120 }] : []), ...(lab ? [{ k: 'label', label: '설명 꼬리표', t: 'text' as const, w: 150 }] : [])] });
+const SPEC2: Record<string, Field[]> = {
+  goal: [{ k: 'title', label: '학습목표 문장 (강조: [[파랑]])', t: 'text', req: true }, { k: 'ko', label: '학습목표 한글 설명', t: 'text' }, { k: 'pic', label: '그림(단원 단어, 선택)', t: 'vword' }, { k: 'head', label: '오른쪽 제목 (비우면 "핵심 표현")', t: 'text' }, EXROWS('핵심 표현'), VINST],
+  kexp: [EXROWS('핵심 표현 (말풍선)', false, true), VINST],
+  tapl: [EXROWS('문장 (눌러서 듣기)'), VINST],
+  lsent: [EXROWS('문장 카드'), VINST],
+  lcardp: [EXROWS('카드 (그림+문장, 최대 6개 권장)', true), VINST],
+  lcardt: [EXROWS('카드 (문장, 최대 6개 권장)'), VINST],
+  wrepeat: [VW('따라 말할 단어'), VINST],
+  sdrill: [{ k: 'tpl', label: '문장 ({} 가 바꿔 넣을 자리, 예: How much are these {}?)', t: 'text', req: true }, { k: 'words', label: '바꿔 넣을 단어 (한 줄에 하나)', t: 'lines', req: true }, VINST],
+  pread: [{ k: 'text', label: '본문 (한 줄에 한 문장, "---" 줄은 쪽 나눔)', t: 'lines', req: true }, { k: 'ko', label: '해설·번역 (쪽 나눔은 "---" 한 줄)', t: 'area' }, VINST],
+  mtext: [{ k: 'title', label: '제목 (예: SALE)', t: 'text' }, { k: 'text', label: '본문 (한 줄에 한 문장, 강조 [[파랑]] {{빨강}})', t: 'lines', req: true }, { k: 'explain', label: '해설 (한 줄에 하나, 강조 가능)', t: 'lines' }, { k: 'ko', label: '해석(한글 번역)', t: 'area' }, VINST],
+};
 const SPEC: Record<string, Field[]> = {
+  ...SPEC2,
   wchoice: [{ k: 'word', label: '단어', t: 'vword', req: true }, { k: 'dir', label: '방향 (ko2en: 뜻→영어, en2ko: 영어→뜻)', t: 'text' }, { k: 'wrong', label: '오답 보기 (한 줄에 하나, 1~5개)', t: 'lines', req: true }, VINST],
   pchoice: [{ k: 'pic', label: '그림(단원 단어)', t: 'vword', req: true }, { k: 'q', label: '질문 (비우면 기본 문구)', t: 'text' }, OPTS, HINT, VINST],
   dchoice: [{ k: 'q', label: '질문', t: 'text' }, { k: 'pic', label: '그림(단원 단어, 선택)', t: 'vword' }, { k: 'lines', label: '대화 (한 줄에 한 문장)', t: 'lines' }, OPTS, VINST],
@@ -125,6 +143,12 @@ export function defaultItem(kind: string): Obj {
     case 'compose': return { k: 'compose', title: '', rules: [{ label: '' }], minSent: 1, sample: '' };
     case 'vcards': case 'vtype1': case 'vmatch': case 'vsound': case 'vwrite': return { k: kind, tag: 'vocab', words: [] };
     case 'vspell': return { k: 'vspell', tag: 'vocab', word: '' };
+    case 'goal': return { k: 'goal', tag: 'expr', title: '', items: [{ en: '', ko: '' }] };
+    case 'kexp': case 'tapl': case 'lsent': case 'lcardp': case 'lcardt': return { k: kind, tag: kind === 'tapl' ? 'speak' : 'listen', items: [{ en: '', ko: '' }, { en: '', ko: '' }] };
+    case 'wrepeat': return { k: 'wrepeat', tag: 'vocab', words: [] };
+    case 'sdrill': return { k: 'sdrill', tag: 'speak', tpl: '{}', words: [] };
+    case 'pread': return { k: 'pread', tag: 'read', text: [] };
+    case 'mtext': return { k: 'mtext', tag: 'write', text: [] };
     case 'wchoice': return { k: 'wchoice', tag: 'vocab', word: '', dir: 'ko2en', wrong: [] };
     case 'pchoice': return { k: 'pchoice', tag: 'vocab', pic: '', opts: [{ t: '' }, { t: '' }, { t: '' }, { t: '' }], a: 0 };
     case 'dchoice': return { k: 'dchoice', tag: 'read', lines: [], opts: [{ t: '' }, { t: '' }, { t: '' }, { t: '' }], a: 0 };

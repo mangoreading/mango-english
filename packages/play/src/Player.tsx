@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { TEXT_KINDS, type Res, type VWord } from './common';
 import { VCards, VMatch, VSound, VSpell, VType1, VWrite } from './kinds';
+import { Goal, KExp, LCardP, LCardT, LSent, MText, PRead, SDrill, TapL, WRepeat } from './kinds3';
 import { DChoice, LChList, LChPic, LChText, LMatch, PChoice, SqChoice, SqMulti, SqTF, TrueFalse, WChoice } from './kinds2';
 
 export interface NativeResult { results: Res[]; total: number; scored: number }
@@ -16,6 +17,16 @@ const INST: Record<string, string> = {
   vmatch: '단어와 한글 뜻을 매칭해 보세요.',
   vsound: '소리를 듣고 단어를 매칭해 보세요.',
   vwrite: '단어를 직접 써보며 익히세요.',
+  goal: '이번 차시에서 배울 내용을 확인해 보세요.',
+  kexp: '핵심 표현을 듣고 따라 읽어 보세요.',
+  tapl: '문장을 눌러 듣고 소리 내어 읽어 보세요.',
+  lsent: '핵심 표현을 눌러서 들어 보세요.',
+  lcardp: '핵심 표현을 눌러서 들어 보세요.',
+  lcardt: '핵심 표현을 눌러서 들어 보세요.',
+  sdrill: '핵심 표현을 듣고 반복적으로 따라 말해 보세요.',
+  pread: '듣고 소리 내어 읽어 보세요.',
+  mtext: '모범 글을 읽어 보세요.',
+  wrepeat: '단어를 듣고 따라 말해 보세요.',
   wchoice: '알맞은 것을 골라 보세요.',
   pchoice: '그림에 알맞은 말을 고르세요.',
   dchoice: '대화를 읽고 알맞은 것을 고르세요.',
@@ -28,7 +39,7 @@ const INST: Record<string, string> = {
   sqtf: '글을 읽고, 질문에 답해 보세요.',
   sqmulti: '글을 읽고, 질문에 답해 보세요.',
 };
-const KIND = { vcards: VCards, vtype1: VType1, vspell: VSpell, vmatch: VMatch, vsound: VSound, vwrite: VWrite,
+const KIND = { goal: Goal, kexp: KExp, tapl: TapL, lsent: LSent, lcardp: LCardP, lcardt: LCardT, sdrill: SDrill, pread: PRead, mtext: MText, wrepeat: WRepeat, vcards: VCards, vtype1: VType1, vspell: VSpell, vmatch: VMatch, vsound: VSound, vwrite: VWrite,
   wchoice: WChoice, pchoice: PChoice, dchoice: DChoice, tf: TrueFalse, lchtext: LChText, lchpic: LChPic, lchlist: LChList, lmatch: LMatch,
   sqchoice: SqChoice, sqtf: SqTF, sqmulti: SqMulti } as const;
 

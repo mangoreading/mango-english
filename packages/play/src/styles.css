@@ -115,3 +115,36 @@
 .nv-tfb { font:inherit; font-weight:800; width:2em; height:2em; border:.1em solid var(--nv-line); border-radius:.4em; background:#fff; cursor:pointer; margin-left:.3em; padding:0; }
 .nv-tfr > span { flex:1; }
 @media (max-width:760px) { .nv-split { grid-template-columns:1fr; } .nv-qpane { border-left:0; border-top:.1em solid var(--nv-line); padding:1em 0 0; margin-top:1em; } .nv-row4 { grid-template-columns:repeat(2, minmax(0,1fr)); } .nv-lm { gap:1.4em; } }
+
+/* ===== 2단계 템플릿 (듣고 익히기 · 따라 말하기 · 학습목표 · 문장 바꿔 말하기 · 글 듣고 읽기 · 모범 글) ===== */
+.nv-cb { color:#2F6FDE; font-weight:700; } .nv-cr { color:#C0392B; font-weight:700; }
+.nv-toolrow { order:-1; display:flex; align-items:center; justify-content:space-between; gap:.8em; width:100%; }
+.nv-toolrow > :only-child { margin-left:auto; }
+.nv-kobtn { font:inherit; font-weight:800; width:2.1em; height:2.1em; border-radius:50%; border:.1em solid var(--nv-line); background:#fff; color:var(--nv-navy); cursor:pointer; padding:0; margin-left:auto; }
+.nv-kobtn.on { background:var(--nv-navy); color:#fff; border-color:var(--nv-navy); }
+.nv-stack { display:flex; flex-direction:column; gap:.7em; width:100%; max-width:40em; }
+.nv-tap { font:inherit; position:relative; display:flex; align-items:center; justify-content:center; gap:1em; border:.12em solid var(--nv-line); background:#fff; border-radius:.9em; padding:.7em 1.2em; cursor:pointer; text-align:center; transition:background .12s, border-color .12s; }
+.nv-tap:hover { border-color:var(--nv-blue); }
+.nv-tap .nv-tt { flex:1; display:flex; flex-direction:column; gap:.15em; } .nv-tap .nv-tt b { font-size:1.25em; font-weight:700; } .nv-tap .nv-tt i { font-style:normal; color:var(--nv-sub); font-size:.95em; }
+.nv-sp { font-size:1.2em; opacity:.55; } .nv-sp.on { opacity:1; }
+.nv-tap.nv-heard2 { border-color:#9FD3B2; } .nv-tap.nv-cur { background:#FFE9A6; border-color:#E0A100; }
+.nv-tap-kexp { border-radius:1.6em; background:#F6FAFF; } .nv-tap-kexp.nv-cur { background:#FFE9A6; }
+.nv-lab { position:absolute; right:-.4em; top:-.7em; font-style:normal; font-size:.75em; font-weight:700; background:#EAF2FB; color:var(--nv-navy); border-radius:999px; padding:.15em .8em; border:.1em solid var(--nv-frame); }
+.nv-stack-tapl .nv-tap { border-radius:.4em; background:#EFF1F5; } .nv-stack-tapl .nv-tap.nv-cur { background:#FFE9A6; }
+.nv-stack-lsent .nv-tap { border-radius:.3em; } .nv-stack-lsent .nv-sp { background:#fff; border:.08em solid var(--nv-line); border-radius:50%; width:1.8em; height:1.8em; display:grid; place-items:center; font-size:.95em; opacity:1; }
+.nv-tap-lcardp, .nv-tap-lcardt { flex-direction:column; justify-content:center; min-height:9.5em; gap:.4em; }
+.nv-tap-lcardt { min-height:7em; } .nv-tap-lcardp .nv-img { width:100%; height:6em; }
+.nv-goalL { padding:0 1.6em .0 .8em; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:.8em; text-align:center; }
+.nv-goalL h3 { margin:0; font-size:1.7em; line-height:1.35; } .nv-sub { margin:0; color:var(--nv-sub); font-size:1.05em; }
+.nv-qpane .nv-tap { width:100%; } .nv-qpane .nv-toolrow { order:0; }
+.nv-capsule-n { font-size:1.9em; } .nv-slotw { display:inline-block; min-width:4.5em; margin:0 .2em; padding:0 .3em; border-bottom:.1em solid #B3261E; color:#B3261E; }
+.nv-chips { display:flex; flex-wrap:wrap; gap:.7em; justify-content:center; max-width:44em; }
+.nv-chipb { font:inherit; font-size:1.15em; font-weight:600; padding:.45em 1.2em; border:.1em solid var(--nv-line); border-radius:.7em; background:#F4F6FA; cursor:pointer; }
+.nv-chipb:hover { border-color:var(--nv-blue); } .nv-chipb.nv-sel { background:#FFE9A6; border-color:#E0A100; } .nv-chipb.nv-heard2 { border-color:#9FD3B2; }
+.nv-row-w { width:100%; } .nv-pbox { flex:1; background:#E8F0FA; border:.1em solid #B9CCE6; padding:1em 1.6em; min-height:12em; display:flex; flex-direction:column; justify-content:center; }
+.nv-pbox p { margin:.3em 0; font-size:1.25em; line-height:1.5; }
+.nv-kobox { width:100%; background:#F2F3F5; } .nv-kobox p { color:#7A7360; }
+.nv-sale { color:#E02424; font-size:1.9em !important; letter-spacing:.04em; text-shadow:.04em .04em 0 #FFD1CC; }
+.nv-p-lg { font-size:1.35em !important; margin:.5em 0 !important; } .nv-p-md { margin:.5em 0; font-size:1.1em; line-height:1.5; }
+.nv-hintbtn.on { background:#FFE39A; } .nv-listen:disabled { opacity:.4; cursor:default; }
+.nv-tabs { justify-content:flex-start; }

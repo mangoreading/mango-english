@@ -1,7 +1,7 @@
 import type { VWord } from '@mango/play';
 import type { VocabOpt } from './ItemForm';
 
-const NATIVE = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti'];
+const NATIVE = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti', 'goal', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext'];
 export const isNativeKind = (k: string) => NATIVE.includes(k);
 
 /** 샘플 미리보기용 단어 (앱에 들어 있는 그림 사용) */
@@ -16,6 +16,16 @@ export const NATIVE_SAMPLES: Record<string, Record<string, unknown>> = {
   vcards: { k: 'vcards', tag: 'vocab', words: W }, vtype1: { k: 'vtype1', tag: 'vocab', words: W },
   vspell: { k: 'vspell', tag: 'vocab', word: 'sunglasses', shown: 6 }, vmatch: { k: 'vmatch', tag: 'vocab', words: W },
   vsound: { k: 'vsound', tag: 'vocab', words: W }, vwrite: { k: 'vwrite', tag: 'vocab', words: W },
+  goal: { k: 'goal', tag: 'expr', title: 'Ask and answer about [[prices]].', ko: '물건의 가격을 묻고 답할 수 있어요.', pic: 'shoes', items: [{ en: 'How much are these socks?', ko: '이 양말은 얼마예요?' }, { en: "They're two thousand won.", ko: '2,000원이에요.' }, { en: 'May I help you?', ko: '도와 드릴까요?' }] },
+  kexp: { k: 'kexp', tag: 'listen', items: [{ en: 'How much is it?', ko: '이것은 얼마예요?', label: '가격 묻기' }, { en: "It's five thousand won.", ko: '5,000원이에요.', label: '가격 답하기' }, { en: 'How much are they?', ko: '그것들은 얼마예요?' }, { en: "They're two thousand won.", ko: '2,000원이에요.' }, { en: "I'll take it.", ko: '그걸로 할게요.' }] },
+  tapl: { k: 'tapl', tag: 'speak', items: [{ en: 'How much is it?', ko: '이것은 얼마예요?' }, { en: "It's five thousand won.", ko: '5,000원이에요.' }, { en: 'How much are they?', ko: '그것들은 얼마예요?' }, { en: "They're two thousand won.", ko: '2,000원이에요.' }, { en: "I'll take it.", ko: '그걸로 할게요.' }] },
+  lsent: { k: 'lsent', tag: 'listen', items: [{ en: 'How much are these socks?', ko: '이 양말은 얼마예요?' }, { en: "They're two thousand won.", ko: '2,000원이에요' }, { en: 'May I help you?', ko: '도와 드릴까요?' }, { en: 'Yes, please.', ko: '네, 부탁해요.' }] },
+  lcardp: { k: 'lcardp', tag: 'listen', items: [{ en: 'cap', ko: '모자', pic: 'cap' }, { en: 'jacket', ko: '재킷', pic: 'jacket' }, { en: 'socks', ko: '양말', pic: 'socks' }, { en: 'shoes', ko: '신발', pic: 'shoes' }, { en: 'pants', ko: '바지', pic: 'pants' }, { en: 'sunglasses', ko: '선글라스', pic: 'sunglasses' }] },
+  lcardt: { k: 'lcardt', tag: 'listen', items: [{ en: 'How much is it?', ko: '이것은 얼마예요?' }, { en: "It's five thousand won.", ko: '5,000원이에요.' }, { en: 'May I help you?', ko: '도와 드릴까요?' }, { en: 'Yes, please.', ko: '네, 부탁해요.' }, { en: "I'll take it.", ko: '그걸로 할게요.' }, { en: 'Here you are.', ko: '여기 있어요.' }] },
+  wrepeat: { k: 'wrepeat', tag: 'vocab', words: W },
+  sdrill: { k: 'sdrill', tag: 'speak', tpl: 'How much are these {}?', words: ['shorts', 'sunglasses', 'pants', 'shoes', 'socks', 'jeans'] },
+  pread: { k: 'pread', tag: 'read', text: ['Today is Class Bazaar Day. Mina has a shop.', 'She sells a cap, a book, and gloves.', 'Ken comes to her shop. He asks, "How much is the book?"', 'Mina says, "It\'s nine thousand won."', '---', 'Ken asks, "How much are the gloves?"', '"They\'re four thousand won."', 'Ken says, "I\'ll take the gloves. Here you are."', 'Mina says, "Thank you!"'], ko: '오늘은 학급 바자회 날이야. 미나는 가게가 있어. 모자, 책, 장갑을 팔아.\n켄이 가게에 와서 "책은 얼마예요?"라고 물어. 미나는 "9,000원이에요."라고 말해.\n---\n켄이 "장갑은 얼마예요?"라고 물어. "4,000원이에요."\n켄은 "장갑을 살게요. 여기 있어요."라고 말해. 미나는 "고마워요!"라고 말해.' },
+  mtext: { k: 'mtext', tag: 'write', title: 'SALE', text: ['Look at these [[bright shoes]].', 'How much are [[these shoes]]?', "They're [[20,000 won]].", "They're on sale."], explain: ['먼저 {{상품과 특징}}을 얘기합니다.', '가격 질문을 하고', '{{가격을 제시}}합니다.', '세일 중임을 얘기합니다.'], ko: '이 밝은 신발을 보세요.\n이 신발은 얼마예요?\n2만 원이에요.\n세일 중이에요.' },
   wchoice: { k: 'wchoice', tag: 'vocab', word: 'shoes', dir: 'ko2en', wrong: ['import', 'promote', 'anticipate'] },
   pchoice: { k: 'pchoice', tag: 'vocab', pic: 'pants', opts: [{ t: 'this pants' }, { t: 'the pants' }, { t: 'these pants' }, { t: 'a pants' }], a: 2 },
   dchoice: { k: 'dchoice', tag: 'read', lines: ['A: May I help you?', 'B: Yes, please. How much are these socks?', 'A: ______'], opts: [{ t: "They're two thousand won." }, { t: "It's two thousand won." }, { t: 'I like socks.' }, { t: 'Here you are.' }], a: 0 },
@@ -31,7 +41,7 @@ export const NATIVE_SAMPLES: Record<string, Record<string, unknown>> = {
 
 /** 문항이 쓰는 단어를 단원 단어 목록에서 찾아 그림까지 붙여 돌려준다 */
 export function nativeVocab(item: Record<string, any>, vocab: VocabOpt[]): VWord[] { // eslint-disable-line @typescript-eslint/no-explicit-any
-  if (!['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice'].includes(item.k)) return vocab.map((v) => ({ key: v.key, en: v.en, ko: v.ko, image: v.image_path ?? null })); // 문장형은 그림 찾기용으로 전체 전달
+  if (!['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat'].includes(item.k)) return vocab.map((v) => ({ key: v.key, en: v.en, ko: v.ko, image: v.image_path ?? null })); // 문장형은 그림 찾기용으로 전체 전달
   const keys: string[] = item.k === 'vspell' || item.k === 'wchoice' ? [item.word] : item.words ?? [];
   return keys.map((k) => vocab.find((v) => v.key === k)).filter(Boolean).map((v) => ({ key: v!.key, en: v!.en, ko: v!.ko, image: v!.image_path ?? null }));
 }
