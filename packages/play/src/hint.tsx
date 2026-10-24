@@ -12,7 +12,7 @@ export function Hint({ lines, kind, item, ctx }: { lines?: string[]; kind?: stri
       const c = ctx?.() ?? { input: '', wrong: 0 };
       const t = await aiHandlers.hint({ kind: kind!, item, input: c.input, wrong: c.wrong, given: given.current });
       given.current += 1; setAi((a) => [...a, t]);
-    } catch { setErr('AI 선생님이 지금은 답하지 못해요. 위 힌트를 먼저 봐 주세요.'); }
+    } catch (e) { setErr('AI 선생님이 지금은 답하지 못해요. 위 힌트를 먼저 봐 주세요. [' + String((e as Error)?.message ?? e).slice(0, 160) + ']'); }
     setBusy(false);
   }
   return (
