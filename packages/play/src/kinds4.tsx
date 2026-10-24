@@ -122,19 +122,22 @@ export function SOrder({ item, onDone }: KindProps) {
   const [order, setOrder] = useState<number[]>(() => { let o = shuffle(rows.map((_, i) => i)); let g = 0; while (rows.length > 1 && o.every((x, i) => x === i) && g++ < 9) o = shuffle(o); return o; });
   const [ko, setKo] = useState(true); const [drag, setDrag] = useState<number | null>(null); const [sel, setSel] = useState<number | null>(null);
   const [ok, setOk] = useState(false); const wrong = useRef(false);
-  function apply(n: number[]) {
-    setOrder(n);
+  const [landed, setLanded] = useState<number | null>(null); const lt = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** 옮긴 문장을 1초쯤 노란색으로 남겼다가 서서히 사라지게 해서, 제대로 놓였는지 알 수 있게 한다 */
+  function flash(r: number) { setLanded(r); if (lt.current) clearTimeout(lt.current); lt.current = setTimeout(() => setLanded(null), 1000); }
+  function apply(n: number[], moved: number) {
+    flash(moved); setOrder(n);
     if (n.every((x, i) => x === i)) { setOk(true); onDone([{ tag: 'write', ok: !wrong.current }]); }
   }
-  const move = (a: number, b: number) => { if (ok || a === b) return; const n = [...order]; const [x] = n.splice(a, 1); n.splice(b, 0, x); apply(n); };
-  const swap = (a: number, b: number) => { const n = [...order]; [n[a], n[b]] = [n[b], n[a]]; apply(n); };
+  const move = (a: number, b: number) => { if (ok || a === b) return; const n = [...order]; const [x] = n.splice(a, 1); n.splice(b, 0, x); apply(n, x); };
+  const swap = (a: number, b: number) => { const n = [...order]; [n[a], n[b]] = [n[b], n[a]]; apply(n, order[a]); };
   function tapRow(pos: number) { if (ok) return; if (sel == null) setSel(pos); else if (sel === pos) setSel(null); else { swap(sel, pos); setSel(null); } }
   return (
     <div className="nv-body nv-wbody">
       <div className="nv-toolrow"><button type="button" className={'nv-kobtn' + (ko ? ' on' : '')} onClick={() => setKo(!ko)}>한</button></div>
       <div className="nv-ord">
         {order.map((r, pos) => (
-          <div key={r} className={'nv-ordi' + (drag === pos ? ' nv-drag' : '') + (sel === pos ? ' nv-sel' : '') + (ok ? ' nv-right' : '')} draggable={!ok}
+          <div key={r} className={'nv-ordi' + (drag === pos ? ' nv-drag' : '') + (sel === pos ? ' nv-sel' : '') + (landed === r ? ' nv-landed' : '') + (ok ? ' nv-right' : '')} draggable={!ok}
             onClick={() => tapRow(pos)}
             onDragStart={() => { setDrag(pos); setSel(null); }} onDragOver={(e) => e.preventDefault()} onDrop={() => { if (drag != null) move(drag, pos); setDrag(null); }} onDragEnd={() => setDrag(null)}>
             <span className="nv-tt"><b>{rows[r].en}</b>{rows[r].ko && <i className={ko ? '' : 'nv-hid'}>{rows[r].ko}</i>}</span>

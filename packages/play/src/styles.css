@@ -398,3 +398,7 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-pillin { width:min(21em,100%); }
 .nv-bl.nv-bl-box:not(.nv-bl-fix) { min-width:36em; }
 .nv-bl.nv-bl-box:not(.nv-bl-fix) ~ .nv-hintwrap { padding-left:1em; box-sizing:border-box; }
+/* 문장 순서 맞추기: 옮겨 놓은 문장이 노란색으로 남았다가 서서히 사라진다 */
+.nv-ordi { transition:background-color .7s ease, border-color .7s ease; }
+.nv-ordi.nv-landed { background:#FFE9A6; border-color:#E0A100; transition:none; }
+.nv-ordi.nv-right.nv-landed { background:#FFE9A6; }
