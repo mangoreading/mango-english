@@ -175,7 +175,7 @@ function Editor({ kindName, item, siblings, steps, keys, vocab, uid, onSaved }: 
     const v = validate(o);
     const probs = [...v.problems];
     if (v.ok) {
-      const used: string[] = o.k === 'vspell' ? [o.word] : (['vcards', 'vtype1', 'vmatch', 'vsound', 'vwrite'].includes(o.k) ? o.words : []);
+      const used: string[] = o.k === 'vspell' || o.k === 'wchoice' ? [o.word] : (['vcards', 'vtype1', 'vmatch', 'vsound', 'vwrite'].includes(o.k) ? o.words : [o.pic, ...(o.opts ?? []).map((x: { flag?: string }) => x.flag)].filter(Boolean));
       const miss = used.filter((k) => !keys.includes(k));
       if (miss.length) probs.push(`단원 어휘에 없는 단어예요: ${miss.join(', ')} ("단어" 탭에서 추가하세요)`);
     }

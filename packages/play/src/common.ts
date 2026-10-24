@@ -1,7 +1,10 @@
 export interface VWord { key: string; en: string; ko: string; image: string | null }
 export interface Res { tag?: string; ok: boolean; hint?: number }
 /** 어휘 활동 6종의 종류 코드 (기획서 p29~34). 이 종류는 React 정식 화면으로 재생한다. */
-export const NATIVE_KINDS = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite'];
+export const VOCAB_KINDS = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite'];
+/** 1단계 문장·읽기·듣기 템플릿 (문항 안에 글이 그대로 들어 있다) */
+export const TEXT_KINDS = ['wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti'];
+export const NATIVE_KINDS = [...VOCAB_KINDS, ...TEXT_KINDS];
 export const isNative = (it: unknown) => NATIVE_KINDS.includes((it as { k?: string })?.k ?? '');
 
 /** 단어 그림 경로: 'word/hat.png'(앱 내장) 또는 업로드된 전체 주소(https://…) */
@@ -66,5 +69,6 @@ export const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ');
 export interface KindProps {
   item: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
   words: VWord[];            // item.words / item.word 에 해당하는 단어(순서 유지)
+  pic: (key?: string | null) => string | null; // 단원 단어 key → 그림 경로
   onDone: (res: Res[]) => void;
 }

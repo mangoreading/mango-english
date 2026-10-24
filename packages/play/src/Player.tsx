@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
-import type { Res, VWord } from './common';
+import { TEXT_KINDS, type Res, type VWord } from './common';
 import { VCards, VMatch, VSound, VSpell, VType1, VWrite } from './kinds';
+import { DChoice, LChList, LChPic, LChText, LMatch, PChoice, SqChoice, SqMulti, SqTF, TrueFalse, WChoice } from './kinds2';
 
 export interface NativeResult { results: Res[]; total: number; scored: number }
 interface Props {
@@ -15,8 +16,21 @@ const INST: Record<string, string> = {
   vmatch: '단어와 한글 뜻을 매칭해 보세요.',
   vsound: '소리를 듣고 단어를 매칭해 보세요.',
   vwrite: '단어를 직접 써보며 익히세요.',
+  wchoice: '알맞은 것을 골라 보세요.',
+  pchoice: '그림에 알맞은 말을 고르세요.',
+  dchoice: '대화를 읽고 알맞은 것을 고르세요.',
+  tf: '일치하면 True, 일치하지 않으면 False 를 선택하세요.',
+  lchtext: '잘 듣고, 알맞은 것을 고르세요.',
+  lchpic: '잘 듣고, 알맞은 그림을 고르세요.',
+  lchlist: '잘 듣고, 알맞은 것을 고르세요.',
+  lmatch: '말을 듣고 알맞은 짝을 찾아 연결하세요.',
+  sqchoice: '글을 읽고, 질문에 답해 보세요.',
+  sqtf: '글을 읽고, 질문에 답해 보세요.',
+  sqmulti: '글을 읽고, 질문에 답해 보세요.',
 };
-const KIND = { vcards: VCards, vtype1: VType1, vspell: VSpell, vmatch: VMatch, vsound: VSound, vwrite: VWrite } as const;
+const KIND = { vcards: VCards, vtype1: VType1, vspell: VSpell, vmatch: VMatch, vsound: VSound, vwrite: VWrite,
+  wchoice: WChoice, pchoice: PChoice, dchoice: DChoice, tf: TrueFalse, lchtext: LChText, lchpic: LChPic, lchlist: LChList, lmatch: LMatch,
+  sqchoice: SqChoice, sqtf: SqTF, sqmulti: SqMulti } as const;
 
 /** 어휘 활동 6종 재생기: 문항(화면)을 차례로 보여 주고, 끝나면 결과 화면을 보여 준다. */
 export function NativePlayer({ title, items, vocab, nextLabel, onResult, onFinish }: Props) {
@@ -45,7 +59,7 @@ export function NativePlayer({ title, items, vocab, nextLabel, onResult, onFinis
     );
   }
 
-  const keys: string[] = it.k === 'vspell' ? [it.word] : it.words ?? [];
+  const keys: string[] = it.k === 'vspell' || it.k === 'wchoice' ? [it.word] : TEXT_KINDS.includes(it.k) ? [] : it.words ?? [];
   const words = keys.map((k) => byKey.get(k)).filter(Boolean) as VWord[];
   const Comp = KIND[it.k as keyof typeof KIND];
   const last = i === items.length - 1;
@@ -66,7 +80,7 @@ export function NativePlayer({ title, items, vocab, nextLabel, onResult, onFinis
       <p className="nv-inst">{it.inst || INST[it.k] || ''}</p>
       {!Comp || words.length !== keys.length
         ? <p className="nv-hint">이 문항에 쓰인 단어가 단원 어휘에 없어요. 관리자에서 단어를 확인해 주세요. ({keys.filter((k) => !byKey.has(k)).join(', ')})</p>
-        : <Comp key={i} item={it} words={words} onDone={onDone} />}
+        : <Comp key={i} item={it} words={words} pic={(k) => (k ? byKey.get(k)?.image ?? null : null)} onDone={onDone} />}
       <div className="nv-foot"><button className="nv-btn nv-btn-lg" disabled={!done} onClick={next}>{last ? '결과 보기' : '다음'}</button></div>
     </div>
   );

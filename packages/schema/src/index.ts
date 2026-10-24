@@ -119,17 +119,45 @@ export const VSound = z.object({ ...vbase, k: z.literal('vsound'), words: VKeys 
 /** 그림 보고 쓰기 (여러 단어를 한 화면에서) */
 export const VWrite = z.object({ ...vbase, k: z.literal('vwrite'), words: VKeys });
 
+/* ===== 1단계: 고르기 · True/False · 듣고 고르기 · 짝짓기 · 글 읽고 답하기 ===== */
+const hint = z.array(z.string()).optional();
+const T1 = { ...base, inst: z.string().optional() };
+/** 뜻 고르기: 단원 단어 1개 + 오답 보기. dir=ko2en 이면 한글 뜻을 보고 영어를, en2ko 면 반대로 */
+export const WChoice = z.object({ ...T1, k: z.literal('wchoice'), word: z.string().min(1), dir: z.enum(['ko2en', 'en2ko']).optional(), wrong: z.array(z.string().min(1)).min(1).max(5) });
+/** 그림 보고 고르기 */
+export const PChoice = z.object({ ...T1, k: z.literal('pchoice'), q: z.string().optional(), pic: z.string().min(1), opts: z.array(Opt).min(2).max(6), a: z.number().int().min(0), hint });
+/** 대화 고르기 */
+export const DChoice = z.object({ ...T1, k: z.literal('dchoice'), q: z.string().optional(), pic: z.string().optional(), lines: z.array(z.string()).optional(), opts: z.array(Opt).min(2).max(6), a: z.number().int().min(0) });
+/** True or False */
+export const TrueFalse = z.object({ ...T1, k: z.literal('tf'), lines: z.array(z.string()).optional(), stmt: z.string().min(1), a: z.boolean().optional(), hint });
+/** 듣고 고르기 3종 (글 4칸 / 그림 4칸 / 세로 목록) */
+const lch = { ...T1, q: z.string().optional(), say: z.string().min(1), opts: z.array(Opt).min(2).max(6), a: z.number().int().min(0), hint };
+export const LChText = z.object({ ...lch, k: z.literal('lchtext') });
+export const LChPic = z.object({ ...lch, k: z.literal('lchpic') });
+export const LChList = z.object({ ...lch, k: z.literal('lchlist') });
+/** 듣고 짝짓기 */
+export const LMatch = z.object({ ...T1, k: z.literal('lmatch'), pairs: z.array(z.object({ left: z.string().min(1), say: z.string().optional(), right: z.string().min(1) })).min(2).max(6) });
+/** 글 읽고 답하기 3종 */
+const sq = { ...T1, title: z.string().optional(), text: z.array(z.string().min(1)).min(1), ko: z.string().optional(), q: z.string().optional(), hint };
+export const SqChoice = z.object({ ...sq, k: z.literal('sqchoice'), q: z.string().min(1), opts: z.array(Opt).min(2).max(6), a: z.number().int().min(0) });
+export const SqTF = z.object({ ...sq, k: z.literal('sqtf'), items: z.array(z.object({ t: z.string().min(1), a: z.boolean().optional() })).min(1).max(6) });
+export const SqMulti = z.object({ ...sq, k: z.literal('sqmulti'), items: z.array(z.object({ t: z.string().min(1), ok: z.boolean().optional() })).min(2).max(6) });
+
 export const ActivityItem = z.discriminatedUnion('k', [
   Learn, Text, Brief, Choose, Match, Build, Fill, Write, Compose, Speak, Fade, Dialog,
   VCards, VType1, VSpell, VMatch, VSound, VWrite,
+  WChoice, PChoice, DChoice, TrueFalse, LChText, LChPic, LChList, LMatch, SqChoice, SqTF, SqMulti,
 ]).superRefine((v, ctx) => {
   if (v.k === 'choose' && v.a >= v.opts.length) ctx.addIssue({ code: 'custom', path: ['a'], message: 'a(정답 index)가 opts 범위를 벗어났어요' });
+  if ((v.k === 'pchoice' || v.k === 'dchoice' || v.k === 'lchtext' || v.k === 'lchpic' || v.k === 'lchlist' || v.k === 'sqchoice') && v.a >= v.opts.length) ctx.addIssue({ code: 'custom', path: ['a'], message: '정답 번호가 보기 범위를 벗어났어요' });
+  if (v.k === 'sqmulti' && !v.items.some((x) => x.ok)) ctx.addIssue({ code: 'custom', path: ['items'], message: '정답이 하나 이상 있어야 해요' });
   if (v.k === 'vspell' && v.shown !== undefined && v.shown >= v.word.length) ctx.addIssue({ code: 'custom', path: ['shown'], message: '보이는 글자 수는 단어 길이보다 작아야 해요' });
   if (v.k === 'build' && v.ans.split(/\s+/).sort().join(' ') !== [...v.words].sort().join(' ')) ctx.addIssue({ code: 'custom', path: ['words'], message: 'words 를 합치면 ans 와 같아야 해요' });
 });
 export type ActivityItem = z.infer<typeof ActivityItem>;
 export type Kind = ActivityItem['k'];
-export const KINDS = ['learn', 'text', 'brief', 'choose', 'match', 'build', 'fill', 'write', 'compose', 'speak', 'fade', 'dialog', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite'] as const;
+export const KINDS = ['learn', 'text', 'brief', 'choose', 'match', 'build', 'fill', 'write', 'compose', 'speak', 'fade', 'dialog', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite',
+  'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti'] as const;
 
 /** 아이템 상태 (검수 워크플로) */
 export const ItemStatus = z.enum(['draft', 'review', 'approved', 'rejected']);
