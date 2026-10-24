@@ -402,3 +402,5 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-ordi { transition:background-color .7s ease, border-color .7s ease; }
 .nv-ordi.nv-landed { background:#FFE9A6; border-color:#E0A100; transition:none; }
 .nv-ordi.nv-right.nv-landed { background:#FFE9A6; }
+.nv-wbody .nv-split-w { width:80%; margin:0 auto; }
+.nv-wbody .nv-split-w ~ .nv-hintwrap { width:80%; max-width:none; }
