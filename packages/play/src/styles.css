@@ -386,3 +386,6 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-wbody .nv-winput:not(.nv-winput-cap):focus { border-color:var(--nv-line); }
 .nv-wbody .nv-blank:focus { border-bottom-color:#8A94A8; }
 .nv-wbody .nv-topicin:focus { border-color:#E0C27A; }
+.nv-pillin .nv-winput { font-size:1.5em; font-weight:700; padding:.45em 1em; } .nv-pillin .nv-winput::placeholder { font-weight:400; font-size:.8em; }
+.nv-pillin { width:min(26em,100%); }
+.nv-pillin { width:min(34em,100%); }
