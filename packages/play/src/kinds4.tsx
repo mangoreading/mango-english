@@ -9,6 +9,15 @@ const cmp = (s: string) => s.toLowerCase().replace(/[’‘`]/g, "'").replace(/[
 const accepts = (v: string, ans: string) => ans.split('|').some((a) => cmp(a) === cmp(v));
 /** 단어 첫 글자만 보여 주는 자동 힌트: How much is it? → H___ m___ is it? */
 export const initials = (s: string) => s.split(' ').map((w) => { const m = w.match(/^([A-Za-z']+)(.*)$/); return m && m[1].length >= 3 ? m[1][0] + '_'.repeat(m[1].length - 1) + m[2] : w; }).join(' ');
+/** AI 힌트에 보낼 "학생의 지금 상태" 설명: 어느 빈칸을 쓰는 중인지, 무엇을 썼는지, 맞/틀린 칸이 어디인지 */
+type BInfo = { vals: string[]; ok: boolean[]; wrong: boolean[] };
+function blanksDesc(lines: string[], info: BInfo | null, foc: number | null): string {
+  if (!info) return '';
+  let q = 0;
+  const text = lines.map((l) => l.split('{}').map((seg, si, arr) => { if (si >= arr.length - 1) return seg; const i = q++; return seg + (info.ok[i] ? `[${info.vals[i]} ✓]` : info.vals[i]?.trim() ? `[${info.vals[i]} ?]` : (foc === i ? '[__ ← student is here]' : '[__]')); }).join('')).join('\n');
+  const st = info.vals.map((_, i) => `#${i + 1}: ${info.ok[i] ? 'correct' : info.wrong[i] ? 'tried wrong' : info.vals[i]?.trim() ? 'typed, not checked' : 'empty'}`).join(', ');
+  return `Text with the student's entries (✓ correct, ? not correct yet):\n${text}\nFocused blank: ${foc != null ? '#' + (foc + 1) : 'none'}. Status: ${st}`;
+}
 const plain = (t: string) => t.replace(/\[\[|\]\]|\{\{|\}\}/g, '');
 
 function HintBox({ lines, item, ctx }: { lines: string[]; item?: Record<string, any>; ctx?: () => { input: string; wrong: number } }) { return <Hint lines={lines} kind={item?.k} item={item} ctx={ctx} />; } // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -43,7 +52,7 @@ export const SBuild = (p: KindProps) => <SB {...p} mode="cap" />;
 export const SWrite = (p: KindProps) => <SB {...p} mode="box" />;
 
 /** 빈칸이 들어 있는 줄들. {} 하나가 입력칸 하나, 정답은 순서대로 ans[]. 칸마다 맞으면 바로 고정, 틀리면 Enter·칸 이탈 때 표시 (확인 버튼 없음) */
-function Blanks({ lines, ans, big, cap, box, onDone, tag }: { lines: string[]; ans: string[]; big?: boolean; cap?: boolean; box?: boolean; onDone: KindProps['onDone']; tag: string }) {
+function Blanks({ lines, ans, big, cap, box, onDone, tag, info, onFoc }: { lines: string[]; ans: string[]; big?: boolean; cap?: boolean; box?: boolean; onDone: KindProps['onDone']; tag: string; info?: { current: BInfo | null }; onFoc?: (i: number) => void }) {
   const [vals, setVals] = useState<string[]>(ans.map(() => '')); const [okS, setOkS] = useState<boolean[]>(ans.map(() => false));
   const [bad, setBad] = useState<boolean[]>(ans.map(() => false)); const wrong = useRef<boolean[]>(ans.map(() => false)); const fired = useRef(false);
   function judge(i: number, val: string, final: boolean) {
@@ -54,6 +63,7 @@ function Blanks({ lines, ans, big, cap, box, onDone, tag }: { lines: string[]; a
       if (!fired.current && o.every(Boolean)) { fired.current = true; onDone(ans.map((_, k) => ({ tag, ok: !wrong.current[k] }))); }
     } else if (final) { wrong.current[i] = true; setBad((b) => b.map((y, k) => (k === i ? true : y))); setTimeout(() => setBad((b) => b.map((y, k) => (k === i ? false : y))), 700); }
   }
+  if (info) info.current = { vals, ok: okS, wrong: wrong.current };
   let bi = 0;
   return (
     <div className={'nv-bl' + (big ? ' nv-bl-big' : '') + (cap ? ' nv-capsule nv-capsule-bl nv-main' : '') + (box ? ' nv-bl-box' : '')}>
@@ -63,29 +73,32 @@ function Blanks({ lines, ans, big, cap, box, onDone, tag }: { lines: string[]; a
           return <span key={si}><Rich text={seg} />{idx >= 0 && (
             <input className={'nv-blank' + (okS[idx] ? ' nv-bok' : '') + (bad[idx] ? ' nv-bbad nv-shake' : '')} style={{ width: Math.max(4, ans[idx].split('|')[0].length * 0.78 + 1.6) + 'em' }}
               value={okS[idx] ? ans[idx].split('|')[0] : vals[idx]} disabled={okS[idx]} autoCapitalize="off" autoCorrect="off" spellCheck={false}
-              onChange={(e) => judge(idx, e.target.value, false)} onBlur={(e) => judge(idx, e.target.value, true)} onKeyDown={(e) => { if (e.key === 'Enter') judge(idx, vals[idx], true); }} />)}</span>;
+              onFocus={() => onFoc?.(idx)} onChange={(e) => judge(idx, e.target.value, false)} onBlur={(e) => judge(idx, e.target.value, true)} onKeyDown={(e) => { if (e.key === 'Enter') judge(idx, vals[idx], true); }} />)}</span>;
         })}</p>))}
     </div>
   );
 }
 /** 빈칸 단어 쓰기: 한글 뜻 줄 + 문장 캡슐(빈칸) + 힌트 */
 export function SFill({ item, onDone }: KindProps) {
+  const info = useRef<BInfo | null>(null); const [foc, setFoc] = useState<number | null>(null);
   return (
     <div className="nv-body nv-wbody nv-wtop">
       <Ko t={item.ko} />
-      <Blanks lines={[item.tpl ?? '{}']} ans={[item.ans ?? '']} big cap onDone={onDone} tag="write" />
-      <div className="nv-subslot"><HintBox lines={item.hint?.length ? item.hint : [initials(String(item.tpl ?? '').replace('{}', (item.ans ?? '').split('|')[0]))]} item={item} /></div>
+      <Blanks lines={[item.tpl ?? '{}']} ans={[item.ans ?? '']} big cap onDone={onDone} tag="write" info={info} onFoc={setFoc} />
+      <div className="nv-subslot"><HintBox lines={item.hint?.length ? item.hint : [initials(String(item.tpl ?? '').replace('{}', (item.ans ?? '').split('|')[0]))]} item={item} ctx={() => ({ input: (item.ko ? `Korean meaning: ${item.ko}\n` : '') + blanksDesc([item.tpl ?? '{}'], info.current, foc), wrong: info.current?.wrong.filter(Boolean).length ?? 0 })} /></div>
     </div>
   );
 }
 /** 그림 보고 대화 완성하기 (Key Expression 대화 빈칸) */
 export function DFill({ item, pic, onDone }: KindProps) {
   const src = pic(item.pic);
+  const info = useRef<BInfo | null>(null); const [foc, setFoc] = useState<number | null>(null);
+  const bh: string[] = item.blankHints ?? [];
   return (
     <div className="nv-body nv-wbody">
       <div className="nv-picwrap nv-dfpic">{src && <img className="nv-img nv-img-md" src={imgSrc(src)} alt="" draggable={false} />}{src && item.tag2 && <span className="nv-price">{item.tag2}</span>}</div>
-      <Blanks lines={item.lines ?? []} ans={item.ans ?? []} big box onDone={onDone} tag="write" />
-      <HintBox lines={item.hint ?? []} item={item} />
+      <Blanks lines={item.lines ?? []} ans={item.ans ?? []} big box onDone={onDone} tag="write" info={info} onFoc={setFoc} />
+      <HintBox lines={foc != null && bh[foc] ? [bh[foc]] : item.hint?.length ? item.hint : bh.filter(Boolean)} item={item} ctx={() => ({ input: 'Dialogue completion with a picture' + (item.tag2 ? ` (price tag ${item.tag2})` : '') + '.\n' + blanksDesc(item.lines ?? [], info.current, foc) + (foc != null && bh[foc] ? `\nTeacher hint for this blank: ${bh[foc]}` : ''), wrong: info.current?.wrong.filter(Boolean).length ?? 0 })} />
     </div>
   );
 }
@@ -94,14 +107,14 @@ export function DFill({ item, pic, onDone }: KindProps) {
 export function SScram({ item, onDone }: KindProps) {
   const ans: string = item.ans ?? ''; const wordsA = ans.split(/\s+/).filter(Boolean);
   const chips = useMemo(() => shuffle([...wordsA, ...(item.extra ?? [])].map((t, id) => ({ id, t }))), [item]); // eslint-disable-line
-  const [seq, setSeq] = useState<number[]>([]); const [ok, setOk] = useState(false); const [bad, setBad] = useState(false); const wrong = useRef(false);
+  const [seq, setSeq] = useState<number[]>([]); const [ok, setOk] = useState(false); const [bad, setBad] = useState(false); const wrong = useRef(false); const wcnt = useRef(0);
   const text = (ids: number[]) => ids.map((i) => chips.find((c) => c.id === i)!.t).join(' ');
   function tap(id: number) {
     if (ok || bad || seq.includes(id)) return;
     const n = [...seq, id]; setSeq(n);
     if (n.length === wordsA.length) {
       if (accepts(text(n), [ans, ...(item.alts ?? [])].join('|'))) { setOk(true); say(ans); onDone([{ tag: 'write', ok: !wrong.current }]); }
-      else { wrong.current = true; setBad(true); setTimeout(() => { setBad(false); setSeq([]); }, 800); }
+      else { wrong.current = true; wcnt.current += 1; setBad(true); setTimeout(() => { setBad(false); setSeq([]); }, 800); }
     }
   }
   return (
@@ -111,7 +124,7 @@ export function SScram({ item, onDone }: KindProps) {
         {seq.map((id) => <button key={id} className="nv-chipb nv-placed" onClick={() => !ok && !bad && setSeq(seq.filter((x) => x !== id))}>{chips.find((c) => c.id === id)!.t}</button>)}
       </div>
       <div className="nv-subslot"><div className="nv-chips nv-chips-bank">{chips.map((c) => <button key={c.id} className="nv-chipb" disabled={seq.includes(c.id)} onClick={() => tap(c.id)}>{c.t}</button>)}</div>
-        <HintBox lines={item.hint ?? []} item={item} /></div>
+        <HintBox lines={item.hint ?? []} item={item} ctx={() => ({ input: `Korean: ${item.ko ?? ''}\nWord chips placed so far (in order): ${seq.length ? text(seq) : '(none)'}\nChips not used yet: ${chips.filter((c) => !seq.includes(c.id)).map((c) => c.t).join(', ') || '(none)'}\nSentence length: ${wordsA.length} words`, wrong: wcnt.current })} /></div>
     </div>
   );
 }
@@ -155,7 +168,8 @@ function WB({ item, onDone, tag }: KindProps & { tag: string }) {
   const [slots, setSlots] = useState<(number | null)[]>(ans.map(() => null)); const [bad, setBad] = useState<boolean[]>(ans.map(() => false));
   const [ok, setOk] = useState(false); const wrong = useRef<boolean[]>(ans.map(() => false));
   const txt = (id: number | null) => (id == null ? '' : bank.find((b) => b.id === id)!.t);
-  const [dragId, setDragId] = useState<number | null>(null); const [over, setOver] = useState<number | null>(null);
+  const [dragId, setDragId] = useState<number | null>(null); const [over, setOver] = useState<number | null>(null); const wcnt = useRef(0);
+  const bh: string[] = item.blankHints ?? []; const nextEmpty = slots.indexOf(null);
   /** 보기를 칸에 넣는다. at 이 없으면 비어 있는 첫 칸(위에서부터), 있으면 그 칸(이미 찬 칸이면 바꿔 넣음) */
   function put(id: number, at?: number) {
     if (ok || bad.some(Boolean)) return;
@@ -164,7 +178,7 @@ function WB({ item, onDone, tag }: KindProps & { tag: string }) {
     const n = [...n0]; n[k] = id; setSlots(n);
     if (!n.includes(null)) {
       const b = n.map((x, i) => !accepts(txt(x), ans[i]));
-      if (b.some(Boolean)) { b.forEach((x, i) => { if (x) wrong.current[i] = true; }); setBad(b); setTimeout(() => { setBad(ans.map(() => false)); setSlots(n.map((x, i) => (b[i] ? null : x))); }, 800); }
+      if (b.some(Boolean)) { wcnt.current += 1; b.forEach((x, i) => { if (x) wrong.current[i] = true; }); setBad(b); setTimeout(() => { setBad(ans.map(() => false)); setSlots(n.map((x, i) => (b[i] ? null : x))); }, 800); }
       else { setOk(true); onDone(ans.map((_, i) => ({ tag, ok: !wrong.current[i] }))); }
     }
   }
@@ -179,7 +193,10 @@ function WB({ item, onDone, tag }: KindProps & { tag: string }) {
             return <span key={si}><Rich text={seg} />{idx >= 0 && <button onDragOver={(e) => { e.preventDefault(); setOver(idx); }} onDragLeave={() => setOver(null)} onDrop={(e) => { e.preventDefault(); if (dragId != null) put(dragId, idx); setDragId(null); setOver(null); }} className={'nv-slotb' + (over === idx ? ' nv-over' : '') + (slots[idx] != null ? ' filled' : '') + (bad[idx] ? ' nv-bbad nv-shake' : '') + (ok ? ' nv-bok' : '')} onClick={() => !ok && slots[idx] != null && setSlots(slots.map((x, k) => (k === idx ? null : x)))}>{txt(slots[idx])}</button>}</span>;
           })}</p>))}
       </div>
-      <HintBox lines={item.hint ?? []} item={item} />
+      <HintBox lines={nextEmpty >= 0 && bh[nextEmpty] ? [bh[nextEmpty]] : item.hint?.length ? item.hint : bh.filter(Boolean)} item={item} ctx={() => {
+        let q = 0; const text = lines.map((l) => l.split('{}').map((seg, si, arr) => { if (si >= arr.length - 1) return seg; const i = q++; return seg + (slots[i] != null ? `[${txt(slots[i])}]` : i === nextEmpty ? '[__ ← next blank]' : '[__]'); }).join('')).join('\n');
+        return { input: `Word bank: ${bank.map((b) => b.t).join(', ')}\nText with the student's choices so far:\n${text}\nNext empty blank: ${nextEmpty >= 0 ? '#' + (nextEmpty + 1) : 'none'}${nextEmpty >= 0 && bh[nextEmpty] ? `\nTeacher hint for it: ${bh[nextEmpty]}` : ''}`, wrong: wcnt.current };
+      }} />
     </div>
   );
 }
@@ -190,7 +207,7 @@ export const SCloze = (p: KindProps) => <WB {...p} tag="read" />;
 export function LWrite({ item, onDone }: KindProps) {
   const rows: { label: string; ans: string }[] = item.rows ?? [];
   const [v, setV] = useState<string[]>(rows.map(() => '')); const [okS, setOkS] = useState<boolean[]>(rows.map(() => false)); const [bad, setBad] = useState<boolean[]>(rows.map(() => false));
-  const wrong = useRef<boolean[]>(rows.map(() => false)); const fired = useRef(false);
+  const wrong = useRef<boolean[]>(rows.map(() => false)); const fired = useRef(false); const [foc, setFoc] = useState<number | null>(null);
   const t = (s: string) => s.replace(/\s/g, '').replace(/^0(\d)/, '$1').replace('.', ':');
   /** 맞게 쓰면 바로 확인, 틀리면 칸을 벗어나거나 Enter 를 눌렀을 때 알려 준다 (확인 버튼 없음) */
   function judge(i: number, val: string, final: boolean) {
@@ -207,9 +224,9 @@ export function LWrite({ item, onDone }: KindProps) {
       <table className="nv-ltab"><thead><tr><th>{item.h1 || '시간'}</th><th>{item.h2 || '일과'}</th></tr></thead>
         <tbody>{rows.map((r, i) => (
           <tr key={i}><td><input className={'nv-blank nv-time' + (okS[i] ? ' nv-bok' : '') + (bad[i] ? ' nv-bbad nv-shake' : '')} value={okS[i] ? r.ans : v[i]} disabled={okS[i]} placeholder="00:00" inputMode="numeric"
-            onChange={(e) => judge(i, e.target.value, false)} onBlur={(e) => judge(i, e.target.value, true)} onKeyDown={(e) => { if (e.key === 'Enter') judge(i, v[i], true); }} /></td><td>{r.label}</td></tr>))}</tbody></table>
+            onFocus={() => setFoc(i)} onChange={(e) => judge(i, e.target.value, false)} onBlur={(e) => judge(i, e.target.value, true)} onKeyDown={(e) => { if (e.key === 'Enter') judge(i, v[i], true); }} /></td><td>{r.label}</td></tr>))}</tbody></table>
       <Msg ok={done} bad={bad.some(Boolean)} />
-      <HintBox lines={item.hint ?? []} item={item} />
+      <HintBox lines={item.hint ?? []} item={item} ctx={() => ({ input: `The student listens and fills in the time for each activity.\n${rows.map((r, i) => `- ${r.label}: ${okS[i] ? v[i] + ' ✓' : v[i]?.trim() ? v[i] + ' (not correct yet)' : '(empty)'}${foc === i ? '  ← student is here' : ''}`).join('\n')}\nListening script: ${item.say ?? ''}`, wrong: wrong.current.filter(Boolean).length })} />
     </div>
   );
 }

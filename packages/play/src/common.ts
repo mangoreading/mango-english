@@ -78,7 +78,7 @@ export interface KindProps {
 export interface AiHandlers {
   chat?: (req: { situation: string; role?: string; history: { who: 'ai' | 'me'; text: string }[] }) => Promise<string>;
   check?: (req: { text: string; rules: string[] }) => Promise<boolean[]>;
-  hint?: (req: { kind: string; item: unknown; input: string; wrong: number; given: number }) => Promise<string>;
+  hint?: (req: { kind: string; item: unknown; input: string; wrong: number; given: number; prev?: string[] }) => Promise<string>;
 }
 export const aiHandlers: AiHandlers = {};
 export const registerAi = (h: AiHandlers) => Object.assign(aiHandlers, h);

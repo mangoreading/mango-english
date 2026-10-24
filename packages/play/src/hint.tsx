@@ -10,7 +10,7 @@ export function Hint({ lines, kind, item, ctx }: { lines?: string[]; kind?: stri
     if (busy || !aiHandlers.hint) return; setBusy(true); setErr('');
     try {
       const c = ctx?.() ?? { input: '', wrong: 0 };
-      const req = { kind: kind!, item, input: c.input, wrong: c.wrong, given: given.current };
+      const req = { kind: kind!, item, input: c.input, wrong: c.wrong, given: given.current, prev: ai };
       let t: string;
       try { t = await aiHandlers.hint(req); } catch { await new Promise((r) => setTimeout(r, 700)); t = await aiHandlers.hint(req); } // 일시 오류면 한 번 더
       given.current += 1; setAi((a) => [...a, t]);

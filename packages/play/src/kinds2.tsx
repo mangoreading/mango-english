@@ -16,15 +16,15 @@ function useSingle(a: number, tag: string, onDone: (r: Res[]) => void) {
   const [sel, setSel] = useState<number | null>(null);
   const [bad, setBad] = useState<number | null>(null);
   const [ok, setOk] = useState(false);
-  const wrong = useRef(false); const nw = useRef(0); const last = useRef(-1);
+  const wrong = useRef(false); const nw = useRef(0); const last = useRef(-1); const tried = useRef<number[]>([]);
   function pick(i: number, spoken?: string) {
     if (ok) return;
     if (spoken) say(spoken);
     if (i === a) { setSel(i); setBad(null); setOk(true); onDone([{ tag, ok: !wrong.current }]); }
-    else { wrong.current = true; nw.current += 1; last.current = i; setBad(i); setTimeout(() => setBad(null), 500); }
+    else { wrong.current = true; nw.current += 1; last.current = i; tried.current.push(i + 1); setBad(i); setTimeout(() => setBad(null), 500); }
   }
   const cls = (i: number) => (ok && i === a ? ' nv-right' : bad === i ? ' nv-wrong nv-shake' : sel === i ? ' nv-on' : '');
-  const ctx = () => ({ input: last.current >= 0 ? `선택한 보기: ${last.current + 1}번` : '', wrong: nw.current });
+  const ctx = () => ({ input: tried.current.length ? `Wrong choices the student already tried (option numbers, 1-based, in the order shown in the item; oldest first): ${tried.current.join(', ')}. The most recent wrong choice: option ${last.current + 1}. They have NOT found the right one yet.` : 'The student has not chosen anything yet.', wrong: nw.current });
   return { pick, cls, ok, ctx };
 }
 const Msg = ({ ok }: { ok: boolean }) => <Fb className={'nv-fbmsg' + (ok ? ' on' : '')}>{ok ? '정답이에요! 👏' : ''}</Fb>;
