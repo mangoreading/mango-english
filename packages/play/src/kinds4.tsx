@@ -186,22 +186,22 @@ export function LWrite({ item, onDone }: KindProps) {
   const [v, setV] = useState<string[]>(rows.map(() => '')); const [okS, setOkS] = useState<boolean[]>(rows.map(() => false)); const [bad, setBad] = useState<boolean[]>(rows.map(() => false));
   const wrong = useRef<boolean[]>(rows.map(() => false)); const fired = useRef(false);
   const t = (s: string) => s.replace(/\s/g, '').replace(/^0(\d)/, '$1').replace('.', ':');
-  function check() {
-    const o = [...okS], b = rows.map(() => false);
-    rows.forEach((r, i) => { if (o[i]) return; if (t(v[i]) === t(r.ans)) o[i] = true; else { b[i] = true; wrong.current[i] = true; } });
-    setOkS(o); setBad(b); setTimeout(() => setBad(rows.map(() => false)), 700);
-    if (!fired.current && o.every(Boolean)) { fired.current = true; onDone(rows.map((_, i) => ({ tag: 'listen', ok: !wrong.current[i] }))); }
+  /** 맞게 쓰면 바로 확인, 틀리면 칸을 벗어나거나 Enter 를 눌렀을 때 알려 준다 (확인 버튼 없음) */
+  function judge(i: number, val: string, final: boolean) {
+    setV((x) => x.map((y, k) => (k === i ? val : y)));
+    if (t(val) === t(rows[i].ans)) {
+      setBad((b) => b.map((y, k) => (k === i ? false : y)));
+      setOkS((o) => { const n = o.map((y, k) => (k === i ? true : y)); if (!fired.current && n.every(Boolean)) { fired.current = true; setTimeout(() => onDone(rows.map((_, k) => ({ tag: 'listen', ok: !wrong.current[k] }))), 0); } return n; });
+    } else if (final && val.trim()) { wrong.current[i] = true; setBad((b) => b.map((y, k) => (k === i ? true : y))); setTimeout(() => setBad((b) => b.map((y, k) => (k === i ? false : y))), 700); }
   }
   const done = okS.every(Boolean);
   return (
     <div className="nv-body">
-      {item.q && <p className="nv-q">{item.q}</p>}
       <button type="button" className="nv-listen" onClick={() => say(item.say ?? '')}>🔊 <b>듣기</b></button>
       <table className="nv-ltab"><thead><tr><th>{item.h1 || '시간'}</th><th>{item.h2 || '일과'}</th></tr></thead>
         <tbody>{rows.map((r, i) => (
           <tr key={i}><td><input className={'nv-blank nv-time' + (okS[i] ? ' nv-bok' : '') + (bad[i] ? ' nv-bbad nv-shake' : '')} value={okS[i] ? r.ans : v[i]} disabled={okS[i]} placeholder="00:00" inputMode="numeric"
-            onChange={(e) => setV(v.map((x, k) => (k === i ? e.target.value : x)))} onKeyDown={(e) => { if (e.key === 'Enter') check(); }} /></td><td>{r.label}</td></tr>))}</tbody></table>
-      <button className="nv-btn" disabled={done || v.every((x) => !x.trim())} onClick={check}>확인</button>
+            onChange={(e) => judge(i, e.target.value, false)} onBlur={(e) => judge(i, e.target.value, true)} onKeyDown={(e) => { if (e.key === 'Enter') judge(i, v[i], true); }} /></td><td>{r.label}</td></tr>))}</tbody></table>
       <Msg ok={done} bad={bad.some(Boolean)} />
       <HintBox lines={item.hint ?? []} item={item} />
     </div>

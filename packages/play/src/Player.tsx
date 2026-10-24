@@ -63,7 +63,7 @@ const INST: Record<string, string> = {
 /** 그림을 문항 화면 안에서 직접 그리는 템플릿 (그 밖의 템플릿은 오른쪽 위에 보조 그림으로 보인다) */
 const OWN_PIC = ['lookspeak', 'role', 'pchoice', 'dchoice', 'dfill', 'goal', 'lcardp', 'lchpic', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat'];
 /** 듣고 고르기: 질문을 맨 위 안내 자리에 보여 준다 */
-const LCH = ['lchtext', 'lchpic', 'lchlist'];
+const LCH = ['lchtext', 'lchpic', 'lchlist', 'lwrite'];
 const INST_SUB: Record<string, string> = { kexp: '(3번 반복해서 들어주세요)' };
 const KIND = { lookspeak: LookSpeak, saykor: SayKor, lspeak: LSpeak, raloud: RAloud, role: Role, present: Present, aitalk: AiTalk, sbuild: SBuild, swrite: SWrite, sfill: SFill, dfill: DFill, sscram: SScram, sorder: SOrder, mwbank: MWBank, scloze: SCloze, lwrite: LWrite, mfree: MFree, swrt: SWrt, goal: Goal, kexp: KExp, tapl: TapL, lsent: LSent, lcardp: LCardP, lcardt: LCardT, sdrill: SDrill, pread: PRead, mtext: MText, wrepeat: WRepeat, vcards: VCards, vtype1: VType1, vspell: VSpell, vmatch: VMatch, vsound: VSound, vwrite: VWrite,
   wchoice: WChoice, pchoice: PChoice, dchoice: DChoice, tf: TrueFalse, lchtext: LChText, lchpic: LChPic, lchlist: LChList, lmatch: LMatch,

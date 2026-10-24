@@ -258,3 +258,5 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-tap-goal.nv-cur { background:#FFE9A6; border-color:#E0A100; }
 @media (max-width:760px) { .nv-kx.nv-kx-lab { grid-template-columns:minmax(0,1fr); } .nv-goal { grid-template-columns:1fr; } .nv-goalR { border-left:0; padding-left:0; } }
 .nv-inst small { display:block; font-weight:500; color:var(--nv-sub); font-size:.8em; margin-top:.15em; }
+.nv-ltab { width:70%; max-width:46em; min-width:0; }
+.nv-ltab th { text-align:center; }
