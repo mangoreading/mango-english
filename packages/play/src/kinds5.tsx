@@ -63,8 +63,8 @@ function Speak({ item, pic, onDone, mode }: KindProps & { mode: 'look' | 'kor' |
   const src = pic(item.pic);
   const self = () => { setOk(true); onDone([{ tag: 'speak', ok: true }]); };
   return (
-    <div className="nv-body">
-      {mode === 'listen' && <button type="button" className="nv-listen" onClick={() => say(item.ask ?? target)}>🔊 <b>듣기</b></button>}
+    <div className={'nv-body' + (mode === 'listen' ? ' nv-hasl' : '')}>
+      {mode === 'listen' && <button type="button" className="nv-listen nv-listen-top" onClick={() => say(item.ask ?? target)}>🔊 <b>듣기</b></button>}
       {mode === 'look' && src && <div className="nv-picwrap"><img className="nv-img nv-img-md" src={imgSrc(src)} alt="" draggable={false} />{item.label && <span className="nv-pill">{item.label}</span>}{item.price && <span className="nv-price">{item.price}</span>}</div>}
       {mode !== 'look' && item.ko && <div className="nv-kobar">{item.ko}</div>}
       <div className={'nv-capsule nv-capsule-sp' + (ok ? ' nv-okc' : '')}>

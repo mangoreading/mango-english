@@ -8,7 +8,7 @@ import { Fb } from './fb';
 type O = { t: string; flag?: string };
 const Img = ({ src, cls }: { src: string | null; cls: string }) => (src ? <img className={cls} src={imgSrc(src)} alt="" draggable={false} /> : null);
 
-const Listen = ({ text }: { text: string }) => <button type="button" className="nv-listen" onClick={() => say(text)}>🔊 <b>듣기</b></button>;
+const Listen = ({ text }: { text: string }) => <button type="button" className="nv-listen nv-listen-top" onClick={() => say(text)}>🔊 <b>듣기</b></button>;
 const Lines = ({ lines, cls }: { lines: string[]; cls?: string }) => <div className={cls ?? 'nv-dlg'}>{lines.map((l, i) => <p key={i}>{l}</p>)}</div>;
 
 /** 보기 한 개를 눌러 정답을 찾는 공통 동작: 틀리면 흔들리고 다시, 맞으면 초록으로 잠긴다 */
@@ -109,7 +109,7 @@ export function TrueFalse({ item, onDone }: KindProps) {
 function LChoose({ item, pic, onDone, mode }: KindProps & { mode: 'row' | 'pic' | 'list' }) {
   const opts: O[] = item.opts ?? []; const s = useSingle(item.a ?? 0, 'listen', onDone);
   return (
-    <div className="nv-body">
+    <div className="nv-body nv-hasl">
       <Listen text={item.say ?? ''} />
       <div className={mode === 'list' ? 'nv-list' : 'nv-row4'}>
         {opts.map((o, i) => (

@@ -264,3 +264,8 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 /* 정답 안내는 아래 줄 가운데, 버튼은 오른쪽 */
 .nv-foot { position:relative; } .nv-fbslot { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); }
 .nv-body > .nv-listen { margin-bottom:1.6em; }
+
+/* 듣기 버튼: 듣기 템플릿에서 항상 같은 자리(패널 위쪽 가운데) */
+.nv-body > .nv-listen.nv-listen-top { position:absolute; top:2.4em; left:50%; transform:translateX(-50%); margin:0; }
+.nv-body > .nv-listen.nv-listen-top:active { transform:translateX(-50%) translateY(.1em); }
+.nv-hasl { padding-top:5.4em; }
