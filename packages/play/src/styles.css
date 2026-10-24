@@ -183,7 +183,7 @@
 .nv-capsule-sp { display:flex; align-items:center; justify-content:center; gap:1em; padding:.9em 1.6em; font-size:1.35em; color:#1F2A44; }
 .nv-capsule-sp b { font-size:1.15em; } .nv-gw .ok { color:#1F2A44; } .nv-gw .bad { background:#FFD6A0; border-radius:.25em; padding:0 .1em; color:#9A3B00; }
 .nv-pill { position:absolute; left:-4.4em; top:.4em; background:#FFF1CC; border:.08em solid var(--nv-navy); border-radius:999px; padding:.1em .9em; font-size:.95em; } .nv-picwrap .nv-price { right:-5em; }
-.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
+p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-micwrap { display:flex; flex-direction:column; align-items:center; gap:.5em; font-size:.95em; color:var(--nv-navy); }
 .nv-mic { font:inherit; font-size:1.8em; width:2.2em; height:2.2em; border-radius:50%; border:.12em solid #FFC000; background:#D12F2F; color:#fff; cursor:pointer; padding:0; box-shadow:0 .15em .5em rgba(209,47,47,.3); } .nv-mic.on { animation:nv-pulse 1s infinite; } .nv-mic-s { font-size:1.2em; width:2em; height:2em; flex:none; }
 @keyframes nv-pulse { 50% { box-shadow:0 0 0 .55em rgba(209,47,47,.15); } }
@@ -222,3 +222,9 @@
 .nv-swap span { display:inline-block; min-width:1.5em; text-align:center; border-radius:999px; padding:.05em .3em; font-weight:700; } .nv-swap span.on { background:var(--nv-blue); color:#fff; } .nv-swap i { font-style:normal; }
 .nv-swap:disabled { opacity:.45; cursor:default; }
 .nv-card-w { padding:.6em .6em .7em; gap:.5em; } .nv-grid3 .nv-card-w .nv-img { height:5.2em; }
+/* 정답 안내("정답이에요!")는 모든 템플릿에서 패널 왼쪽 아래에 고정: 위치가 움직이지 않는다 */
+.nv-body { position:relative; }
+.nv-body .nv-fbmsg { position:absolute; left:1.6em; bottom:1.2em; margin:0; text-align:left; min-height:0; }
+/* 그림 보고 쓰기: 판정할 때 칸 크기가 변하지 않게 */
+.nv-card-w { height:11.4em; box-sizing:border-box; } .nv-input-s { height:2.3em; box-sizing:border-box; font-weight:700; } .nv-input-s:disabled { font-weight:700; }
+.nv-hint { min-height:1.4em; }
