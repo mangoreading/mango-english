@@ -186,12 +186,12 @@ export function Present({ item, onDone }: KindProps) {
           {state === 'done' ? <video src={url} controls playsInline /> : <video ref={vid} muted playsInline />}
           {state === 'idle' && <div className="nv-camph">빨간 버튼을 눌러 카메라를 켜고 발표해 볼까요?</div>}
           {state === 'rec' && <span className="nv-rect">● {mm(sec)}</span>}
+          {state === 'idle' && <button className="nv-recb nv-recb-in" onClick={open} aria-label="카메라 켜기" />}
+          {state === 'ready' && <button className="nv-recb nv-recb-in" onClick={start} aria-label="녹화 시작" />}
+          {state === 'rec' && <button className="nv-recb nv-recb-in on" onClick={() => rec.current?.stop()} aria-label="녹화 끝내기" />}
         </div>
       </div>
       <div className="nv-ra-btns">
-        {state === 'idle' && <button className="nv-recb" onClick={open} aria-label="카메라 켜기" />}
-        {state === 'ready' && <button className="nv-recb" onClick={start} aria-label="녹화 시작" />}
-        {state === 'rec' && <button className="nv-recb on" onClick={() => rec.current?.stop()} aria-label="녹화 끝내기" />}
         {state === 'done' && <span />}
         {state === 'done' && <Fb className="nv-fbmsg on">발표를 마쳤어요! 👏 (영상은 이 기기에만 있어요)</Fb>}
         {(state === 'idle' || state === 'ready') && err && <button className="nv-btn nv-ghost" onClick={() => { setState('done'); onDone([{ tag: 'speak', ok: true }]); }}>건너뛰기</button>}

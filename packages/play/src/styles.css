@@ -512,3 +512,12 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 [data-skin=mango] .nv-spkin { position:absolute; right:.6em; top:50%; transform:translateY(-50%); width:3.55em; height:3.55em; border:0; border-radius:50%; background:#e3edff; cursor:pointer; padding:0; display:grid; place-items:center; font-size:.5em; }
 [data-skin=mango] .nv-spkin i { width:1.75em; height:1.75em; background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233979f3' stroke='%233979f3' stroke-width='2' stroke-linecap='round'><path d='M4 9v6h4l5 4V5L8 9H4z'/><path d='M16 8c2 2 2 6 0 8M19 5c4 4 4 10 0 14' fill='none'/></svg>") center/contain no-repeat; }
 [data-skin=mango] .nv-spkin:active { transform:translateY(-50%) scale(.95); }
+/* 발표 영상: 스크립트는 줄바꿈 없이(아주 길 때만 줄바꿈), 녹화 버튼은 영상 영역 하단 가운데 */
+[data-skin=mango] .nv-wbody .nv-pres { max-width:68em; grid-template-columns:max-content minmax(20em,1fr); gap:1.4em; }
+[data-skin=mango] .nv-script { width:max-content; max-width:36em; }
+[data-skin=mango] .nv-script p { font-size:1.15em; }
+.nv-recb-in { position:absolute; left:50%; bottom:1.1em; transform:translateX(-50%); z-index:2; }
+.nv-cam .nv-recb-in { margin:0; }
+[data-skin=mango] .nv-cam { min-height:19em; }
+[data-skin=mango] .nv-camph { top:36%; }
+.nv-recb-in { bottom:1.4em; }
