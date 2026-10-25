@@ -115,7 +115,7 @@ export function NativePlayer({ title, items, vocab, nextLabel, onResult, onFinis
   }
 
   return (
-    <div className="nv-overlay" data-hd={it.k === 'lookspeak' || it.k === 'saykor' ? 'bg' : undefined} data-skin={VOCAB_SKIN.includes(it.k) ? 'forest' : SPEAK_SKIN.includes(it.k) ? 'mango' : BG_SKIN.includes(it.k) ? 'mangobg' : undefined}>
+    <div className="nv-overlay" data-hd={SPEAK_SKIN.includes(it.k) ? 'bg' : undefined} data-skin={VOCAB_SKIN.includes(it.k) ? 'forest' : SPEAK_SKIN.includes(it.k) ? 'mango' : BG_SKIN.includes(it.k) ? 'mangobg' : undefined}>
       <div className="nv-head">
         <button className="nv-x" onClick={() => onFinish('exit')} aria-label="나가기">‹</button>
         <b>{title}</b>
