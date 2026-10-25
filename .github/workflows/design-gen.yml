@@ -1,0 +1,33 @@
+name: design-gen
+# ChatGPT 에서 하던 시안 제작·요소 분리를 OpenAI API 로 실행한다. 결과는 design/out/<이름>/ 에 올라온다.
+# 필요: GitHub Secrets 의 OPENAI_API_KEY
+on:
+  workflow_dispatch:
+    inputs:
+      name: { description: '결과 폴더 이름 (예: look-speak-2)', required: true }
+      prompt_file: { description: '요청문 파일 경로 (예: design/prompts/look-speak.md)', required: true }
+      ref_images: { description: '참고 이미지 경로, 쉼표로 구분 (선택)', required: false, default: '' }
+      model: { description: 'OpenAI 모델', required: false, default: 'gpt-5' }
+permissions: { contents: write }
+concurrency: design-gen
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Generate
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PROMPT_FILE: ${{ inputs.prompt_file }}
+          REF_IMAGES: ${{ inputs.ref_images }}
+          MODEL: ${{ inputs.model }}
+          OUT_DIR: design/out/${{ inputs.name }}
+        run: node tools/design_gen.mjs
+      - name: Commit results
+        run: |
+          git config user.name "design-gen"; git config user.email "design-gen@users.noreply.github.com"
+          git add design/out
+          git commit -m "design-gen: ${{ inputs.name }}" || echo "변경 없음"
+          git pull --rebase origin main && git push origin HEAD:main
