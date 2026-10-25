@@ -527,3 +527,11 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-overlay[data-skin=mangobg] > * { position:relative; z-index:1; }
 [data-skin=mangobg] .nv-body { background:transparent; border:0; box-shadow:none; }
 [data-skin=mangobg] .nv-body .nv-capsule { width:78% !important; max-width:none !important; }
+
+/* mangobg: 시안의 뒤로가기·포인트 요소 */
+[data-skin=mangobg] .nv-x { font-size:1em; width:3.1em; height:3.1em; padding:0; border-radius:50%; background:#fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2320233e' stroke-width='2.3' stroke-linecap='round' stroke-linejoin='round'><path d='m15 4-8 8 8 8'/></svg>") center/1.6em no-repeat; box-shadow:0 .25em 1em rgba(21,43,77,.09); color:transparent; overflow:hidden; text-indent:-99em; flex:none; }
+[data-skin=mangobg] .nv-star { width:1.85em; height:1.85em; color:transparent; overflow:hidden; text-indent:-99em; background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffc322' stroke='%23ffb600' stroke-width='1'><path d='m12 1.8 3.1 6.4 7.1 1-5.1 5 .9 7.1-6-3.3-6.3 3.3 1.2-7.1-5.2-5 7.2-1z'/></svg>") center/contain no-repeat; display:inline-block; }
+[data-skin=mangobg] .nv-pts { margin-left:auto; line-height:1; display:flex; align-items:center; gap:.75em; background:#fff8ea; border-radius:3em; padding:.55em 1.25em; font-size:1.125em; font-weight:700; color:#20233e; white-space:nowrap; }
+[data-skin=mangobg] .nv-head { gap:1.55em; }
+[data-skin=mangobg] .nv-head { height:5em; position:relative; }
+[data-skin=mangobg] .nv-dots { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); margin:0; }
