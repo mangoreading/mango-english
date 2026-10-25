@@ -66,6 +66,7 @@ const NO_SIDE = ['sbuild', 'swrite', 'sfill', 'sscram', 'sorder', 'mwbank', 'scl
 const VOCAB_SKIN = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat'];
 /** 말하기 지시문의 '영어로 말해 보세요' 부분을 파랗게 강조 (mango 스킨) */
 function hl(t: string, on: boolean) { const m = on ? t.match(/^(.*?)((?:영어로 )?말해 보세요.*)$/) : null; return m ? <>{m[1]}<span className="nv-hl">{m[2]}</span></> : t; }
+const BG_SKIN = ['sdrill'];
 const SPEAK_SKIN = ['lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present'];
 const OWN_PIC = ['lookspeak', 'role', 'pchoice', 'dchoice', 'dfill', 'goal', 'lcardp', 'lchpic', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat'];
 /** 듣고 고르기: 질문을 맨 위 안내 자리에 보여 준다 */
@@ -114,7 +115,7 @@ export function NativePlayer({ title, items, vocab, nextLabel, onResult, onFinis
   }
 
   return (
-    <div className="nv-overlay" data-skin={VOCAB_SKIN.includes(it.k) ? 'forest' : SPEAK_SKIN.includes(it.k) ? 'mango' : undefined}>
+    <div className="nv-overlay" data-skin={VOCAB_SKIN.includes(it.k) ? 'forest' : SPEAK_SKIN.includes(it.k) ? 'mango' : BG_SKIN.includes(it.k) ? 'mangobg' : undefined}>
       <div className="nv-head">
         <button className="nv-x" onClick={() => onFinish('exit')} aria-label="나가기">‹</button>
         <b>{title}</b>
