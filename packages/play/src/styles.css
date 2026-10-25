@@ -533,5 +533,8 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 [data-skin=mangobg] .nv-star { width:1.85em; height:1.85em; color:transparent; overflow:hidden; text-indent:-99em; background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffc322' stroke='%23ffb600' stroke-width='1'><path d='m12 1.8 3.1 6.4 7.1 1-5.1 5 .9 7.1-6-3.3-6.3 3.3 1.2-7.1-5.2-5 7.2-1z'/></svg>") center/contain no-repeat; display:inline-block; }
 [data-skin=mangobg] .nv-pts { margin-left:auto; line-height:1; display:flex; align-items:center; gap:.75em; background:#fff8ea; border-radius:3em; padding:.55em 1.25em; font-size:1.125em; font-weight:700; color:#20233e; white-space:nowrap; }
 [data-skin=mangobg] .nv-head { gap:1.55em; }
-[data-skin=mangobg] .nv-head { height:5em; position:relative; }
+[data-skin=mangobg] .nv-head { position:relative; }
 [data-skin=mangobg] .nv-dots { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); margin:0; }
+[data-skin=mangobg] .nv-x { width:2.5em; height:2.5em; background-size:1.3em; }
+[data-skin=mangobg] .nv-pts { font-size:1em; padding:.3em 1em; gap:.55em; }
+[data-skin=mangobg] .nv-star { width:1.5em; height:1.5em; }
