@@ -525,3 +525,5 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-overlay[data-skin=mangobg] > * { position:relative; z-index:1; }
 .nv-overlay[data-skin=mangobg] { background:#fff; }
 .nv-overlay[data-skin=mangobg] > * { position:relative; z-index:1; }
+[data-skin=mangobg] .nv-body { background:transparent; border:0; box-shadow:none; }
+[data-skin=mangobg] .nv-body .nv-capsule { width:78% !important; max-width:none !important; }
