@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const key = process.env.OPENAI_API_KEY;
-if (!key) { console.error('OPENAI_API_KEY 가 없어요 (GitHub Secrets 에 등록)'); process.exit(1); }
+if (!key) { fs.mkdirSync(process.env.OUT_DIR || 'design/out/run', { recursive: true }); fs.writeFileSync((process.env.OUT_DIR || 'design/out/run') + '/error.txt', 'OPENAI_API_KEY 가 비어 있어요 (Secrets 이름/등록 확인)'); process.exit(0); }
 const model = process.env.MODEL || 'gpt-5';
 const out = process.env.OUT_DIR || 'design/out/run';
 fs.mkdirSync(out, { recursive: true });
@@ -23,7 +23,7 @@ const H = { Authorization: 'Bearer ' + key, 'content-type': 'application/json' }
 const r = await fetch('https://api.openai.com/v1/responses', { method: 'POST', headers: H, body: JSON.stringify(body) });
 const txt = await r.text();
 fs.writeFileSync(path.join(out, 'response.json'), txt);
-if (!r.ok) { console.error('OpenAI 오류', r.status, txt.slice(0, 600)); process.exit(1); }
+if (!r.ok) { fs.writeFileSync(path.join(out, 'error.txt'), `OpenAI 오류 ${r.status}\n${txt.slice(0, 2000)}`); console.error('OpenAI 오류', r.status, txt.slice(0, 600)); process.exit(0); } // 오류 내용도 저장소에 남겨 확인할 수 있게 함
 const d = JSON.parse(txt);
 
 let n = 0; const files = [];
