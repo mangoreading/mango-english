@@ -557,3 +557,7 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 [data-skin=mango] .nv-hint-in .nv-hintbtn { font-size:.95em; min-width:6em; padding:.55em .9em; left:2em; gap:.5em; }
 [data-skin=mango] .nv-picwrap { width:28em; min-width:0; max-width:90%; min-height:14.5em; padding:1em 2em; }
 [data-skin=mango] .nv-picwrap .nv-img { height:11.5em; }
+/* mangobg: 세로 스크롤 없이 한 화면에 */
+[data-skin=mangobg] .nv-body { gap:.7em; padding-top:.3em; padding-bottom:.3em; overflow:hidden; }
+[data-skin=mangobg] .nv-body .nv-img-md { width:6em; height:6em; }
+[data-skin=mangobg] .nv-body .nv-list .nv-opt { padding:.55em 1em; }
