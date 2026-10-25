@@ -65,6 +65,7 @@ const INST: Record<string, string> = {
 const NO_SIDE = ['sdrill', 'sbuild', 'swrite', 'sfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'mfree', 'swrt', 'mtext', 'lwrite', 'saykor', 'lspeak', 'raloud', 'present', 'aitalk'];
 const VOCAB_BG = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat', 'pchoice'];
 const VOCAB_SKIN: string[] = [];
+const GREEN_BG = ['lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'aitalk', 'tapl', 'sdrill', 'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'mfree', 'swrt', 'mtext'];
 /** 말하기 지시문의 '영어로 말해 보세요' 부분을 파랗게 강조 (mango 스킨) */
 function hl(t: string, on: boolean) { const m = on ? t.match(/^(.*?)((?:영어로 |따라 )?말해 보세요.*)$/) : null; return m ? <>{m[1]}<span className="nv-hl">{m[2]}</span></> : t; }
 const BG_SKIN = ['sdrill', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat', 'pchoice'];
@@ -116,7 +117,7 @@ export function NativePlayer({ title, items, vocab, nextLabel, onResult, onFinis
   }
 
   return (
-    <div className="nv-overlay" data-bgimg={VOCAB_BG.includes(it.k) ? "v" : undefined} data-hd={SPEAK_SKIN.includes(it.k) ? 'bg' : undefined} data-skin={VOCAB_SKIN.includes(it.k) ? 'forest' : SPEAK_SKIN.includes(it.k) ? 'mango' : BG_SKIN.includes(it.k) ? 'mangobg' : undefined}>
+    <div className="nv-overlay" data-bgimg={VOCAB_BG.includes(it.k) ? "v" : GREEN_BG.includes(it.k) ? "g" : undefined} data-hd={SPEAK_SKIN.includes(it.k) ? 'bg' : undefined} data-skin={VOCAB_SKIN.includes(it.k) ? 'forest' : SPEAK_SKIN.includes(it.k) ? 'mango' : BG_SKIN.includes(it.k) ? 'mangobg' : undefined}>
       <div className="nv-head">
         <button className="nv-x" onClick={() => onFinish('exit')} aria-label="나가기">‹</button>
         <b>{title}</b>
