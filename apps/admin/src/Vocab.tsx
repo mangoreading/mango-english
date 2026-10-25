@@ -14,6 +14,14 @@ async function shrink(file: File): Promise<Blob> {
   c.getContext('2d')!.drawImage(bmp, 0, 0, c.width, c.height);
   return await new Promise((res, rej) => c.toBlob((b) => (b ? res(b) : rej(new Error('이미지를 변환하지 못했어요'))), 'image/png'));
 }
+/** AI(OpenAI)로 단어 그림을 만든다 → PNG 파일 */
+async function genImage(word: string, ko: string, extra: string): Promise<File> {
+  const { data, error } = await supabase.functions.invoke('gen-image', { body: { word, ko, extra } });
+  if (error) { let m = error.message; try { const j = await (error as any).context?.json?.(); if (j?.error) m = j.error; } catch { /* 그대로 */ } throw new Error(m); }
+  if (!data?.image) throw new Error(data?.error ?? '그림을 받지 못했어요');
+  const bin = atob(data.image as string); const u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+  return new File([u8], word + '.png', { type: 'image/png' });
+}
 async function upload(key: string, file: File): Promise<string> {
   const blob = await shrink(file);
   const path = `${key}-${Date.now()}.png`;
@@ -30,6 +38,24 @@ export function UnitVocab({ unitId }: { unitId: string }) {
   const [busy, setBusy] = useState(false);
   const [en, setEn] = useState(''); const [ko, setKo] = useState(''); const [key, setKey] = useState(''); const [file, setFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [gen, setGen] = useState<{ target: Word | 'new'; word: string; ko: string } | null>(null);
+  const [extra, setExtra] = useState(''); const [prev, setPrev] = useState<File | null>(null); const [prevUrl, setPrevUrl] = useState(''); const [genBusy, setGenBusy] = useState(false);
+  useEffect(() => { if (!prev) { setPrevUrl(''); return; } const u = URL.createObjectURL(prev); setPrevUrl(u); return () => URL.revokeObjectURL(u); }, [prev]);
+  function openGen(target: Word | 'new') {
+    const word = target === 'new' ? en.trim() : target.en; const ko2 = target === 'new' ? ko.trim() : target.ko;
+    if (!word) { setMsg({ t: 'err', s: '먼저 영어 단어를 입력해 주세요.' }); return; }
+    setGen({ target, word, ko: ko2 }); setPrev(null); setExtra(''); setMsg(null);
+  }
+  async function makeImg() {
+    if (!gen) return; setGenBusy(true); setMsg(null);
+    try { setPrev(await genImage(gen.word, gen.ko, extra)); } catch (e) { fail(e); } finally { setGenBusy(false); }
+  }
+  async function useImg() {
+    if (!gen || !prev) return;
+    if (gen.target === 'new') { setFile(prev); setMsg({ t: 'ok', s: '그림을 골랐어요. 아래 [추가]를 누르면 단어와 함께 저장돼요.' }); }
+    else await changeImage(gen.target, prev);
+    setGen(null); setPrev(null);
+  }
 
   async function load() {
     const uv = await supabase.from('unit_vocab').select('vocab(id,key,en,ko,image_path)').eq('unit_id', unitId);
@@ -84,15 +110,34 @@ export function UnitVocab({ unitId }: { unitId: string }) {
           <label>한글 뜻<input value={ko} onChange={(e) => setKo(e.target.value)} placeholder="선글라스" /></label>
           <label>코드 (비우면 자동)<input value={key} onChange={(e) => setKey(e.target.value)} placeholder={slug(en) || 'sunglasses'} /></label>
           <label>그림 (선택)<input ref={fileRef} type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></label>
+          <button className="mx-btn sec" disabled={busy} onClick={() => openGen('new')}>AI로 그림 만들기</button>
           <button className="mx-btn" disabled={busy} onClick={add}>추가</button>
         </div>
+        {file && <p className="mx-muted" style={{ margin: '8px 0 0' }}>선택된 그림: {file.name}</p>}
         <div className="mx-row" style={{ marginTop: 10 }}>
           <select value="" onChange={(e) => void addExisting(e.target.value)}><option value="">기존 단어 추가… (다른 단원에서 쓴 단어)</option>{others.map((o) => <option key={o.id} value={o.id}>{o.en} · {o.ko}</option>)}</select>
         </div>
       </div>
+      {gen && (
+        <div className="mx-card">
+          <h3>AI 그림 만들기 · {gen.word}{gen.ko ? ` (${gen.ko})` : ''}</h3>
+          <div className="mx-row">
+            <label style={{ flex: 1 }}>추가 설명 (선택, 영어) <input value={extra} onChange={(e) => setExtra(e.target.value)} placeholder="예: a pink baseball jacket with white sleeves" /></label>
+            <button className="mx-btn" disabled={genBusy} onClick={makeImg}>{genBusy ? '만드는 중… (10~30초)' : prev ? '다시 만들기' : '만들기'}</button>
+            <button className="mx-btn sec" disabled={genBusy} onClick={() => { setGen(null); setPrev(null); }}>닫기</button>
+          </div>
+          {prevUrl && (
+            <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 16 }}>
+              <img src={prevUrl} alt="" style={{ width: 200, height: 200, objectFit: 'contain', border: '1px solid #ddd', borderRadius: 12, background: '#fff' }} />
+              <button className="mx-btn" disabled={busy} onClick={useImg}>{gen.target === 'new' ? '이 그림 사용' : '이 그림으로 바꾸기'}</button>
+            </div>
+          )}
+          <p className="mx-muted" style={{ margin: '10px 0 0' }}>만들 때마다 비용이 들어요. 마음에 안 들면 추가 설명을 적고 다시 만들어 보세요.</p>
+        </div>
+      )}
       <div className="mx-card">
         <table>
-          <thead><tr><th style={{ width: 70 }}>그림</th><th>영어</th><th>한글 뜻</th><th>코드</th><th style={{ width: 200 }} /></tr></thead>
+          <thead><tr><th style={{ width: 70 }}>그림</th><th>영어</th><th>한글 뜻</th><th>코드</th><th style={{ width: 280 }} /></tr></thead>
           <tbody>
             {words.map((w) => (
               <tr key={w.id}>
@@ -102,6 +147,7 @@ export function UnitVocab({ unitId }: { unitId: string }) {
                 <td className="mx-muted">{w.key}</td>
                 <td className="mx-act">
                   <label className="mx-btn sec" style={{ display: 'inline-block', cursor: 'pointer' }}>그림 바꾸기<input type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void changeImage(w, f); e.target.value = ''; }} /></label>
+                  <button className="mx-btn sec" onClick={() => openGen(w)}>AI 그림</button>
                   <button className="mx-btn sec" onClick={() => remove(w)}>단원에서 빼기</button>
                 </td>
               </tr>
