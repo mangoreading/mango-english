@@ -175,7 +175,7 @@ export const SWrt = z.object({ ...T1, k: z.literal('swrt'), title: z.string().op
 /* ===== 4단계: 말하기 ===== */
 const sp = { ...T1, target: z.string().min(1), pass: z.number().min(0.3).max(1).optional(), hint };
 export const LookSpeak = z.object({ ...sp, k: z.literal('lookspeak'), pic: z.string().optional(), label: z.string().optional(), price: z.string().optional() });
-export const SayKor = z.object({ ...sp, k: z.literal('saykor'), ko: z.string().min(1) });
+export const SayKor = z.object({ ...sp, k: z.literal('saykor'), ko: z.string().min(1), koHl: z.string().optional() });
 export const LSpeak = z.object({ ...sp, k: z.literal('lspeak'), ask: z.string().optional(), ko: z.string().optional() });
 export const RAloud = z.object({ ...T1, k: z.literal('raloud'), target: z.string().min(1), stars: z.boolean().optional(), fluency: z.boolean().optional() });
 export const Role = z.object({ ...T1, k: z.literal('role'), pic: z.string().optional(), price: z.string().optional(), lines: z.array(z.string().regex(/^\s*[A-Za-z]+\s*[:：]/, '"A: 문장" 형식이어야 해요')).min(2).max(10) });

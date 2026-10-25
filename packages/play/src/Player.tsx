@@ -66,7 +66,8 @@ const NO_SIDE = ['sbuild', 'swrite', 'sfill', 'sscram', 'sorder', 'mwbank', 'scl
 const VOCAB_SKIN = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat'];
 /** 말하기 지시문의 '영어로 말해 보세요' 부분을 파랗게 강조 (mango 스킨) */
 function hl(t: string, on: boolean) { const m = on ? t.match(/^(.*?)((?:영어로 )?말해 보세요.*)$/) : null; return m ? <>{m[1]}<span className="nv-hl">{m[2]}</span></> : t; }
-const SPEAK_SKIN = ['lookspeak'];
+const SPEAK_SKIN = ['lookspeak', 'saykor'];
+function sayKo(t: string) { try { const u = new SpeechSynthesisUtterance(t); u.lang = 'ko-KR'; window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); } catch { /* 음성 미지원 */ } }
 const OWN_PIC = ['lookspeak', 'role', 'pchoice', 'dchoice', 'dfill', 'goal', 'lcardp', 'lchpic', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat'];
 /** 듣고 고르기: 질문을 맨 위 안내 자리에 보여 준다 */
 const LCH = ['lchtext', 'lchpic', 'lchlist', 'lwrite'];
@@ -121,7 +122,7 @@ export function NativePlayer({ title, items, vocab, nextLabel, onResult, onFinis
         <span className="nv-dots">{items.map((_, k) => <i key={k} className={k < i ? 'd1' : k === i ? 'd2' : ''} />)}</span>
         <span className="nv-pts"><i className="nv-star">★</i> 포인트 : +{pts}</span>
       </div>
-      <p className="nv-inst">{hl(LCH.includes(it.k) && it.q ? it.q : it.inst || INST[it.k] || '', SPEAK_SKIN.includes(it.k))}{INST_SUB[it.k] && <small>{INST_SUB[it.k]}</small>}</p>
+      <p className="nv-inst"><span>{hl(LCH.includes(it.k) && it.q ? it.q : it.inst || INST[it.k] || '', SPEAK_SKIN.includes(it.k))}{INST_SUB[it.k] && <small>{INST_SUB[it.k]}</small>}</span>{it.k === 'saykor' && it.ko && <button type="button" className="nv-instaudio" aria-label="문제 듣기" onClick={() => sayKo(String(it.ko))}><i /></button>}</p>
       <FbSlot.Provider value={slot}>
       {!Comp || words.length !== keys.length
         ? <p className="nv-hint">이 문항에 쓰인 단어가 단원 어휘에 없어요. 관리자에서 단어를 확인해 주세요. ({keys.filter((k) => !byKey.has(k)).join(', ')})</p>

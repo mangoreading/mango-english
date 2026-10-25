@@ -23,7 +23,7 @@ export const NATIVE_SAMPLES: Record<string, Record<string, unknown>> = {
   vspell: { k: 'vspell', tag: 'vocab', word: 'sunglasses', shown: 6 }, vmatch: { k: 'vmatch', tag: 'vocab', words: W },
   vsound: { k: 'vsound', tag: 'vocab', words: W }, vwrite: { k: 'vwrite', tag: 'vocab', words: W },
   lookspeak: { k: 'lookspeak', tag: 'speak', pic: 'jackettag', target: 'How much are these jackets?', hint: ['How much are ~?'] },
-  saykor: { k: 'saykor', tag: 'speak', ko: '16,000원입니다.', target: "They're sixteen thousand won.", hint: ["They're ~."] },
+  saykor: { k: 'saykor', tag: 'speak', ko: '16,000원입니다.', koHl: '16,000원', target: "They're sixteen thousand won.", hint: ["They're ~."] },
   lspeak: { k: 'lspeak', tag: 'speak', ask: 'How much are these sunglasses?', ko: 'Ken의 가게 / 선글라스 13,000원', target: "They're thirteen thousand won.", hint: ["They're ~ won."] },
   raloud: { k: 'raloud', tag: 'speak', target: "It's fifteen thousand won.", stars: true, fluency: true },
   role: { k: 'role', tag: 'speak', pic: 'jackettag', lines: ['A: May I help you?', 'B: Yes, please. How much are {{these jackets}}?', 'A: [[They are two thousand]] dollars.', "B: I'll pick them."] },

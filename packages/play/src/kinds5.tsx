@@ -68,7 +68,7 @@ function Speak({ item, pic, onDone, mode }: KindProps & { mode: 'look' | 'kor' |
       {mode === 'listen' && <button type="button" className="nv-listen nv-listen-top" onClick={() => say(item.ask ?? target)}>🔊 <b>듣기</b></button>}
       <div className="nv-sptop">
         {mode === 'look' ? (src && <div className="nv-picwrap"><img className="nv-img nv-img-md" src={imgSrc(src)} alt="" draggable={false} />{item.label && <span className="nv-pill">{item.label}</span>}{item.price && <span className="nv-price">{item.price}</span>}</div>)
-          : item.ko && <div className="nv-kobar">{item.ko}</div>}
+          : item.ko && <div className="nv-kobar">{item.koHl && String(item.ko).includes(item.koHl) ? <>{String(item.ko).split(item.koHl)[0]}<span className="nv-koaccent">{item.koHl}</span>{String(item.ko).split(item.koHl).slice(1).join(item.koHl)}</> : item.ko}</div>}
       </div>
       <div className={'nv-capsule nv-capsule-sp nv-main' + (ok ? ' nv-okc' : '')}>
         <Hint inline lines={item.hint ?? []} kind={item.k} item={item} ctx={() => ({ input: `Student must say: "${target}" (${mode === 'look' ? 'looking at a picture' : mode === 'kor' ? 'translating the Korean line' : 'answering a question they listened to'}).\n` + (tries ? `Attempts: ${tries}. Speech recognised: "${heard}". Words not recognised: ${missed.join(', ') || 'none'}.` : 'No attempt yet.'), wrong: tries })} />
