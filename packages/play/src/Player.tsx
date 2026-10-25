@@ -25,7 +25,7 @@ const INST: Record<string, string> = {
   lspeak: '질문을 듣고 대답해 보세요.',
   raloud: '아래 문장을 듣고 따라 읽어보세요.',
   role: '다음 대화를 역할을 나눠 말해 보세요.',
-  present: '내가 쓴 글을 발표해 보세요.',
+  present: '내가 작성한 홍보글을 발표해 보세요.',
   aitalk: '아래 상황에 맞게 대화를 진행해 보세요.',
   sbuild: '다음 문장을 영어로 써 보세요.',
   swrite: '다음 문장을 영어로 써 보세요.',
@@ -70,7 +70,7 @@ const SPEAK_SKIN = ['lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present'
 const OWN_PIC = ['lookspeak', 'role', 'pchoice', 'dchoice', 'dfill', 'goal', 'lcardp', 'lchpic', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat'];
 /** 듣고 고르기: 질문을 맨 위 안내 자리에 보여 준다 */
 const LCH = ['lchtext', 'lchpic', 'lchlist', 'lwrite'];
-const INST_SUB: Record<string, string> = { kexp: '(3번 반복해서 들어주세요)' };
+const INST_SUB: Record<string, string> = { kexp: '(3번 반복해서 들어주세요)', present: '(동영상 촬영해 보기)' };
 const KIND = { lookspeak: LookSpeak, saykor: SayKor, lspeak: LSpeak, raloud: RAloud, role: Role, present: Present, aitalk: AiTalk, sbuild: SBuild, swrite: SWrite, sfill: SFill, dfill: DFill, sscram: SScram, sorder: SOrder, mwbank: MWBank, scloze: SCloze, lwrite: LWrite, mfree: MFree, swrt: SWrt, goal: Goal, kexp: KExp, tapl: TapL, lsent: LSent, lcardp: LCardP, lcardt: LCardT, sdrill: SDrill, pread: PRead, mtext: MText, wrepeat: WRepeat, vcards: VCards, vtype1: VType1, vspell: VSpell, vmatch: VMatch, vsound: VSound, vwrite: VWrite,
   wchoice: WChoice, pchoice: PChoice, dchoice: DChoice, tf: TrueFalse, lchtext: LChText, lchpic: LChPic, lchlist: LChList, lmatch: LMatch,
   sqchoice: SqChoice, sqtf: SqTF, sqmulti: SqMulti } as const;
