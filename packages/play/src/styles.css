@@ -543,3 +543,7 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 [data-hd=bg] .nv-wbody .nv-capsule.nv-capsule-sp.nv-main { width:min(55em,100%) !important; }
 [data-hd=bg] .nv-head { border-bottom:.15em solid #BBD7F2; }
 [data-hd=bg] .nv-inst { margin-top:.85em; }
+/* 문장 바꿔 말하기: 질문(지시문)·캡슐 테두리를 다른 말하기 활동과 동일하게 */
+[data-skin=mangobg] .nv-inst { font-size:1.875em; font-weight:700; color:#20233e; letter-spacing:-.03em; margin:.85em 0 0; padding:.2em 1em 0; }
+[data-skin=mangobg] .nv-hl { color:#3979f3; }
+[data-skin=mangobg] .nv-body .nv-capsule { border:2px solid #468bff; box-shadow:0 6px 20px rgba(78,134,220,.09); }

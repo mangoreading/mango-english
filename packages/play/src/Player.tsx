@@ -122,7 +122,7 @@ export function NativePlayer({ title, items, vocab, nextLabel, onResult, onFinis
         <span className="nv-dots">{items.map((_, k) => <i key={k} className={k < i ? 'd1' : k === i ? 'd2' : ''} />)}</span>
         <span className="nv-pts"><i className="nv-star">★</i> 포인트 : +{pts}</span>
       </div>
-      <p className="nv-inst"><span>{hl(LCH.includes(it.k) && it.q ? it.q : it.inst || INST[it.k] || '', SPEAK_SKIN.includes(it.k))}{INST_SUB[it.k] && <small>{INST_SUB[it.k]}</small>}</span></p>
+      <p className="nv-inst"><span>{hl(LCH.includes(it.k) && it.q ? it.q : it.inst || INST[it.k] || '', SPEAK_SKIN.includes(it.k) || BG_SKIN.includes(it.k))}{INST_SUB[it.k] && <small>{INST_SUB[it.k]}</small>}</span></p>
       <FbSlot.Provider value={slot}>
       {!Comp || words.length !== keys.length
         ? <p className="nv-hint">이 문항에 쓰인 단어가 단원 어휘에 없어요. 관리자에서 단어를 확인해 주세요. ({keys.filter((k) => !byKey.has(k)).join(', ')})</p>
