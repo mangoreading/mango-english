@@ -567,3 +567,4 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 [data-skin=mango] .nv-ra-t .nv-spkin { font-size:.36em; }
 .nv-overlay[data-skin=mangobg][data-bgimg=v]::before { background:url("./bg-vocab.jpg") center/cover no-repeat; }
 [data-bgimg=v] .nv-big { background:#fff; }
+[data-bgimg=v] .nv-prompt { max-width:42em; position:relative; top:-3.2em; }
