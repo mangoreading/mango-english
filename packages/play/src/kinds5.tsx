@@ -68,7 +68,7 @@ function Speak({ item, pic, onDone, mode, peekHint }: KindProps & { mode: 'look'
   const missed = g?.filter((x) => !x.ok).map((x) => x.w.replace(/[^\w']/g, '')).filter(Boolean) ?? [];
   return (
     <div className={'nv-body nv-wbody nv-spz' + (mode === 'listen' ? ' nv-hasl' : '')}>
-      {mode === 'listen' && <button type="button" className="nv-listen nv-listen-top" onClick={() => say(item.ask ?? target)}>🔊 <b>듣기</b></button>}
+      {mode === 'listen' && <button type="button" className="nv-listen nv-listen-top" onClick={() => say(item.ask ?? target)}><i className="nv-sico" aria-hidden="true" /> <b>듣기</b></button>}
       <div className="nv-sptop">
         {mode === 'look' ? (src && <div className="nv-picwrap"><img className="nv-img nv-img-md" src={imgSrc(src)} alt="" draggable={false} />{item.label && <span className="nv-pill">{item.label}</span>}{item.price && <span className="nv-price">{item.price}</span>}</div>)
           : item.ko && <div className="nv-kobar">{item.koHl && String(item.ko).includes(item.koHl) ? <>{String(item.ko).split(item.koHl)[0]}<span className="nv-koaccent">{item.koHl}</span>{String(item.ko).split(item.koHl).slice(1).join(item.koHl)}</> : item.ko}</div>}
@@ -76,7 +76,7 @@ function Speak({ item, pic, onDone, mode, peekHint }: KindProps & { mode: 'look'
       <div className={'nv-capsule nv-capsule-sp nv-main' + (ok ? ' nv-okc' : '')}>
         {peekHint ? <div className="nv-hintwrap nv-hint-in"><button type="button" className="nv-hintbtn" onClick={showHint}><span className="nv-bulb">💡</span> Hint</button></div> : <Hint inline lines={item.hint ?? []} kind={item.k} item={item} ctx={() => ({ input: `Student must say: "${target}" (${mode === 'look' ? 'looking at a picture' : mode === 'kor' ? 'translating the Korean line' : 'answering a question they listened to'}).\n` + (tries ? `Attempts: ${tries}. Speech recognised: "${heard}". Words not recognised: ${missed.join(', ') || 'none'}.` : 'No attempt yet.'), wrong: tries })} />}
         <b className={peekHint ? 'nv-peek' + (ok || peek ? ' on' : '') : undefined}>{g && (ok || !peekHint) ? <Words g={g} /> : target}</b>
-        {mode === 'look' && <button className={'nv-spk' + (peekHint ? ' nv-peek' + (ok || peek ? ' on' : '') : '')} onClick={() => say(target)} aria-label="듣기">🔊</button>}
+        {mode === 'look' && <button className={'nv-spk' + (peekHint ? ' nv-peek' + (ok || peek ? ' on' : '') : '')} onClick={() => say(target)} aria-label="듣기"><i className="nv-sico" aria-hidden="true" /></button>}
       </div>
       <MicBtn on={mic.on} onClick={ok ? () => undefined : mic.on ? mic.stop : mic.start} dim={ok} />
       <div className="nv-spstat">

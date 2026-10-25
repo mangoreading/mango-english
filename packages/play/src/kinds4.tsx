@@ -220,7 +220,7 @@ export function LWrite({ item, onDone }: KindProps) {
   const done = okS.every(Boolean);
   return (
     <div className="nv-body nv-hasl">
-      <button type="button" className="nv-listen nv-listen-top" onClick={() => say(item.say ?? '')}>🔊 <b>듣기</b></button>
+      <button type="button" className="nv-listen nv-listen-top" onClick={() => say(item.say ?? '')}><i className="nv-sico" aria-hidden="true" /> <b>듣기</b></button>
       <table className="nv-ltab"><thead><tr><th>{item.h1 || '시간'}</th><th>{item.h2 || '일과'}</th></tr></thead>
         <tbody>{rows.map((r, i) => (
           <tr key={i}><td><input className={'nv-blank nv-time' + (okS[i] ? ' nv-bok' : '') + (bad[i] ? ' nv-bbad nv-shake' : '')} value={okS[i] ? r.ans : v[i]} disabled={okS[i]} placeholder="00:00" inputMode="numeric"

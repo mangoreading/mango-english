@@ -8,7 +8,7 @@ import { Fb } from './fb';
 type O = { t: string; flag?: string };
 const Img = ({ src, cls }: { src: string | null; cls: string }) => (src ? <img className={cls} src={imgSrc(src)} alt="" draggable={false} /> : null);
 
-const Listen = ({ text }: { text: string }) => <button type="button" className="nv-listen nv-listen-top" onClick={() => say(text)}>🔊 <b>듣기</b></button>;
+const Listen = ({ text }: { text: string }) => <button type="button" className="nv-listen nv-listen-top" onClick={() => say(text)}><i className="nv-sico" aria-hidden="true" /> <b>듣기</b></button>;
 const Lines = ({ lines, cls }: { lines: string[]; cls?: string }) => <div className={cls ?? 'nv-dlg'}>{lines.map((l, i) => <p key={i}>{l}</p>)}</div>;
 
 /** 보기 한 개를 눌러 정답을 찾는 공통 동작: 틀리면 흔들리고 다시, 맞으면 초록으로 잠긴다 */
@@ -47,7 +47,7 @@ function WChoiceBody({ item, words, vocab, ko2en, onPick, toggle, onDone }: Kind
       <div className="nv-prompt">
         {toggle}
         <b className={ko2en ? 'nv-ko-lg' : 'nv-en-lg'}>{ko2en ? w.ko : w.en}</b>
-        <button className="nv-spk" onClick={() => say(w.en)} aria-label="다시 듣기">🔊</button>
+        <button className="nv-spk" onClick={() => say(w.en)} aria-label="다시 듣기"><i className="nv-sico" aria-hidden="true" /></button>
       </div>
       <div className="nv-grid22">{opts.map((o, i) => <button key={i} className={'nv-opt nv-opt-c' + s.cls(i)} onClick={() => { onPick(); s.pick(i, ko2en ? o.t : undefined); }}>{o.t}</button>)}</div>
       <Msg ok={s.ok} />
@@ -147,7 +147,7 @@ export function LMatch({ item, onDone }: KindProps) {
       <div className="nv-lm">
         <div className="nv-lmcol">{pairs.map((p, i) => (
           <button key={i} className={'nv-lmc' + (sel === i ? ' nv-on' : '') + (done.has(i) ? ' nv-lmdone' : '')} style={done.has(i) ? { background: hue[i % hue.length] } : undefined} onClick={() => left(i)}>
-            <b>{p.left}</b><span>🔊</span></button>))}</div>
+            <b>{p.left}</b><span><i className="nv-sico" aria-hidden="true" /></span></button>))}</div>
         <div className="nv-lmcol">{rights.map((r) => (
           <button key={r.i} className={'nv-lmc nv-lmr' + (bad === r.i ? ' nv-wrong nv-shake' : '') + (done.has(r.i) ? ' nv-lmdone' : '')} style={done.has(r.i) ? { background: hue[r.i % hue.length] } : undefined} onClick={() => right(r.i)}>
             <b>{r.t}</b></button>))}</div>
@@ -167,7 +167,7 @@ function Story({ item, side, tag }: { item: Record<string, any>; side: ReactNode
         {item.title && <h3>{item.title}</h3>}
         {text.map((l, i) => <p key={i}>{l}</p>)}
         <div className="nv-ptools">
-          <button type="button" className="nv-listen nv-listen-s" onClick={() => say(text.join(' '))}>🔊 <b>듣기</b></button>
+          <button type="button" className="nv-listen nv-listen-s" onClick={() => say(text.join(' '))}><i className="nv-sico" aria-hidden="true" /> <b>듣기</b></button>
           {item.ko && <button type="button" className="nv-hintbtn" onClick={() => setKo(!ko)}>{ko ? '해석 닫기' : '해석 보기'}</button>}
         </div>
         {ko && <div className="nv-hintbox on">{String(item.ko).split('\n').map((l, i) => <p key={i}>{l}</p>)}</div>}

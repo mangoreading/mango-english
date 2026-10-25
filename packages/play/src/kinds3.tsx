@@ -14,12 +14,12 @@ export function Rich({ text }: { text: string }) {
   return <>{out}</>;
 }
 const plain = (t: string) => t.replace(/\[\[|\]\]|\{\{|\}\}/g, '');
-const Spk = ({ on }: { on?: boolean }) => <span className={'nv-sp' + (on ? ' on' : '')} aria-hidden>🔊</span>;
+const Spk = ({ on }: { on?: boolean }) => <span className={'nv-sp' + (on ? ' on' : '')} aria-hidden><i className="nv-sico" aria-hidden="true" /></span>;
 const KoBtn = ({ on, set }: { on: boolean; set: (v: boolean) => void }) => <button type="button" className={'nv-kobtn' + (on ? ' on' : '')} onClick={() => set(!on)} aria-pressed={on} title="한글 뜻 보기/숨기기">한</button>;
 type Ex = { en: string; ko?: string; pic?: string; label?: string; group?: string };
 /** 오른쪽 위 둥근 버튼: 🔊 전체 듣기 · 한(한글 뜻 보기/숨기기) */
 const IconBtns = ({ onAll, ko, setKo }: { onAll: () => void; ko: boolean; setKo: (v: boolean) => void }) => (
-  <div className="nv-ibtns"><button type="button" className="nv-icb" onClick={onAll} aria-label="전체 듣기" title="전체 듣기">🔊</button><KoBtn on={ko} set={setKo} /></div>
+  <div className="nv-ibtns"><button type="button" className="nv-icb" onClick={onAll} aria-label="전체 듣기" title="전체 듣기"><i className="nv-sico" aria-hidden="true" /></button><KoBtn on={ko} set={setKo} /></div>
 );
 /** 문장들을 차례로 끝까지 읽어 주는 '전체 듣기' */
 function useAll(texts: string[], mark: (i: number) => void) {
@@ -155,7 +155,7 @@ export function SDrill({ item, onDone }: KindProps) {
   return (
     <div className="nv-body">
       <div className="nv-capsule nv-capsule-n">{a}<span className="nv-slotw">{cur == null ? ' ' : words[cur]}</span>{b}</div>
-      <button type="button" className="nv-listen nv-listen-s" disabled={cur == null} onClick={() => cur != null && say(full(words[cur]))}>🔊 <b>다시 듣기</b></button>
+      <button type="button" className="nv-listen nv-listen-s" disabled={cur == null} onClick={() => cur != null && say(full(words[cur]))}><i className="nv-sico" aria-hidden="true" /> <b>다시 듣기</b></button>
       <div className="nv-chips">
         {words.map((w, i) => <button key={i} className={'nv-chipb' + (cur === i ? ' nv-sel' : '') + (tried.has(i) ? ' nv-heard2' : '')} onClick={() => { setCur(i); setTried(new Set(tried).add(i)); say(full(w)); }}>{w}</button>)}
       </div>
@@ -181,7 +181,7 @@ export function PRead({ item, onDone }: KindProps) {
         <button className="nv-arrow" disabled={p === pages.length - 1} onClick={() => go(p + 1)} aria-label="다음">›</button>
       </div>
       <div className="nv-ptools">
-        <button className="nv-listen nv-listen-s" onClick={() => { say(pages[p].map(plain).join(' ')); heard(); }}>🔊 <b>전체 듣기</b></button>
+        <button className="nv-listen nv-listen-s" onClick={() => { say(pages[p].map(plain).join(' ')); heard(); }}><i className="nv-sico" aria-hidden="true" /> <b>전체 듣기</b></button>
         {kos[p] && <button className="nv-hintbtn" onClick={() => setKo(!ko)}>{ko ? '해설 닫기' : '해설 보기'}</button>}
       </div>
       {ko && kos[p] && <div className="nv-hintbox on nv-kobox">{kos[p].split('\n').map((l, i) => <p key={i}>{l}</p>)}</div>}
@@ -212,7 +212,7 @@ export function MText({ item, onDone }: KindProps) {
             <div className="nv-mtr nv-mtstack">{[['ex', sideEx], ['ko', sideKo]].map(([k, arr]) => <p key={k as string} className={'nv-p-md' + (tab === k ? '' : ' nv-mtoff')}>{(arr as string[])[i] != null && <Rich text={(arr as string[])[i]} />}</p>)}</div>
           </div>))}
       </div>
-      <div className="nv-ptools"><button className="nv-listen nv-listen-s" onClick={() => say(lines.map(plain).join(' '))}>🔊 <b>듣기</b></button></div>
+      <div className="nv-ptools"><button className="nv-listen nv-listen-s" onClick={() => say(lines.map(plain).join(' '))}><i className="nv-sico" aria-hidden="true" /> <b>듣기</b></button></div>
       </div>
     </div>
   );

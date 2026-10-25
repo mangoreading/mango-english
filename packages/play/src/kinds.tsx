@@ -158,7 +158,7 @@ function MatchBoard({ words, mode, onDone }: { words: KindProps['words']; mode: 
           if (!c) return <div key={'x' + n} />;
           const cls = ['nv-m', c.t === 'en' ? 'nv-m-en' : c.t === 'snd' ? 'nv-m-snd' : 'nv-m-ko'];
           if (matched.has(c.key)) cls.push('nv-m-done'); if (sel?.id === c.id) cls.push('nv-m-sel'); if (flash.includes(c.id)) cls.push('nv-shake', 'nv-m-bad');
-          return <button key={c.id} className={cls.join(' ')} onClick={() => tap(c)}>{c.t === 'snd' ? '🔊' : c.label}</button>;
+          return <button key={c.id} className={cls.join(' ')} onClick={() => tap(c)}>{c.t === 'snd' ? <i className="nv-sico" aria-hidden="true" /> : c.label}</button>;
         })}
       </div>
       <p className="nv-hint">{matched.size}/{words.length} 맞췄어요</p>

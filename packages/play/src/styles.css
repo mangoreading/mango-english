@@ -561,3 +561,7 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 [data-skin=mangobg] .nv-body { gap:.7em; padding-top:.3em; padding-bottom:.3em; overflow:hidden; }
 [data-skin=mangobg] .nv-body .nv-img-md { width:6em; height:6em; }
 [data-skin=mangobg] .nv-body .nv-list .nv-opt { padding:.55em 1em; }
+/* 공통 스피커 아이콘 (따라 읽기 평가의 아이콘) */
+.nv-sico { display:inline-block; flex:none; vertical-align:middle; width:1.5em; height:1.5em; border-radius:50%; background:#e3edff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233979f3' stroke='%233979f3' stroke-width='2' stroke-linecap='round'><path d='M4 9v6h4l5 4V5L8 9H4z'/><path d='M16 8c2 2 2 6 0 8M19 5c4 4 4 10 0 14' fill='none'/></svg>") center/58% no-repeat; }
+.nv-icb .nv-sico { width:1.5em; height:1.5em; } .nv-sp .nv-sico { width:1.35em; height:1.35em; }
+[data-skin=mango] .nv-ra-t .nv-spkin { font-size:.36em; }
