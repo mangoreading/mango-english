@@ -89,7 +89,7 @@ function Speak({ item, pic, onDone, mode, peekHint }: KindProps & { mode: 'look'
 }
 export const LookSpeak = (p: KindProps) => <Speak {...p} mode="look" peekHint />;
 export const SayKor = (p: KindProps) => <Speak {...p} mode="kor" peekHint />;
-export const LSpeak = (p: KindProps) => <Speak {...p} mode="listen" />;
+export const LSpeak = (p: KindProps) => <Speak {...p} mode="listen" peekHint />;
 
 /** 따라 읽기: 듣기 → 말하기 → 단어별 결과(색) → 약한 단어를 짚어 다시 듣고 한 번 더 */
 export function RAloud({ item, onDone }: KindProps) {

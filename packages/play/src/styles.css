@@ -498,3 +498,13 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 [data-skin=mango] .nv-koaccent { color:#e82943; }
 /* 말하기(Look&Speak·Say it in English): 문장은 평소 숨김 → Hint 를 누르면 잠깐 보이고, 통과하면 계속 보임 */
 .nv-peek { opacity:0; transition:opacity .35s; } .nv-peek.on { opacity:1; }
+/* mango 스킨: 듣고 대답하기·따라 읽기·발표 */
+[data-skin=mango] .nv-body > .nv-listen.nv-listen-top { position:static; transform:none; margin:0 0 1.4em; }
+[data-skin=mango] .nv-listen { background:#3979f3; border:0; color:#fff; border-radius:3em; padding:.55em 1.4em; box-shadow:0 .3em 1em rgba(57,121,243,.25); }
+[data-skin=mango] .nv-hasl .nv-sptop { min-height:9em; }
+[data-skin=mango] .nv-ra { width:min(100%,46em); max-width:none; }
+[data-skin=mango] .nv-ra-body .nv-ra-t, [data-skin=mango] .nv-ra-t { height:auto; min-height:5em; padding:.7em 1.4em; font-size:2.2em; font-weight:700; background:#fffaf2; border:.09em solid #fff; border-radius:.55em; box-shadow:0 .35em .8em rgba(43,77,132,.11); color:#20233e; }
+[data-skin=mango] .nv-ra-r { background:transparent; min-height:5em; padding:.6em 0 0; }
+[data-skin=mango] .nv-spkc { background:#e3edff; border:0; border-radius:50%; color:#3979f3; box-shadow:none; }
+[data-skin=mango] .nv-script { background:#fff; border:0; border-radius:1.2em; box-shadow:0 .5em 1.4em rgba(43,77,132,.1); }
+[data-skin=mango] .nv-cam { border-radius:1.2em; overflow:hidden; }
