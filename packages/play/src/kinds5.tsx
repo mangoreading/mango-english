@@ -108,7 +108,7 @@ export function RAloud({ item, onDone }: KindProps) {
   return (
     <div className="nv-body nv-wbody nv-wtop nv-ra-body">
       <div className="nv-ra">
-        <div className="nv-ra-t">{g ? <Words g={g} /> : target}</div>
+        <div className="nv-ra-t"><span>{g ? <Words g={g} /> : target}</span><button type="button" className="nv-spkin" onClick={() => say(target)} aria-label="듣기"><i /></button></div>
         <div className="nv-ra-r">{g && <>
           {item.stars && <p className="nv-stars5">정확도 : {[1, 2, 3, 4, 5].map((n) => <span key={n} className={n <= stars ? 'on' : ''}>★</span>)}</p>}
           {item.fluency && <p className="nv-stars5">유창성 : {[1, 2, 3, 4, 5].map((n) => <span key={n} className={n <= flu ? 'on' : ''}>★</span>)}</p>}
@@ -116,7 +116,6 @@ export function RAloud({ item, onDone }: KindProps) {
         </>}</div>
       </div>
       <div className="nv-ra-btns">
-        <button className="nv-spkc" onClick={() => say(target)} aria-label="듣기">🔊<sup>{fin ? '' : round === 1 ? '1st' : '2nd'}</sup></button>
         <MicBtn dim={fin} on={mic.on} onClick={fin ? () => undefined : mic.on ? mic.stop : startMic} label={fin ? '\u00a0' : round === 1 ? '먼저 들어 본 뒤, 마이크를 눌러 따라 읽어요' : '한 번 더 읽어 볼까요?'} />
       </div>
       {!fin && mic.err && <Fb className="nv-fbmsg on nv-fbbad">{ERRMSG[mic.err]}</Fb>}

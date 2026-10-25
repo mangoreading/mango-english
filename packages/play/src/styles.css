@@ -508,3 +508,7 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 [data-skin=mango] .nv-spkc { background:#e3edff; border:0; border-radius:50%; color:#3979f3; box-shadow:none; }
 [data-skin=mango] .nv-script { background:#fff; border:0; border-radius:1.2em; box-shadow:0 .5em 1.4em rgba(43,77,132,.1); }
 [data-skin=mango] .nv-cam { border-radius:1.2em; overflow:hidden; }
+[data-skin=mango] .nv-ra-t { position:relative; display:flex; align-items:center; justify-content:center; padding-left:2.2em; padding-right:2.2em; }
+[data-skin=mango] .nv-spkin { position:absolute; right:.6em; top:50%; transform:translateY(-50%); width:3.55em; height:3.55em; border:0; border-radius:50%; background:#e3edff; cursor:pointer; padding:0; display:grid; place-items:center; font-size:.5em; }
+[data-skin=mango] .nv-spkin i { width:1.75em; height:1.75em; background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233979f3' stroke='%233979f3' stroke-width='2' stroke-linecap='round'><path d='M4 9v6h4l5 4V5L8 9H4z'/><path d='M16 8c2 2 2 6 0 8M19 5c4 4 4 10 0 14' fill='none'/></svg>") center/contain no-repeat; }
+[data-skin=mango] .nv-spkin:active { transform:translateY(-50%) scale(.95); }
