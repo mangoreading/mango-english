@@ -566,3 +566,4 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-icb .nv-sico { width:1.5em; height:1.5em; } .nv-sp .nv-sico { width:1.35em; height:1.35em; }
 [data-skin=mango] .nv-ra-t .nv-spkin { font-size:.36em; }
 .nv-overlay[data-skin=mangobg][data-bgimg=v]::before { background:url("./bg-vocab.jpg") center/cover no-repeat; }
+[data-bgimg=v] .nv-big { background:#fff; }
