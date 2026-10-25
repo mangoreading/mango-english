@@ -552,3 +552,4 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 [data-skin=mango] .nv-ra { width:min(55em,100%); max-width:none; }
 [data-skin=mango] .nv-ra-body .nv-ra-t, [data-skin=mango] .nv-ra-t { min-height:0; height:3.22em; padding:0 3em; background:#fff; border:3px solid #44546A; border-radius:999px; box-shadow:none; font-size:2.19em; font-weight:800; letter-spacing:-.03em; color:#20233e; }
 [data-skin=mango] .nv-ra-t .nv-spkin { right:.5em; font-size:.42em; }
+[data-skin=mango] .nv-ra { margin-top:2.6em; }
