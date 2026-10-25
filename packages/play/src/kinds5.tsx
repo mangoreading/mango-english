@@ -52,7 +52,10 @@ const MicBtn = ({ on, onClick, label, dim }: { on: boolean; onClick: () => void;
 const Words = ({ g }: { g: { w: string; ok: boolean }[] }) => <span className="nv-gw">{g.map((x, i) => <span key={i} className={x.ok ? 'ok' : 'bad'}>{x.w} </span>)}</span>;
 
 /** 말하기 3종: lookspeak(그림) / saykor(우리말) / lspeak(듣고 대답) */
-function Speak({ item, pic, onDone, mode }: KindProps & { mode: 'look' | 'kor' | 'listen' }) {
+function Speak({ item, pic, onDone, mode, peekHint }: KindProps & { mode: 'look' | 'kor' | 'listen'; peekHint?: boolean }) {
+  const [peek, setPeek] = useState(false); const peekT = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showHint = () => { setPeek(true); if (peekT.current) clearTimeout(peekT.current); peekT.current = setTimeout(() => setPeek(false), 3000); };
+  useEffect(() => () => { if (peekT.current) clearTimeout(peekT.current); }, []);
   const target: string = item.target ?? ''; const need: number = item.pass ?? 0.7;
   const [g, setG] = useState<{ w: string; ok: boolean }[] | null>(null); const [heard, setHeard] = useState(''); const [tries, setTries] = useState(0); const [ok, setOk] = useState(false);
   const mic = useMic((t) => {
@@ -71,9 +74,9 @@ function Speak({ item, pic, onDone, mode }: KindProps & { mode: 'look' | 'kor' |
           : item.ko && <div className="nv-kobar">{item.koHl && String(item.ko).includes(item.koHl) ? <>{String(item.ko).split(item.koHl)[0]}<span className="nv-koaccent">{item.koHl}</span>{String(item.ko).split(item.koHl).slice(1).join(item.koHl)}</> : item.ko}</div>}
       </div>
       <div className={'nv-capsule nv-capsule-sp nv-main' + (ok ? ' nv-okc' : '')}>
-        <Hint inline lines={item.hint ?? []} kind={item.k} item={item} ctx={() => ({ input: `Student must say: "${target}" (${mode === 'look' ? 'looking at a picture' : mode === 'kor' ? 'translating the Korean line' : 'answering a question they listened to'}).\n` + (tries ? `Attempts: ${tries}. Speech recognised: "${heard}". Words not recognised: ${missed.join(', ') || 'none'}.` : 'No attempt yet.'), wrong: tries })} />
-        <b>{g ? <Words g={g} /> : target}</b>
-        {mode === 'look' && <button className="nv-spk" onClick={() => say(target)} aria-label="듣기">🔊</button>}
+        {peekHint ? <div className="nv-hintwrap nv-hint-in"><button type="button" className="nv-hintbtn" onClick={showHint}><span className="nv-bulb">💡</span> Hint</button></div> : <Hint inline lines={item.hint ?? []} kind={item.k} item={item} ctx={() => ({ input: `Student must say: "${target}" (${mode === 'look' ? 'looking at a picture' : mode === 'kor' ? 'translating the Korean line' : 'answering a question they listened to'}).\n` + (tries ? `Attempts: ${tries}. Speech recognised: "${heard}". Words not recognised: ${missed.join(', ') || 'none'}.` : 'No attempt yet.'), wrong: tries })} />}
+        <b className={peekHint ? 'nv-peek' + (ok || peek ? ' on' : '') : undefined}>{g && (ok || !peekHint) ? <Words g={g} /> : target}</b>
+        {mode === 'look' && <button className={'nv-spk' + (peekHint ? ' nv-peek' + (ok || peek ? ' on' : '') : '')} onClick={() => say(target)} aria-label="듣기">🔊</button>}
       </div>
       <MicBtn on={mic.on} onClick={ok ? () => undefined : mic.on ? mic.stop : mic.start} dim={ok} />
       <div className="nv-spstat">
@@ -84,8 +87,8 @@ function Speak({ item, pic, onDone, mode }: KindProps & { mode: 'look' | 'kor' |
     </div>
   );
 }
-export const LookSpeak = (p: KindProps) => <Speak {...p} mode="look" />;
-export const SayKor = (p: KindProps) => <Speak {...p} mode="kor" />;
+export const LookSpeak = (p: KindProps) => <Speak {...p} mode="look" peekHint />;
+export const SayKor = (p: KindProps) => <Speak {...p} mode="kor" peekHint />;
 export const LSpeak = (p: KindProps) => <Speak {...p} mode="listen" />;
 
 /** 따라 읽기: 듣기 → 말하기 → 단어별 결과(색) → 약한 단어를 짚어 다시 듣고 한 번 더 */

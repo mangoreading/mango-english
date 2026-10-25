@@ -496,3 +496,5 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 [data-skin=mango] .nv-kobar { width:max-content; min-width:min(41.9em,90%); max-width:66em; min-height:4.2em; height:auto; padding:.9em 1.4em; background:#fffaf2; border:.19em solid #fff; border-radius:1.25em; box-shadow:0 .75em 1.75em rgba(43,77,132,.11); display:flex; align-items:center; justify-content:center; text-align:center; font-size:2.44em; font-weight:700; line-height:1.5; color:#20233e; overflow-wrap:anywhere; }
 [data-skin=mango] .nv-sptop .nv-kobar { font-size:2.44em; max-width:27em; min-width:min(17.2em,90%); width:max-content; }
 [data-skin=mango] .nv-koaccent { color:#e82943; }
+/* 말하기(Look&Speak·Say it in English): 문장은 평소 숨김 → Hint 를 누르면 잠깐 보이고, 통과하면 계속 보임 */
+.nv-peek { opacity:0; transition:opacity .35s; } .nv-peek.on { opacity:1; }
