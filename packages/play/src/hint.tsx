@@ -19,7 +19,7 @@ export function Hint({ lines, kind, item, ctx, inline }: { lines?: string[]; kin
   }
   return (
     <div className={'nv-hintwrap' + (inline ? ' nv-hint-in' : '')}>
-      <button type="button" className="nv-hintbtn" onClick={() => setOn(!on)} aria-expanded={on}>💡 Hint</button>
+      <button type="button" className="nv-hintbtn" onClick={() => setOn(!on)} aria-expanded={on}><span className="nv-bulb">💡</span> Hint</button>
       <div className={'nv-hintbox' + (on ? ' on' : '')}>
         {lines?.map((l, i) => <p key={i}>{l}</p>)}
         {ai.map((l, i) => <p key={'a' + i} className="nv-aihint">🤖 {l}</p>)}

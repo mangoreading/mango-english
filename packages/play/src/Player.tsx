@@ -65,8 +65,8 @@ const INST: Record<string, string> = {
 const NO_SIDE = ['sbuild', 'swrite', 'sfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'mfree', 'swrt', 'mtext', 'lwrite', 'saykor', 'lspeak', 'raloud', 'present', 'aitalk'];
 const VOCAB_SKIN = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat'];
 /** 말하기 지시문의 '영어로 말해 보세요' 부분을 파랗게 강조 (mango 스킨) */
-function hl(t: string, on: boolean) { const m = on ? t.match(/^(.*?)(영어로 말해 보세요.*)$/) : null; return m ? <>{m[1]}<span className="nv-hl">{m[2]}</span></> : t; }
-const SPEAK_SKIN = ['lookspeak', 'saykor', 'lspeak'];
+function hl(t: string, on: boolean) { const m = on ? t.match(/^(.*?)((?:영어로 )?말해 보세요.*)$/) : null; return m ? <>{m[1]}<span className="nv-hl">{m[2]}</span></> : t; }
+const SPEAK_SKIN = ['lookspeak'];
 const OWN_PIC = ['lookspeak', 'role', 'pchoice', 'dchoice', 'dfill', 'goal', 'lcardp', 'lchpic', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat'];
 /** 듣고 고르기: 질문을 맨 위 안내 자리에 보여 준다 */
 const LCH = ['lchtext', 'lchpic', 'lchlist', 'lwrite'];
@@ -119,7 +119,7 @@ export function NativePlayer({ title, items, vocab, nextLabel, onResult, onFinis
         <button className="nv-x" onClick={() => onFinish('exit')} aria-label="나가기">‹</button>
         <b>{title}</b>
         <span className="nv-dots">{items.map((_, k) => <i key={k} className={k < i ? 'd1' : k === i ? 'd2' : ''} />)}</span>
-        <span className="nv-pts">★ 포인트 : +{pts}</span>
+        <span className="nv-pts"><i className="nv-star">★</i> 포인트 : +{pts}</span>
       </div>
       <p className="nv-inst">{hl(LCH.includes(it.k) && it.q ? it.q : it.inst || INST[it.k] || '', SPEAK_SKIN.includes(it.k))}{INST_SUB[it.k] && <small>{INST_SUB[it.k]}</small>}</p>
       <FbSlot.Provider value={slot}>
