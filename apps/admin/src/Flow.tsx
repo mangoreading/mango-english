@@ -2,16 +2,18 @@ import { useEffect, useState } from 'react';
 import { supabase } from './supabase';
 import { PageHead } from './ui';
 
-interface Step { id: string; lesson_id: string; pos: number; name_en: string; name_ko: string; minutes: number | null; special: string | null; src_id: string | null }
+interface Step { id: string; lesson_id: string; pos: number; name_en: string; name_ko: string; minutes: number | null; special: string | null; src_id: string | null; kind: string | null; qty: number | null }
 interface Lesson { id: string; no: number; en: string; ko: string; goal: string; color: string; src_id: string | null; flow_steps: Step[] }
 export type Owner = { kind: 'template'; id: string } | { kind: 'unit'; id: string };
 
-const SPECIAL_KO: Record<string, string> = { diagnostic: '진단(7차시)', adaptive: '맞춤(8차시)' };
+const SPECIAL_KO: Record<string, string> = { diagnostic: '체크', adaptive: '맞춤' };
 
 /** 흐름 편집기: 템플릿/단원 공용. 차시 > 활동 목록을 표로 보여주고 바로 고친다. */
 export function FlowEditor({ owner }: { owner: Owner }) {
   const [ls, setLs] = useState<Lesson[] | null>(null);
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [kinds, setKinds] = useState<{ key: string; name_ko: string }[]>([]);
+  useEffect(() => { supabase.from('activity_types').select('key,name_ko,active,sort').eq('active', true).order('sort').then((r) => setKinds((r.data ?? []) as { key: string; name_ko: string }[])); }, []);
   const [msg, setMsg] = useState<{ t: 'ok' | 'err'; s: string } | null>(null);
   const col = owner.kind === 'template' ? 'template_id' : 'unit_id';
 
@@ -76,13 +78,15 @@ export function FlowEditor({ owner }: { owner: Owner }) {
             <button className="mx-btn sec" onClick={() => delLesson(l)}>차시 삭제</button>
           </div>
           <table>
-            <thead><tr><th style={{ width: 36 }}>#</th><th>활동 (영문)</th><th>활동 (한글)</th><th style={{ width: 60 }}>분</th><th style={{ width: 90 }}>구분</th>{owner.kind === 'unit' && <th style={{ width: 60 }}>문항</th>}<th style={{ width: 150 }} /></tr></thead>
+            <thead><tr><th style={{ width: 36 }}>#</th><th>활동 (영문)</th><th>활동 (한글)</th><th style={{ width: 200 }}>활동 템플릿</th><th style={{ width: 60 }}>문항 수</th><th style={{ width: 60 }}>분</th><th style={{ width: 90 }}>구분</th>{owner.kind === 'unit' && <th style={{ width: 60 }}>문항</th>}<th style={{ width: 150 }} /></tr></thead>
             <tbody>
               {l.flow_steps.map((s, i) => (
                 <tr key={s.id}>
                   <td>{i + 1}</td>
                   <td><Txt value={s.name_en} onSave={(v) => updStep(s.id, { name_en: v })} /></td>
                   <td><Txt value={s.name_ko} onSave={(v) => updStep(s.id, { name_ko: v })} /></td>
+                  <td><select className="mx-cell" value={s.kind ?? ''} onChange={(e) => updStep(s.id, { kind: e.target.value || null })}><option value="">(지정 안 함)</option>{kinds.map((k) => <option key={k.key} value={k.key}>{k.name_ko}</option>)}</select></td>
+                  <td><Txt value={s.qty == null ? '' : String(s.qty)} w={44} onSave={(v) => updStep(s.id, { qty: v === '' ? null : Math.max(0, parseInt(v, 10) || 0) })} /></td>
                   <td><Txt value={s.minutes == null ? '' : String(s.minutes)} w={44} onSave={(v) => updStep(s.id, { minutes: v === '' ? null : Math.max(0, parseInt(v, 10) || 0) })} /></td>
                   <td>{s.special ? <span className="mx-tag">{SPECIAL_KO[s.special]}</span> : owner.kind === 'unit' && !s.src_id ? <span className="mx-tag">추가됨</span> : ''}</td>
                   {owner.kind === 'unit' && <td>{counts[s.id] ?? 0}</td>}
@@ -136,7 +140,7 @@ export function Templates() {
     for (const l of (src.data ?? []) as unknown as Lesson[]) {
       const nl = await supabase.from('flow_lessons').insert({ template_id: n.data.id, no: l.no, en: l.en, ko: l.ko, goal: l.goal, color: l.color }).select('id').single();
       if (nl.error) { setErr(nl.error.message); return; }
-      const steps = l.flow_steps.map((s) => ({ lesson_id: nl.data.id, pos: s.pos, name_en: s.name_en, name_ko: s.name_ko, minutes: s.minutes, special: s.special }));
+      const steps = l.flow_steps.map((s) => ({ lesson_id: nl.data.id, pos: s.pos, name_en: s.name_en, name_ko: s.name_ko, minutes: s.minutes, special: s.special, kind: s.kind, qty: s.qty }));
       if (steps.length) await supabase.from('flow_steps').insert(steps);
     }
     setSel(n.data.id); await load();
