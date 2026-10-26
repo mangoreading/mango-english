@@ -625,3 +625,8 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 [data-skin=mango] .nv-topic { margin-bottom:1.2em; }
 [data-skin=mango] .nv-chk, [data-skin=mango] .nv-wta { height:17em; min-height:17em; }
 [data-skin=mango] .nv-dfpic ~ .nv-bl { max-width:39.6em; margin-top:1.4em; }
+/* sorder: 우상단 [한] 버튼이 보이도록 목록을 내림 / swrt: 두 박스 높이 동일, 글자 키움 */
+[data-skin=mango] .nv-ord { margin-top:3.2em; }
+[data-skin=mango] .nv-split-w { grid-template-rows:18em; align-items:stretch; }
+[data-skin=mango] .nv-split-w .nv-chk, [data-skin=mango] .nv-split-w .nv-wta { height:100%; min-height:0; box-sizing:border-box; }
+[data-skin=mango] .nv-split-w .nv-wta { font-size:1.35em; line-height:1.5; }
