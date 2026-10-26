@@ -648,3 +648,5 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-passage .nv-hintbox p { margin:0; line-height:1.45; font-size:1em; }
 /* 읽기 문항(3/4/5): 본문·문항 시작 위치를 상단 기준으로 통일 */
 [data-skin=mango] .nv-body:has(> .nv-split:not(.nv-goal):not(.nv-split-w)) { justify-content:flex-start; padding-top:2.6em; }
+/* 해석 보기를 눌러도 우측 문항 위치가 움직이지 않도록 위쪽 고정 */
+[data-skin=mango] .nv-split:not(.nv-goal):not(.nv-split-w) > .nv-qpane { justify-content:flex-start; }
