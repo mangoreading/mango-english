@@ -568,3 +568,8 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-overlay[data-skin=mangobg][data-bgimg=v]::before { background:url("./bg-vocab.jpg") center/cover no-repeat; }
 [data-bgimg=v] .nv-big { background:#fff; }
 [data-bgimg=v] .nv-prompt { max-width:42em; position:relative; top:-3.2em; }
+/* AI 자유대화 (mango): 상황 박스를 위로, 대화창을 길게, 작은 마이크 */
+[data-skin=mango] .nv-wtop .nv-kobar.nv-sit { font-size:1.7em; min-height:0; padding:.55em 1.2em; margin-top:-1.1em; }
+[data-skin=mango] .nv-wtop .nv-chat { height:24em; }
+[data-skin=mango] .nv-chatin .nv-mic-s { width:2.7em; height:2.7em; border-width:.32em; font-size:1em; margin:0; right:3.7em; }
+[data-skin=mango] .nv-wtop .nv-kobar.nv-sit { min-width:0; margin-bottom:.7em; }
