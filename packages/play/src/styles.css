@@ -637,3 +637,8 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 [data-skin=mango] .nv-body > .nv-dlg { margin-bottom:1.3em; }
 [data-skin=mango] .nv-body > .nv-dlg + .nv-capsule, [data-skin=mango] .nv-wbody > .nv-dlg + .nv-capsule { width:68% !important; max-width:none !important; margin-bottom:1.3em; }
 [data-skin=mango] .nv-body > .nv-capsule + .nv-tfrow { margin-top:.4em; }
+/* tf 문장 글자색 / 글 읽고 답하기: 듣기·해석 보기 버튼 크기 통일 */
+[data-skin=mango] .nv-tfq, [data-skin=mango] .nv-capsule .nv-tfs { color:#000; }
+[data-skin=mango] .nv-ptools { display:flex; gap:.6em; align-items:center; }
+[data-skin=mango] .nv-ptools .nv-listen, [data-skin=mango] .nv-ptools .nv-hintbtn { box-sizing:border-box; width:7.6em; height:2.5em; padding:0 .8em; font-size:.92em; display:inline-flex; align-items:center; justify-content:center; gap:.4em; border-radius:999px; }
+[data-skin=mango] .nv-dlg + .nv-capsule { color:#000 !important; }
