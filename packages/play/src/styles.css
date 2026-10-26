@@ -630,3 +630,4 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 [data-skin=mango] .nv-split-w { grid-template-rows:18em; align-items:stretch; }
 [data-skin=mango] .nv-split-w .nv-chk, [data-skin=mango] .nv-split-w .nv-wta { height:100%; min-height:0; box-sizing:border-box; }
 [data-skin=mango] .nv-split-w .nv-wta { font-size:1.35em; line-height:1.5; }
+[data-skin=mango] .nv-split-w .nv-wta { color:#000; }
