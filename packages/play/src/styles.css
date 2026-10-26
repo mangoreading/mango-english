@@ -584,3 +584,9 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 [data-skin=mango] .nv-chatin .nv-mic-s { border-width:.12em; background-size:1.05em, 100% 100%; }
 [data-skin=mango] .nv-stack-tapl ~ .nv-hint { margin-top:1em; }
 [data-skin=mango] .nv-wbody > p.nv-hint, [data-skin=mango] .nv-body > p.nv-hint { margin-top:1.1em; }
+/* 듣기 템플릿 다듬기 */
+[data-skin=mango] .nv-hintwrap:not(.nv-hint-in) { margin-top:1.1em; }
+[data-skin=mango] .nv-row4 { margin-top:1.8em; }
+[data-skin=mango] .nv-tap-lcardt .nv-tt { flex:0 0 auto; }
+[data-skin=mango] .nv-tap-lcardt { justify-content:center; align-items:center; }
+[data-skin=mango] .nv-ltab td:last-child { text-align:left; font-size:1.4em; padding-left:1.4em; }
