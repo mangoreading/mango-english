@@ -212,8 +212,8 @@ export function SqMulti({ item, onDone }: KindProps) {
   const rows: { t: string; ok?: boolean }[] = item.items ?? [];
   const [sel, setSel] = useState<Set<number>>(new Set()); const [ok, setOk] = useState(false); const [bad, setBad] = useState(false); const wrong = useRef(false);
   const mark = (i: number) => String.fromCharCode(9424 + i);
-  function check() {
-    const good = rows.every((r, i) => !!r.ok === sel.has(i));
+  function check(cur: Set<number> = sel) {
+    const good = rows.every((r, i) => !!r.ok === cur.has(i));
     if (good) { setOk(true); onDone([{ tag: 'read', ok: !wrong.current }]); }
     else { wrong.current = true; setBad(true); setTimeout(() => { setBad(false); setSel(new Set()); }, 700); }
   }
@@ -222,8 +222,7 @@ export function SqMulti({ item, onDone }: KindProps) {
       <p className="nv-qt">{item.q || 'Q. 알맞은 것을 모두 선택하세요.'}</p>
       <div className={'nv-list nv-list-s' + (bad ? ' nv-shake' : '')}>{rows.map((r, i) => (
         <button key={i} disabled={ok} className={'nv-opt nv-opt-l' + (ok ? (r.ok ? ' nv-right' : '') : sel.has(i) ? ' nv-on' : '')}
-          onClick={() => { const n = new Set(sel); if (n.has(i)) n.delete(i); else n.add(i); setSel(n); }}>{mark(i)} {r.t}</button>))}</div>
-      <div className="nv-center"><button className="nv-btn" disabled={ok || !sel.size} onClick={check}>확인</button></div>
+          onClick={() => { const n = new Set(sel); if (n.has(i)) n.delete(i); else n.add(i); setSel(n); if (n.size === rows.filter((x) => x.ok).length) setTimeout(() => check(n), 250); }}>{mark(i)} {r.t}</button>))}</div>
       <Msg ok={ok} /><Hint lines={item.hint} kind={item.k} item={item} />
     </>} /></div>
   );
