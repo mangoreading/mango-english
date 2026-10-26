@@ -615,3 +615,13 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-hintbtn .nv-bulb, [data-skin=mango] .nv-hintbtn .nv-bulb { display:inline-block; flex:none; width:1.45em; height:1.45em; color:transparent; overflow:hidden; text-indent:-99em; background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke-linecap='round' stroke-linejoin='round'><g stroke='%23F2A900' stroke-width='1.7'><path d='M12 1.2v1.6M3.6 4.6l1.1 1.1M20.4 4.6l-1.1 1.1M1.4 11h1.6M21 11h1.6'/></g><path d='M9.5 19.3h5M10.3 21.6h3.4M9 16.6c-1.7-1.2-3-2.8-3-4.9a6 6 0 1 1 12 0c0 2.1-1.3 3.7-3 4.9l-.3 1.5H9.3L9 16.6Z' fill='%23FFE27A' stroke='%23C98A00' stroke-width='1.5'/></svg>") center/contain no-repeat; filter:drop-shadow(0 0 .12em rgba(255,200,40,.7)); }
 .nv-hintbtn, [data-skin=mango] .nv-hint-in .nv-hintbtn, [data-skin=mango] .nv-wtop .nv-chathint .nv-hintbtn { background:#FFF1CC; border:.1em solid #44546A; color:#7A5A00; font-weight:700; }
 [data-skin=mango] .nv-kobar { margin-bottom:.6em; font-size:2em; }
+/* 쓰기 템플릿 다듬기 */
+[data-skin=mango] .nv-koslot .nv-kobar { min-width:min(23em,90%); font-size:1.45em; min-height:2.2em; padding:.35em 1em; margin-bottom:1em; }
+[data-skin=mango] .nv-wbody .nv-winput:not(.nv-winput-cap) { width:min(19.2em,100%); margin-top:1.1em; }
+[data-skin=mango] .nv-wbody .nv-chips { margin-top:1.4em; }
+[data-skin=mango] .nv-dfpic ~ .nv-bl-box.nv-bl-fix { max-width:39.6em; margin-top:1.4em; }
+[data-skin=mango] .nv-ordi .nv-tt b { font-size:1.4em; }
+[data-skin=mango] .nv-ordtip { margin-top:1.4em; }
+[data-skin=mango] .nv-topic { margin-bottom:1.2em; }
+[data-skin=mango] .nv-chk, [data-skin=mango] .nv-wta { height:17em; min-height:17em; }
+[data-skin=mango] .nv-dfpic ~ .nv-bl { max-width:39.6em; margin-top:1.4em; }
