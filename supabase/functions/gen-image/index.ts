@@ -2,7 +2,7 @@
 // OpenAI 키는 Supabase 비밀 값 OPENAI_API_KEY 에서만 읽는다(앱·GitHub 에는 없음). 본사(hq) 계정만 쓸 수 있다.
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
-const MODEL = Deno.env.get('OPENAI_IMAGE_MODEL') ?? 'gpt-image-1';
+const MODEL = Deno.env.get('OPENAI_IMAGE_MODEL') ?? 'gpt-image-2.5-flare';
 const QUALITY = Deno.env.get('OPENAI_IMAGE_QUALITY') ?? 'low'; // low / medium / high (비용 차이)
 const DAILY_LIMIT = Number(Deno.env.get('IMAGE_DAILY_LIMIT') ?? '60'); // 하루 생성 횟수 상한 (비용 보호)
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type', 'Access-Control-Allow-Methods': 'POST, OPTIONS' };
