@@ -616,7 +616,7 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-hintbtn, [data-skin=mango] .nv-hint-in .nv-hintbtn, [data-skin=mango] .nv-wtop .nv-chathint .nv-hintbtn { background:#FFF1CC; border:.1em solid #44546A; color:#7A5A00; font-weight:700; }
 [data-skin=mango] .nv-kobar { margin-bottom:.6em; font-size:2em; }
 /* 쓰기 템플릿 다듬기 */
-[data-skin=mango] .nv-koslot .nv-kobar { min-width:min(23em,90%); font-size:1.45em; min-height:2.2em; padding:.35em 1em; margin-bottom:1em; }
+[data-skin=mango] .nv-koslot .nv-kobar { min-width:min(23em,90%); font-size:1.45em; min-height:2.42em; padding:.42em 1em; margin-bottom:1em; }
 [data-skin=mango] .nv-wbody .nv-winput:not(.nv-winput-cap) { width:min(19.2em,100%); margin-top:1.1em; }
 [data-skin=mango] .nv-wbody .nv-chips { margin-top:1.4em; }
 [data-skin=mango] .nv-dfpic ~ .nv-bl-box.nv-bl-fix { max-width:39.6em; margin-top:1.4em; }
