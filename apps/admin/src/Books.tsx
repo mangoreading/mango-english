@@ -3,7 +3,8 @@ import { supabase } from './supabase';
 import { PageHead } from './ui';
 
 interface Pub { id: string; name: string }
-interface Book { id: string; publisher_id: string; grade: number; title: string; year: number | null; cover_url: string | null; lessons: number; units: { kind: string }[] }
+interface Book { id: string; publisher_id: string; grade: number; title: string; year: number | null; cover_url: string | null; lessons: number; units: { no: number; title: string; kind: string; seq: number | null }[] }
+const tocOf = (b: Book) => [...b.units].sort((x, y) => (x.seq ?? x.no) - (y.seq ?? y.no)).map((u) => (u.kind === 'review' ? u.title : `LESSON ${u.no} ${u.title}`)).join('\n');
 const empty = { publisher_id: '', grade: 5, title: '', year: new Date().getFullYear(), lessons: 12 };
 
 /** 표지 그림을 가로 600px 이하 PNG 로 줄인다 */
@@ -34,7 +35,7 @@ export function Books() {
 
   async function load() {
     const p = await supabase.from('publishers').select('id,name').order('name');
-    const b = await supabase.from('books').select('id,publisher_id,grade,title,year,cover_url,lessons,units(kind)').order('grade');
+    const b = await supabase.from('books').select('id,publisher_id,grade,title,year,cover_url,lessons,units(no,title,kind,seq)').order('grade');
     if (p.error || b.error) { setMsg({ t: 'err', s: (p.error ?? b.error)!.message }); return; }
     setPubs((p.data ?? []) as Pub[]); setBooks((b.data ?? []) as unknown as Book[]);
     setSel((c) => c ?? ((b.data ?? [])[0] as { id: string } | undefined)?.id ?? null);
@@ -47,8 +48,8 @@ export function Books() {
   const cur = books?.find((x) => x.id === sel) ?? null;
   function pick(b: Book | 'new') {
     setFile(null);
-    if (b === 'new') { setSel('new'); setF({ ...empty, publisher_id: pubs[0]?.id ?? '' }); return; }
-    setSel(b.id); setF({ publisher_id: b.publisher_id, grade: b.grade, title: b.title, year: b.year ?? new Date().getFullYear(), lessons: b.lessons });
+    if (b === 'new') { setToc(''); setSel('new'); setF({ ...empty, publisher_id: pubs[0]?.id ?? '' }); return; }
+    setToc(tocOf(b)); setSel(b.id); setF({ publisher_id: b.publisher_id, grade: b.grade, title: b.title, year: b.year ?? new Date().getFullYear(), lessons: b.lessons });
   }
 
   async function addPub() {
@@ -87,19 +88,20 @@ export function Books() {
     if (!cur) return;
     setBusy(true);
     try {
-      const ex = await supabase.from('units').select('no').eq('book_id', cur.id);
-      if (ex.error) throw new Error(ex.error.message);
-      const have = new Set((ex.data ?? []).map((x) => x.no as number));
-      const rows: { book_id: string; no: number; title: string; kind: string; seq: number }[] = [];
-      toc.split('\n').map((l) => l.trim()).filter(Boolean).forEach((l) => {
+      const byNo = new Map(cur.units.map((u) => [u.no, u]));
+      const ins: { book_id: string; no: number; title: string; kind: string; seq: number }[] = [];
+      const upd: { no: number; title: string; seq: number }[] = [];
+      toc.split('\n').map((l) => l.trim()).filter(Boolean).forEach((l, i) => {
         const m = l.match(/^lesson\s*(\d+)\s*[:.\-]?\s*(.*)$/i); const r = l.match(/^review\s*(\d+)/i);
-        const no = m ? +m[1] : r ? 100 + +r[1] : 0; if (!no || have.has(no)) return;
-        rows.push({ book_id: cur.id, no, title: m ? (m[2] || `Lesson ${m[1]}`) : l, kind: m ? 'lesson' : 'review', seq: rows.length + have.size + 1 });
+        const no = m ? +m[1] : r ? 100 + +r[1] : 0; if (!no) return;
+        const title = m ? (m[2] || `Lesson ${m[1]}`) : l; const ex = byNo.get(no);
+        if (!ex) ins.push({ book_id: cur.id, no, title, kind: m ? 'lesson' : 'review', seq: i + 1 });
+        else if (ex.title !== title || ex.seq !== i + 1) upd.push({ no, title, seq: i + 1 });
       });
-      if (!rows.length) { setMsg({ t: 'ok', s: '이미 모두 있어요' }); return; }
-      const r = await supabase.from('units').insert(rows);
-      if (r.error) throw new Error(r.error.message);
-      setMsg({ t: 'ok', s: `단원 ${rows.length}개를 만들었어요` }); load();
+      if (!ins.length && !upd.length) { setMsg({ t: 'ok', s: '바뀐 내용이 없어요' }); return; }
+      if (ins.length) { const r = await supabase.from('units').insert(ins); if (r.error) throw new Error(r.error.message); }
+      for (const u of upd) { const r = await supabase.from('units').update({ title: u.title, seq: u.seq }).eq('book_id', cur.id).eq('no', u.no); if (r.error) throw new Error(r.error.message); }
+      setMsg({ t: 'ok', s: `추가 ${ins.length}개, 수정 ${upd.length}개` }); load();
     } catch (e) { setMsg({ t: 'err', s: (e as Error).message }); } finally { setBusy(false); }
   }
   async function delBook() {
@@ -162,10 +164,10 @@ export function Books() {
                 </div>
                 {sel !== 'new' && (
                   <div style={{ marginTop: 18 }}>
-                    <div className="mx-sec-t">목차로 단원 만들기</div>
-                    <p className="mx-muted">교재 목차를 한 줄에 하나씩 붙여 넣으세요. 예) LESSON 1 Where Are You From? / Review 1. 이미 있는 단원은 그대로 두고, 없는 단원만 추가해요.</p>
+                    <div className="mx-sec-t">단원 목차</div>
+                    <p className="mx-muted">현재 등록된 단원이 한 줄에 하나씩 채워져 있어요. 줄을 고치거나 추가·순서 변경한 뒤 [목차 반영]을 누르면 새 단원은 만들고, 제목·순서가 바뀐 단원은 수정해요. (형식: LESSON 1 제목 / Review 1. 줄을 지워도 기존 단원은 삭제되지 않아요)</p>
                     <textarea rows={7} style={{ width: '100%', boxSizing: 'border-box' }} value={toc} onChange={(e) => setToc(e.target.value)} />
-                    <button className="mx-btn" disabled={busy || !toc.trim()} onClick={makeUnits}>단원 만들기</button>
+                    <button className="mx-btn" disabled={busy || !toc.trim()} onClick={makeUnits}>목차 반영</button>
                   </div>
                 )}
               </>
