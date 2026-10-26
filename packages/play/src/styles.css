@@ -650,3 +650,5 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 [data-skin=mango] .nv-body:has(> .nv-split:not(.nv-goal):not(.nv-split-w)) { justify-content:flex-start; padding-top:2.6em; }
 /* 해석 보기를 눌러도 우측 문항 위치가 움직이지 않도록 위쪽 고정 */
 [data-skin=mango] .nv-split:not(.nv-goal):not(.nv-split-w) > .nv-qpane { justify-content:flex-start; }
+/* 버튼 글자가 길어도(전체 듣기) 줄바꿈 없이 */
+[data-skin=mango] .nv-ptools .nv-listen, [data-skin=mango] .nv-ptools .nv-hintbtn { width:auto; min-width:7.6em; white-space:nowrap; }
