@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { supabase } from './supabase';
-import { openPreview } from './ui';
-import { isNativeKind, nativeVocab } from './samples';
+import { supabase } from '../../shared/supabase';
+import { openPreview } from '../../shared/ui';
+import { isNativeKind, nativeVocab } from '../../shared/samples';
 import { ItemForm, KIND_NAME, defaultItem, validate, type VocabOpt } from './ItemForm';
-import { catLabel, type KindRow } from './Kinds';
+import { catLabel, type KindRow } from '../kinds/Kinds';
 
 export type Status = 'draft' | 'review' | 'approved' | 'rejected';
 const STATUSES: Status[] = ['draft', 'review', 'approved', 'rejected'];

@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { supabase } from './supabase';
-import { PageHead } from './ui';
-import { specOf } from './ItemForm';
-import { openPreview } from './ui';
+import { supabase } from '../../shared/supabase';
+import { PageHead } from '../../shared/ui';
+import { specOf } from '../units/ItemForm';
+import { openPreview } from '../../shared/ui';
 import { NativePlayer } from '@mango/play';
-import { NATIVE_SAMPLES, SAMPLE_VOCAB, isNativeKind } from './samples';
+import { NATIVE_SAMPLES, SAMPLE_VOCAB, isNativeKind } from '../../shared/samples';
 
 export const CATEGORIES = ['어휘', '표현', '듣기', '말하기', '읽기', '쓰기', '공통'];
 /** 영역 표시 이름 (DB에는 한글 값 그대로 저장) */

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { supabase } from './supabase';
-import { PageHead } from './ui';
+import { supabase } from '../../shared/supabase';
+import { PageHead } from '../../shared/ui';
 
 interface Pub { id: string; name: string }
 interface Book { id: string; publisher_id: string; grade: number; title: string; year: number | null; cover_url: string | null; lessons: number; units: { no: number; title: string; kind: string; seq: number | null }[] }

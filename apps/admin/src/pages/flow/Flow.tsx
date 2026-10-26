@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { supabase } from './supabase';
-import { PageHead } from './ui';
+import { supabase } from '../../shared/supabase';
+import { PageHead } from '../../shared/ui';
 
 interface Step { id: string; lesson_id: string; pos: number; name_en: string; name_ko: string; minutes: number | null; special: string | null; src_id: string | null; kind: string | null; qty: number | null }
 interface Lesson { id: string; no: number; en: string; ko: string; goal: string; color: string; src_id: string | null; flow_steps: Step[] }

@@ -1,5 +1,5 @@
 import type { VWord } from '@mango/play';
-import type { VocabOpt } from './ItemForm';
+import type { VocabOpt } from '../pages/units/ItemForm';
 
 const NATIVE = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti', 'goal', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext', 'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'mfree', 'swrt', 'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'aitalk'];
 export const isNativeKind = (k: string) => NATIVE.includes(k);

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { supabase } from './supabase';
+import { supabase } from '../../shared/supabase';
 
 interface Word { id: string; key: string; en: string; ko: string; image_path: string | null }
 /** 단어 그림 주소: 'word/hat.png'(앱 내장) 또는 업로드된 전체 주소 */
