@@ -170,7 +170,7 @@ function Story({ item, side, tag }: { item: Record<string, any>; side: ReactNode
           <button type="button" className="nv-listen nv-listen-s" onClick={() => say(text.join(' '))}><i className="nv-sico" aria-hidden="true" /> <b>듣기</b></button>
           {item.ko && <button type="button" className="nv-hintbtn" onClick={() => setKo(!ko)}>{ko ? '해석 닫기' : '해석 보기'}</button>}
         </div>
-        {ko && <div className="nv-hintbox on">{String(item.ko).split(/\n+|(?<=[.!?。])\s+/).filter(Boolean).map((l, i) => <p key={i}>{l}</p>)}</div>}
+        {ko && <div className="nv-hintbox on">{String(item.ko).split('\n').map((l, i) => <p key={i}>{l}</p>)}</div>}
       </div>
       <div className="nv-qpane" data-tag={tag}>{side}</div>
     </div>
