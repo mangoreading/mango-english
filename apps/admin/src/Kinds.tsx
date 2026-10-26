@@ -10,7 +10,7 @@ export const CATEGORIES = ['어휘', '표현', '듣기', '말하기', '읽기', 
 /** 영역 표시 이름 (DB에는 한글 값 그대로 저장) */
 export const CAT_EN: Record<string, string> = { 어휘: 'Vocab', 표현: 'Expression', 듣기: 'Listening', 말하기: 'Speaking', 읽기: 'Reading', 쓰기: 'Writing', 공통: 'Common' };
 export const catLabel = (c: string) => CAT_EN[c] ?? c;
-export interface KindRow { key: string; name_ko: string; name_en?: string; version?: number; description: string; category: string; sort: number; active: boolean }
+export interface KindRow { key: string; name_ko: string; name_en?: string; version?: number; description: string; category: string; sort: number; active: boolean; importance?: string | null }
 
 /** 활동 템플릿 관리: 목록(영역별), 이름·설명·영역·사용 여부 수정, 입력 항목과 사용 현황 보기 */
 export function Types() {
@@ -22,7 +22,7 @@ export function Types() {
   useEffect(() => { if (msg?.t !== 'ok') return; const id = setTimeout(() => setMsg(null), 1200); return () => clearTimeout(id); }, [msg]);
 
   async function load() {
-    const r = await supabase.from('activity_types').select('key,name_ko,name_en,version,description,category,sort,active');
+    const r = await supabase.from('activity_types').select('key,name_ko,name_en,version,description,category,sort,active,importance');
     if (r.error) { setMsg({ t: 'err', s: r.error.message }); return; }
     setRows(((r.data ?? []) as KindRow[]).sort((a, b) => CATEGORIES.indexOf(a.category) - CATEGORIES.indexOf(b.category) || a.sort - b.sort));
     const it = await supabase.from('items').select('template,unit_id,tpl_ver').limit(20000);
@@ -50,11 +50,11 @@ export function Types() {
           <div className="mx-card">
             <table className="mx-fixed">
               <colgroup><col style={{ width: 40 }} /><col style={{ width: '14%' }} /><col style={{ width: '30%' }} /><col /><col style={{ width: 56 }} /><col style={{ width: 64 }} /></colgroup>
-              <thead><tr><th className="mx-no">No</th><th>영역</th><th>한글 이름</th><th>영어 이름</th><th>버전</th><th>상태</th></tr></thead>
+              <thead><tr><th className="mx-no">No</th><th>영역</th><th>한글 이름</th><th>영어 이름</th><th>중요도</th><th>버전</th><th>상태</th></tr></thead>
               <tbody>
                 {shown.map((r, n) => (
                   <tr key={r.key} className={'mx-click' + (r.key === selKey ? ' mx-sel' : '')} onClick={() => setSelKey(r.key)}>
-                    <td className="mx-no">{n + 1}</td><td>{catLabel(r.category)}</td><td>{r.name_ko}</td><td>{r.name_en}</td><td>v{r.version ?? 1}</td>
+                    <td className="mx-no">{n + 1}</td><td>{catLabel(r.category)}</td><td>{r.name_ko}</td><td>{r.name_en}</td><td>{r.importance ?? ''}</td><td>v{r.version ?? 1}</td>
                     
                     <td><span className={'mx-chip mx-chip-k ' + (r.active ? 'approved' : 'draft')}>{r.active ? '사용' : '숨김'}</span></td>
                   </tr>
@@ -93,7 +93,7 @@ function Detail({ row, use, onSaved }: { row: KindRow; use?: { items: number; un
     if (err) setPmsg(err);
   }
   async function save() {
-    const { error } = await supabase.from('activity_types').update({ name_ko: f.name_ko.trim(), name_en: (f.name_en ?? '').trim(), description: f.description, category: f.category, active: f.active }).eq('key', row.key);
+    const { error } = await supabase.from('activity_types').update({ name_ko: f.name_ko.trim(), name_en: (f.name_en ?? '').trim(), description: f.description, category: f.category, importance: f.importance || null, active: f.active }).eq('key', row.key);
     onSaved(error ? { t: 'err', s: '저장 실패: ' + error.message } : { t: 'ok', s: '저장했어요.' });
   }
   const lvKo = (l: string) => (l === 'breaking' ? '깨지는 변경' : l === 'compatible' ? '호환 변경' : '안전 변경');
@@ -138,6 +138,7 @@ function Detail({ row, use, onSaved }: { row: KindRow; use?: { items: number; un
         <div className="mx-sec-b mx-form">
           <div className="mx-row">
             <select value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })}>{CATEGORIES.map((c) => <option key={c} value={c}>{catLabel(c)}</option>)}</select>
+            <select value={f.importance ?? ''} onChange={(e) => setF({ ...f, importance: e.target.value })}><option value="">중요도 없음</option>{['필수', '최우선 핵심', '핵심', '보조', '확장'].map((c) => <option key={c} value={c}>{c}</option>)}</select>
             <label className="mx-f mx-chk"><input type="checkbox" checked={f.active} onChange={(e) => setF({ ...f, active: e.target.checked })} />사용 (끄면 새 문항을 만들 때 목록에서 숨겨요)</label>
           </div>
         </div>
