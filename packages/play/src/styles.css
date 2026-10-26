@@ -633,3 +633,9 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 [data-skin=mango] .nv-split-w .nv-wta { color:#000; }
 /* 글 읽고 오른쪽에서 푸는 활동: 감싸는 박스를 기존대로 (안쪽 간격도 기존 그대로) */
 [data-skin=mango] .nv-body:has(> .nv-split:not(.nv-goal):not(.nv-split-w)) { background:#fff; border:.15em solid var(--nv-frame); border-radius:1.3em; box-shadow:0 .2em .8em rgba(68,84,106,.08); width:calc(100% - 4.4em); max-width:76em; padding:1em 2.4em 1em; gap:1.2em; margin:0 auto; justify-content:center; }
+/* 위/아래 요소 간격 점검 */
+[data-skin=mango] .nv-body > .nv-dlg { margin-bottom:1.3em; }
+[data-skin=mango] .nv-body > .nv-dlg + .nv-capsule, [data-skin=mango] .nv-wbody > .nv-dlg + .nv-capsule { width:68% !important; max-width:none !important; margin-bottom:1.3em; }
+[data-skin=mango] .nv-body > .nv-capsule + .nv-tfrow { margin-top:.4em; }
+[data-skin=mango] .nv-body > .nv-sptop + .nv-dlgbig { margin-top:1.2em; }
+[data-skin=mango] .nv-body > .nv-dlgbig + .nv-rolebar { margin-top:1.2em; }
