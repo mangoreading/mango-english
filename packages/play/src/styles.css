@@ -573,3 +573,14 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 [data-skin=mango] .nv-wtop .nv-chat { height:24em; }
 [data-skin=mango] .nv-chatin .nv-mic-s { width:2.7em; height:2.7em; border-width:.32em; font-size:1em; margin:0; right:3.7em; }
 [data-skin=mango] .nv-wtop .nv-kobar.nv-sit { min-width:0; margin-bottom:.7em; }
+/* 문장 눌러 듣기: 카드 높이 약간 줄임 */
+[data-skin=mango] .nv-stack-tapl .nv-tap { padding:.4em 1.2em; }
+[data-skin=mango] .nv-stack-tapl ~ .nv-spstat, [data-skin=mango] .nv-stack-tapl + .nv-spstat { margin-top:.9em; }
+/* AI 자유대화: 입력줄 간격, 마이크 크기, 힌트 */
+[data-skin=mango] .nv-wtop .nv-chatin { margin-top:.9em; }
+[data-skin=mango] .nv-chatin .nv-mic-s { width:2.1em; height:2.1em; border-width:.22em; box-shadow:none; right:3.8em; }
+[data-skin=mango] .nv-wtop .nv-chathint { display:flex; align-items:center; gap:.8em; width:100%; max-width:38em; min-height:2.6em; margin-top:.4em; }
+[data-skin=mango] .nv-wtop .nv-chathint .nv-hintbtn { font-size:.85em; padding:.35em 1em; border:.09em solid #e5c98b; background:#fff0bc; color:#20233e; font-weight:400; }
+[data-skin=mango] .nv-chatin .nv-mic-s { border-width:.12em; background-size:1.05em, 100% 100%; }
+[data-skin=mango] .nv-stack-tapl ~ .nv-hint { margin-top:1em; }
+[data-skin=mango] .nv-wbody > p.nv-hint, [data-skin=mango] .nv-body > p.nv-hint { margin-top:1.1em; }

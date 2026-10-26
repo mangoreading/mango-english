@@ -219,6 +219,7 @@ export function AiTalk({ item, onDone }: KindProps) {
     if (nn >= turns && !fired.current) { fired.current = true; setFin(true); onDone([{ tag: 'speak', ok: true }]); }
   }
   const nextHint = item.hints?.[n] ?? script[n - 1]?.hint;
+  const [showH, setShowH] = useState(false); useEffect(() => setShowH(false), [n]);
   return (
     <div className="nv-body nv-wbody nv-wtop">
       {item.situation && <div className="nv-kobar nv-sit">{item.situation}</div>}
@@ -231,7 +232,7 @@ export function AiTalk({ item, onDone }: KindProps) {
         {micSupported() && <button type="button" className={'nv-mic nv-mic-s' + (mic.on ? ' on' : '')} onClick={mic.on ? mic.stop : mic.start} aria-label="말하기">🎤</button>}
         <button type="button" className="nv-send" disabled={!v.trim() || busy} onClick={() => void send()} aria-label="보내기">➤</button>
       </div> : <Fb className="nv-fbmsg on">대화를 잘 마쳤어요! 👏</Fb>}
-      <p className="nv-chathint">{nextHint && !fin ? <>💡 <b>{nextHint}</b></> : '\u00a0'}</p>
+      <div className="nv-chathint">{!fin ? <><button type="button" className={'nv-hintbtn' + (showH ? ' on' : '')} onClick={() => setShowH(!showH)}><span className="nv-bulb">💡</span> Hint</button>{showH && <b>{nextHint ?? '자유롭게 말해 보세요'}</b>}</> : '\u00a0'}</div>
     </div>
   );
 }
