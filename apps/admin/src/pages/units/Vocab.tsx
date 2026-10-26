@@ -128,10 +128,10 @@ export function UnitVocab({ unitId }: { unitId: string }) {
       {gen && (
         <div className="mx-card">
           <h3>AI 그림 만들기 · {gen.word}{gen.ko ? ` (${gen.ko})` : ''}</h3>
-          <div className="mx-row">
+          <div className="mx-row" style={{ alignItems: 'flex-end' }}>
             <label style={{ flex: 1 }}>추가 설명 (선택, 영어) <input value={extra} onChange={(e) => setExtra(e.target.value)} placeholder="예: a pink baseball jacket with white sleeves" /></label>
-            <button className="mx-btn" disabled={genBusy} onClick={makeImg}>{genBusy ? '만드는 중… (10~30초)' : prev ? '다시 만들기' : '만들기'}</button>
-            <button className="mx-btn sec" disabled={genBusy} onClick={() => { setGen(null); setPrev(null); }}>닫기</button>
+            <button className="mx-btn" style={{ height: 38 }} disabled={genBusy} onClick={makeImg}>{genBusy ? '만드는 중… (10~30초)' : prev ? '다시 만들기' : '만들기'}</button>
+            <button className="mx-btn sec" style={{ height: 38 }} disabled={genBusy} onClick={() => { setGen(null); setPrev(null); }}>닫기</button>
           </div>
           {prevUrl && (
             <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 16 }}>
