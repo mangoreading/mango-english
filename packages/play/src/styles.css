@@ -144,7 +144,7 @@
 .nv-chipb:hover { border-color:var(--nv-blue); } .nv-chipb.nv-sel { background:#FFE9A6; border-color:#E0A100; } .nv-chipb.nv-heard2 { border-color:#9FD3B2; }
 .nv-row-w { width:100%; } .nv-pbox { flex:1; background:#E8F0FA; border:.1em solid #B9CCE6; padding:1em 1.6em; min-height:12em; display:flex; flex-direction:column; justify-content:center; }
 .nv-pbox p { margin:.3em 0; font-size:1.25em; line-height:1.5; }
-.nv-kobox { width:100%; background:#F2F3F5; } .nv-kobox p { color:#7A7360; }
+.nv-kobox { width:auto; align-self:stretch; box-sizing:border-box; margin:0 5.12em; background:#F2F3F5; } .nv-kobox p { color:#7A7360; }
 .nv-sale { color:#E02424; font-size:1.9em !important; letter-spacing:.04em; text-shadow:.04em .04em 0 #FFD1CC; }
 .nv-p-lg { font-size:1.35em !important; margin:.5em 0 !important; } .nv-p-md { margin:.5em 0; font-size:1.1em; line-height:1.5; }
 .nv-hintbtn.on { background:#FFE39A; } .nv-listen:disabled { opacity:.4; cursor:default; }
