@@ -590,3 +590,4 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 [data-skin=mango] .nv-tap-lcardt .nv-tt { flex:0 0 auto; }
 [data-skin=mango] .nv-tap-lcardt { justify-content:center; align-items:center; }
 [data-skin=mango] .nv-ltab td:last-child { text-align:left; font-size:1.4em; padding-left:1.4em; }
+[data-skin=mango] .nv-foot .nv-btn { background:#44546A; border-color:#44546A; box-shadow:none; }
