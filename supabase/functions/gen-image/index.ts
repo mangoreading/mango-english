@@ -10,7 +10,7 @@ const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { sta
 const cut = (s: unknown, n: number) => String(s ?? '').slice(0, n);
 
 // 기존 단어 그림(이모지풍 3D 아이콘)과 톤을 맞추는 고정 문장
-const STYLE = 'A single cute 3D glossy emoji-style icon of the object, soft rounded shapes, bright friendly colors, soft shading, centered, no text, no shadow on the ground, no background elements, kids educational illustration.';
+const STYLE = 'A single cute 3D glossy emoji-style icon of the object, soft rounded shapes, bright friendly colors, soft shading, centered, no text, no shadow on the ground, transparent background, no background elements, kids educational illustration.';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });

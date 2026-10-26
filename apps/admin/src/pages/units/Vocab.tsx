@@ -20,7 +20,14 @@ async function genImage(word: string, ko: string, extra: string): Promise<File> 
   if (error) { let m = error.message; try { const j = await (error as any).context?.json?.(); if (j?.error) m = j.error; } catch { /* 그대로 */ } throw new Error(m); }
   if (!data?.image) throw new Error(data?.error ?? '그림을 받지 못했어요');
   const bin = atob(data.image as string); const u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
-  return new File([u8], word + '.png', { type: 'image/png' });
+  // 300x300 투명 PNG 로 줄인다 (배경은 투명 유지)
+  const bmp = await createImageBitmap(new Blob([u8], { type: 'image/png' }));
+  const c = document.createElement('canvas'); c.width = 300; c.height = 300;
+  const k = Math.min(300 / bmp.width, 300 / bmp.height);
+  const w = Math.round(bmp.width * k), h = Math.round(bmp.height * k);
+  c.getContext('2d')!.drawImage(bmp, Math.round((300 - w) / 2), Math.round((300 - h) / 2), w, h);
+  const blob: Blob = await new Promise((res, rej) => c.toBlob((b) => (b ? res(b) : rej(new Error('이미지를 변환하지 못했어요'))), 'image/png'));
+  return new File([blob], word + '.png', { type: 'image/png' });
 }
 async function upload(key: string, file: File): Promise<string> {
   const blob = await shrink(file);
