@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { FbSlot } from './fb';
 import { imgSrc, setQuiet, TEXT_KINDS, type Res, type VWord } from './common';
 import { VCards, VMatch, VSound, VSpell, VType1, VWrite } from './kinds';
@@ -79,7 +79,7 @@ const KIND = { lookspeak: LookSpeak, saykor: SayKor, lspeak: LSpeak, raloud: RAl
 
 /** 어휘 활동 6종 재생기: 문항(화면)을 차례로 보여 주고, 끝나면 결과 화면을 보여 준다. */
 export function NativePlayer({ title, items, vocab, nextLabel, quiet, onResult, onFinish }: Props) {
-  setQuiet(!!quiet); useEffect(() => () => setQuiet(false), []);
+  setQuiet(!!quiet);
   const [i, setI] = useState(0);
   const [done, setDone] = useState(false);
   const [all, setAll] = useState<Res[]>([]);
