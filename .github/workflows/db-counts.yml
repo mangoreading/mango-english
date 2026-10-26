@@ -9,7 +9,7 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
-          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -At -F ' | ' <<'SQL'
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -At -F ' | ' > out.txt <<'SQL'
           select 'items total', count(*) from public.items;
           select 'items by unit', u.no::text || ' ' || u.title, i.status::text, count(*) from public.items i join public.units u on u.id=i.unit_id group by 2,3 order by 2,3;
           select 'items legacy-template', count(*) from public.items where template in ('learn','text','brief','choose','match','build','fill','write','compose','speak','fade','dialog');
@@ -24,3 +24,7 @@ jobs:
           select 'activity_progress', count(*) from public.activity_progress;
           select 'vocab', count(*) from public.vocab;
           SQL
+          python3 - <<'PY'
+          t = open('out.txt').read().strip().replace('%','%25').replace('\r','').replace('\n','%0A')
+          print('::notice title=counts::' + t)
+          PY
