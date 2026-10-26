@@ -19,6 +19,7 @@ export function Types() {
   const [selKey, setSelKey] = useState<string | null>(null);
   const [cat, setCat] = useState('전체');
   const [msg, setMsg] = useState<{ t: 'ok' | 'err'; s: string } | null>(null);
+  useEffect(() => { if (msg?.t !== 'ok') return; const id = setTimeout(() => setMsg(null), 1200); return () => clearTimeout(id); }, [msg]);
 
   async function load() {
     const r = await supabase.from('activity_types').select('key,name_ko,name_en,version,description,category,sort,active');
@@ -39,7 +40,8 @@ export function Types() {
   return (
     <>
       <PageHead title="활동 템플릿" sub="문항이 쓰는 활동 화면의 종류예요. 이름·설명·영역·사용 여부를 여기서 관리하고, 새 템플릿이 필요하면 Claude에게 요청해 주세요." />
-      {msg && <p className={msg.t === 'ok' ? 'mx-ok' : 'mx-err'}>{msg.s}</p>}
+      {msg?.t === 'err' && <p className="mx-err">{msg.s}</p>}
+      {msg?.t === 'ok' && <div className="mx-toast" role="status">{msg.s}</div>}
       <div className="mx-seg mx-seg-n">
         {['전체', ...CATEGORIES].map((c) => <button key={c} className={cat === c ? 'on' : ''} onClick={() => setCat(c)}>{c === '전체' ? 'All' : catLabel(c)} ({c === '전체' ? visible.length : visible.filter((x) => x.category === c).length})</button>)}
       </div>
