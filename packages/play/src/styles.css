@@ -643,3 +643,6 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 [data-skin=mango] .nv-ptools .nv-listen, [data-skin=mango] .nv-ptools .nv-hintbtn { box-sizing:border-box; width:7.6em; height:2.5em; padding:0 .8em; font-size:.92em; display:inline-flex; align-items:center; justify-content:center; gap:.4em; border-radius:999px; }
 [data-skin=mango] .nv-dlg + .nv-capsule { color:#000 !important; }
 [data-skin=mango] .nv-body:has(> .nv-split:not(.nv-goal):not(.nv-split-w)) { width:calc((100% - 4.4em) * .9); max-width:68.4em; }
+/* 해석 보기: 한글 글자 작게, 줄 간격 촘촘하게 */
+.nv-passage .nv-hintbox { font-size:.88em; padding:.45em .8em; }
+.nv-passage .nv-hintbox p { margin:0; line-height:1.45; font-size:1em; }
