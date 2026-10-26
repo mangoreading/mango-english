@@ -637,5 +637,3 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 [data-skin=mango] .nv-body > .nv-dlg { margin-bottom:1.3em; }
 [data-skin=mango] .nv-body > .nv-dlg + .nv-capsule, [data-skin=mango] .nv-wbody > .nv-dlg + .nv-capsule { width:68% !important; max-width:none !important; margin-bottom:1.3em; }
 [data-skin=mango] .nv-body > .nv-capsule + .nv-tfrow { margin-top:.4em; }
-[data-skin=mango] .nv-body > .nv-sptop + .nv-dlgbig { margin-top:1.2em; }
-[data-skin=mango] .nv-body > .nv-dlgbig + .nv-rolebar { margin-top:1.2em; }
