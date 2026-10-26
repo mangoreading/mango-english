@@ -100,3 +100,6 @@ h3 + .mx-sec { border-top:0; padding-top:6px; }
 .mx-brand img { height:40px; width:auto; background:#fff; border-radius:10px; padding:6px 12px; display:block; }
 .mx-menu button { font-weight:400; }
 .mx-seg-n button { font-weight:400; }
+.mx-sec-t { font-weight:400; }
+.mx-chip-k { font-weight:400; }
+.mx-chip-k.approved { background:#FFE6CC; color:#C25A00; }
