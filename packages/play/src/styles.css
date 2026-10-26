@@ -646,3 +646,5 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 /* 해석 보기: 한글 글자 작게, 줄 간격 촘촘하게 */
 .nv-passage .nv-hintbox { font-size:.88em; padding:.45em .8em; }
 .nv-passage .nv-hintbox p { margin:0; line-height:1.45; font-size:1em; }
+/* 읽기 문항(3/4/5): 본문·문항 시작 위치를 상단 기준으로 통일 */
+[data-skin=mango] .nv-body:has(> .nv-split:not(.nv-goal):not(.nv-split-w)) { justify-content:flex-start; padding-top:2.6em; }
