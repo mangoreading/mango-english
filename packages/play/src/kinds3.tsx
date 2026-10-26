@@ -154,8 +154,15 @@ export function SDrill({ item, onDone }: KindProps) {
   const full = (w: string) => `${a}${w}${b ?? ''}`;
   return (
     <div className="nv-body">
-      <div className="nv-capsule nv-capsule-n">{a}<span className="nv-slotw">{cur == null ? ' ' : words[cur]}</span>{b}</div>
-      <button type="button" className="nv-listen nv-listen-s" disabled={cur == null} onClick={() => cur != null && say(full(words[cur]))}><i className="nv-sico" aria-hidden="true" /> <b>다시 듣기</b></button>
+      <div className="nv-capsule nv-capsule-n nv-sdcap">
+        <span className="nv-sdtxt">{a}<span className="nv-wheel" aria-live="polite">
+          <span className="nv-wheel-sz">{words.reduce((m, w) => (w.length > m.length ? w : m), '')}</span>
+          <span className="nv-wheel-in" style={{ transform: `translateY(${cur == null ? 0 : -(cur + 1) * 1.4}em)` }}>
+            <i />{words.map((w, i) => <i key={i} className={cur === i ? 'on' : ''}>{w}</i>)}
+          </span>
+        </span>{b}</span>
+        <button type="button" className="nv-spkin" disabled={cur == null} onClick={() => cur != null && say(full(words[cur]))} aria-label="다시 듣기" title="다시 듣기"><i /></button>
+      </div>
       <div className="nv-chips">
         {words.map((w, i) => <button key={i} className={'nv-chipb' + (cur === i ? ' nv-sel' : '') + (tried.has(i) ? ' nv-heard2' : '')} onClick={() => { setCur(i); setTried(new Set(tried).add(i)); say(full(w)); }}>{w}</button>)}
       </div>

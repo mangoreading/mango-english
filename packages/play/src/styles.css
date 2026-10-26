@@ -591,3 +591,13 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 [data-skin=mango] .nv-tap-lcardt { justify-content:center; align-items:center; }
 [data-skin=mango] .nv-ltab td:last-child { text-align:left; font-size:1.4em; padding-left:1.4em; }
 [data-skin=mango] .nv-foot .nv-btn { background:#44546A; border-color:#44546A; box-shadow:none; }
+/* 문장 바꿔 말하기: 슬롯 안에서 단어가 굴러서 바뀐다 + 다시 듣기는 박스 오른쪽 끝 */
+.nv-sdcap { position:relative; }
+.nv-sdtxt { display:inline-flex; align-items:center; gap:.3em; white-space:pre; }
+.nv-wheel { position:relative; display:inline-block; height:1.4em; overflow:hidden; margin:0 .1em; border-bottom:.08em solid #B3261E; vertical-align:middle; }
+.nv-wheel-sz { display:block; visibility:hidden; height:0; padding:0 .5em; }
+.nv-wheel-in { position:absolute; left:0; right:0; top:0; display:flex; flex-direction:column; transition:transform .45s cubic-bezier(.3,1.2,.5,1); }
+.nv-wheel-in i { display:block; height:1.4em; line-height:1.4em; text-align:center; font-style:normal; color:#B3261E; font-weight:700; white-space:nowrap; }
+:is([data-skin=mangobg],[data-skin=mango]) .nv-sdcap .nv-spkin { position:absolute; right:.6em; top:50%; transform:translateY(-50%); width:3.55em; height:3.55em; border:0; border-radius:50%; background:#e3edff; cursor:pointer; padding:0; display:grid; place-items:center; font-size:.42em; }
+:is([data-skin=mangobg],[data-skin=mango]) .nv-sdcap .nv-spkin i { width:1.75em; height:1.75em; background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233979f3' stroke='%233979f3' stroke-width='2' stroke-linecap='round'><path d='M4 9v6h4l5 4V5L8 9H4z'/><path d='M16 8c2 2 2 6 0 8M19 5c4 4 4 10 0 14' fill='none'/></svg>") center/contain no-repeat; }
+.nv-sdcap .nv-spkin:disabled { opacity:.4; cursor:default; }
