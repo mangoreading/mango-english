@@ -610,3 +610,4 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-sditem:hover { border-color:#3979f3; color:#3979f3; }
 .nv-sditem.nv-sel { color:#B3261E; border-color:#e3ebfb; background:#e3ebfb; font-weight:700; transform:scale(1.04); }
 .nv-capsule.nv-sdcap .nv-sdtxt { color:#000 !important; } .nv-sdcap .nv-wheel-in i { color:#B3261E; }
+.nv-hintbtn { display:inline-flex; align-items:center; gap:.4em; line-height:1.2; } .nv-hintbtn .nv-bulb { display:inline-block; flex:none; vertical-align:middle; }
