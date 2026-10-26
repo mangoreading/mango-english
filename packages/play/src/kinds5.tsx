@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { aiHandlers, imgSrc, say, sayThen, type KindProps } from './common';
+import { aiHandlers, imgSrc, say, sayAuto, sayThen, type KindProps } from './common';
 import { Hint } from './hint';
 import { Fb } from './fb';
 
@@ -103,7 +103,7 @@ export function RAloud({ item, onDone }: KindProps) {
   });
   const bads = g?.filter((x) => !x.ok).map((x) => x.w.replace(/[^\w']/g, '')) ?? []; const stars = g ? Math.round(pct(g) * 5) : 0;
   const startMic = () => { t0.current = Date.now(); mic.start(); };
-  useEffect(() => { const id = setTimeout(() => say(target), 500); return () => clearTimeout(id); /* 열릴 때 한 번 들려줌 */ // eslint-disable-next-line
+  useEffect(() => { const id = setTimeout(() => sayAuto(target), 500); return () => clearTimeout(id); /* 열릴 때 한 번 들려줌 */ // eslint-disable-next-line
   }, []);
   return (
     <div className="nv-body nv-wbody nv-wtop nv-ra-body">
@@ -209,7 +209,7 @@ export function AiTalk({ item, onDone }: KindProps) {
   const [msgs, setMsgs] = useState<{ who: 'ai' | 'me'; text: string }[]>(item.open ? [{ who: 'ai', text: item.open }] : []); const [v, setV] = useState(''); const [busy, setBusy] = useState(false); const [n, setN] = useState(0); const [fin, setFin] = useState(false);
   const end = useRef<HTMLDivElement>(null); const fired = useRef(false);
   useEffect(() => { end.current?.scrollIntoView({ block: 'end' }); }, [msgs]);
-  useEffect(() => { if (msgs.length === 1 && item.open) say(item.open); /* eslint-disable-next-line */ }, []);
+  useEffect(() => { if (msgs.length === 1 && item.open) sayAuto(item.open); /* eslint-disable-next-line */ }, []);
   const mic = useMic((t) => setV(t.split(' | ')[0]));
   async function send() {
     const text = v.trim(); if (!text || busy || fin) return; setV(''); const h = [...msgs, { who: 'me' as const, text }]; setMsgs(h); setBusy(true);

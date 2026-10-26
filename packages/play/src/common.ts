@@ -82,3 +82,8 @@ export interface AiHandlers {
 }
 export const aiHandlers: AiHandlers = {};
 export const registerAi = (h: AiHandlers) => Object.assign(aiHandlers, h);
+
+/** 화면이 열릴 때 저절로 나는 소리(자동 재생). 관리자의 미리보기 같은 곳에서는 끈다. */
+let quiet = false;
+export function setQuiet(b: boolean) { quiet = b; }
+export function sayAuto(text: string) { if (!quiet) say(text); }

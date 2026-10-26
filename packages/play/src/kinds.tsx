@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { imgSrc, norm, say, sayThen, shuffle, type KindProps, type Res } from './common';
+import { imgSrc, norm, say, sayAuto, sayThen, shuffle, type KindProps, type Res } from './common';
 
 const T = 'vocab';
 const Pic = ({ src, cls }: { src: string | null; cls?: string }) => (src ? <img className={cls ?? 'nv-img'} src={imgSrc(src)} alt="" draggable={false} /> : <div className={cls ?? 'nv-img'} />);
@@ -38,7 +38,7 @@ export function VType1({ words, onDone }: KindProps) {
   const [wrong, setWrong] = useState<Record<string, boolean>>({});
   const [shake, setShake] = useState(false);
   const w = words[i];
-  useEffect(() => { say(w.en); /* 카드가 열리면 자동으로 소리 */ }, [i]); // eslint-disable-line
+  useEffect(() => { sayAuto(w.en); /* 카드가 열리면 자동으로 소리 */ }, [i]); // eslint-disable-line
   const finish = (d: Record<string, boolean>) => { if (words.every((x) => d[x.key])) onDone(words.map((x) => ({ tag: T, ok: !wrong[x.key] }))); };
   function check() {
     if (done[w.key]) return;

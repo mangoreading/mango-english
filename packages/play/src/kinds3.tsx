@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { imgSrc, say, sayThen, type KindProps } from './common';
+import { imgSrc, say, sayAuto, sayThen, type KindProps } from './common';
 
 /* ===== 2단계 템플릿: 듣고 익히기 · 따라 말하기 · 학습목표 · 문장 바꿔 말하기 · 글 듣고 읽기 · 모범 글 =====
    강조 표기: [[파랑]]  {{빨강}}  (문항 글 안에 그대로 쓴다) */
@@ -127,7 +127,7 @@ export function Goal({ item, pic, onDone }: KindProps) {
 export function WRepeat({ words, onDone }: KindProps) {
   const [i, setI] = useState(0); const [seen, setSeen] = useState<Set<number>>(new Set([0]));
   const fired = useRef(false); const w = words[i];
-  useEffect(() => { say(w.en); /* 카드가 열리면 자동으로 소리 */ }, [i]); // eslint-disable-line
+  useEffect(() => { sayAuto(w.en); /* 카드가 열리면 자동으로 소리 */ }, [i]); // eslint-disable-line
   useEffect(() => { if (!fired.current && seen.size === words.length) { fired.current = true; onDone([]); } /* eslint-disable-next-line */ }, [seen]);
   const go = (n: number) => { if (n >= 0 && n < words.length) { setI(n); setSeen(new Set(seen).add(n)); } };
   return (

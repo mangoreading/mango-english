@@ -52,7 +52,7 @@ export function Types() {
               <tbody>
                 {shown.map((r, n) => (
                   <tr key={r.key} className={'mx-click' + (r.key === selKey ? ' mx-sel' : '')} onClick={() => setSelKey(r.key)}>
-                    <td className="mx-no">{n + 1}</td><td>{catLabel(r.category)}</td><td><b>{r.name_ko}</b></td><td>{r.name_en}</td><td>v{r.version ?? 1}</td>
+                    <td className="mx-no">{n + 1}</td><td>{catLabel(r.category)}</td><td>{r.name_ko}</td><td>{r.name_en}</td><td>v{r.version ?? 1}</td>
                     
                     <td><span className={'mx-chip ' + (r.active ? 'approved' : 'draft')}>{r.active ? '사용' : '숨김'}</span></td>
                   </tr>
@@ -105,7 +105,7 @@ function Detail({ row, use, onSaved }: { row: KindRow; use?: { items: number; un
           <div className="mx-prev">
             {isNativeKind(row.key) && (
               <button type="button" className="mx-thumb" onClick={sample} title="눌러서 크게 보기" aria-label="샘플 미리보기 화면 (눌러서 크게 보기)">
-                <div className="mx-thumb-in"><NativePlayer key={row.key} title={row.name_ko} items={[NATIVE_SAMPLES[row.key]]} vocab={SAMPLE_VOCAB} onResult={() => {}} onFinish={() => {}} /></div>
+                <div className="mx-thumb-in"><NativePlayer quiet key={row.key} title={row.name_ko} items={[NATIVE_SAMPLES[row.key]]} vocab={SAMPLE_VOCAB} onResult={() => {}} onFinish={() => {}} /></div>
               </button>
             )}
             <div className="mx-prev-side"><button type="button" className="mx-btn" onClick={sample}>▶ 샘플 미리보기</button></div>

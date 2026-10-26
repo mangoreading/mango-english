@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { imgSrc, say, shuffle, type KindProps, type Res } from './common';
+import { imgSrc, say, sayAuto, shuffle, type KindProps, type Res } from './common';
 import { Hint } from './hint';
 import { Fb } from './fb';
 
@@ -41,7 +41,7 @@ function WChoiceBody({ item, words, vocab, ko2en, onPick, toggle, onDone }: Kind
   }, [item, ko2en]); // eslint-disable-line
   const a = opts.findIndex((o) => o.c);
   const s = useSingle(a, 'vocab', onDone);
-  useEffect(() => { say(w.en); /* 단어 소리는 문제가 열리면 자동 재생 */ }, [ko2en]); // eslint-disable-line
+  useEffect(() => { sayAuto(w.en); /* 단어 소리는 문제가 열리면 자동 재생 */ }, [ko2en]); // eslint-disable-line
   return (
     <div className="nv-body">
       <div className="nv-prompt">

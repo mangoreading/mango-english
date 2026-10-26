@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FbSlot } from './fb';
-import { imgSrc, TEXT_KINDS, type Res, type VWord } from './common';
+import { imgSrc, setQuiet, TEXT_KINDS, type Res, type VWord } from './common';
 import { VCards, VMatch, VSound, VSpell, VType1, VWrite } from './kinds';
 import { AiTalk, LookSpeak, LSpeak, Present, RAloud, Role, SayKor } from './kinds5';
 import { DFill, LWrite, MFree, MWBank, SBuild, SCloze, SFill, SOrder, SScram, SWrite, SWrt } from './kinds4';
@@ -9,7 +9,7 @@ import { DChoice, LChList, LChPic, LChText, LMatch, PChoice, SqChoice, SqMulti, 
 
 export interface NativeResult { results: Res[]; total: number; scored: number }
 interface Props {
-  title: string; items: Record<string, any>[]; vocab: VWord[]; nextLabel?: string; // eslint-disable-line @typescript-eslint/no-explicit-any
+  title: string; items: Record<string, any>[]; vocab: VWord[]; nextLabel?: string; quiet?: boolean; // eslint-disable-line @typescript-eslint/no-explicit-any
   onResult: (r: NativeResult) => void;
   onFinish: (a: 'next' | 'again' | 'exit') => void;
 }
@@ -78,7 +78,8 @@ const KIND = { lookspeak: LookSpeak, saykor: SayKor, lspeak: LSpeak, raloud: RAl
   sqchoice: SqChoice, sqtf: SqTF, sqmulti: SqMulti } as const;
 
 /** 어휘 활동 6종 재생기: 문항(화면)을 차례로 보여 주고, 끝나면 결과 화면을 보여 준다. */
-export function NativePlayer({ title, items, vocab, nextLabel, onResult, onFinish }: Props) {
+export function NativePlayer({ title, items, vocab, nextLabel, quiet, onResult, onFinish }: Props) {
+  setQuiet(!!quiet); useEffect(() => () => setQuiet(false), []);
   const [i, setI] = useState(0);
   const [done, setDone] = useState(false);
   const [all, setAll] = useState<Res[]>([]);
