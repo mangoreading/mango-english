@@ -631,3 +631,7 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 [data-skin=mango] .nv-split-w .nv-chk, [data-skin=mango] .nv-split-w .nv-wta { height:100%; min-height:0; box-sizing:border-box; }
 [data-skin=mango] .nv-split-w .nv-wta { font-size:1.35em; line-height:1.5; }
 [data-skin=mango] .nv-split-w .nv-wta { color:#000; }
+/* 글 읽고 오른쪽에서 푸는 활동: 감싸는 박스를 기존대로 */
+[data-skin=mango] .nv-body:has(> .nv-split:not(.nv-goal):not(.nv-split-w)) { background:#fff; border:.15em solid var(--nv-frame); border-radius:1.3em; box-shadow:0 .2em .8em rgba(68,84,106,.08); width:calc(100% - 4.4em); max-width:76em; padding:1.4em 2.4em 1.2em; gap:1.2em; margin:1em auto 0; justify-content:center; }
+[data-skin=mango] .nv-split:not(.nv-goal):not(.nv-split-w) > :first-child { display:flex; flex-direction:column; gap:.9em; padding-right:1.4em; }
+[data-skin=mango] .nv-split:not(.nv-goal):not(.nv-split-w) .nv-qpane { gap:1em; }
