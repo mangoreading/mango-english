@@ -112,13 +112,13 @@ export function UnitVocab({ unitId }: { unitId: string }) {
       {msg && <p className={msg.t === 'ok' ? 'mx-ok' : 'mx-err'}>{msg.s}</p>}
       <div className="mx-card">
         <h3>단어 추가</h3>
-        <div className="mx-row">
+        <div className="mx-row" style={{ alignItems: 'flex-end' }}>
           <label>영어<input value={en} onChange={(e) => setEn(e.target.value)} placeholder="sunglasses" /></label>
           <label>한글 뜻<input value={ko} onChange={(e) => setKo(e.target.value)} placeholder="선글라스" /></label>
           <label>코드 (비우면 자동)<input value={key} onChange={(e) => setKey(e.target.value)} placeholder={slug(en) || 'sunglasses'} /></label>
-          <label>그림 (선택)<input ref={fileRef} type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></label>
-          <button className="mx-btn sec" disabled={busy} onClick={() => openGen('new')}>AI로 그림 만들기</button>
-          <button className="mx-btn" disabled={busy} onClick={add}>추가</button>
+          <label>그림 (선택)<input ref={fileRef} type="file" accept="image/*" style={{ height: 38, boxSizing: 'border-box' }} onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></label>
+          <button className="mx-btn sec" style={{ height: 38 }} disabled={busy} onClick={() => openGen('new')}>AI로 그림 만들기</button>
+          <button className="mx-btn" style={{ height: 38 }} disabled={busy} onClick={add}>추가</button>
         </div>
         {file && <p className="mx-muted" style={{ margin: '8px 0 0' }}>선택된 그림: {file.name}</p>}
         <div className="mx-row" style={{ marginTop: 10 }}>
