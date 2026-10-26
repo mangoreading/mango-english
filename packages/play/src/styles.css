@@ -609,3 +609,4 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-sditem { font:inherit; font-size:.62em; line-height:1.5; font-weight:400; color:#9aa3b5; background:#fff; border:.07em solid #d8dde8; border-radius:.5em; padding:.1em 1em; cursor:pointer; white-space:nowrap; transition:color .25s, border-color .25s, background .25s, transform .25s; }
 .nv-sditem:hover { border-color:#3979f3; color:#3979f3; }
 .nv-sditem.nv-sel { color:#B3261E; border-color:#e3ebfb; background:#e3ebfb; font-weight:700; transform:scale(1.04); }
+.nv-capsule.nv-sdcap .nv-sdtxt { color:#000 !important; } .nv-sdcap .nv-wheel-in i { color:#B3261E; }
