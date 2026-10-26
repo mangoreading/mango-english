@@ -1,0 +1,27 @@
+name: db-counts
+# 읽기 전용: 주요 테이블의 건수만 로그에 찍는다 (내용은 출력하지 않음)
+on: workflow_dispatch
+jobs:
+  counts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Count rows
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -At -F ' | ' <<'SQL'
+          select 'items total', count(*) from public.items;
+          select 'items by unit/status', u.no::text || ' ' || i.status::text, count(*) from public.items i join public.units u on u.id=i.unit_id group by 2 order by 2;
+          select 'items legacy-template', count(*) from public.items where template in ('learn','text','brief','choose','match','build','fill','write','compose','speak','fade','dialog');
+          select 'items by template', template, count(*) from public.items group by template order by 3 desc;
+          select 'unit_bundles', count(*) from public.unit_bundles;
+          select 'flow_templates', count(*) from public.flow_templates;
+          select 'flow_lessons tpl/unit', count(*) filter (where template_id is not null), count(*) filter (where unit_id is not null) from public.flow_lessons;
+          select 'flow_steps', count(*) from public.flow_steps;
+          select 'units', count(*) from public.units;
+          select 'progress', count(*) from public.progress;
+          select 'attempts', count(*) from public.attempts;
+          select 'activity_progress', count(*) from public.activity_progress;
+          select 'vocab', count(*) from public.vocab;
+          select 'template_samples', count(*) from public.template_samples;
+          SQL
