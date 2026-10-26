@@ -49,7 +49,7 @@ export function Types() {
         <div className="mx-grid">
           <div className="mx-card">
             <table className="mx-fixed">
-              <colgroup><col style={{ width: 40 }} /><col style={{ width: '14%' }} /><col style={{ width: '30%' }} /><col /><col style={{ width: 56 }} /><col style={{ width: 64 }} /></colgroup>
+              <colgroup><col style={{ width: 40 }} /><col style={{ width: '14%' }} /><col style={{ width: '26%' }} /><col /><col style={{ width: 96 }} /><col style={{ width: 56 }} /><col style={{ width: 64 }} /></colgroup>
               <thead><tr><th className="mx-no">No</th><th>영역</th><th>한글 이름</th><th>영어 이름</th><th>중요도</th><th>버전</th><th>상태</th></tr></thead>
               <tbody>
                 {shown.map((r, n) => (
