@@ -105,10 +105,10 @@ export function Items({ unitId, uid }: { unitId: string; uid: string }) {
       </div>
       <div className="mx-card">
         <div className="mx-row">
-          <label>레벨<select value={level} onChange={(e) => setLevel(e.target.value)}><option value="all">전체</option>{LEVELS.map((l) => <option key={l}>{l}</option>)}</select></label>
-          <label>활동<select value={stepF} onChange={(e) => setStepF(e.target.value)}><option value="all">전체</option><option value="none">(연결 안 됨)</option>{steps.map((s) => <option key={s.id} value={s.id}>{s.lessonNo}차시 · {s.name}</option>)}</select></label>
-          <label>상태<select value={status} onChange={(e) => setStatus(e.target.value)}><option value="all">전체</option>{STATUSES.map((s) => <option key={s} value={s}>{STATUS_KO[s]}</option>)}<option value="stale">옛 버전 (재검토 필요)</option></select></label>
-          <label>검색<input value={q} onChange={(e) => setQ(e.target.value)} placeholder="문항 내용에서 찾기" /></label>
+          <label><select value={level} onChange={(e) => setLevel(e.target.value)} aria-label="레벨"><option value="all">레벨 전체</option>{LEVELS.map((l) => <option key={l}>{l}</option>)}</select></label>
+          <label><select value={stepF} onChange={(e) => setStepF(e.target.value)} aria-label="활동"><option value="all">활동 전체</option><option value="none">(연결 안 됨)</option>{steps.map((s) => <option key={s.id} value={s.id}>{s.lessonNo}차시 · {s.name}</option>)}</select></label>
+          <label><select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="상태"><option value="all">상태 전체</option>{STATUSES.map((s) => <option key={s} value={s}>{STATUS_KO[s]}</option>)}<option value="stale">옛 버전 (재검토 필요)</option></select></label>
+          <label><input aria-label="검색" value={q} onChange={(e) => setQ(e.target.value)} placeholder="문항 내용에서 찾기" /></label>
           <span style={{ flex: 1 }} />
           <span className="mx-muted">목록 {shown.length}개 일괄:</span>
           {(['review', 'approved', 'rejected'] as Status[]).map((s) => <button key={s} className="mx-btn sec" disabled={busy || !shown.length} onClick={() => bulk(s)}>{STATUS_KO[s]}</button>)}
