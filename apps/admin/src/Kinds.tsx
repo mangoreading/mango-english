@@ -40,7 +40,7 @@ export function Types() {
     <>
       <PageHead title="활동 템플릿" sub="문항이 쓰는 활동 화면의 종류예요. 이름·설명·영역·사용 여부를 여기서 관리하고, 새 템플릿이 필요하면 Claude에게 요청해 주세요." />
       {msg && <p className={msg.t === 'ok' ? 'mx-ok' : 'mx-err'}>{msg.s}</p>}
-      <div className="mx-seg">
+      <div className="mx-seg mx-seg-n">
         {['전체', ...CATEGORIES].map((c) => <button key={c} className={cat === c ? 'on' : ''} onClick={() => setCat(c)}>{c === '전체' ? 'All' : catLabel(c)} ({c === '전체' ? visible.length : visible.filter((x) => x.category === c).length})</button>)}
       </div>
       {!rows ? <p className="mx-muted">불러오는 중…</p> : (

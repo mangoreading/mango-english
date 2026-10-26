@@ -33,7 +33,7 @@ function Shell({ children, session, tab, setTab }: { children: React.ReactNode; 
   return (
     <div className="mx-app">
       <header className="mx-top">
-        <b className="mx-brand"><i />Mango English Admin</b>
+        <b className="mx-brand"><img src="/img/logo.png" alt="Mango English" /></b>
         {session && setTab && <nav className="mx-menu">{TABS.map(([k, n]) => <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{n}</button>)}</nav>}
         <span style={{ flex: 1 }} />
         {session && <span className="mx-who"><span>{session.user.email}</span><button className="mx-out" onClick={() => supabase.auth.signOut()}>로그아웃</button></span>}

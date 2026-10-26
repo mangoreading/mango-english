@@ -97,3 +97,6 @@ h3 + .mx-sec { border-top:0; padding-top:6px; }
 .mx-seg { gap:6px; padding:5px; }
 .mx-seg button { padding:8px 22px; }
 .mx-fixed { table-layout:fixed; width:100%; } .mx-fixed td, .mx-fixed th { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mx-brand img { height:40px; width:auto; background:#fff; border-radius:10px; padding:6px 12px; display:block; }
+.mx-menu button { font-weight:400; }
+.mx-seg-n button { font-weight:400; }
