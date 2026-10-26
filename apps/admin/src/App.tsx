@@ -5,14 +5,15 @@ import { Templates, UnitFlow } from './Flow';
 import { Types } from './Kinds';
 import { Items } from './Items';
 import { UnitVocab } from './Vocab';
+import { Books } from './Books';
 import { PageHead } from './ui';
 
-export type Tab = 'units' | 'tpl' | 'types';
-const TABS: [Tab, string][] = [['units', '단원·콘텐츠'], ['tpl', '흐름 템플릿'], ['types', '활동 템플릿']];
+export type Tab = 'books' | 'units' | 'tpl' | 'types';
+const TABS: [Tab, string][] = [['books', '교재 관리'], ['units', '단원·콘텐츠'], ['tpl', '흐름 템플릿'], ['types', '활동 템플릿']];
 type Status = 'draft' | 'review' | 'approved' | 'rejected';
 const STATUS_KO: Record<Status, string> = { draft: '초안', review: '검수중', approved: '승인', rejected: '반려' };
 
-interface UnitRow { id: string; no: number; title: string; status: string; version: number; books: { title: string; grade: number; publishers: { name: string } | null } | null }
+interface UnitRow { id: string; no: number; kind?: string; title: string; status: string; version: number; books: { title: string; grade: number; publishers: { name: string } | null } | null }
 
 export function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -78,6 +79,7 @@ function Gate({ session, tab }: { session: Session; tab: Tab }) {
 function Main({ uid, tab }: { uid: string; tab: Tab }) {
   return (
     <>
+      {tab === 'books' && <Books />}
       {tab === 'units' && <Units uid={uid} />}
       {tab === 'tpl' && <Templates />}
       {tab === 'types' && <Types />}
@@ -90,7 +92,7 @@ function Units({ uid }: { uid: string }) {
   const [err, setErr] = useState('');
   const [open, setOpen] = useState<UnitRow | null>(null);
   useEffect(() => {
-    supabase.from('units').select('id,no,title,status,version,books(title,grade,publishers(name))').order('no').then(({ data, error }) => {
+    supabase.from('units').select('id,no,title,status,version,kind,seq,books(title,grade,publishers(name))').order('seq').then(({ data, error }) => {
       if (error) setErr(error.message); else setUnits((data ?? []) as unknown as UnitRow[]);
     });
   }, []);
@@ -106,7 +108,7 @@ function Units({ uid }: { uid: string }) {
           <tbody>
             {units.map((u) => (
               <tr key={u.id} className="mx-click" onClick={() => setOpen(u)}>
-                <td>{u.books?.publishers?.name}</td><td>{u.books?.title}</td><td>{u.books?.grade}</td><td>{u.no}</td><td>{u.title}</td>
+                <td>{u.books?.publishers?.name}</td><td>{u.books?.title}</td><td>{u.books?.grade}</td><td>{u.kind === 'review' ? 'Review' : u.no}</td><td>{u.title}</td>
                 <td><span className={`mx-chip ${u.status}`}>{STATUS_KO[u.status as Status] ?? u.status}</span></td>
               </tr>
             ))}
