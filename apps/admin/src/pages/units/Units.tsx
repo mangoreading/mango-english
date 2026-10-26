@@ -11,7 +11,7 @@ interface UnitRow { id: string; no: number; kind?: string; title: string; status
 
 export function Units({ uid }: { uid: string }) {
   const [units, setUnits] = useState<UnitRow[] | null>(null);
-  const [dots, setDots] = useState<Record<string, { no: number; n: number }[]>>({});
+  const [dots, setDots] = useState<Record<string, { no: number; n: number; track: string }[]>>({});
   const [err, setErr] = useState('');
   const [open, setOpen] = useState<UnitRow | null>(null);
   const [q, setQ] = useState({ pub: '', grade: '', book: '', status: '', text: '' });
@@ -20,12 +20,12 @@ export function Units({ uid }: { uid: string }) {
       const u = await supabase.from('units').select('id,no,title,status,version,kind,seq,books(title,grade,publishers(name))').order('seq');
       if (u.error) { setErr(u.error.message); return; }
       setUnits((u.data ?? []) as unknown as UnitRow[]);
-      const fl = await supabase.from('flow_lessons').select('unit_id,no').not('unit_id', 'is', null).order('no');
+      const fl = await supabase.from('flow_lessons').select('unit_id,no,track').not('unit_id', 'is', null).order('no');
       const it = await supabase.from('items').select('unit_id,lesson').limit(20000);
       const cnt: Record<string, number> = {};
       (it.data ?? []).forEach((x: { unit_id: string; lesson: number }) => { const k = x.unit_id + ':' + x.lesson; cnt[k] = (cnt[k] ?? 0) + 1; });
-      const d: Record<string, { no: number; n: number }[]> = {};
-      (fl.data ?? []).forEach((x: { unit_id: string; no: number }) => { (d[x.unit_id] ??= []).push({ no: x.no, n: cnt[x.unit_id + ':' + x.no] ?? 0 }); });
+      const d: Record<string, { no: number; n: number; track: string }[]> = {};
+      (fl.data ?? []).forEach((x: { unit_id: string; no: number; track: string }) => { (d[x.unit_id] ??= []).push({ no: x.no, track: x.track, n: cnt[x.unit_id + ':' + x.no] ?? 0 }); });
       setDots(d);
     })();
   }, []);
@@ -59,7 +59,10 @@ export function Units({ uid }: { uid: string }) {
               <tr key={u.id} className="mx-click" onClick={() => setOpen(u)}>
                 <td>{u.books?.publishers?.name}</td><td>{u.books?.title}</td><td>{u.books?.grade}</td><td>{u.kind === 'review' ? 'Review' : u.no}</td><td>{u.title}</td>
                 <td>{dots[u.id]?.length
-                  ? <span style={{ letterSpacing: 3, color: 'var(--navy)' }}>{dots[u.id].map((d) => <span key={d.no} title={`${d.no}차시 · 문항 ${d.n}개`}>{d.n > 0 ? '●' : '○'}</span>)}</span>
+                  ? <span style={{ letterSpacing: 3, color: 'var(--navy)' }}>
+                      {dots[u.id].filter((d) => d.track === 'core').map((d) => <span key={d.no} title={`${d.no}차시 · 문항 ${d.n}개`}>{d.n > 0 ? '●' : '○'}</span>)}
+                      {dots[u.id].filter((d) => d.track !== 'core').map((d) => <span key={d.no} className="mx-muted" style={{ marginLeft: 8, letterSpacing: 0 }} title={`${d.track === 'support' ? '보충' : '확장'} · 문항 ${d.n}개`}>{d.track === 'support' ? '보' : '확'}<span style={{ color: 'var(--navy)', letterSpacing: 0 }}> {d.n > 0 ? '●' : '○'}</span></span>)}
+                    </span>
                   : <span className="mx-muted">흐름 없음</span>}</td>
                 <td><span className={`mx-chip ${u.status}`}>{STATUS_KO[u.status as Status] ?? u.status}</span></td>
               </tr>

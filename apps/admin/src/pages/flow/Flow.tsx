@@ -3,7 +3,7 @@ import { supabase } from '../../shared/supabase';
 import { PageHead } from '../../shared/ui';
 
 interface Step { id: string; lesson_id: string; pos: number; name_en: string; name_ko: string; minutes: number | null; special: string | null; src_id: string | null; kind: string | null; qty: number | null }
-interface Lesson { id: string; no: number; en: string; ko: string; goal: string; color: string; src_id: string | null; flow_steps: Step[] }
+interface Lesson { id: string; no: number; track?: string; en: string; ko: string; goal: string; color: string; src_id: string | null; flow_steps: Step[] }
 export type Owner = { kind: 'template'; id: string } | { kind: 'unit'; id: string };
 
 const SPECIAL_KO: Record<string, string> = { diagnostic: '체크', adaptive: '맞춤' };
@@ -70,10 +70,11 @@ export function FlowEditor({ owner }: { owner: Owner }) {
       {ls.map((l) => (
         <div className="mx-box" key={l.id}>
           <div className="mx-row mx-head">
-            <b>{l.no}차시</b>
+            <b>{l.track === 'support' ? '보충' : l.track === 'challenge' ? '확장' : `${l.no}차시`}</b>
             <Txt value={l.en} w={200} onSave={(v) => updLesson(l.id, { en: v })} />
             <Txt value={l.ko} w={200} onSave={(v) => updLesson(l.id, { ko: v })} />
             <span style={{ flex: 1 }} />
+            {l.track && l.track !== 'core' && <span className="mx-muted">활동 모음 · 권장 최대 {l.track === 'support' ? 5 : 3}개{l.flow_steps.length > (l.track === 'support' ? 5 : 3) ? ' (초과)' : ''}</span>}
             {owner.kind === 'unit' && !l.src_id && <span className="mx-tag">추가됨</span>}
             <button className="mx-btn sec" onClick={() => delLesson(l)}>차시 삭제</button>
           </div>
@@ -138,7 +139,7 @@ export function Templates() {
     if (n.error) { setErr(n.error.message); return; }
     const src = await supabase.from('flow_lessons').select('*, flow_steps(*)').eq('template_id', cur.id).order('no');
     for (const l of (src.data ?? []) as unknown as Lesson[]) {
-      const nl = await supabase.from('flow_lessons').insert({ template_id: n.data.id, no: l.no, en: l.en, ko: l.ko, goal: l.goal, color: l.color }).select('id').single();
+      const nl = await supabase.from('flow_lessons').insert({ template_id: n.data.id, no: l.no, en: l.en, ko: l.ko, goal: l.goal, color: l.color, track: l.track ?? 'core' }).select('id').single();
       if (nl.error) { setErr(nl.error.message); return; }
       const steps = l.flow_steps.map((s) => ({ lesson_id: nl.data.id, pos: s.pos, name_en: s.name_en, name_ko: s.name_ko, minutes: s.minutes, special: s.special, kind: s.kind, qty: s.qty }));
       if (steps.length) await supabase.from('flow_steps').insert(steps);
