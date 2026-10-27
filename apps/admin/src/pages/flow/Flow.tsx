@@ -57,6 +57,15 @@ export function FlowEditor({ owner }: { owner: Owner }) {
     if (err) setMsg({ t: 'err', s: err.message }); else setMsg(null);
     await load();
   }
+  /** 활동 템플릿을 바꾸면, 이름을 직접 고치지 않은 경우(이전 템플릿 이름 그대로/새 활동) 활동 이름도 새 템플릿 이름으로 바꾼다 */
+  function changeKind(s: Step, key: string) {
+    const nk = kinds.find((k) => k.key === key); const ok = kinds.find((k) => k.key === s.kind);
+    const same = (a: string, b?: string) => !!b && a.trim() === b.trim();
+    const untouched = (s.name_en === 'New Activity' && s.name_ko === '새 활동') || (!!ok && same(s.name_ko, ok.name_ko) && (same(s.name_en, ok.name_en) || same(s.name_en, ok.name_ko)));
+    const patch: Partial<Step> = { kind: key || null };
+    if (nk && untouched) { patch.name_ko = nk.name_ko; patch.name_en = nk.name_en || nk.name_ko; }
+    void updStep(s.id, patch);
+  }
   async function sample(key: string, title: string) {
     const err = await openPreview(() => ({ kind: 'native', items: [NATIVE_SAMPLES[key]], vocab: SAMPLE_VOCAB, title }));
     if (err) setMsg({ t: 'err', s: err });
@@ -113,7 +122,7 @@ export function FlowEditor({ owner }: { owner: Owner }) {
                   <td>{s.kind && isNativeKind(s.kind) && <button type="button" style={{ padding: 0, border: 0, background: 'none', cursor: 'pointer' }} title="눌러서 샘플 보기" onClick={() => void sample(s.kind!, s.name_ko || s.name_en)}><img className="mx-lthumb" src={`/thumbs/${s.kind}.jpg`} alt="샘플 미리보기" loading="lazy" /></button>}</td>
                   <td><Txt value={s.name_en} onSave={(v) => updStep(s.id, { name_en: v })} /></td>
                   <td><Txt value={s.name_ko} onSave={(v) => updStep(s.id, { name_ko: v })} /></td>
-                  <td><select className="mx-cell" value={s.kind ?? ''} onChange={(e) => updStep(s.id, { kind: e.target.value || null })}><option value="">(지정 안 함)</option>{kinds.map((k) => <option key={k.key} value={k.key}>{k.name_ko}</option>)}</select></td>
+                  <td><select className="mx-cell" value={s.kind ?? ''} onChange={(e) => changeKind(s, e.target.value)}><option value="">(지정 안 함)</option>{kinds.map((k) => <option key={k.key} value={k.key}>{k.name_ko}</option>)}</select></td>
                   <td><Txt value={s.qty == null ? '' : String(s.qty)} w={44} onSave={(v) => updStep(s.id, { qty: v === '' ? null : Math.max(0, parseInt(v, 10) || 0) })} /></td>
                   <td><Txt value={s.minutes == null ? '' : String(s.minutes)} w={44} onSave={(v) => updStep(s.id, { minutes: v === '' ? null : Math.max(0, parseInt(v, 10) || 0) })} /></td>
                   <td style={{ textAlign: 'center' }}><input type="checkbox" checked={s.study !== false} title="수업(학습)에서 하는 활동" onChange={(e) => updStep(s.id, { study: e.target.checked })} /></td>
