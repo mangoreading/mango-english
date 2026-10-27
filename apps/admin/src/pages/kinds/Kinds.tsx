@@ -49,12 +49,12 @@ export function Types() {
         <div className="mx-grid">
           <div className="mx-card">
             <table className="mx-fixed">
-              <colgroup><col style={{ width: 40 }} /><col style={{ width: '14%' }} /><col style={{ width: '26%' }} /><col /><col style={{ width: 96 }} /><col style={{ width: 56 }} /><col style={{ width: 64 }} /></colgroup>
-              <thead><tr><th className="mx-no">No</th><th>영역</th><th>한글 이름</th><th>영어 이름</th><th>중요도</th><th>버전</th><th>상태</th></tr></thead>
+              <colgroup><col style={{ width: 40 }} /><col style={{ width: '12%' }} /><col style={{ width: 84 }} /><col style={{ width: '24%' }} /><col /><col style={{ width: 96 }} /><col style={{ width: 56 }} /><col style={{ width: 64 }} /></colgroup>
+              <thead><tr><th className="mx-no">No</th><th>영역</th><th>미리보기</th><th>한글 이름</th><th>영어 이름</th><th>중요도</th><th>버전</th><th>상태</th></tr></thead>
               <tbody>
                 {shown.map((r, n) => (
                   <tr key={r.key} className={'mx-click' + (r.key === selKey ? ' mx-sel' : '')} onClick={() => setSelKey(r.key)}>
-                    <td className="mx-no">{n + 1}</td><td>{catLabel(r.category)}</td><td>{r.name_ko}</td><td>{r.name_en}</td><td>{r.importance ?? ''}</td><td>v{r.version ?? 1}</td>
+                    <td className="mx-no">{n + 1}</td><td>{catLabel(r.category)}</td><td>{isNativeKind(r.key) && <img className="mx-lthumb" src={`/thumbs/${r.key}.jpg`} alt="" loading="lazy" />}</td><td>{r.name_ko}</td><td>{r.name_en}</td><td>{r.importance ?? ''}</td><td>v{r.version ?? 1}</td>
                     
                     <td><span className={'mx-chip mx-chip-k ' + (r.active ? 'approved' : 'draft')}>{r.active ? '사용' : '숨김'}</span></td>
                   </tr>
