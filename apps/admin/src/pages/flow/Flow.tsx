@@ -98,14 +98,15 @@ export function FlowEditor({ owner }: { owner: Owner }) {
             {owner.kind === 'unit' && !l.src_id && <span className="mx-tag">추가됨</span>}
             <button className="mx-btn sec" onClick={() => delLesson(l)}>차시 삭제</button>
           </div>
-          <table>
-            <thead><tr><th style={{ width: 28 }} /><th style={{ width: 36 }}>#</th><th style={{ width: 108 }}>미리보기</th><th>활동 (영문)</th><th>활동 (한글)</th><th style={{ width: 200 }}>활동 템플릿</th><th style={{ width: 60 }}>문항 수</th><th style={{ width: 60 }}>분</th><th style={{ width: 52 }}>숙제</th><th style={{ width: 90 }}>구분</th>{owner.kind === 'unit' && <th style={{ width: 60 }}>문항</th>}<th style={{ width: 150 }} /></tr></thead>
+          <table className="mx-fixed" style={{ minWidth: 900 }}>
+            <colgroup><col style={{ width: 26 }} /><col style={{ width: 30 }} /><col style={{ width: 108 }} /><col /><col /><col style={{ width: 170 }} /><col style={{ width: 56 }} /><col style={{ width: 48 }} /><col style={{ width: 48 }} /><col style={{ width: 64 }} />{owner.kind === 'unit' && <col style={{ width: 52 }} />}<col style={{ width: 70 }} /></colgroup>
+            <thead><tr><th /><th>#</th><th>미리보기</th><th>활동 (영문)</th><th>활동 (한글)</th><th>활동 템플릿</th><th>문항 수</th><th>분</th><th>숙제</th><th>구분</th>{owner.kind === 'unit' && <th>문항</th>}<th /></tr></thead>
             <tbody>
               {l.flow_steps.map((s, i) => (
                 <tr key={s.id} style={{ opacity: drag?.lesson === l.id && drag.from === i ? 0.4 : 1, boxShadow: over?.lesson === l.id && over.at === i ? 'inset 0 3px 0 var(--navy)' : over?.lesson === l.id && over.at === l.flow_steps.length && i === l.flow_steps.length - 1 ? 'inset 0 -3px 0 var(--navy)' : undefined }}
                   onDragOver={(e) => { if (drag?.lesson !== l.id) return; e.preventDefault(); const r = e.currentTarget.getBoundingClientRect(); const at = e.clientY < r.top + r.height / 2 ? i : i + 1; if (over?.at !== at || over.lesson !== l.id) setOver({ lesson: l.id, at }); }}
                   onDrop={(e) => { if (drag?.lesson !== l.id) return; e.preventDefault(); void reorder(l, drag.from, over?.lesson === l.id ? over.at : i); }}>
-                  <td className="mx-muted" draggable title="끌어서 순서 바꾸기" style={{ cursor: 'grab', userSelect: 'none', textAlign: 'center', fontSize: 18 }}
+                  <td className="mx-muted" draggable title="끌어서 순서 바꾸기" style={{ cursor: 'grab', userSelect: 'none', textAlign: 'center', fontSize: 16, padding: '0 2px' }}
                     onDragStart={(e) => { setDrag({ lesson: l.id, from: i }); e.dataTransfer.effectAllowed = 'move'; const tr = e.currentTarget.closest('tr'); if (tr) e.dataTransfer.setDragImage(tr, 20, 20); }}
                     onDragEnd={() => { setDrag(null); setOver(null); }}>⠿</td>
                   <td>{i + 1}</td>
