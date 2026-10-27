@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCardProgress } from './fb';
 import { imgSrc, norm, say, sayAuto, sayThen, shuffle, type KindProps, type Res } from './common';
 
 const T = 'vocab';
@@ -38,6 +39,7 @@ export function VType1({ words, onDone }: KindProps) {
   const [wrong, setWrong] = useState<Record<string, boolean>>({});
   const [shake, setShake] = useState(false);
   const w = words[i];
+  useCardProgress(words.length, i);
   useEffect(() => { sayAuto(w.en); /* 카드가 열리면 자동으로 소리 */ }, [i]); // eslint-disable-line
   const finish = (d: Record<string, boolean>) => { if (words.every((x) => d[x.key])) onDone(words.map((x) => ({ tag: T, ok: !wrong[x.key] }))); };
   function check() {

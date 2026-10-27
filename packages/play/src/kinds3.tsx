@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCardProgress } from './fb';
 import { imgSrc, say, sayAuto, sayThen, type KindProps } from './common';
 
 /* ===== 2단계 템플릿: 듣고 익히기 · 따라 말하기 · 학습목표 · 문장 바꿔 말하기 · 글 듣고 읽기 · 모범 글 =====
@@ -127,6 +128,7 @@ export function Goal({ item, pic, onDone }: KindProps) {
 export function WRepeat({ words, onDone }: KindProps) {
   const [i, setI] = useState(0); const [seen, setSeen] = useState<Set<number>>(new Set([0]));
   const fired = useRef(false); const w = words[i];
+  useCardProgress(words.length, i);
   useEffect(() => { sayAuto(w.en); /* 카드가 열리면 자동으로 소리 */ }, [i]); // eslint-disable-line
   useEffect(() => { if (!fired.current && seen.size === words.length) { fired.current = true; onDone([]); } /* eslint-disable-next-line */ }, [seen]);
   const go = (n: number) => { if (n >= 0 && n < words.length) { setI(n); setSeen(new Set(seen).add(n)); } };
@@ -179,6 +181,7 @@ export function PRead({ item, onDone }: KindProps) {
   const pages: string[][] = ((item.text ?? []) as string[]).reduce<string[][]>((a, l) => { if (l.trim() === '---') a.push([]); else a[a.length - 1].push(l); return a; }, [[]]).filter((g) => g.length);
   const kos: string[] = item.ko ? String(item.ko).split(/\n-{3,}\n/) : [];
   const [p, setP] = useState(0); const [seen, setSeen] = useState<Set<number>>(new Set()); const [ko, setKo] = useState(false); const fired = useRef(false);
+  useCardProgress(pages.length, p);
   useEffect(() => { if (!fired.current && seen.size === pages.length) { fired.current = true; onDone([]); } /* eslint-disable-next-line */ }, [seen]);
   const heard = () => setSeen((s) => new Set(s).add(p));
   const go = (n: number) => { if (n >= 0 && n < pages.length) { setP(n); setKo(false); } };

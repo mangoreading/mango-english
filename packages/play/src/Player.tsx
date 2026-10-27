@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { FbSlot } from './fb';
+import { FbSlot, ProgCtx, type CardProg } from './fb';
 import { imgSrc, setQuiet, TEXT_KINDS, type Res, type VWord } from './common';
 import { VCards, VMatch, VSound, VSpell, VType1, VWrite } from './kinds';
 import { AiTalk, LookSpeak, LSpeak, Present, RAloud, Role, SayKor } from './kinds5';
@@ -86,6 +86,7 @@ export function NativePlayer({ title, items, vocab, nextLabel, quiet, onResult, 
   const [fin, setFin] = useState(false);
   const [pts, setPts] = useState(0);
   const [slot, setSlot] = useState<HTMLElement | null>(null);
+  const [prog, setProg] = useState<CardProg>(null);
   const byKey = useMemo(() => new Map(vocab.map((v) => [v.key, v])), [vocab]);
   const it = items[i];
 
@@ -121,15 +122,17 @@ export function NativePlayer({ title, items, vocab, nextLabel, quiet, onResult, 
       <div className="nv-head">
         <button className="nv-x" onClick={() => onFinish('exit')} aria-label="나가기">‹</button>
         <b>{title}</b>
-        <span className="nv-dots">{items.map((_, k) => <i key={k} className={k < i ? 'd1' : k === i ? 'd2' : ''} />)}</span>
+        <span className="nv-dots">{(prog ? Array.from({ length: prog.n }) : items).map((_, k) => { const c = prog ? prog.cur : i; return <i key={k} className={k < c ? 'd1' : k === c ? 'd2' : ''} />; })}</span>
         <span className="nv-pts"><i className="nv-star">★</i> 포인트 : +{pts}</span>
       </div>
       <p className="nv-inst"><span>{hl(LCH.includes(it.k) && it.q ? it.q : it.inst || INST[it.k] || '', SPEAK_SKIN.includes(it.k) || BG_SKIN.includes(it.k))}{INST_SUB[it.k] && <small>{INST_SUB[it.k]}</small>}</span></p>
+      <ProgCtx.Provider value={setProg}>
       <FbSlot.Provider value={slot}>
       {!Comp || words.length !== keys.length
         ? <p className="nv-hint">이 문항에 쓰인 단어가 단원 어휘에 없어요. 관리자에서 단어를 확인해 주세요. ({keys.filter((k) => !byKey.has(k)).join(', ')})</p>
         : <Comp key={i} item={it} words={words} vocab={vocab} pic={(k) => (k ? byKey.get(k)?.image ?? null : null)} onDone={onDone} />}
       </FbSlot.Provider>
+      </ProgCtx.Provider>
       {it.pic && !OWN_PIC.includes(it.k) && !NO_SIDE.includes(it.k) && byKey.get(it.pic)?.image && <img className="nv-sidepic" src={imgSrc(byKey.get(it.pic)!.image)} alt="" draggable={false} />}
       <div className="nv-foot"><span className="nv-fbslot" ref={setSlot} /><button className="nv-btn nv-btn-lg" disabled={!done} onClick={next}>{last ? '결과 보기' : '다음'}</button></div>
     </div>
