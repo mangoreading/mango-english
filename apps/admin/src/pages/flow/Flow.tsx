@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../shared/supabase';
-import { PageHead } from '../../shared/ui';
+import { PageHead, openPreview } from '../../shared/ui';
 import { CATEGORIES, catLabel } from '../kinds/Kinds';
-import { isNativeKind } from '../../shared/samples';
+import { isNativeKind, NATIVE_SAMPLES, SAMPLE_VOCAB } from '../../shared/samples';
 
 interface Step { id: string; lesson_id: string; pos: number; name_en: string; name_ko: string; minutes: number | null; special: string | null; src_id: string | null; kind: string | null; qty: number | null }
 interface Lesson { id: string; no: number; track?: string; en: string; ko: string; goal: string; color: string; src_id: string | null; flow_steps: Step[] }
@@ -48,6 +48,10 @@ export function FlowEditor({ owner }: { owner: Owner }) {
     await run(supabase.from('flow_steps').update({ pos: b.pos }).eq('id', a.id));
     await run(supabase.from('flow_steps').update({ pos: a.pos }).eq('id', b.id));
   }
+  async function sample(key: string, title: string) {
+    const err = await openPreview(() => ({ kind: 'native', items: [NATIVE_SAMPLES[key]], vocab: SAMPLE_VOCAB, title }));
+    if (err) setMsg({ t: 'err', s: err });
+  }
   async function addStep(l: Lesson, k?: KindOpt) {
     const pos = l.flow_steps.length ? Math.max(...l.flow_steps.map((s) => s.pos)) + 1 : 0;
     setPick(null);
@@ -91,7 +95,7 @@ export function FlowEditor({ owner }: { owner: Owner }) {
               {l.flow_steps.map((s, i) => (
                 <tr key={s.id}>
                   <td>{i + 1}</td>
-                  <td>{s.kind && isNativeKind(s.kind) && <img className="mx-lthumb" src={`/thumbs/${s.kind}.jpg`} alt="" loading="lazy" />}</td>
+                  <td>{s.kind && isNativeKind(s.kind) && <button type="button" style={{ padding: 0, border: 0, background: 'none', cursor: 'pointer' }} title="눌러서 샘플 보기" onClick={() => void sample(s.kind!, s.name_ko || s.name_en)}><img className="mx-lthumb" src={`/thumbs/${s.kind}.jpg`} alt="샘플 미리보기" loading="lazy" /></button>}</td>
                   <td><Txt value={s.name_en} onSave={(v) => updStep(s.id, { name_en: v })} /></td>
                   <td><Txt value={s.name_ko} onSave={(v) => updStep(s.id, { name_ko: v })} /></td>
                   <td><select className="mx-cell" value={s.kind ?? ''} onChange={(e) => updStep(s.id, { kind: e.target.value || null })}><option value="">(지정 안 함)</option>{kinds.map((k) => <option key={k.key} value={k.key}>{k.name_ko}</option>)}</select></td>
