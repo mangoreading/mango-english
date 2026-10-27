@@ -1,19 +1,23 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../shared/supabase';
 import { PageHead } from '../../shared/ui';
+import { CATEGORIES, catLabel } from '../kinds/Kinds';
+import { isNativeKind } from '../../shared/samples';
 
 interface Step { id: string; lesson_id: string; pos: number; name_en: string; name_ko: string; minutes: number | null; special: string | null; src_id: string | null; kind: string | null; qty: number | null }
 interface Lesson { id: string; no: number; track?: string; en: string; ko: string; goal: string; color: string; src_id: string | null; flow_steps: Step[] }
 export type Owner = { kind: 'template'; id: string } | { kind: 'unit'; id: string };
 
+interface KindOpt { key: string; name_ko: string; name_en?: string; category?: string; importance?: string | null }
 const SPECIAL_KO: Record<string, string> = { diagnostic: '체크', adaptive: '맞춤' };
 
 /** 흐름 편집기: 템플릿/단원 공용. 차시 > 활동 목록을 표로 보여주고 바로 고친다. */
 export function FlowEditor({ owner }: { owner: Owner }) {
   const [ls, setLs] = useState<Lesson[] | null>(null);
   const [counts, setCounts] = useState<Record<string, number>>({});
-  const [kinds, setKinds] = useState<{ key: string; name_ko: string }[]>([]);
-  useEffect(() => { supabase.from('activity_types').select('key,name_ko,active,sort').eq('active', true).order('sort').then((r) => setKinds((r.data ?? []) as { key: string; name_ko: string }[])); }, []);
+  const [kinds, setKinds] = useState<KindOpt[]>([]);
+  const [pick, setPick] = useState<Lesson | null>(null);
+  useEffect(() => { supabase.from('activity_types').select('key,name_ko,name_en,category,importance,active,sort').eq('active', true).order('sort').then((r) => setKinds((r.data ?? []) as KindOpt[])); }, []);
   const [msg, setMsg] = useState<{ t: 'ok' | 'err'; s: string } | null>(null);
   const col = owner.kind === 'template' ? 'template_id' : 'unit_id';
 
@@ -44,9 +48,12 @@ export function FlowEditor({ owner }: { owner: Owner }) {
     await run(supabase.from('flow_steps').update({ pos: b.pos }).eq('id', a.id));
     await run(supabase.from('flow_steps').update({ pos: a.pos }).eq('id', b.id));
   }
-  async function addStep(l: Lesson) {
+  async function addStep(l: Lesson, k?: KindOpt) {
     const pos = l.flow_steps.length ? Math.max(...l.flow_steps.map((s) => s.pos)) + 1 : 0;
-    await run(supabase.from('flow_steps').insert({ lesson_id: l.id, pos, name_en: 'New Activity', name_ko: '새 활동', minutes: 5 }));
+    setPick(null);
+    await run(supabase.from('flow_steps').insert(k
+      ? { lesson_id: l.id, pos, name_en: k.name_en || k.name_ko, name_ko: k.name_ko, minutes: 5, kind: k.key, qty: 3 }
+      : { lesson_id: l.id, pos, name_en: 'New Activity', name_ko: '새 활동', minutes: 5 }));
   }
   async function delStep(s: Step) {
     const n = counts[s.id] ?? 0;
@@ -100,10 +107,34 @@ export function FlowEditor({ owner }: { owner: Owner }) {
               ))}
             </tbody>
           </table>
-          <button className="mx-btn sec" style={{ marginTop: 8 }} onClick={() => addStep(l)}>+ 활동 추가</button>
+          <button className="mx-btn sec" style={{ marginTop: 8 }} onClick={() => setPick(l)}>+ 활동 추가</button>
         </div>
       ))}
       <button className="mx-btn" onClick={addLesson}>+ 차시 추가</button>
+      {pick && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }} onClick={() => setPick(null)}>
+          <div className="mx-card" style={{ width: 720, maxWidth: '94vw', maxHeight: '86vh', overflow: 'auto', margin: 0 }} onClick={(e) => e.stopPropagation()}>
+            <div className="mx-row" style={{ justifyContent: 'space-between' }}>
+              <div className="mx-sec-t" style={{ margin: 0 }}>활동 템플릿 선택 · {pick.no}차시</div>
+              <button className="mx-btn sec" onClick={() => setPick(null)}>닫기</button>
+            </div>
+            {CATEGORIES.filter((c) => kinds.some((k) => k.category === c)).map((c) => (
+              <div key={c} style={{ marginTop: 12 }}>
+                <div className="mx-muted" style={{ fontWeight: 700, marginBottom: 6 }}>{catLabel(c)}</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(210px,1fr))', gap: 8 }}>
+                  {kinds.filter((k) => k.category === c).map((k) => (
+                    <button key={k.key} type="button" className="mx-btn sec" style={{ display: 'flex', gap: 10, alignItems: 'center', textAlign: 'left', padding: 6, fontWeight: 400 }} onClick={() => addStep(pick, k)}>
+                      {isNativeKind(k.key) ? <img className="mx-lthumb" style={{ flex: 'none', width: 72, height: 45 }} src={`/thumbs/${k.key}.jpg`} alt="" loading="lazy" /> : <span style={{ width: 72, height: 45, flex: 'none' }} />}
+                      <span><b>{k.name_ko}</b>{k.importance ? <span className="mx-muted"> · {k.importance}</span> : null}<br /><span className="mx-muted" style={{ fontSize: 12 }}>{k.name_en}</span></span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <div style={{ marginTop: 14 }}><button className="mx-btn sec" onClick={() => void addStep(pick)}>템플릿 없이 빈 활동 추가</button></div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
