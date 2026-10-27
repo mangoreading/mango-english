@@ -82,7 +82,7 @@ const SPEC: Record<string, Field[]> = {
   ...SPEC2,
   ...SPEC4,
   ...SPEC3,
-  wchoice: [{ k: 'word', label: '단어', t: 'vword', req: true }, { k: 'dir', label: '방향 (ko2en: 뜻→영어, en2ko: 영어→뜻)', t: 'text' }, { k: 'wrong', label: '오답 보기 (한 줄에 하나, 1~5개)', t: 'lines', req: true }, VINST],
+  wchoice: [{ k: 'word', label: '단어', t: 'vword', req: true }, { k: 'dir', label: '방향 (en2ko: 영어→뜻(기본), ko2en: 뜻→영어)', t: 'text' }, { k: 'wrong', label: '오답 보기 (한 줄에 하나, 1~5개)', t: 'lines', req: true }, VINST],
   pchoice: [{ k: 'pic', label: '그림(단원 단어)', t: 'vword', req: true }, { k: 'q', label: '질문 (비우면 기본 문구)', t: 'text' }, OPTS, HINT, VINST],
   dchoice: [{ k: 'q', label: '질문', t: 'text' }, { k: 'pic', label: '그림(단원 단어, 선택)', t: 'vword' }, { k: 'lines', label: '대화 (한 줄에 한 문장)', t: 'lines' }, OPTS, VINST],
   tf: [{ k: 'lines', label: '대화·글 (선택, 한 줄에 한 문장)', t: 'lines' }, { k: 'stmt', label: '판단할 문장', t: 'text', req: true }, { k: 'a', label: '정답이 True 예요', t: 'bool' }, HINT, VINST],
@@ -197,7 +197,7 @@ export function defaultItem(kind: string): Obj {
     case 'sdrill': return { k: 'sdrill', tag: 'speak', tpl: '{}', words: [] };
     case 'pread': return { k: 'pread', tag: 'read', text: [] };
     case 'mtext': return { k: 'mtext', tag: 'write', text: [] };
-    case 'wchoice': return { k: 'wchoice', tag: 'vocab', word: '', dir: 'ko2en', wrong: [] };
+    case 'wchoice': return { k: 'wchoice', tag: 'vocab', word: '', dir: 'en2ko', wrong: [] };
     case 'pchoice': return { k: 'pchoice', tag: 'vocab', pic: '', opts: [{ t: '' }, { t: '' }, { t: '' }, { t: '' }], a: 0 };
     case 'dchoice': return { k: 'dchoice', tag: 'read', lines: [], opts: [{ t: '' }, { t: '' }, { t: '' }, { t: '' }], a: 0 };
     case 'tf': return { k: 'tf', tag: 'read', stmt: '' };

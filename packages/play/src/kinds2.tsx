@@ -35,7 +35,7 @@ function WChoiceBody({ item, words, vocab, ko2en, onPick, toggle, onDone }: Kind
   const w = words[0];
   const opts = useMemo(() => {
     const pool = (vocab ?? []).filter((v) => v.key !== w.key).map((v) => (ko2en ? v.en : v.ko));
-    const given: string[] = item.dir === (ko2en ? 'ko2en' : 'en2ko') || (!item.dir && ko2en) ? item.wrong ?? [] : [];
+    const given: string[] = item.dir === (ko2en ? 'ko2en' : 'en2ko') || (!item.dir && !ko2en) ? item.wrong ?? [] : [];
     const wr = [...new Set([...given, ...shuffle(pool)])].filter((t) => t !== (ko2en ? w.en : w.ko)).slice(0, 3);
     return shuffle([{ t: ko2en ? w.en : w.ko, c: true }, ...wr.map((t) => ({ t, c: false }))]);
   }, [item, ko2en]); // eslint-disable-line
@@ -55,7 +55,7 @@ function WChoiceBody({ item, words, vocab, ko2en, onPick, toggle, onDone }: Kind
   );
 }
 export function WChoice(p: KindProps) {
-  const [ko2en, setK] = useState((p.item.dir ?? 'ko2en') === 'ko2en'); const [touched, setT] = useState(false);
+  const [ko2en, setK] = useState((p.item.dir ?? 'en2ko') === 'ko2en'); const [touched, setT] = useState(false);
   const toggle = (
     <button type="button" className="nv-swap" disabled={touched} onClick={() => setK(!ko2en)} aria-label="한글 뜻과 영어 단어 바꾸기" title="문제 방향 바꾸기">
       <span className={ko2en ? 'on' : ''}>가</span><i>⇄</i><span className={ko2en ? '' : 'on'}>A</span>
