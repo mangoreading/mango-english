@@ -131,7 +131,7 @@ export function NativePlayer({ title, items, vocab, nextLabel, quiet, onResult, 
         : <Comp key={i} item={it} words={words} vocab={vocab} pic={(k) => (k ? byKey.get(k)?.image ?? null : null)} onDone={onDone} />}
       </FbSlot.Provider>
       {it.pic && !OWN_PIC.includes(it.k) && !NO_SIDE.includes(it.k) && byKey.get(it.pic)?.image && <img className="nv-sidepic" src={imgSrc(byKey.get(it.pic)!.image)} alt="" draggable={false} />}
-      <div className="nv-foot"><span className="nv-fbslot" ref={setSlot} /><button className="nv-btn nv-btn-lg" disabled={!done} onClick={next}>다음</button></div>
+      <div className="nv-foot"><span className="nv-fbslot" ref={setSlot} /><button className="nv-btn nv-btn-lg" disabled={!done} onClick={next}>{last ? '결과 보기' : '다음'}</button></div>
     </div>
   );
 }
