@@ -43,10 +43,19 @@ export function FlowEditor({ owner }: { owner: Owner }) {
   }
   const updLesson = (id: string, patch: Partial<Lesson>) => run(supabase.from('flow_lessons').update(patch).eq('id', id));
   const updStep = (id: string, patch: Partial<Step>) => run(supabase.from('flow_steps').update(patch).eq('id', id));
-  async function move(l: Lesson, i: number, d: -1 | 1) {
-    const a = l.flow_steps[i], b = l.flow_steps[i + d]; if (!a || !b) return;
-    await run(supabase.from('flow_steps').update({ pos: b.pos }).eq('id', a.id));
-    await run(supabase.from('flow_steps').update({ pos: a.pos }).eq('id', b.id));
+  const [drag, setDrag] = useState<{ lesson: string; from: number } | null>(null);
+  const [over, setOver] = useState<{ lesson: string; at: number } | null>(null);
+  /** 드래그해서 from 번째 활동을 to 번째 자리(0..n)로 옮긴다 */
+  async function reorder(l: Lesson, from: number, to: number) {
+    setDrag(null); setOver(null);
+    const arr = [...l.flow_steps];
+    const [m] = arr.splice(from, 1);
+    arr.splice(to > from ? to - 1 : to, 0, m);
+    if (arr.every((x, k) => x.id === l.flow_steps[k].id)) return;
+    const res = await Promise.all(arr.map((x, k) => (x.pos === k ? Promise.resolve({ error: null }) : supabase.from('flow_steps').update({ pos: k }).eq('id', x.id))));
+    const err = res.find((r) => r.error)?.error as { message: string } | null | undefined;
+    if (err) setMsg({ t: 'err', s: err.message }); else setMsg(null);
+    await load();
   }
   async function sample(key: string, title: string) {
     const err = await openPreview(() => ({ kind: 'native', items: [NATIVE_SAMPLES[key]], vocab: SAMPLE_VOCAB, title }));
@@ -90,10 +99,15 @@ export function FlowEditor({ owner }: { owner: Owner }) {
             <button className="mx-btn sec" onClick={() => delLesson(l)}>차시 삭제</button>
           </div>
           <table>
-            <thead><tr><th style={{ width: 36 }}>#</th><th style={{ width: 108 }}>미리보기</th><th>활동 (영문)</th><th>활동 (한글)</th><th style={{ width: 200 }}>활동 템플릿</th><th style={{ width: 60 }}>문항 수</th><th style={{ width: 60 }}>분</th><th style={{ width: 90 }}>구분</th>{owner.kind === 'unit' && <th style={{ width: 60 }}>문항</th>}<th style={{ width: 150 }} /></tr></thead>
+            <thead><tr><th style={{ width: 28 }} /><th style={{ width: 36 }}>#</th><th style={{ width: 108 }}>미리보기</th><th>활동 (영문)</th><th>활동 (한글)</th><th style={{ width: 200 }}>활동 템플릿</th><th style={{ width: 60 }}>문항 수</th><th style={{ width: 60 }}>분</th><th style={{ width: 90 }}>구분</th>{owner.kind === 'unit' && <th style={{ width: 60 }}>문항</th>}<th style={{ width: 150 }} /></tr></thead>
             <tbody>
               {l.flow_steps.map((s, i) => (
-                <tr key={s.id}>
+                <tr key={s.id} style={{ opacity: drag?.lesson === l.id && drag.from === i ? 0.4 : 1, boxShadow: over?.lesson === l.id && over.at === i ? 'inset 0 3px 0 var(--navy)' : over?.lesson === l.id && over.at === l.flow_steps.length && i === l.flow_steps.length - 1 ? 'inset 0 -3px 0 var(--navy)' : undefined }}
+                  onDragOver={(e) => { if (drag?.lesson !== l.id) return; e.preventDefault(); const r = e.currentTarget.getBoundingClientRect(); const at = e.clientY < r.top + r.height / 2 ? i : i + 1; if (over?.at !== at || over.lesson !== l.id) setOver({ lesson: l.id, at }); }}
+                  onDrop={(e) => { if (drag?.lesson !== l.id) return; e.preventDefault(); void reorder(l, drag.from, over?.lesson === l.id ? over.at : i); }}>
+                  <td className="mx-muted" draggable title="끌어서 순서 바꾸기" style={{ cursor: 'grab', userSelect: 'none', textAlign: 'center', fontSize: 18 }}
+                    onDragStart={(e) => { setDrag({ lesson: l.id, from: i }); e.dataTransfer.effectAllowed = 'move'; const tr = e.currentTarget.closest('tr'); if (tr) e.dataTransfer.setDragImage(tr, 20, 20); }}
+                    onDragEnd={() => { setDrag(null); setOver(null); }}>⠿</td>
                   <td>{i + 1}</td>
                   <td>{s.kind && isNativeKind(s.kind) && <button type="button" style={{ padding: 0, border: 0, background: 'none', cursor: 'pointer' }} title="눌러서 샘플 보기" onClick={() => void sample(s.kind!, s.name_ko || s.name_en)}><img className="mx-lthumb" src={`/thumbs/${s.kind}.jpg`} alt="샘플 미리보기" loading="lazy" /></button>}</td>
                   <td><Txt value={s.name_en} onSave={(v) => updStep(s.id, { name_en: v })} /></td>
@@ -104,8 +118,6 @@ export function FlowEditor({ owner }: { owner: Owner }) {
                   <td>{s.special ? <span className="mx-tag">{SPECIAL_KO[s.special]}</span> : owner.kind === 'unit' && !s.src_id ? <span className="mx-tag">추가됨</span> : ''}</td>
                   {owner.kind === 'unit' && <td>{counts[s.id] ?? 0}</td>}
                   <td className="mx-act">
-                    <button className="mx-btn sec" disabled={i === 0} onClick={() => move(l, i, -1)}>↑</button>
-                    <button className="mx-btn sec" disabled={i === l.flow_steps.length - 1} onClick={() => move(l, i, 1)}>↓</button>
                     <button className="mx-btn sec" onClick={() => delStep(s)}>삭제</button>
                   </td>
                 </tr>
