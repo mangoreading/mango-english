@@ -86,11 +86,12 @@ export function FlowEditor({ owner }: { owner: Owner }) {
             <button className="mx-btn sec" onClick={() => delLesson(l)}>차시 삭제</button>
           </div>
           <table>
-            <thead><tr><th style={{ width: 36 }}>#</th><th>활동 (영문)</th><th>활동 (한글)</th><th style={{ width: 200 }}>활동 템플릿</th><th style={{ width: 60 }}>문항 수</th><th style={{ width: 60 }}>분</th><th style={{ width: 90 }}>구분</th>{owner.kind === 'unit' && <th style={{ width: 60 }}>문항</th>}<th style={{ width: 150 }} /></tr></thead>
+            <thead><tr><th style={{ width: 36 }}>#</th><th style={{ width: 108 }}>미리보기</th><th>활동 (영문)</th><th>활동 (한글)</th><th style={{ width: 200 }}>활동 템플릿</th><th style={{ width: 60 }}>문항 수</th><th style={{ width: 60 }}>분</th><th style={{ width: 90 }}>구분</th>{owner.kind === 'unit' && <th style={{ width: 60 }}>문항</th>}<th style={{ width: 150 }} /></tr></thead>
             <tbody>
               {l.flow_steps.map((s, i) => (
                 <tr key={s.id}>
                   <td>{i + 1}</td>
+                  <td>{s.kind && isNativeKind(s.kind) && <img className="mx-lthumb" src={`/thumbs/${s.kind}.jpg`} alt="" loading="lazy" />}</td>
                   <td><Txt value={s.name_en} onSave={(v) => updStep(s.id, { name_en: v })} /></td>
                   <td><Txt value={s.name_ko} onSave={(v) => updStep(s.id, { name_ko: v })} /></td>
                   <td><select className="mx-cell" value={s.kind ?? ''} onChange={(e) => updStep(s.id, { kind: e.target.value || null })}><option value="">(지정 안 함)</option>{kinds.map((k) => <option key={k.key} value={k.key}>{k.name_ko}</option>)}</select></td>
