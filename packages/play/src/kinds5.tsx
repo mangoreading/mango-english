@@ -36,10 +36,10 @@ function useMic(onText: (t: string, info?: SttInfo) => void, getRef?: () => stri
     r.result.then(async (wav) => {
       try {
         const info = await getStt()!(wav, refFn.current?.());
-        setOn(false);
+        setOn(false); console.debug('[stt]', info, wav.size);
         if (!info.text.trim()) setErr('nospeech'); else cb.current(info.text, info);
       } catch { azureBroken = true; setOn(false); setErr('error'); }
-    }).catch((c) => { setOn(false); if (c === 'denied') setErr('denied'); else if (c === 'nospeech') setErr('nospeech'); else setErr('error'); });
+    }).catch((c) => { setOn(false); if (c === 'denied' || c === 'nospeech' || c === 'silent') setErr(c); else setErr('error'); });
   }
   function start() {
     if (useAzure()) { startAzure(); return; }
@@ -56,7 +56,7 @@ function useMic(onText: (t: string, info?: SttInfo) => void, getRef?: () => stri
   const stop = () => { try { rec.current?.stop(); } catch { /* */ } try { az.current?.stop(); } catch { /* */ } };
   return { on, err, start, stop };
 }
-const ERRMSG: Record<string, string> = { nosupport: '이 브라우저는 말소리 인식을 지원하지 않아요. 소리 내어 읽고 아래 버튼을 눌러 주세요.', denied: '마이크 사용이 막혀 있어요. 주소창의 마이크 허용을 눌러 주세요.', nospeech: '소리가 들리지 않았어요. 다시 말해 보세요.', error: '잘 듣지 못했어요. 다시 한번 말해 보세요.' };
+const ERRMSG: Record<string, string> = { nosupport: '이 브라우저는 말소리 인식을 지원하지 않아요. 소리 내어 읽고 아래 버튼을 눌러 주세요.', denied: '마이크 사용이 막혀 있어요. 주소창의 마이크 허용을 눌러 주세요.', nospeech: '소리가 들리지 않았어요. 다시 말해 보세요.', silent: '마이크 소리가 거의 들어오지 않아요. 마이크가 켜져 있는지, 올바른 마이크가 선택됐는지 확인해 주세요.', error: '잘 듣지 못했어요. 다시 한번 말해 보세요.' };
 
 const MicBtn = ({ on, onClick, label, dim }: { on: boolean; onClick: () => void; label?: string; dim?: boolean }) => (
   <div className={'nv-micwrap' + (dim ? ' nv-dim' : '')}>
