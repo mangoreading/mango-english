@@ -70,18 +70,19 @@ const MicBtn = ({ on, busy, level, onClick, label, dim }: { on: boolean; busy?: 
 /** 말한 단어 채점 결과(단어별 % 표시는 따라 읽기 평가(raloud)에서만 쓴다). acc 는 Azure 발음평가의 단어별 정확도(0~100)이고, 없으면 ok(들린 단어와 일치 여부)만 쓴다 */
 type GW = { w: string; ok: boolean; acc?: number };
 function attachAcc(g: GW[], info?: SttInfo): GW[] {
-  const ws = info?.words?.filter((x) => x.err !== 'Insertion' && x.acc != null);
-  if (!ws?.length) return g;
-  if (ws.length === g.length) return g.map((x, i) => ({ ...x, acc: ws[i].acc }));
+  // Insertion(더 말한 단어)은 빼고, Omission(빠뜨리거나 다른 단어로 들린 단어)은 정확도 0% 로 본다 — Azure 가 이런 단어에는 점수를 주지 않는 경우가 있다
+  const ws = (info?.words ?? []).filter((x) => x.err !== 'Insertion').map((x) => ({ w: x.w, acc: x.acc ?? (x.err === 'Omission' ? 0 : undefined) }));
+  if (!ws.some((x) => x.acc != null)) return g;
+  if (ws.length === g.length) return g.map((x, i) => (ws[i].acc != null ? { ...x, acc: ws[i].acc } : x));
   const used = new Set<number>();
-  return g.map((x) => { const c = clean(x.w); const j = ws.findIndex((y, k) => !used.has(k) && clean(y.w) === c); if (j < 0) return x; used.add(j); return { ...x, acc: ws[j].acc }; });
+  return g.map((x) => { const c = clean(x.w); const j = ws.findIndex((y, k) => !used.has(k) && clean(y.w) === c); if (j < 0 || ws[j].acc == null) return x.ok ? x : { ...x, acc: 0 }; used.add(j); return { ...x, acc: ws[j].acc }; });
 }
 const isBad = (x: GW) => (x.acc != null ? x.acc < 70 : !x.ok);
 // 70% 이상: 보통(초록 %) · 40~69%: 주황 · 40% 미만: 빨강
 const accCls = (a: number) => (a >= 70 ? 'a-hi' : a >= 40 ? 'a-mid' : 'a-lo');
-const Words = ({ g }: { g: GW[] }) => <span className="nv-gw">{g.map((x, i) => x.acc != null
+const Words = ({ g, plain }: { g: GW[]; plain?: boolean }) => <span className="nv-gw">{g.map((x, i) => x.acc != null
   ? <span key={i} className={'nv-w ' + accCls(x.acc)}>{x.w}<small>{Math.round(x.acc)}%</small>{' '}</span>
-  : <span key={i} className={x.ok ? 'ok' : 'bad'}>{x.w} </span>)}</span>;
+  : <span key={i} className={plain || x.ok ? 'ok' : 'bad'}>{x.w} </span>)}</span>; // plain: 밑줄·배경 표시 없이(따라 읽기는 단어별 %로만 보여 준다)
 
 /** 말하기 3종: lookspeak(그림) / saykor(우리말) / lspeak(듣고 대답) */
 function Speak({ item, pic, onDone, mode, peekHint }: KindProps & { mode: 'look' | 'kor' | 'listen'; peekHint?: boolean }) {
@@ -142,7 +143,7 @@ export function RAloud({ item, onDone }: KindProps) {
   return (
     <div className="nv-body nv-wbody nv-wtop nv-ra-body">
       <div className="nv-ra">
-        <div className="nv-ra-t"><span>{g ? <Words g={g} /> : target}</span><button type="button" className="nv-spkin" onClick={() => say(target)} aria-label="듣기"><i /></button></div>
+        <div className="nv-ra-t"><span>{g ? <Words g={g} plain /> : target}</span><button type="button" className="nv-spkin" onClick={() => say(target)} aria-label="듣기"><i /></button></div>
         <div className="nv-ra-r">{g && <>
           {item.stars && <p className="nv-stars5">정확도 : {[1, 2, 3, 4, 5].map((n) => <span key={n} className={n <= stars ? 'on' : ''}>★</span>)}</p>}
           {item.fluency && <p className="nv-stars5">유창성 : {[1, 2, 3, 4, 5].map((n) => <span key={n} className={n <= flu ? 'on' : ''}>★</span>)}</p>}
