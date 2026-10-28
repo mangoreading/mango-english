@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
     if (ref) headers['Pronunciation-Assessment'] = btoa(JSON.stringify({ ReferenceText: ref, GradingSystem: 'HundredMark', Granularity: 'Word', EnableMiscue: true }));
 
     const r = await fetch(`https://${REGION}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=en-US&format=detailed&profanity=masked`, { method: 'POST', headers, body: audio });
-    if (!r.ok) throw new Error('Azure 오류 ' + r.status + ' ' + (await r.text()).slice(0, 200));
+    if (!r.ok) throw new Error('Azure 오류 ' + r.status + ' [' + (Deno.env.get('AZURE_STT_KEY') ? 'STT키' : '공용키') + ', ' + REGION + '] ' + (await r.text()).slice(0, 200));
     const d = await r.json();
     if (d.RecognitionStatus && d.RecognitionStatus !== 'Success') return json({ text: '', status: d.RecognitionStatus });
     const n = d.NBest?.[0] ?? {};
