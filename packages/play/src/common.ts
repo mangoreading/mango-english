@@ -81,7 +81,7 @@ export function sayScript(text: string, done?: () => void) {
   stopAudio();
   const gen = ++scriptGen;
   const rows = text.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => {
-    const m = l.match(/^([A-Za-z][A-Za-z .'-]{0,14}|[가-힣]{1,6}):\s*(.+)$/);
+    const m = l.match(/^([A-Za-z][A-Za-z .'-]{0,14}(?:\(\s*[A-Za-z]{3,6}\s*\))?|[가-힣]{1,6}):\s*(.+)$/);
     return m ? { who: m[1], t: m[2] } : { who: undefined as string | undefined, t: l };
   });
   const browser = () => {
@@ -137,4 +137,4 @@ export function setQuiet(b: boolean) { quiet = b; }
 export function sayAuto(text: string) { if (!quiet) say(text); }
 
 /** 장면 영상: 말하는 사람마다 목소리 높낮이를 다르게 읽어 준다 */
-export const voicePitch = (who?: string) => { if (!who) return 1; let h = 0; for (const c of who) h = (h * 31 + c.charCodeAt(0)) >>> 0; return [1, 1.3, 0.75, 1.15][h % 4]; };
+export const voicePitch = (who?: string) => { if (!who) return 1; const tg = who.match(/\(\s*([A-Za-z]+)\s*\)\s*$/)?.[1]?.toLowerCase(); if (tg) { const t: Record<string, number> = { girl: 1.35, child: 1.35, boy: 1.2, woman: 1.1, female: 1.1, man: 0.8, male: 0.8 }; if (t[tg]) return t[tg]; } let h = 0; for (const c of who) h = (h * 31 + c.charCodeAt(0)) >>> 0; return [1, 1.3, 0.75, 1.15][h % 4]; };

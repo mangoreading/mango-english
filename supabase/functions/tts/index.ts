@@ -13,15 +13,20 @@ const FEMALE = ['en-US-JennyNeural', 'en-US-AriaNeural'];
 const MALE = ['en-US-GuyNeural', 'en-US-DavisNeural'];
 const CHILD = 'en-US-AnaNeural';
 const hash = (s: string) => { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; };
-/** 화자 이름으로 목소리를 고른다. 같은 이름은 언제나 같은 목소리. */
-function voiceFor(who?: string): string {
-  if (!who) return FEMALE[0];
-  const w = who.toLowerCase().trim();
-  if (/^(clerk|seller|shopkeeper|teacher|woman|lady|mom|mother|mum)/.test(w)) return FEMALE[hash(w) % FEMALE.length];
-  if (/^(dad|father|grandpa|man|mr)/.test(w)) return MALE[hash(w) % MALE.length];
-  if (/^(boy|girl|kid|child)/.test(w)) return CHILD;
-  const all = [CHILD, ...MALE, ...FEMALE];
-  return all[hash(w) % all.length];
+/** 화자 이름으로 목소리를 고른다. 이름 뒤 괄호로 지정하면 그대로 따른다: Jina(girl) · Joon(boy) · Mom(woman) · Dad(man).
+ *  괄호가 없으면 Clerk·Mom 같은 어른 이름만 성인 목소리, 나머지는 아이(여자) 목소리. 남자아이는 남성 목소리의 높낮이를 올려 만든다. */
+function voiceFor(who?: string): { voice: string; pitch?: string } {
+  if (!who) return { voice: FEMALE[0] };
+  const m = who.trim().match(/^(.*?)\s*\(\s*([a-z]+)\s*\)\s*$/i);
+  const name = (m ? m[1] : who).toLowerCase().trim(); const tag = m ? m[2].toLowerCase() : '';
+  if (tag === 'girl' || tag === 'child') return { voice: CHILD };
+  if (tag === 'boy') return { voice: MALE[0], pitch: '+22%' };
+  if (tag === 'woman' || tag === 'female') return { voice: FEMALE[hash(name) % FEMALE.length] };
+  if (tag === 'man' || tag === 'male') return { voice: MALE[hash(name) % MALE.length] };
+  if (/^(clerk|seller|shopkeeper|teacher|woman|lady|mom|mother|mum)/.test(name)) return { voice: FEMALE[hash(name) % FEMALE.length] };
+  if (/^(dad|father|grandpa|man|mr)/.test(name)) return { voice: MALE[hash(name) % MALE.length] };
+  if (/^(boy)/.test(name)) return { voice: MALE[0], pitch: '+22%' };
+  return { voice: CHILD };
 }
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -44,7 +49,7 @@ Deno.serve(async (req) => {
     if (!lines.length) return json({ error: '읽을 글이 없어요' }, 400);
     if (lines.reduce((n, l) => n + l.t.length, 0) > MAX_CHARS) return json({ error: '글이 너무 길어요' }, 400);
 
-    const body = lines.map((l) => `<voice name="${voiceFor(l.who)}"><prosody rate="${RATE}">${esc(l.t)}</prosody><break time="450ms"/></voice>`).join('');
+    const body = lines.map((l) => { const v = voiceFor(l.who); return `<voice name="${v.voice}"><prosody rate="${RATE}"${v.pitch ? ` pitch="${v.pitch}"` : ''}>${esc(l.t)}</prosody><break time="450ms"/></voice>`; }).join('');
     const ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US">${body}</speak>`;
 
     const r = await fetch(`https://${REGION}.tts.speech.microsoft.com/cognitiveservices/v1`, {
