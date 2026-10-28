@@ -22,3 +22,4 @@ jobs:
           supabase functions deploy ai-assist --project-ref migqgdcewawndbezvfqv
           supabase functions deploy gen-image --project-ref migqgdcewawndbezvfqv
           supabase functions deploy tts --project-ref migqgdcewawndbezvfqv
+          supabase functions deploy stt --project-ref migqgdcewawndbezvfqv

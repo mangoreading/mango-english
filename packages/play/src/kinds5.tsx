@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { aiHandlers, imgSrc, say, sayAuto, sayThen, type KindProps } from './common';
+import { aiHandlers, getStt, imgSrc, say, sayAuto, sayThen, type KindProps, type SttInfo } from './common';
+import { canRecord, startRecording, type Recording } from './rec';
 import { Hint } from './hint';
 import { Fb } from './fb';
 
@@ -7,7 +8,9 @@ import { Fb } from './fb';
    말소리 인식은 브라우저의 음성 인식(SpeechRecognition)을 쓴다. 지원하지 않는 브라우저에서는 '말했어요' 버튼으로 대신한다. */
 type SR = { start: () => void; stop: () => void; abort: () => void; lang: string; interimResults: boolean; maxAlternatives: number; onresult: (e: any) => void; onerror: (e: any) => void; onend: () => void }; // eslint-disable-line @typescript-eslint/no-explicit-any
 const SRClass = (): (new () => SR) | null => { try { const w = window as any; return w.SpeechRecognition || w.webkitSpeechRecognition || null; } catch { return null; } }; // eslint-disable-line @typescript-eslint/no-explicit-any
-export const micSupported = () => !!SRClass();
+let azureBroken = false; // Azure 서버 호출이 실패하면 이번 접속 동안은 브라우저 음성 인식으로 대신한다
+const useAzure = () => !!getStt() && canRecord() && !azureBroken;
+export const micSupported = () => !!SRClass() || useAzure();
 const clean = (s: string) => s.toLowerCase().replace(/[’‘`]/g, "'").replace(/[^a-z0-9' ]/g, ' ').replace(/\s+/g, ' ').trim();
 const words = (s: string) => clean(s).split(' ').filter(Boolean);
 /** 목표 문장의 단어별 일치 여부 (들린 문장에 그 단어가 있으면 맞음) */
@@ -24,21 +27,33 @@ export function fluency(cover: number, target: string, ms: number): number {
 const pct = (g: { ok: boolean }[]) => (g.length ? g.filter((x) => x.ok).length / g.length : 0);
 
 /** 마이크 훅: start() 하면 한 번 듣고 결과 문장을 돌려준다 */
-function useMic(onText: (t: string) => void) {
-  const [on, setOn] = useState(false); const [err, setErr] = useState(''); const rec = useRef<SR | null>(null);
-  useEffect(() => () => { try { rec.current?.abort(); } catch { /* */ } }, []);
+function useMic(onText: (t: string, info?: SttInfo) => void, getRef?: () => string) {
+  const [on, setOn] = useState(false); const [err, setErr] = useState(''); const rec = useRef<SR | null>(null); const az = useRef<Recording | null>(null);
+  const cb = useRef(onText); cb.current = onText; const refFn = useRef(getRef); refFn.current = getRef;
+  useEffect(() => () => { try { rec.current?.abort(); } catch { /* */ } try { az.current?.cancel(); } catch { /* */ } }, []);
+  function startAzure() {
+    const r = startRecording(); az.current = r; setErr(''); setOn(true);
+    r.result.then(async (wav) => {
+      try {
+        const info = await getStt()!(wav, refFn.current?.());
+        setOn(false);
+        if (!info.text.trim()) setErr('nospeech'); else cb.current(info.text, info);
+      } catch { azureBroken = true; setOn(false); setErr('error'); }
+    }).catch((c) => { setOn(false); if (c === 'denied') setErr('denied'); else if (c === 'nospeech') setErr('nospeech'); else setErr('error'); });
+  }
   function start() {
+    if (useAzure()) { startAzure(); return; }
     const C = SRClass(); if (!C) { setErr('nosupport'); return; }
     try {
       const r = new C(); rec.current = r; r.lang = 'en-US'; r.interimResults = false; r.maxAlternatives = 3;
       let got = false;
-      r.onresult = (e: any) => { got = true; const a = Array.from(e.results[0] as ArrayLike<{ transcript: string }>).map((x) => x.transcript); onText(a.join(' | ')); }; // eslint-disable-line @typescript-eslint/no-explicit-any
+      r.onresult = (e: any) => { got = true; const a = Array.from(e.results[0] as ArrayLike<{ transcript: string }>).map((x) => x.transcript); cb.current(a.join(' | ')); }; // eslint-disable-line @typescript-eslint/no-explicit-any
       r.onerror = (e: any) => { setErr(e.error === 'not-allowed' ? 'denied' : e.error === 'no-speech' ? 'nospeech' : 'error'); setOn(false); }; // eslint-disable-line @typescript-eslint/no-explicit-any
       r.onend = () => { setOn(false); if (!got) setErr((x) => x || 'nospeech'); };
       setErr(''); setOn(true); r.start();
     } catch { setErr('error'); setOn(false); }
   }
-  const stop = () => { try { rec.current?.stop(); } catch { /* */ } };
+  const stop = () => { try { rec.current?.stop(); } catch { /* */ } try { az.current?.stop(); } catch { /* */ } };
   return { on, err, start, stop };
 }
 const ERRMSG: Record<string, string> = { nosupport: '이 브라우저는 말소리 인식을 지원하지 않아요. 소리 내어 읽고 아래 버튼을 눌러 주세요.', denied: '마이크 사용이 막혀 있어요. 주소창의 마이크 허용을 눌러 주세요.', nospeech: '소리가 들리지 않았어요. 다시 말해 보세요.', error: '잘 듣지 못했어요. 다시 한번 말해 보세요.' };
@@ -62,7 +77,7 @@ function Speak({ item, pic, onDone, mode, peekHint }: KindProps & { mode: 'look'
     const opts = t.split(' | '); const best = opts.map((o) => grade(target, o)).sort((a, b) => pct(b) - pct(a))[0];
     setHeard(opts[0]); setG(best); setTries((n) => n + 1);
     if (pct(best) >= need) { setOk(true); onDone([{ tag: 'speak', ok: tries === 0 }]); }
-  });
+  }, () => target);
   const src = pic(item.pic);
   const self = () => { setOk(true); onDone([{ tag: 'speak', ok: true }]); };
   const missed = g?.filter((x) => !x.ok).map((x) => x.w.replace(/[^\w']/g, '')).filter(Boolean) ?? [];
@@ -96,11 +111,13 @@ export function RAloud({ item, onDone }: KindProps) {
   const target: string = item.target ?? ''; const [round, setRound] = useState(1); const [g, setG] = useState<{ w: string; ok: boolean }[] | null>(null);
   const [fin, setFin] = useState(false); const firstOk = useRef(true);
   const t0 = useRef(0); const [flu, setFlu] = useState(0);
-  const mic = useMic((t) => {
-    const opts = t.split(' | '); const best = opts.map((o) => grade(target, o)).sort((a, b) => pct(b) - pct(a))[0]; setG(best); setFlu(fluency(pct(best), target, Date.now() - t0.current));
+  const mic = useMic((t, info) => {
+    const opts = t.split(' | '); const best = opts.map((o) => grade(target, o)).sort((a, b) => pct(b) - pct(a))[0]; setG(best);
+    // Azure 발음평가의 유창성(0~100)이 있으면 그것을 별 1~5개로, 없으면 속도로 추정
+    setFlu(info?.fluency != null ? Math.max(1, Math.min(5, Math.round(info.fluency / 20))) : fluency(pct(best), target, Date.now() - t0.current));
     if (round === 1) { firstOk.current = pct(best) >= 0.7; if (pct(best) >= 0.95) { setFin(true); onDone([{ tag: 'speak', ok: true }]); } else setRound(2); }
     else { setFin(true); onDone([{ tag: 'speak', ok: firstOk.current }]); }
-  });
+  }, () => target);
   const bads = g?.filter((x) => !x.ok).map((x) => x.w.replace(/[^\w']/g, '')) ?? []; const stars = g ? Math.round(pct(g) * 5) : 0;
   const startMic = () => { t0.current = Date.now(); mic.start(); };
   useEffect(() => { const id = setTimeout(() => sayAuto(target), 500); return () => clearTimeout(id); /* 열릴 때 한 번 들려줌 */ // eslint-disable-next-line
@@ -131,7 +148,7 @@ export function Role({ item, pic, onDone }: KindProps) {
   const [me, setMe] = useState<string | null>(null); const [pos, setPos] = useState(-1); const [g, setG] = useState<{ w: string; ok: boolean }[] | null>(null); const fired = useRef(false);
   const [wait, setWait] = useState(false);
   const mine = pos >= 0 && pos < lines.length && lines[pos].who === me;
-  const mic = useMic((t) => { const best = t.split(' | ').map((o) => grade(lines[pos].text, o)).sort((a, b) => pct(b) - pct(a))[0]; setG(best); if (pct(best) >= 0.6) setTimeout(() => adv(pos), 700); });
+  const mic = useMic((t) => { const best = t.split(' | ').map((o) => grade(lines[pos].text, o)).sort((a, b) => pct(b) - pct(a))[0]; setG(best); if (pct(best) >= 0.6) setTimeout(() => adv(pos), 700); }, () => lines[pos]?.text ?? '');
   function adv(from: number) {
     setG(null); const n = from + 1; setPos(n);
     if (n >= lines.length) { if (!fired.current) { fired.current = true; onDone([{ tag: 'speak', ok: true }]); } return; }

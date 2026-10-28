@@ -45,6 +45,12 @@ function utter(text: string, pitch = 1): SpeechSynthesisUtterance {
 }
 
 /* ===== Azure 음성(서버): 연결돼 있으면 긴 지문에 쓰고, 안 되면 브라우저 음성으로 대신한다 ===== */
+/** 말하기 평가(STT) 서버 연결: 녹음(WAV)과 읽을 문장을 보내 글자와 발음 점수(0~100)를 받는다 */
+export interface SttInfo { text: string; accuracy?: number; fluency?: number; completeness?: number; pron?: number }
+let sttHook: ((wav: Blob, ref?: string) => Promise<SttInfo>) | null = null;
+export const registerStt = (h: (wav: Blob, ref?: string) => Promise<SttInfo>) => { sttHook = h; };
+export const getStt = () => sttHook;
+
 export type TtsLine = { who?: string; t: string };
 let ttsHook: ((lines: TtsLine[]) => Promise<Blob>) | null = null;
 export const registerTts = (h: (lines: TtsLine[]) => Promise<Blob>) => { ttsHook = h; };
