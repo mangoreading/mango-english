@@ -249,7 +249,7 @@ export function AiTalk({ item, onDone }: KindProps) {
       </div>
       {!fin ? <div className="nv-chatin">
         <input value={v} onChange={(e) => setV(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') void send(); }} placeholder="여기에 타이핑하거나 말로 얘기해보세요" autoCapitalize="off" spellCheck={false} />
-        {micSupported() && <button type="button" className={'nv-mic nv-mic-s' + (mic.on ? ' on' : '')} onClick={mic.on ? mic.stop : mic.start} aria-label="말하기">🎤</button>}
+        {micSupported() && <button type="button" className={'nv-mic nv-mic-s' + (mic.on ? ' on' : '') + (mic.busy ? ' busy' : '')} style={mic.on ? { boxShadow: `0 0 0 ${Math.min(.9, mic.level * 7)}em rgba(245,28,68,.28)` } : undefined} onClick={mic.busy ? undefined : mic.on ? mic.stop : mic.start} aria-label={mic.busy ? '확인하고 있어요' : '말하기'} title={mic.busy ? '확인하고 있어요…' : undefined}>🎤</button>}
         <button type="button" className="nv-send" disabled={!v.trim() || busy} onClick={() => void send()} aria-label="보내기">➤</button>
       </div> : <Fb className="nv-fbmsg on">대화를 잘 마쳤어요! 👏</Fb>}
       <div className="nv-chathint">{!fin ? <><button type="button" className={'nv-hintbtn' + (showH ? ' on' : '')} onClick={() => setShowH(!showH)}><span className="nv-bulb">💡</span> Hint</button>{showH && <b>{nextHint ?? '자유롭게 말해 보세요'}</b>}</> : '\u00a0'}</div>

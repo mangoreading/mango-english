@@ -696,3 +696,4 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 @media (max-width:760px) { .nv-mtbtn { position:static; display:block; margin:.4em auto 0; } }
 .nv-overlay .nv-mtmod, .nv-overlay[data-skin] > .nv-mtmod { position:absolute; inset:0; z-index:60; }
 .nv-mtbtns .nv-ghost { background:#fff; color:#44546A; border:.12em solid #CBD6E6; }
+.nv-mic.busy { opacity:.5; animation:nv-pulse 1s infinite; cursor:default; }
