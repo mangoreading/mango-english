@@ -41,7 +41,6 @@ Deno.serve(async (req) => {
     return json({
       text: String(n.Lexical ?? n.Display ?? d.DisplayText ?? ''), display: String(n.Display ?? d.DisplayText ?? ''), status: 'Success', // 채점에는 숫자를 글자로 읽은 형태(Lexical: fifteen thousand)를 쓴다. Display 는 15,000 처럼 숫자로 나온다
       accuracy: num(n.AccuracyScore, pa.AccuracyScore), fluency: num(n.FluencyScore, pa.FluencyScore), completeness: num(n.CompletenessScore, pa.CompletenessScore), pron: num(n.PronScore, pa.PronScore),
-      dbg: { nk: Object.keys(n), wk: n.Words?.[0] ? Object.keys(n.Words[0]) : [] }, // 점수가 안 보일 때 원인을 찾기 위한 응답 구조(점수 값은 아님)
       words: Array.isArray(n.Words) ? n.Words.map((w: W) => ({ w: w.Word, acc: num(w.AccuracyScore, w.PronunciationAssessment?.AccuracyScore), err: w.ErrorType ?? w.PronunciationAssessment?.ErrorType })) : undefined,
     });
   } catch (e) {
