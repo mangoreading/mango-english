@@ -37,7 +37,7 @@ function useMic(onText: (t: string, info?: SttInfo) => void, getRef?: () => stri
       setOn(false); setBusy(true);   // 녹음이 끝나면 바로 '확인 중' 상태로 바꿔 서버 응답을 기다리는 동안에도 눌렀다는 것이 보이게 한다
       try {
         const info = await getStt()!(wav, refFn.current?.());
-        setBusy(false); azureFails = 0; console.debug('[stt]', info, wav.size);
+        setBusy(false); azureFails = 0; console.info('[stt]', JSON.stringify(info), wav.size);
         if (!info.text.trim()) { setErr('nospeech'); setFails((n) => n + 1); } else { setFails(0); cb.current(info.text, info); }
       } catch { azureFails++; setBusy(false); setOn(false); setErr('error'); setFails((n) => n + 1); }
     }).catch((c) => { setOn(false); setLevel(0); setFails((n) => n + 1); if (c === 'denied' || c === 'nospeech' || c === 'silent') setErr(c); else setErr('error'); });
