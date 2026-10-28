@@ -67,7 +67,7 @@ const MicBtn = ({ on, busy, level, onClick, label, dim }: { on: boolean; busy?: 
     <span>{on ? '듣고 있어요… 말해 보세요' : busy ? '확인하고 있어요…' : label ?? '버튼을 눌러 소리내어 말해보세요'}</span>
   </div>
 );
-/** 말한 단어 채점 결과. acc 는 Azure 발음평가의 단어별 정확도(0~100)이고, 없으면 ok(들린 단어와 일치 여부)만 쓴다 */
+/** 말한 단어 채점 결과(단어별 % 표시는 따라 읽기 평가(raloud)에서만 쓴다). acc 는 Azure 발음평가의 단어별 정확도(0~100)이고, 없으면 ok(들린 단어와 일치 여부)만 쓴다 */
 type GW = { w: string; ok: boolean; acc?: number };
 function attachAcc(g: GW[], info?: SttInfo): GW[] {
   const ws = info?.words?.filter((x) => x.err !== 'Insertion' && x.acc != null);
@@ -90,9 +90,9 @@ function Speak({ item, pic, onDone, mode, peekHint }: KindProps & { mode: 'look'
   useEffect(() => () => { if (peekT.current) clearTimeout(peekT.current); }, []);
   const target: string = item.target ?? ''; const need: number = item.pass ?? 0.7;
   const [g, setG] = useState<GW[] | null>(null); const [heard, setHeard] = useState(''); const [tries, setTries] = useState(0); const [ok, setOk] = useState(false);
-  const mic = useMic((t, info) => {
+  const mic = useMic((t) => {
     const opts = t.split(' | '); const best = opts.map((o) => grade(target, o)).sort((a, b) => pct(b) - pct(a))[0];
-    setHeard(opts[0]); setG(attachAcc(best, info)); setTries((n) => n + 1);
+    setHeard(opts[0]); setG(best); setTries((n) => n + 1);
     if (pct(best) >= need) { setOk(true); onDone([{ tag: 'speak', ok: tries === 0 }]); }
   }, () => target);
   const src = pic(item.pic);
@@ -165,7 +165,7 @@ export function Role({ item, pic, onDone }: KindProps) {
   const [me, setMe] = useState<string | null>(null); const [pos, setPos] = useState(-1); const [g, setG] = useState<GW[] | null>(null); const fired = useRef(false);
   const [wait, setWait] = useState(false);
   const mine = pos >= 0 && pos < lines.length && lines[pos].who === me;
-  const mic = useMic((t, info) => { const best = t.split(' | ').map((o) => grade(lines[pos].text, o)).sort((a, b) => pct(b) - pct(a))[0]; setG(attachAcc(best, info)); if (pct(best) >= 0.6) setTimeout(() => adv(pos), 700); }, () => lines[pos]?.text ?? '');
+  const mic = useMic((t) => { const best = t.split(' | ').map((o) => grade(lines[pos].text, o)).sort((a, b) => pct(b) - pct(a))[0]; setG(best); if (pct(best) >= 0.6) setTimeout(() => adv(pos), 700); }, () => lines[pos]?.text ?? '');
   function adv(from: number) {
     setG(null); const n = from + 1; setPos(n);
     if (n >= lines.length) { if (!fired.current) { fired.current = true; onDone([{ tag: 'speak', ok: true }]); } return; }
