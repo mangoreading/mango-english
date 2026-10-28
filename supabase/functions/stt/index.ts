@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
     let ref = '';
     try { ref = decodeURIComponent(req.headers.get('x-ref') ?? '').slice(0, 300).trim(); } catch { /* 무시 */ }
     const headers: Record<string, string> = { 'Ocp-Apim-Subscription-Key': key, 'Content-Type': 'audio/wav; codecs=audio/pcm; samplerate=16000', Accept: 'application/json' };
-    if (ref) headers['Pronunciation-Assessment'] = btoa(JSON.stringify({ ReferenceText: ref, GradingSystem: 'HundredMark', Granularity: 'Word', EnableMiscue: true }));
+    if (ref) headers['Pronunciation-Assessment'] = btoa(JSON.stringify({ ReferenceText: ref, GradingSystem: 'HundredMark', Granularity: 'Word', Dimension: 'Comprehensive', EnableMiscue: true }));
 
     const r = await fetch(`https://${REGION}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=en-US&format=detailed&profanity=masked`, { method: 'POST', headers, body: audio });
     if (!r.ok) throw new Error('Azure 오류 ' + r.status + ' [' + (Deno.env.get('AZURE_STT_KEY') ? 'STT키' : '공용키') + ', ' + REGION + '] ' + (await r.text()).slice(0, 200));
