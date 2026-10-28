@@ -652,3 +652,20 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 [data-skin=mango] .nv-split:not(.nv-goal):not(.nv-split-w) > .nv-qpane { justify-content:flex-start; }
 /* 버튼 글자가 길어도(전체 듣기) 줄바꿈 없이 */
 [data-skin=mango] .nv-ptools .nv-listen, [data-skin=mango] .nv-ptools .nv-hintbtn { width:auto; min-width:7.6em; white-space:nowrap; }
+
+/* ---- 장면 영상 (scene) ---- */
+.nv-scene { align-items:center; gap:.9em; }
+.nv-stage { position:relative; width:42em; aspect-ratio:16/9; border-radius:1.2em; overflow:hidden; background:#fff; border:.1em solid #D6DEEA; box-shadow:0 .3em 1.2em rgba(40,60,100,.1); }
+.nv-stage-img { width:100%; height:100%; object-fit:contain; display:block; background:linear-gradient(180deg,#EAF2FD,#F7FAFF); }
+.nv-stage-ph { background:linear-gradient(180deg,#EAF2FD,#F7FAFF); }
+.nv-who { position:absolute; left:.9em; top:.8em; background:#fff; color:#20233e; font-weight:700; font-size:.95em; padding:.25em .8em; border-radius:999px; border:.08em solid #D6DEEA; }
+.nv-stage-go { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.4em; background:rgba(30,45,80,.42); border:0; color:#fff; cursor:pointer; font:inherit; }
+.nv-stage-go i { font-style:normal; width:2.6em; height:2.6em; border-radius:50%; background:#fff; color:#3B6FD8; display:flex; align-items:center; justify-content:center; font-size:1.5em; padding-left:.12em; }
+.nv-stage-go b { font-size:1.2em; }
+.nv-subs { position:absolute; left:0; right:0; bottom:.55em; text-align:center; padding:0 1em; }
+.nv-subs p { display:inline-block; margin:0; background:rgba(20,28,50,.78); color:#fff; font-size:1.25em; line-height:1.35; padding:.25em .8em; border-radius:.5em; }
+.nv-subs small { display:block; margin-top:.25em; font-size:.95em; color:#fff; text-shadow:0 0 .3em #000; }
+.nv-subs-end { opacity:.75; }
+.nv-bar { position:absolute; left:0; right:0; bottom:0; height:.3em; background:rgba(255,255,255,.55); } .nv-bar i { display:block; height:100%; background:#3B6FD8; transition:width .35s; }
+.nv-sq { width:42em; max-width:100%; display:flex; flex-direction:column; gap:.8em; }
+.nv-scene .nv-ptools { margin-top:.2em; }

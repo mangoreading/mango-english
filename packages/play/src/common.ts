@@ -3,7 +3,7 @@ export interface Res { tag?: string; ok: boolean; hint?: number }
 /** 어휘 활동 6종의 종류 코드 (기획서 p29~34). 이 종류는 React 정식 화면으로 재생한다. */
 export const VOCAB_KINDS = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wrepeat'];
 /** 1단계 문장·읽기·듣기 템플릿 (문항 안에 글이 그대로 들어 있다) */
-export const TEXT_KINDS = ['lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'aitalk', 'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'mfree', 'swrt', 'goal', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'sdrill', 'pread', 'mtext', 'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti'];
+export const TEXT_KINDS = ['lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'aitalk', 'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'mfree', 'swrt', 'goal', 'scene', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'sdrill', 'pread', 'mtext', 'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti'];
 export const NATIVE_KINDS = [...VOCAB_KINDS, ...TEXT_KINDS];
 export const isNative = (it: unknown) => NATIVE_KINDS.includes((it as { k?: string })?.k ?? '');
 
@@ -36,11 +36,11 @@ function pickVoice(): SpeechSynthesisVoice | null {
 }
 try { speechSynthesis.addEventListener('voiceschanged', () => { picked = undefined; }); } catch { /* 소리가 안 되는 환경 */ }
 
-function utter(text: string): SpeechSynthesisUtterance {
+function utter(text: string, pitch = 1): SpeechSynthesisUtterance {
   const u = new SpeechSynthesisUtterance(text);
   const v = pickVoice();
   if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'en-US';
-  u.rate = 0.85; u.pitch = 1;
+  u.rate = 0.85; u.pitch = pitch;
   return u;
 }
 
@@ -49,12 +49,12 @@ export function say(text: string) {
 }
 
 /** 읽어 주고, 다 읽으면 done()을 부른다. 소리가 안 되는 환경이거나 끝 신호가 안 오면 3초 뒤에 부른다. */
-export function sayThen(text: string, done: () => void) {
+export function sayThen(text: string, done: () => void, pitch = 1) {
   let fin = false; const end = () => { if (!fin) { fin = true; done(); } };
   setTimeout(end, 3000);
   try {
     speechSynthesis.cancel();
-    const u = utter(text); u.onend = end; u.onerror = end;
+    const u = utter(text, pitch); u.onend = end; u.onerror = end;
     speechSynthesis.speak(u);
   } catch { end(); }
 }
@@ -87,3 +87,6 @@ export const registerAi = (h: AiHandlers) => Object.assign(aiHandlers, h);
 let quiet = false;
 export function setQuiet(b: boolean) { quiet = b; }
 export function sayAuto(text: string) { if (!quiet) say(text); }
+
+/** 장면 영상: 말하는 사람마다 목소리 높낮이를 다르게 읽어 준다 */
+export const voicePitch = (who?: string) => { if (!who) return 1; let h = 0; for (const c of who) h = (h * 31 + c.charCodeAt(0)) >>> 0; return [1, 1.3, 0.75, 1.15][h % 4]; };

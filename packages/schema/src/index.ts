@@ -156,6 +156,11 @@ export const LCardT = z.object({ ...T1, k: z.literal('lcardt'), items: exs(1) })
 export const WRepeat = z.object({ ...vbase, k: z.literal('wrepeat'), words: VKeys });
 export const SDrill = z.object({ ...T1, k: z.literal('sdrill'), tpl: z.string().refine((v) => v.includes('{}'), '문장에 {} (바꿀 자리)가 있어야 해요'), words: z.array(z.string().min(1)).min(2).max(10) });
 export const PRead = z.object({ ...T1, k: z.literal('pread'), text: z.array(z.string().min(1)).min(1), ko: z.string().optional() });
+/** 장면 영상: 그림·대사가 이어지는 30초 안팎의 짧은 장면 + (선택) 확인 문항 */
+export const Scene = z.object({ ...T1, k: z.literal('scene'), title: z.string().optional(),
+  scenes: z.array(z.object({ who: z.string().optional(), en: z.string().min(1), ko: z.string().optional(), pic: z.string().optional() })).min(2).max(14),
+  sub: z.enum(['en', 'enko', 'none']).optional(), replay: z.number().int().min(0).max(5).optional(),
+  qs: z.array(z.object({ q: z.string().min(1), ans: z.string().min(1), wrong: z.array(z.string().min(1)).min(1).max(3) })).max(4).optional() });
 export const MText = z.object({ ...T1, k: z.literal('mtext'), title: z.string().optional(), text: z.array(z.string().min(1)).min(1), explain: z.array(z.string()).optional(), ko: z.string().optional() });
 
 /* ===== 3단계: 쓰기류 =====  빈칸은 {} (정답은 ans 에 순서대로, "|" 로 여러 정답) */
@@ -187,7 +192,7 @@ export const ActivityItem = z.discriminatedUnion('k', [
   VCards, VType1, VSpell, VMatch, VSound, VWrite,
   LookSpeak, SayKor, LSpeak, RAloud, Role, Present, AiTalk,
   SBuild, SWrite, SFill, DFill, SScram, SOrder, MWBank, SCloze, LWrite, MFree, SWrt,
-  Goal, KExp, TapL, LSent, LCardP, LCardT, WRepeat, SDrill, PRead, MText,
+  Goal, KExp, TapL, LSent, LCardP, LCardT, Scene, WRepeat, SDrill, PRead, MText,
   WChoice, PChoice, DChoice, TrueFalse, LChText, LChPic, LChList, LMatch, SqChoice, SqTF, SqMulti,
 ]).superRefine((v, ctx) => {
   if (v.k === 'choose' && v.a >= v.opts.length) ctx.addIssue({ code: 'custom', path: ['a'], message: 'a(정답 index)가 opts 범위를 벗어났어요' });
@@ -204,7 +209,7 @@ export type Kind = ActivityItem['k'];
 export const KINDS = ['learn', 'text', 'brief', 'choose', 'match', 'build', 'fill', 'write', 'compose', 'speak', 'fade', 'dialog', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite',
   'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'aitalk',
   'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'mfree', 'swrt',
-  'goal', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext',
+  'goal', 'scene', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext',
   'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti'] as const;
 
 /** 아이템 상태 (검수 워크플로) */

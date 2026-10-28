@@ -1,7 +1,7 @@
 import type { VWord } from '@mango/play';
 import type { VocabOpt } from '../pages/units/ItemForm';
 
-const NATIVE = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti', 'goal', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext', 'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'mfree', 'swrt', 'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'aitalk'];
+const NATIVE = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti', 'goal', 'scene', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext', 'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'mfree', 'swrt', 'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'aitalk'];
 export const isNativeKind = (k: string) => NATIVE.includes(k);
 
 /** 샘플 미리보기용 단어 (앱에 들어 있는 그림 사용) */
@@ -48,6 +48,16 @@ export const NATIVE_SAMPLES: Record<string, Record<string, unknown>> = {
   lcardt: { k: 'lcardt', tag: 'listen', items: [{ en: 'How much is it?', ko: '이것은 얼마예요?' }, { en: "It's five thousand won.", ko: '5,000원이에요.' }, { en: 'May I help you?', ko: '도와 드릴까요?' }, { en: 'Yes, please.', ko: '네, 부탁해요.' }, { en: "I'll take it.", ko: '그걸로 할게요.' }, { en: 'Here you are.', ko: '여기 있어요.' }] },
   wrepeat: { k: 'wrepeat', tag: 'vocab', words: W },
   sdrill: { k: 'sdrill', pic: 'shoes', tag: 'speak', tpl: 'How much are these {}?', words: ['shorts', 'sunglasses', 'pants', 'shoes', 'socks', 'jeans'] },
+  scene: { k: 'scene', tag: 'listen', title: 'At the Sports Shop', sub: 'en', replay: 2, scenes: [
+    { who: 'Mom', en: "Minho, let's get your new soccer things today.", ko: '민호야, 오늘 축구용품을 새로 사자.', pic: 'hat' },
+    { who: 'Clerk', en: 'Hello! May I help you?', ko: '안녕하세요! 도와드릴까요?', pic: 'shoes' },
+    { who: 'Minho', en: 'Yes, please. How much are these shoes?', ko: '네, 부탁해요. 이 신발은 얼마예요?', pic: 'shoes' },
+    { who: 'Clerk', en: "They're thirty thousand won.", ko: '3만 원이에요.', pic: 'shoes' },
+    { who: 'Mom', en: 'How about these socks, Minho?', ko: '이 양말은 어떠니, 민호야?', pic: 'socks' },
+    { who: 'Minho', en: 'How much are these socks?', ko: '이 양말은 얼마예요?', pic: 'socks' },
+    { who: 'Clerk', en: "They're five thousand won.", ko: '5천 원이에요.', pic: 'socks' },
+    { who: 'Minho', en: 'Great! I want these socks.', ko: '좋아요! 이 양말을 갖고 싶어요.', pic: 'socks' }],
+    qs: [{ q: 'How much are the shoes?', ans: 'thirty thousand won', wrong: ['thirteen thousand won', 'five thousand won', 'three thousand won'] }, { q: 'What does Minho want?', ans: 'the socks', wrong: ['the shoes', 'a hat', 'shorts'] }] },
   pread: { k: 'pread', pic: 'ball', tag: 'read', text: ['Today is Class Bazaar Day. Mina has a shop.', 'She sells a cap, a book, and gloves.', 'Ken comes to her shop. He asks, "How much is the book?"', 'Mina says, "It\'s nine thousand won."', '---', 'Ken asks, "How much are the gloves?"', '"They\'re four thousand won."', 'Ken says, "I\'ll take the gloves. Here you are."', 'Mina says, "Thank you!"'], ko: '오늘은 학급 바자회 날이야. 미나는 가게가 있어. 모자, 책, 장갑을 팔아.\n켄이 가게에 와서 "책은 얼마예요?"라고 물어. 미나는 "9,000원이에요."라고 말해.\n---\n켄이 "장갑은 얼마예요?"라고 물어. "4,000원이에요."\n켄은 "장갑을 살게요. 여기 있어요."라고 말해. 미나는 "고마워요!"라고 말해.' },
   mtext: { k: 'mtext', tag: 'write', title: 'SALE', text: ['Look at these [[bright shoes]].', 'How much are [[these shoes]]?', "They're [[20,000 won]].", "They're on sale."], explain: ['먼저 {{상품과 특징}}을 얘기합니다.', '가격 질문을 하고', '{{가격을 제시}}합니다.', '세일 중임을 얘기합니다.'], ko: '이 밝은 신발을 보세요.\n이 신발은 얼마예요?\n2만 원이에요.\n세일 중이에요.' },
   wchoice: { k: 'wchoice', tag: 'vocab', word: 'shoes', dir: 'en2ko', wrong: ['반바지', '양말', '재킷'] },
