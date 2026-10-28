@@ -67,7 +67,21 @@ const MicBtn = ({ on, busy, level, onClick, label, dim }: { on: boolean; busy?: 
     <span>{on ? '듣고 있어요… 말해 보세요' : busy ? '확인하고 있어요…' : label ?? '버튼을 눌러 소리내어 말해보세요'}</span>
   </div>
 );
-const Words = ({ g }: { g: { w: string; ok: boolean }[] }) => <span className="nv-gw">{g.map((x, i) => <span key={i} className={x.ok ? 'ok' : 'bad'}>{x.w} </span>)}</span>;
+/** 말한 단어 채점 결과. acc 는 Azure 발음평가의 단어별 정확도(0~100)이고, 없으면 ok(들린 단어와 일치 여부)만 쓴다 */
+type GW = { w: string; ok: boolean; acc?: number };
+function attachAcc(g: GW[], info?: SttInfo): GW[] {
+  const ws = info?.words?.filter((x) => x.err !== 'Insertion' && x.acc != null);
+  if (!ws?.length) return g;
+  if (ws.length === g.length) return g.map((x, i) => ({ ...x, acc: ws[i].acc }));
+  const used = new Set<number>();
+  return g.map((x) => { const c = clean(x.w); const j = ws.findIndex((y, k) => !used.has(k) && clean(y.w) === c); if (j < 0) return x; used.add(j); return { ...x, acc: ws[j].acc }; });
+}
+const isBad = (x: GW) => (x.acc != null ? x.acc < 70 : !x.ok);
+// 70% 이상: 보통(초록 %) · 40~69%: 주황 · 40% 미만: 빨강
+const accCls = (a: number) => (a >= 70 ? 'a-hi' : a >= 40 ? 'a-mid' : 'a-lo');
+const Words = ({ g }: { g: GW[] }) => <span className="nv-gw">{g.map((x, i) => x.acc != null
+  ? <span key={i} className={'nv-w ' + accCls(x.acc)}>{x.w}<small>{Math.round(x.acc)}%</small>{' '}</span>
+  : <span key={i} className={x.ok ? 'ok' : 'bad'}>{x.w} </span>)}</span>;
 
 /** 말하기 3종: lookspeak(그림) / saykor(우리말) / lspeak(듣고 대답) */
 function Speak({ item, pic, onDone, mode, peekHint }: KindProps & { mode: 'look' | 'kor' | 'listen'; peekHint?: boolean }) {
@@ -75,15 +89,15 @@ function Speak({ item, pic, onDone, mode, peekHint }: KindProps & { mode: 'look'
   const showHint = () => { setPeek(true); if (peekT.current) clearTimeout(peekT.current); peekT.current = setTimeout(() => setPeek(false), 3000); };
   useEffect(() => () => { if (peekT.current) clearTimeout(peekT.current); }, []);
   const target: string = item.target ?? ''; const need: number = item.pass ?? 0.7;
-  const [g, setG] = useState<{ w: string; ok: boolean }[] | null>(null); const [heard, setHeard] = useState(''); const [tries, setTries] = useState(0); const [ok, setOk] = useState(false);
-  const mic = useMic((t) => {
+  const [g, setG] = useState<GW[] | null>(null); const [heard, setHeard] = useState(''); const [tries, setTries] = useState(0); const [ok, setOk] = useState(false);
+  const mic = useMic((t, info) => {
     const opts = t.split(' | '); const best = opts.map((o) => grade(target, o)).sort((a, b) => pct(b) - pct(a))[0];
-    setHeard(opts[0]); setG(best); setTries((n) => n + 1);
+    setHeard(opts[0]); setG(attachAcc(best, info)); setTries((n) => n + 1);
     if (pct(best) >= need) { setOk(true); onDone([{ tag: 'speak', ok: tries === 0 }]); }
   }, () => target);
   const src = pic(item.pic);
   const self = () => { setOk(true); onDone([{ tag: 'speak', ok: true }]); };
-  const missed = g?.filter((x) => !x.ok).map((x) => x.w.replace(/[^\w']/g, '')).filter(Boolean) ?? [];
+  const missed = g?.filter(isBad).map((x) => x.w.replace(/[^\w']/g, '')).filter(Boolean) ?? [];
   return (
     <div className={'nv-body nv-wbody nv-spz' + (mode === 'listen' ? ' nv-hasl' : '')}>
       {mode === 'listen' && <button type="button" className="nv-listen nv-listen-top" onClick={() => say(item.ask ?? target)}><i className="nv-sico" aria-hidden="true" /> <b>듣기</b></button>}
@@ -111,17 +125,17 @@ export const LSpeak = (p: KindProps) => <Speak {...p} mode="listen" peekHint />;
 
 /** 따라 읽기: 듣기 → 말하기 → 단어별 결과(색) → 약한 단어를 짚어 다시 듣고 한 번 더 */
 export function RAloud({ item, onDone }: KindProps) {
-  const target: string = item.target ?? ''; const [round, setRound] = useState(1); const [g, setG] = useState<{ w: string; ok: boolean }[] | null>(null);
+  const target: string = item.target ?? ''; const [round, setRound] = useState(1); const [g, setG] = useState<GW[] | null>(null);
   const [fin, setFin] = useState(false); const firstOk = useRef(true);
   const t0 = useRef(0); const [flu, setFlu] = useState(0);
   const mic = useMic((t, info) => {
-    const opts = t.split(' | '); const best = opts.map((o) => grade(target, o)).sort((a, b) => pct(b) - pct(a))[0]; setG(best);
+    const opts = t.split(' | '); const best = opts.map((o) => grade(target, o)).sort((a, b) => pct(b) - pct(a))[0]; setG(attachAcc(best, info));
     // Azure 발음평가의 유창성(0~100)이 있으면 그것을 별 1~5개로, 없으면 속도로 추정
     setFlu(info?.fluency != null ? Math.max(1, Math.min(5, Math.round(info.fluency / 20))) : fluency(pct(best), target, Date.now() - t0.current));
     if (round === 1) { firstOk.current = pct(best) >= 0.7; if (pct(best) >= 0.95) { setFin(true); onDone([{ tag: 'speak', ok: true }]); } else setRound(2); }
     else { setFin(true); onDone([{ tag: 'speak', ok: firstOk.current }]); }
   }, () => target);
-  const bads = g?.filter((x) => !x.ok).map((x) => x.w.replace(/[^\w']/g, '')) ?? []; const stars = g ? Math.round(pct(g) * 5) : 0;
+  const bads = g?.filter(isBad).map((x) => x.w.replace(/[^\w']/g, '')) ?? []; const stars = g ? Math.round(pct(g) * 5) : 0;
   const startMic = () => { t0.current = Date.now(); mic.start(); };
   useEffect(() => { const id = setTimeout(() => sayAuto(target), 500); return () => clearTimeout(id); /* 열릴 때 한 번 들려줌 */ // eslint-disable-next-line
   }, []);
@@ -148,10 +162,10 @@ export function RAloud({ item, onDone }: KindProps) {
 export function Role({ item, pic, onDone }: KindProps) {
   const lines: { who: string; text: string }[] = (item.lines ?? []).map((l: string) => { const m = l.match(/^\s*([A-Za-z]+)\s*[:：]\s*(.*)$/); return m ? { who: m[1].toUpperCase(), text: m[2] } : { who: '', text: l }; });
   const roles = [...new Set(lines.map((l) => l.who).filter(Boolean))].slice(0, 2);
-  const [me, setMe] = useState<string | null>(null); const [pos, setPos] = useState(-1); const [g, setG] = useState<{ w: string; ok: boolean }[] | null>(null); const fired = useRef(false);
+  const [me, setMe] = useState<string | null>(null); const [pos, setPos] = useState(-1); const [g, setG] = useState<GW[] | null>(null); const fired = useRef(false);
   const [wait, setWait] = useState(false);
   const mine = pos >= 0 && pos < lines.length && lines[pos].who === me;
-  const mic = useMic((t) => { const best = t.split(' | ').map((o) => grade(lines[pos].text, o)).sort((a, b) => pct(b) - pct(a))[0]; setG(best); if (pct(best) >= 0.6) setTimeout(() => adv(pos), 700); }, () => lines[pos]?.text ?? '');
+  const mic = useMic((t, info) => { const best = t.split(' | ').map((o) => grade(lines[pos].text, o)).sort((a, b) => pct(b) - pct(a))[0]; setG(attachAcc(best, info)); if (pct(best) >= 0.6) setTimeout(() => adv(pos), 700); }, () => lines[pos]?.text ?? '');
   function adv(from: number) {
     setG(null); const n = from + 1; setPos(n);
     if (n >= lines.length) { if (!fired.current) { fired.current = true; onDone([{ tag: 'speak', ok: true }]); } return; }

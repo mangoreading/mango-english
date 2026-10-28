@@ -697,3 +697,10 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-overlay .nv-mtmod, .nv-overlay[data-skin] > .nv-mtmod { position:absolute; inset:0; z-index:60; }
 .nv-mtbtns .nv-ghost { background:#fff; color:#44546A; border:.12em solid #CBD6E6; }
 .nv-mic.busy { opacity:.5; animation:nv-pulse 1s infinite; cursor:default; }
+
+/* 단어별 발음 정확도(%): 70% 이상 초록 · 40~69% 주황 · 40% 미만 빨강 */
+.nv-gw .nv-w { display:inline-block; text-align:center; line-height:1.15; margin:0 .12em; vertical-align:top; background:none; text-decoration:none; padding:0; }
+.nv-gw .nv-w small { display:block; font-size:.42em; font-weight:800; margin-top:.25em; letter-spacing:0; }
+.nv-gw .a-hi small { color:#2E9E5B; }
+.nv-gw .a-mid { color:#C26A00; } .nv-gw .a-mid small { color:#C26A00; }
+.nv-gw .a-lo { color:#D64545; } .nv-gw .a-lo small { color:#D64545; }
