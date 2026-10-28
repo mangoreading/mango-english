@@ -6,14 +6,14 @@ import { canRecord, startRecording, type Recording } from './rec';
 type Phase = 'idle' | 'rec' | 'chk' | 'done';
 export function MicTest({ onClose }: { onClose: () => void }) {
   const [phase, setPhase] = useState<Phase>('idle'); const [level, setLevel] = useState(0); const [msg, setMsg] = useState(''); const [good, setGood] = useState<boolean | null>(null); const [heard, setHeard] = useState('');
-  const rec = useRef<Recording | null>(null);
+  const rec = useRef<Recording | null>(null); const [url, setUrl] = useState('');
   useEffect(() => () => { try { rec.current?.cancel(); } catch { /* 무시 */ } }, []);
   function start() {
     if (!canRecord()) { setPhase('done'); setGood(false); setMsg('이 기기에서는 마이크를 쓸 수 없어요.'); return; }
-    setPhase('rec'); setGood(null); setMsg(''); setHeard('');
+    setPhase('rec'); setGood(null); setMsg(''); setHeard(''); setUrl((u) => { if (u) URL.revokeObjectURL(u); return ''; });
     const r = startRecording({ maxMs: 7000, noSpeechMs: 5000, onLevel: setLevel }); rec.current = r;
     r.result.then(async (wav) => {
-      setLevel(0); const h = getStt();
+      setLevel(0); setUrl(URL.createObjectURL(wav)); const h = getStt();
       if (!h) { setPhase('done'); setGood(true); setMsg('마이크 소리가 잘 들어와요!'); return; }
       setPhase('chk');
       try {
@@ -33,6 +33,7 @@ export function MicTest({ onClose }: { onClose: () => void }) {
         <p className="nv-mttext">{phase === 'idle' ? "시작을 누르고 'Hello'라고 말해 보세요." : phase === 'rec' ? "듣고 있어요… 'Hello'라고 말해 보세요." : phase === 'chk' ? '확인하고 있어요…' : msg}</p>
         <span className="nv-lvl nv-lvl-big" aria-hidden="true">{Array.from({ length: 15 }).map((_, k) => <i key={k} className={phase === 'rec' && Math.min(1, level * 7) > k / 15 ? 'on' : ''} />)}</span>
         {phase === 'done' && heard && <p className="nv-mtheard">들린 말: “{heard}”</p>}
+        {(phase === 'chk' || phase === 'done') && url && <audio className="nv-mtaudio" controls src={url} aria-label="내 목소리 다시 듣기" />}
         {phase === 'done' && good != null && <p className={'nv-mtres ' + (good ? 'ok' : 'bad')}>{good ? '✓' : '✕'}</p>}
         <div className="nv-mtbtns">
           {(phase === 'idle' || phase === 'done') && <button type="button" className="nv-btn" onClick={start}>{phase === 'idle' ? '시작' : '다시 해 보기'}</button>}
