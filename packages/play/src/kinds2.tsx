@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { imgSrc, say, sayAuto, shuffle, type KindProps, type Res } from './common';
+import { imgSrc, say, sayAuto, sayScript, isScript, shuffle, type KindProps, type Res } from './common';
 import { Hint } from './hint';
 import { Fb } from './fb';
 
@@ -8,7 +8,14 @@ import { Fb } from './fb';
 type O = { t: string; flag?: string };
 const Img = ({ src, cls }: { src: string | null; cls: string }) => (src ? <img className={cls} src={imgSrc(src)} alt="" draggable={false} /> : null);
 
-const Listen = ({ text }: { text: string }) => <button type="button" className="nv-listen nv-listen-top" onClick={() => say(text)}><i className="nv-sico" aria-hidden="true" /> <b>듣기</b></button>;
+const Listen = ({ text, max }: { text: string; max?: number }) => {
+  const [n, setN] = useState(0); const long = isScript(text);
+  const left = max == null ? null : Math.max(0, max - n);
+  return <button type="button" className="nv-listen nv-listen-top" disabled={left === 0} style={left === 0 ? { opacity: .45 } : undefined}
+    onClick={() => { setN(n + 1); if (long) sayScript(text); else say(text); }}>
+    <i className="nv-sico" aria-hidden="true" /> <b>듣기</b>{left != null && <span style={{ marginLeft: '.5em', fontSize: '.8em' }}>({left}번 남음)</span>}
+  </button>;
+};
 const Lines = ({ lines, cls }: { lines: string[]; cls?: string }) => <div className={cls ?? 'nv-dlg'}>{lines.map((l, i) => <p key={i}>{l}</p>)}</div>;
 
 /** 보기 한 개를 눌러 정답을 찾는 공통 동작: 틀리면 흔들리고 다시, 맞으면 초록으로 잠긴다 */
@@ -110,7 +117,7 @@ function LChoose({ item, pic, onDone, mode }: KindProps & { mode: 'row' | 'pic' 
   const opts: O[] = item.opts ?? []; const s = useSingle(item.a ?? 0, 'listen', onDone);
   return (
     <div className="nv-body nv-hasl">
-      <Listen text={item.say ?? ''} />
+      <Listen text={item.say ?? ''} max={item.replay} />
       <div className={mode === 'list' ? 'nv-list' : 'nv-row4'}>
         {opts.map((o, i) => (
           <button key={i} className={'nv-opt' + (mode === 'pic' ? ' nv-opt-pic' : mode === 'row' ? ' nv-opt-tile' : '') + s.cls(i)} onClick={() => s.pick(i)}>

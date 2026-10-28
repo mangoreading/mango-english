@@ -131,7 +131,8 @@ export const DChoice = z.object({ ...T1, k: z.literal('dchoice'), q: z.string().
 /** True or False */
 export const TrueFalse = z.object({ ...T1, k: z.literal('tf'), lines: z.array(z.string()).optional(), stmt: z.string().min(1), a: z.boolean().optional(), hint });
 /** 듣고 고르기 3종 (글 4칸 / 그림 4칸 / 세로 목록) */
-const lch = { ...T1, q: z.string().optional(), say: z.string().min(1), opts: z.array(Opt).min(2).max(6), a: z.number().int().min(0), hint };
+/** say 에 여러 줄("이름: 문장")을 넣으면 긴 듣기 지문. replay 는 다시 듣기 가능 횟수(비우면 제한 없음) */
+const lch = { ...T1, q: z.string().optional(), say: z.string().min(1), replay: z.number().int().min(1).max(9).optional(), opts: z.array(Opt).min(2).max(6), a: z.number().int().min(0), hint };
 export const LChText = z.object({ ...lch, k: z.literal('lchtext') });
 export const LChPic = z.object({ ...lch, k: z.literal('lchpic') });
 export const LChList = z.object({ ...lch, k: z.literal('lchlist') });

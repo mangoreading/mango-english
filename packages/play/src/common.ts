@@ -51,12 +51,31 @@ export function say(text: string) {
 /** 읽어 주고, 다 읽으면 done()을 부른다. 소리가 안 되는 환경이거나 끝 신호가 안 오면 3초 뒤에 부른다. */
 export function sayThen(text: string, done: () => void, pitch = 1) {
   let fin = false; const end = () => { if (!fin) { fin = true; done(); } };
-  setTimeout(end, 3000);
+  setTimeout(end, Math.max(3000, text.length * 120));
   try {
     speechSynthesis.cancel();
     const u = utter(text, pitch); u.onend = end; u.onerror = end;
     speechSynthesis.speak(u);
   } catch { end(); }
+}
+
+/** 여러 줄 지문 재생: 한 줄씩 차례로 읽는다. "이름: 문장" 이면 이름별로 목소리 높낮이를 달리한다. 새로 재생하면 앞 재생은 멈춘다. */
+let scriptGen = 0;
+export const isScript = (t?: string) => /\n/.test((t ?? '').trim());
+export function sayScript(text: string, done?: () => void) {
+  const gen = ++scriptGen;
+  const rows = text.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => {
+    const m = l.match(/^([A-Za-z][A-Za-z .'-]{0,14}|[가-힣]{1,6}):\s*(.+)$/);
+    return m ? { who: m[1], t: m[2] } : { who: undefined as string | undefined, t: l };
+  });
+  let i = 0;
+  const next = () => {
+    if (gen !== scriptGen) return;
+    if (i >= rows.length) { done?.(); return; }
+    const r = rows[i++];
+    sayThen(r.t, () => { if (gen === scriptGen) setTimeout(next, 350); }, voicePitch(r.who));
+  };
+  next();
 }
 
 export function shuffle<T>(a: T[]): T[] {
