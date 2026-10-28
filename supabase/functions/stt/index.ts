@@ -34,11 +34,15 @@ Deno.serve(async (req) => {
     const d = await r.json();
     if (d.RecognitionStatus && d.RecognitionStatus !== 'Success') return json({ text: '', status: d.RecognitionStatus });
     const n = d.NBest?.[0] ?? {};
+    // 점수는 응답 형태에 따라 NBest 바로 아래에 있거나 PronunciationAssessment 안에 있다. 두 곳 모두 읽는다.
     const pa = n.PronunciationAssessment ?? {};
+    const num = (a: unknown, b: unknown) => (typeof a === 'number' ? a : typeof b === 'number' ? b : undefined);
+    type W = { Word: string; AccuracyScore?: number; ErrorType?: string; PronunciationAssessment?: { AccuracyScore?: number; ErrorType?: string } };
     return json({
       text: String(n.Lexical ?? n.Display ?? d.DisplayText ?? ''), display: String(n.Display ?? d.DisplayText ?? ''), status: 'Success', // 채점에는 숫자를 글자로 읽은 형태(Lexical: fifteen thousand)를 쓴다. Display 는 15,000 처럼 숫자로 나온다
-      accuracy: pa.AccuracyScore, fluency: pa.FluencyScore, completeness: pa.CompletenessScore, pron: pa.PronScore,
-      words: Array.isArray(n.Words) ? n.Words.map((w: { Word: string; PronunciationAssessment?: { AccuracyScore?: number; ErrorType?: string } }) => ({ w: w.Word, acc: w.PronunciationAssessment?.AccuracyScore, err: w.PronunciationAssessment?.ErrorType })) : undefined,
+      accuracy: num(n.AccuracyScore, pa.AccuracyScore), fluency: num(n.FluencyScore, pa.FluencyScore), completeness: num(n.CompletenessScore, pa.CompletenessScore), pron: num(n.PronScore, pa.PronScore),
+      dbg: { nk: Object.keys(n), wk: n.Words?.[0] ? Object.keys(n.Words[0]) : [] }, // 점수가 안 보일 때 원인을 찾기 위한 응답 구조(점수 값은 아님)
+      words: Array.isArray(n.Words) ? n.Words.map((w: W) => ({ w: w.Word, acc: num(w.AccuracyScore, w.PronunciationAssessment?.AccuracyScore), err: w.ErrorType ?? w.PronunciationAssessment?.ErrorType })) : undefined,
     });
   } catch (e) {
     return json({ error: String((e as Error).message ?? e) }, 500);
