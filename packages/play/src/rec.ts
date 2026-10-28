@@ -20,8 +20,8 @@ function down(f32: Float32Array, from: number, to: number): Float32Array {
   return out;
 }
 
-export function startRecording(opt: { maxMs?: number; noSpeechMs?: number; endSilenceMs?: number } = {}): Recording {
-  const maxMs = opt.maxMs ?? 15000, noSpeechMs = opt.noSpeechMs ?? 7000, endSilenceMs = opt.endSilenceMs ?? 1200;
+export function startRecording(opt: { maxMs?: number; noSpeechMs?: number; endSilenceMs?: number; onLevel?: (v: number) => void } = {}): Recording {
+  const maxMs = opt.maxMs ?? 15000, noSpeechMs = opt.noSpeechMs ?? 7000, endSilenceMs = opt.endSilenceMs ?? 1500;
   let finish: (b: Blob) => void = () => undefined, fail: (e: RecErr) => void = () => undefined;
   const result = new Promise<Blob>((res, rej) => { finish = res; fail = rej; });
   let done = false; let cleanup = () => undefined as void; let wantStop = false; let endNow: (() => void) | null = null;
@@ -36,7 +36,7 @@ export function startRecording(opt: { maxMs?: number; noSpeechMs?: number; endSi
     const chunks: Float32Array[] = []; const t0 = Date.now(); const lows: number[] = []; let peak = 0, spoke = false, lastVoice = 0, voiced = 0;
     cleanup = () => { try { proc.disconnect(); src.disconnect(); stream.getTracks().forEach((t) => t.stop()); void ctx.close(); } catch { /* 무시 */ } };
     const end = () => {
-      if (done) return; done = true; cleanup();
+      if (done) return; done = true; cleanup(); opt.onLevel?.(0);
       if (peak < 0.004) { fail('silent'); return; }            // 마이크 소리가 거의 안 들어옴(다른 마이크가 선택됐거나 음소거)
       // 말을 감지하지 못했어도 소리가 있었다면 Azure 에 보내 판단을 맡긴다
       let n = 0; for (const c of chunks) n += c.length; const all = new Float32Array(n); let o = 0; for (const c of chunks) { all.set(c, o); o += c.length; }
@@ -47,10 +47,10 @@ export function startRecording(opt: { maxMs?: number; noSpeechMs?: number; endSi
       if (done) return;
       const d = e.inputBuffer.getChannelData(0); chunks.push(new Float32Array(d));
       let s = 0; for (let i = 0; i < d.length; i++) s += d[i] * d[i]; const rms = Math.sqrt(s / d.length); const now = Date.now() - t0;
-      peak = Math.max(peak, rms);
+      peak = Math.max(peak, rms); opt.onLevel?.(rms);
       if (now < 400) { lows.push(rms); return; }                        // 처음 0.4초는 주변 소음 크기 측정
       const floor = lows.length ? Math.min(...lows) : 0;                // 말을 바로 시작해도 흔들리지 않게 가장 조용한 값 기준
-      const thr = Math.max(0.006, floor * 2.5);
+      const thr = Math.max(0.005, floor * 2.2);
       if (rms > thr) { voiced++; lastVoice = now; if (voiced >= 2) spoke = true; }
       if (wantStop || now > maxMs || (!spoke && now > noSpeechMs) || (spoke && now - lastVoice > endSilenceMs)) end();
     };

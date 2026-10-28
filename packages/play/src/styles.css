@@ -677,3 +677,22 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-rv-who { flex:none; width:4.2em; font-size:.85em; font-weight:700; color:#5B6B8C; padding-top:.15em; }
 .nv-rv-row b { display:block; font-weight:600; color:#20233e; } .nv-rv-row small { display:block; color:#7A7360; font-size:.9em; }
 .nv-rv-ex { background:#F2F6FD; border:.1em solid #D6DEEA; border-radius:1em; padding:.5em 1em; } .nv-rv-ex p { margin:.3em 0; line-height:1.5; }
+
+/* ===== 마이크: 소리 크기 막대 · 마이크 테스트 ===== */
+.nv-lvl { display:flex; align-items:flex-end; justify-content:center; gap:.28em; height:1.6em; }
+.nv-lvl i { width:.38em; height:.5em; border-radius:.2em; background:#e3e8f2; transition:height .08s, background .08s; }
+.nv-lvl i.on { height:1.5em; background:#f51c44; }
+.nv-lvl-big { height:2.4em; margin:.8em 0 .4em; } .nv-lvl-big i { width:.5em; } .nv-lvl-big i.on { height:2.3em; }
+.nv-instrow { position:relative; flex:none; }
+.nv-mtbtn { position:absolute; right:1.6em; top:.2em; font:inherit; font-size:.9em; font-weight:700; color:#44546A; background:#fff; border:.1em solid #CBD6E6; border-radius:2em; padding:.45em 1em; cursor:pointer; white-space:nowrap; }
+.nv-mtbtn i { font-style:normal; margin-right:.3em; }
+.nv-mtmod { position:absolute; inset:0; z-index:60; display:grid; place-items:center; background:rgba(32,35,62,.45); }
+.nv-mtbox { width:min(28em, 88%); background:#fff; border-radius:1.2em; padding:1.6em 2em 1.4em; text-align:center; box-shadow:0 .6em 2em rgba(0,0,0,.25); }
+.nv-mttitle { font-size:1.3em; }
+.nv-mttext { min-height:3em; margin:.8em 0 0; font-size:1.05em; line-height:1.5; }
+.nv-mtheard { margin:.2em 0; color:#7a869c; }
+.nv-mtres { margin:.2em 0; font-size:2em; font-weight:800; } .nv-mtres.ok { color:#2E9E5B; } .nv-mtres.bad { color:#D9544A; }
+.nv-mtbtns { display:flex; gap:.8em; justify-content:center; margin-top:1em; }
+@media (max-width:760px) { .nv-mtbtn { position:static; display:block; margin:.4em auto 0; } }
+.nv-overlay .nv-mtmod, .nv-overlay[data-skin] > .nv-mtmod { position:absolute; inset:0; z-index:60; }
+.nv-mtbtns .nv-ghost { background:#fff; color:#44546A; border:.12em solid #CBD6E6; }

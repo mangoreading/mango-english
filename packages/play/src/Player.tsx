@@ -5,6 +5,7 @@ import { VCards, VMatch, VSound, VSpell, VType1, VWrite } from './kinds';
 import { AiTalk, LookSpeak, LSpeak, Present, RAloud, Role, SayKor } from './kinds5';
 import { DFill, LWrite, MFree, MWBank, SBuild, SCloze, SFill, SOrder, SScram, SWrite, SWrt } from './kinds4';
 import { SceneStory } from './kinds6';
+import { MicTest } from './mictest';
 import { Goal, KExp, LCardP, LCardT, LSent, MText, PRead, SDrill, TapL, WRepeat } from './kinds3';
 import { DChoice, LChList, LChPic, LChText, LMatch, PChoice, SqChoice, SqMulti, SqTF, TrueFalse, WChoice } from './kinds2';
 
@@ -70,6 +71,7 @@ const VOCAB_SKIN: string[] = [];
 /** 말하기 지시문의 '영어로 말해 보세요' 부분을 파랗게 강조 (mango 스킨) */
 function hl(t: string, on: boolean) { const m = on ? t.match(/^(.*?)((?:영어로 |따라 )?말해 보세요.*)$/) : null; return m ? <>{m[1]}<span className="nv-hl">{m[2]}</span></> : t; }
 const BG_SKIN = ['sdrill', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat', 'pchoice'];
+const MIC_KINDS = ['lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'aitalk']; // 마이크를 쓰는 활동(지시문 오른쪽에 '마이크 테스트' 버튼)
 const SPEAK_SKIN = ['goal', 'scene', 'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'tapl', 'aitalk', 'lwrite', 'kexp', 'lsent', 'lcardp', 'lcardt', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'mfree', 'swrt', 'mtext', 'pread', 'dchoice', 'tf', 'sqchoice', 'sqtf', 'sqmulti'];
 const OWN_PIC = ['lookspeak', 'role', 'pchoice', 'dchoice', 'dfill', 'goal', 'lcardp', 'lchpic', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat'];
 /** 듣고 고르기: 질문을 맨 위 안내 자리에 보여 준다 */
@@ -89,6 +91,7 @@ export function NativePlayer({ title, items, vocab, nextLabel, quiet, onResult, 
   const [pts, setPts] = useState(0);
   const [slot, setSlot] = useState<HTMLElement | null>(null);
   const [prog, setProg] = useState<CardProg>(null);
+  const [mt, setMt] = useState(false);
   const byKey = useMemo(() => new Map(vocab.map((v) => [v.key, v])), [vocab]);
   const it = items[i];
 
@@ -127,7 +130,10 @@ export function NativePlayer({ title, items, vocab, nextLabel, quiet, onResult, 
         <span className="nv-dots">{(prog ? Array.from({ length: prog.n }) : items).map((_, k) => { const c = prog ? prog.cur : i; return <i key={k} className={k < c ? 'd1' : k === c ? 'd2' : ''} />; })}</span>
         <span className="nv-pts"><i className="nv-star">★</i> 포인트 : +{pts}</span>
       </div>
+      <div className="nv-instrow">
       <p className="nv-inst"><span>{hl(LCH.includes(it.k) && it.q ? it.q : it.inst || INST[it.k] || '', SPEAK_SKIN.includes(it.k) || BG_SKIN.includes(it.k))}{INST_SUB[it.k] && <small>{INST_SUB[it.k]}</small>}</span></p>
+        {MIC_KINDS.includes(it.k) && <button type="button" className="nv-mtbtn" onClick={() => setMt(true)}><i aria-hidden="true">🎤</i> 마이크 테스트</button>}
+      </div>
       <ProgCtx.Provider value={setProg}>
       <FbSlot.Provider value={slot}>
       {!Comp || words.length !== keys.length
@@ -136,6 +142,7 @@ export function NativePlayer({ title, items, vocab, nextLabel, quiet, onResult, 
       </FbSlot.Provider>
       </ProgCtx.Provider>
       {it.pic && !OWN_PIC.includes(it.k) && !NO_SIDE.includes(it.k) && byKey.get(it.pic)?.image && <img className="nv-sidepic" src={imgSrc(byKey.get(it.pic)!.image)} alt="" draggable={false} />}
+      {mt && <MicTest onClose={() => setMt(false)} />}
       <div className="nv-foot"><span className="nv-fbslot" ref={setSlot} /><button className="nv-btn nv-btn-lg" disabled={!done} onClick={next}>{last ? '결과 보기' : '다음'}</button></div>
     </div>
   );
