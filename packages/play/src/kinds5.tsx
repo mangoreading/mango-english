@@ -78,10 +78,10 @@ function attachAcc(g: GW[], info?: SttInfo): GW[] {
   return g.map((x) => { const c = clean(x.w); const j = ws.findIndex((y, k) => !used.has(k) && clean(y.w) === c); if (j < 0 || ws[j].acc == null) return x.ok ? x : { ...x, acc: 0 }; used.add(j); return { ...x, acc: ws[j].acc }; });
 }
 const isBad = (x: GW) => (x.acc != null ? x.acc < 70 : !x.ok);
-// 70% 이상: 보통(초록 %) · 40~69%: 주황 · 40% 미만: 빨강
+// 70% 이상: 보통(검은 글자, % 표시 없음) · 40~69%: 주황 · 40% 미만: 빨강 — % 는 70% 미만 단어에만 보여 준다
 const accCls = (a: number) => (a >= 70 ? 'a-hi' : a >= 40 ? 'a-mid' : 'a-lo');
 const Words = ({ g, plain }: { g: GW[]; plain?: boolean }) => <span className="nv-gw">{g.map((x, i) => x.acc != null
-  ? <span key={i} className={'nv-w ' + accCls(x.acc)}>{x.w}<small>{Math.round(x.acc)}%</small>{' '}</span>
+  ? <span key={i} className={'nv-w ' + accCls(x.acc)}>{x.w}{x.acc < 70 && <small>{Math.round(x.acc)}%</small>}{' '}</span>
   : <span key={i} className={plain || x.ok ? 'ok' : 'bad'}>{x.w} </span>)}</span>; // plain: 밑줄·배경 표시 없이(따라 읽기는 단어별 %로만 보여 준다)
 
 /** 말하기 3종: lookspeak(그림) / saykor(우리말) / lspeak(듣고 대답) */
