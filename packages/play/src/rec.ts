@@ -20,7 +20,7 @@ function down(f32: Float32Array, from: number, to: number): Float32Array {
   return out;
 }
 
-export function startRecording(opt: { maxMs?: number; noSpeechMs?: number; endSilenceMs?: number; onLevel?: (v: number) => void } = {}): Recording {
+export function startRecording(opt: { maxMs?: number; noSpeechMs?: number; endSilenceMs?: number; onLevel?: (v: number) => void; onReady?: () => void } = {}): Recording {
   const maxMs = opt.maxMs ?? 15000, noSpeechMs = opt.noSpeechMs ?? 7000, endSilenceMs = opt.endSilenceMs ?? 1500;
   let finish: (b: Blob) => void = () => undefined, fail: (e: RecErr) => void = () => undefined;
   const result = new Promise<Blob>((res, rej) => { finish = res; fail = rej; });
@@ -43,8 +43,10 @@ export function startRecording(opt: { maxMs?: number; noSpeechMs?: number; endSi
       finish(toWav(down(all, ctx.sampleRate, 16000), Math.min(16000, ctx.sampleRate)));
     };
     endNow = end; if (wantStop) { end(); return; }
+    let readyFired = false;
     proc.onaudioprocess = (e) => {
       if (done) return;
+      if (!readyFired) { readyFired = true; opt.onReady?.(); }   // 첫 소리 조각이 들어오기 시작하면 '말해 보세요'
       const d = e.inputBuffer.getChannelData(0); chunks.push(new Float32Array(d));
       let s = 0; for (let i = 0; i < d.length; i++) s += d[i] * d[i]; const rms = Math.sqrt(s / d.length); const now = Date.now() - t0;
       peak = Math.max(peak, rms); opt.onLevel?.(rms);
