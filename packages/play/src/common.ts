@@ -44,7 +44,16 @@ function utter(text: string, pitch = 1): SpeechSynthesisUtterance {
   return u;
 }
 
+/* ===== Azure 음성(서버): 연결돼 있으면 긴 지문에 쓰고, 안 되면 브라우저 음성으로 대신한다 ===== */
+export type TtsLine = { who?: string; t: string };
+let ttsHook: ((lines: TtsLine[]) => Promise<Blob>) | null = null;
+export const registerTts = (h: (lines: TtsLine[]) => Promise<Blob>) => { ttsHook = h; };
+const ttsCache = new Map<string, string>();
+let curAudio: HTMLAudioElement | null = null;
+const stopAudio = () => { try { curAudio?.pause(); } catch { /* 무시 */ } curAudio = null; };
+
 export function say(text: string) {
+  stopAudio(); scriptGen++;
   try { speechSynthesis.cancel(); speechSynthesis.speak(utter(text)); } catch { /* 소리가 안 되는 환경이면 조용히 넘어간다 */ }
 }
 
@@ -63,11 +72,13 @@ export function sayThen(text: string, done: () => void, pitch = 1) {
 let scriptGen = 0;
 export const isScript = (t?: string) => /\n/.test((t ?? '').trim());
 export function sayScript(text: string, done?: () => void) {
+  stopAudio();
   const gen = ++scriptGen;
   const rows = text.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => {
     const m = l.match(/^([A-Za-z][A-Za-z .'-]{0,14}|[가-힣]{1,6}):\s*(.+)$/);
     return m ? { who: m[1], t: m[2] } : { who: undefined as string | undefined, t: l };
   });
+  const browser = () => {
   let i = 0;
   const next = () => {
     if (gen !== scriptGen) return;
@@ -76,6 +87,18 @@ export function sayScript(text: string, done?: () => void) {
     sayThen(r.t, () => { if (gen === scriptGen) setTimeout(next, 350); }, voicePitch(r.who));
   };
   next();
+  };
+  if (!ttsHook) { browser(); return; }
+  const k = JSON.stringify(rows);
+  const play = (src: string) => {
+    if (gen !== scriptGen) return;
+    try { speechSynthesis.cancel(); } catch { /* 무시 */ }
+    const a = new Audio(src); curAudio = a; a.onended = () => done?.(); a.onerror = () => { if (gen === scriptGen) browser(); };
+    a.play().catch(() => { if (gen === scriptGen) browser(); });
+  };
+  const hit = ttsCache.get(k);
+  if (hit) { play(hit); return; }
+  ttsHook(rows).then((b) => { const u = URL.createObjectURL(b); ttsCache.set(k, u); play(u); }).catch(() => { if (gen === scriptGen) browser(); });
 }
 
 export function shuffle<T>(a: T[]): T[] {

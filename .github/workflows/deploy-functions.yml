@@ -21,3 +21,4 @@ jobs:
           if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then echo "::error::GitHub Secrets 에 SUPABASE_ACCESS_TOKEN 이 없어요"; exit 1; fi
           supabase functions deploy ai-assist --project-ref migqgdcewawndbezvfqv
           supabase functions deploy gen-image --project-ref migqgdcewawndbezvfqv
+          supabase functions deploy tts --project-ref migqgdcewawndbezvfqv

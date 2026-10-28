@@ -1,4 +1,4 @@
-import { registerAi } from '@mango/play';
+import { registerAi, registerTts } from '@mango/play';
 import { supabase } from './supabase';
 
 /** AI 도우미 연결: Supabase 서버 함수(ai-assist)를 통해 힌트·대화를 받는다. 함수가 아직 없거나 실패하면 문항에 적힌 내용으로 대신한다. */
@@ -18,4 +18,11 @@ registerAi({
   hint: (r) => call({ action: 'hint', ...r }),
   check: async (r) => { const t = await call({ action: 'check', ...r }); const a = JSON.parse(t); if (!Array.isArray(a)) throw new Error('bad'); return r.rules.map((_, i) => !!a[i]); },
   chat: (r) => call({ action: 'chat', ...r }),
+});
+
+/** 음성 합성 연결: Supabase 서버 함수(tts)가 Azure 음성으로 만든 mp3 를 받아 온다. 실패하면 브라우저 음성으로 대신한다. */
+registerTts(async (lines) => {
+  const { data, error } = await supabase.functions.invoke('tts', { body: { lines } });
+  if (error || !(data instanceof Blob)) throw new Error('tts');
+  return data;
 });
