@@ -88,7 +88,7 @@ function Speak({ item, pic, onDone, mode, peekHint }: KindProps & { mode: 'look'
   const [peek, setPeek] = useState(false); const peekT = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showHint = () => { setPeek(true); if (peekT.current) clearTimeout(peekT.current); peekT.current = setTimeout(() => setPeek(false), 3000); };
   useEffect(() => () => { if (peekT.current) clearTimeout(peekT.current); }, []);
-  const target: string = item.target ?? ''; const need: number = item.pass ?? 0.7;
+  const target: string = item.target ?? ''; const need: number = item.pass ?? 0.5;
   const [g, setG] = useState<GW[] | null>(null); const [heard, setHeard] = useState(''); const [tries, setTries] = useState(0); const [ok, setOk] = useState(false);
   const mic = useMic((t) => {
     const opts = t.split(' | '); const best = opts.map((o) => grade(target, o)).sort((a, b) => pct(b) - pct(a))[0];
@@ -165,7 +165,7 @@ export function Role({ item, pic, onDone }: KindProps) {
   const [me, setMe] = useState<string | null>(null); const [pos, setPos] = useState(-1); const [g, setG] = useState<GW[] | null>(null); const fired = useRef(false);
   const [wait, setWait] = useState(false);
   const mine = pos >= 0 && pos < lines.length && lines[pos].who === me;
-  const mic = useMic((t) => { const best = t.split(' | ').map((o) => grade(lines[pos].text, o)).sort((a, b) => pct(b) - pct(a))[0]; setG(best); if (pct(best) >= 0.6) setTimeout(() => adv(pos), 700); }, () => lines[pos]?.text ?? '');
+  const mic = useMic((t) => { const best = t.split(' | ').map((o) => grade(lines[pos].text, o)).sort((a, b) => pct(b) - pct(a))[0]; setG(best); if (pct(best) >= 0.5) setTimeout(() => adv(pos), 700); }, () => lines[pos]?.text ?? '');
   function adv(from: number) {
     setG(null); const n = from + 1; setPos(n);
     if (n >= lines.length) { if (!fired.current) { fired.current = true; onDone([{ tag: 'speak', ok: true }]); } return; }
