@@ -1,9 +1,9 @@
 // Mango English 말하기 평가(STT): 학생이 녹음한 짧은 음성(WAV 16kHz 모노)을 Azure 로 보내 글자로 바꾸고,
 // 읽어야 할 문장(x-ref)이 있으면 발음 평가(정확도·유창성·완성도)도 함께 돌려준다.
-// Azure 키는 Supabase 비밀 값 AZURE_SPEECH_KEY / AZURE_SPEECH_REGION(없으면 koreacentral) 에서만 읽는다. 로그인한 사용자만 쓸 수 있다.
+// Azure 키는 Supabase 비밀 값 AZURE_STT_KEY(없으면 AZURE_SPEECH_KEY) / AZURE_STT_REGION(없으면 AZURE_SPEECH_REGION, 그것도 없으면 koreacentral) 에서만 읽는다. 로그인한 사용자만 쓸 수 있다.
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
-const REGION = Deno.env.get('AZURE_SPEECH_REGION') ?? 'koreacentral';
+const REGION = Deno.env.get('AZURE_STT_REGION') ?? Deno.env.get('AZURE_SPEECH_REGION') ?? 'koreacentral';
 const MAX_BYTES = 700_000; // 16kHz 16bit 모노 약 20초
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-ref', 'Access-Control-Allow-Methods': 'POST, OPTIONS' };
 const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { ...CORS, 'Content-Type': 'application/json' } });
@@ -17,8 +17,8 @@ Deno.serve(async (req) => {
     const { data: u } = await asUser.auth.getUser(token);
     if (!u?.user) return json({ error: '로그인이 필요해요' }, 401);
 
-    const key = Deno.env.get('AZURE_SPEECH_KEY');
-    if (!key) return json({ error: 'AZURE_SPEECH_KEY 가 설정되어 있지 않아요' }, 500);
+    const key = Deno.env.get('AZURE_STT_KEY') ?? Deno.env.get('AZURE_SPEECH_KEY'); // STT 전용 키가 있으면 그것을, 없으면 공용 Speech 키를 쓴다
+    if (!key) return json({ error: 'AZURE_STT_KEY 가 설정되어 있지 않아요' }, 500);
 
     const audio = new Uint8Array(await req.arrayBuffer());
     if (audio.length < 2000) return json({ error: '녹음이 너무 짧아요' }, 400);
