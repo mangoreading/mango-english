@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
     const n = d.NBest?.[0] ?? {};
     const pa = n.PronunciationAssessment ?? {};
     return json({
-      text: String(n.Display ?? d.DisplayText ?? ''), status: 'Success',
+      text: String(n.Lexical ?? n.Display ?? d.DisplayText ?? ''), display: String(n.Display ?? d.DisplayText ?? ''), status: 'Success', // 채점에는 숫자를 글자로 읽은 형태(Lexical: fifteen thousand)를 쓴다. Display 는 15,000 처럼 숫자로 나온다
       accuracy: pa.AccuracyScore, fluency: pa.FluencyScore, completeness: pa.CompletenessScore, pron: pa.PronScore,
       words: Array.isArray(n.Words) ? n.Words.map((w: { Word: string; PronunciationAssessment?: { AccuracyScore?: number; ErrorType?: string } }) => ({ w: w.Word, acc: w.PronunciationAssessment?.AccuracyScore, err: w.PronunciationAssessment?.ErrorType })) : undefined,
     });
