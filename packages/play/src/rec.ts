@@ -24,8 +24,8 @@ export function startRecording(opt: { maxMs?: number; noSpeechMs?: number; endSi
   const maxMs = opt.maxMs ?? 15000, noSpeechMs = opt.noSpeechMs ?? 7000, endSilenceMs = opt.endSilenceMs ?? 1200;
   let finish: (b: Blob) => void = () => undefined, fail: (e: RecErr) => void = () => undefined;
   const result = new Promise<Blob>((res, rej) => { finish = res; fail = rej; });
-  let done = false; let cleanup = () => undefined as void; let wantStop = false;
-  const stop = () => { wantStop = true; };
+  let done = false; let cleanup = () => undefined as void; let wantStop = false; let endNow: (() => void) | null = null;
+  const stop = () => { wantStop = true; endNow?.(); };   // 버튼을 누르면 다음 소리 조각을 기다리지 않고 바로 끝낸다
   const cancel = () => { if (done) return; done = true; cleanup(); fail('error'); };
   (async () => {
     let stream: MediaStream;
@@ -42,6 +42,7 @@ export function startRecording(opt: { maxMs?: number; noSpeechMs?: number; endSi
       let n = 0; for (const c of chunks) n += c.length; const all = new Float32Array(n); let o = 0; for (const c of chunks) { all.set(c, o); o += c.length; }
       finish(toWav(down(all, ctx.sampleRate, 16000), Math.min(16000, ctx.sampleRate)));
     };
+    endNow = end; if (wantStop) { end(); return; }
     proc.onaudioprocess = (e) => {
       if (done) return;
       const d = e.inputBuffer.getChannelData(0); chunks.push(new Float32Array(d));

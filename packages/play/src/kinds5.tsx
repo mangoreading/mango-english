@@ -28,20 +28,22 @@ const pct = (g: { ok: boolean }[]) => (g.length ? g.filter((x) => x.ok).length /
 
 /** 마이크 훅: start() 하면 한 번 듣고 결과 문장을 돌려준다 */
 function useMic(onText: (t: string, info?: SttInfo) => void, getRef?: () => string) {
-  const [on, setOn] = useState(false); const [err, setErr] = useState(''); const rec = useRef<SR | null>(null); const az = useRef<Recording | null>(null);
+  const [on, setOn] = useState(false); const [busy, setBusy] = useState(false); const [err, setErr] = useState(''); const rec = useRef<SR | null>(null); const az = useRef<Recording | null>(null);
   const cb = useRef(onText); cb.current = onText; const refFn = useRef(getRef); refFn.current = getRef;
   useEffect(() => () => { try { rec.current?.abort(); } catch { /* */ } try { az.current?.cancel(); } catch { /* */ } }, []);
   function startAzure() {
     const r = startRecording(); az.current = r; setErr(''); setOn(true);
     r.result.then(async (wav) => {
+      setOn(false); setBusy(true);   // 녹음이 끝나면 바로 '확인 중' 상태로 바꿔 서버 응답을 기다리는 동안에도 눌렀다는 것이 보이게 한다
       try {
         const info = await getStt()!(wav, refFn.current?.());
-        setOn(false); console.debug('[stt]', info, wav.size);
+        setBusy(false); console.debug('[stt]', info, wav.size);
         if (!info.text.trim()) setErr('nospeech'); else cb.current(info.text, info);
-      } catch { azureBroken = true; setOn(false); setErr('error'); }
+      } catch { azureBroken = true; setBusy(false); setOn(false); setErr('error'); }
     }).catch((c) => { setOn(false); if (c === 'denied' || c === 'nospeech' || c === 'silent') setErr(c); else setErr('error'); });
   }
   function start() {
+    if (busy) return;
     if (useAzure()) { startAzure(); return; }
     const C = SRClass(); if (!C) { setErr('nosupport'); return; }
     try {
@@ -54,14 +56,14 @@ function useMic(onText: (t: string, info?: SttInfo) => void, getRef?: () => stri
     } catch { setErr('error'); setOn(false); }
   }
   const stop = () => { try { rec.current?.stop(); } catch { /* */ } try { az.current?.stop(); } catch { /* */ } };
-  return { on, err, start, stop };
+  return { on, busy, err, start, stop };
 }
 const ERRMSG: Record<string, string> = { nosupport: '이 브라우저는 말소리 인식을 지원하지 않아요. 소리 내어 읽고 아래 버튼을 눌러 주세요.', denied: '마이크 사용이 막혀 있어요. 주소창의 마이크 허용을 눌러 주세요.', nospeech: '소리가 들리지 않았어요. 다시 말해 보세요.', silent: '마이크 소리가 거의 들어오지 않아요. 마이크가 켜져 있는지, 올바른 마이크가 선택됐는지 확인해 주세요.', error: '잘 듣지 못했어요. 다시 한번 말해 보세요.' };
 
-const MicBtn = ({ on, onClick, label, dim }: { on: boolean; onClick: () => void; label?: string; dim?: boolean }) => (
+const MicBtn = ({ on, busy, onClick, label, dim }: { on: boolean; busy?: boolean; onClick: () => void; label?: string; dim?: boolean }) => (
   <div className={'nv-micwrap' + (dim ? ' nv-dim' : '')}>
     <button type="button" className={'nv-mic' + (on ? ' on' : '')} onClick={onClick} aria-label="말하기">🎤</button>
-    <span>{on ? '듣고 있어요… 말해 보세요' : label ?? '버튼을 눌러 소리내어 말해보세요'}</span>
+    <span>{on ? '듣고 있어요… 말해 보세요' : busy ? '확인하고 있어요…' : label ?? '버튼을 눌러 소리내어 말해보세요'}</span>
   </div>
 );
 const Words = ({ g }: { g: { w: string; ok: boolean }[] }) => <span className="nv-gw">{g.map((x, i) => <span key={i} className={x.ok ? 'ok' : 'bad'}>{x.w} </span>)}</span>;
@@ -93,7 +95,7 @@ function Speak({ item, pic, onDone, mode, peekHint }: KindProps & { mode: 'look'
         <b className={peekHint ? 'nv-peek' + (ok || peek ? ' on' : '') : undefined}>{g && (ok || !peekHint) ? <Words g={g} /> : target}</b>
         {mode === 'look' && <button className={'nv-spk' + (peekHint ? ' nv-peek' + (ok || peek ? ' on' : '') : '')} onClick={() => say(target)} aria-label="듣기"><i className="nv-sico" aria-hidden="true" /></button>}
       </div>
-      <MicBtn on={mic.on} onClick={ok ? () => undefined : mic.on ? mic.stop : mic.start} dim={ok} />
+      <MicBtn on={mic.on} busy={mic.busy} onClick={ok ? () => undefined : mic.on ? mic.stop : mic.start} dim={ok} />
       <div className="nv-spstat">
         <p className="nv-heard">{g ? <>들린 말: “{heard}” · 일치 {Math.round(pct(g) * 100)}%</> : '\u00a0'}</p>
         <button className="nv-btn nv-ghost nv-selfbtn" style={{ visibility: !ok && (mic.err === 'nosupport' || mic.err === 'denied' || tries >= 3) ? 'visible' : 'hidden' }} onClick={self}>소리 내어 말했어요</button>
@@ -133,7 +135,7 @@ export function RAloud({ item, onDone }: KindProps) {
         </>}</div>
       </div>
       <div className="nv-ra-btns">
-        <MicBtn dim={fin} on={mic.on} onClick={fin ? () => undefined : mic.on ? mic.stop : startMic} label={fin ? '\u00a0' : round === 1 ? '먼저 들어 본 뒤, 마이크를 눌러 따라 읽어요' : '한 번 더 읽어 볼까요?'} />
+        <MicBtn dim={fin} on={mic.on} busy={mic.busy} onClick={fin ? () => undefined : mic.on ? mic.stop : startMic} label={fin ? '\u00a0' : round === 1 ? '먼저 들어 본 뒤, 마이크를 눌러 따라 읽어요' : '한 번 더 읽어 볼까요?'} />
       </div>
       {!fin && mic.err && <Fb className="nv-fbmsg on nv-fbbad">{ERRMSG[mic.err]}</Fb>}
       <div className="nv-spstat"><button className="nv-btn nv-ghost nv-selfbtn" style={{ visibility: !fin && (mic.err === 'nosupport' || mic.err === 'denied') ? 'visible' : 'hidden' }} onClick={() => { setFin(true); onDone([{ tag: 'speak', ok: true }]); }}>소리 내어 읽었어요</button></div>
@@ -173,7 +175,7 @@ export function Role({ item, pic, onDone }: KindProps) {
         {lines.map((l, i) => (
           <p key={i} className={(i === pos ? 'cur ' : '') + (l.who === me ? 'me' : '') + (i > pos ? ' later' : '')}><b>{l.who ? l.who + ' :' : ''}</b> {i === pos && g && l.who === me ? <Words g={g} /> : <Rich2 t={l.text} />}</p>))}
       </div>
-      <MicBtn dim={!mine} on={mic.on} onClick={mine ? (mic.on ? mic.stop : mic.start) : () => undefined} label={pos >= lines.length ? '\u00a0' : mine ? '내 차례예요. 마이크를 누르고 말해 보세요' : wait ? '상대 차례예요. 잘 들어 보세요…' : '\u00a0'} />
+      <MicBtn dim={!mine} on={mic.on} busy={mic.busy} onClick={mine ? (mic.on ? mic.stop : mic.start) : () => undefined} label={pos >= lines.length ? '\u00a0' : mine ? '내 차례예요. 마이크를 누르고 말해 보세요' : wait ? '상대 차례예요. 잘 들어 보세요…' : '\u00a0'} />
       {pos >= lines.length ? <Fb className="nv-fbmsg on">역할극을 마쳤어요! 👏</Fb> : mine && mic.err ? <Fb className="nv-fbmsg on nv-fbbad">{ERRMSG[mic.err]}</Fb> : null}
       <div className="nv-spstat"><button className="nv-btn nv-ghost nv-selfbtn" style={{ visibility: mine && (mic.err === 'nosupport' || mic.err === 'denied') ? 'visible' : 'hidden' }} onClick={() => adv(pos)}>말했어요</button></div>
     </div>
