@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { aiHandlers, getStt, imgSrc, say, sayAuto, sayThen, type KindProps, type SttInfo } from './common';
+import { aiHandlers, getStt, imgSrc, isSpeaking, useSpeaking, say, sayAuto, sayThen, type KindProps, type SttInfo } from './common';
 import { canRecord, startRecording, type Recording } from './rec';
 import { Hint } from './hint';
 import { Fb } from './fb';
@@ -43,7 +43,7 @@ function useMic(onText: (t: string, info?: SttInfo) => void, getRef?: () => stri
     }).catch((c) => { setOn(false); setLevel(0); setFails((n) => n + 1); if (c === 'denied' || c === 'nospeech' || c === 'silent') setErr(c); else setErr('error'); });
   }
   function start() {
-    if (busy) return;
+    if (busy || isSpeaking()) return;   // 처리 중이거나 음원이 나오는 중에는 시작하지 않는다
     if (useAzure()) { startAzure(); return; }
     const C = SRClass(); if (!C) { setErr('nosupport'); return; }
     try {
@@ -60,11 +60,11 @@ function useMic(onText: (t: string, info?: SttInfo) => void, getRef?: () => stri
 }
 const ERRMSG: Record<string, string> = { nosupport: '이 브라우저는 말소리 인식을 지원하지 않아요. 소리 내어 읽고 아래 버튼을 눌러 주세요.', denied: '마이크 사용이 막혀 있어요. 주소창의 마이크 허용을 눌러 주세요.', nospeech: '소리가 들리지 않았어요. 다시 말해 보세요.', silent: '마이크 소리가 거의 들어오지 않아요. 마이크가 켜져 있는지, 올바른 마이크가 선택됐는지 확인해 주세요.', error: '잘 듣지 못했어요. 다시 한번 말해 보세요.' };
 
-const MicBtn = ({ on, busy, level, onClick, label, dim }: { on: boolean; busy?: boolean; level?: number; onClick: () => void; label?: string; dim?: boolean }) => (
+const MicBtn = ({ on, busy, level, locked, onClick, label, dim }: { on: boolean; busy?: boolean; level?: number; locked?: boolean; onClick: () => void; label?: string; dim?: boolean }) => (
   <div className={'nv-micwrap' + (dim ? ' nv-dim' : '')}>
-    <button type="button" className={'nv-mic' + (on ? ' on' : '')} onClick={onClick} aria-label="말하기">🎤</button>
+    <button type="button" className={'nv-mic' + (on ? ' on' : '')} disabled={locked && !on} onClick={onClick} aria-label="말하기">🎤</button>
     {on && <span className="nv-lvl" aria-hidden="true">{Array.from({ length: 9 }).map((_, k) => <i key={k} className={Math.min(1, (level ?? 0) * 7) > k / 9 ? 'on' : ''} />)}</span>}
-    <span>{on ? '듣고 있어요… 말해 보세요' : busy ? '확인하고 있어요…' : label ?? '버튼을 눌러 소리내어 말해보세요'}</span>
+    <span>{on ? '듣고 있어요… 말해 보세요' : busy ? '확인하고 있어요…' : locked ? '소리를 잘 들어 보세요…' : label ?? '버튼을 눌러 소리내어 말해보세요'}</span>
   </div>
 );
 /** 말한 단어 채점 결과(단어별 % 표시는 따라 읽기 평가(raloud)에서만 쓴다). acc 는 Azure 발음평가의 단어별 정확도(0~100)이고, 없으면 ok(들린 단어와 일치 여부)만 쓴다 */
@@ -86,6 +86,7 @@ const Words = ({ g, plain }: { g: GW[]; plain?: boolean }) => <span className="n
 
 /** 말하기 3종: lookspeak(그림) / saykor(우리말) / lspeak(듣고 대답) */
 function Speak({ item, pic, onDone, mode, peekHint }: KindProps & { mode: 'look' | 'kor' | 'listen'; peekHint?: boolean }) {
+  const speaking = useSpeaking();
   const [peek, setPeek] = useState(false); const peekT = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showHint = () => { setPeek(true); if (peekT.current) clearTimeout(peekT.current); peekT.current = setTimeout(() => setPeek(false), 3000); };
   useEffect(() => () => { if (peekT.current) clearTimeout(peekT.current); }, []);
@@ -111,7 +112,7 @@ function Speak({ item, pic, onDone, mode, peekHint }: KindProps & { mode: 'look'
         <b className={peekHint ? 'nv-peek' + (ok || peek ? ' on' : '') : undefined}>{g && (ok || !peekHint) ? <Words g={g} /> : target}</b>
         {mode === 'look' && <button className={'nv-spk' + (peekHint ? ' nv-peek' + (ok || peek ? ' on' : '') : '')} onClick={() => say(target)} aria-label="듣기"><i className="nv-sico" aria-hidden="true" /></button>}
       </div>
-      <MicBtn on={mic.on} busy={mic.busy} level={mic.level} onClick={ok ? () => undefined : mic.on ? mic.stop : mic.start} dim={ok} />
+      <MicBtn on={mic.on} busy={mic.busy} level={mic.level} locked={speaking} onClick={ok ? () => undefined : mic.on ? mic.stop : mic.start} dim={ok} />
       <div className="nv-spstat">
         <p className="nv-heard">{g ? <>들린 말: “{heard}” · 일치 {Math.round(pct(g) * 100)}%</> : '\u00a0'}</p>
         <button className="nv-btn nv-ghost nv-selfbtn" style={{ visibility: !ok && (mic.err === 'nosupport' || mic.err === 'denied' || mic.fails >= 2 || tries >= 3) ? 'visible' : 'hidden' }} onClick={self}>소리 내어 말했어요</button>
@@ -126,6 +127,7 @@ export const LSpeak = (p: KindProps) => <Speak {...p} mode="listen" peekHint />;
 
 /** 따라 읽기: 듣기 → 말하기 → 단어별 결과(색) → 약한 단어를 짚어 다시 듣고 한 번 더 */
 export function RAloud({ item, onDone }: KindProps) {
+  const speaking = useSpeaking();
   const target: string = item.target ?? ''; const [round, setRound] = useState(1); const [g, setG] = useState<GW[] | null>(null);
   const [fin, setFin] = useState(false); const firstOk = useRef(true);
   const t0 = useRef(0); const [flu, setFlu] = useState(0);
@@ -151,7 +153,7 @@ export function RAloud({ item, onDone }: KindProps) {
         </>}</div>
       </div>
       <div className="nv-ra-btns">
-        <MicBtn dim={fin} on={mic.on} busy={mic.busy} level={mic.level} onClick={fin ? () => undefined : mic.on ? mic.stop : startMic} label={fin ? '\u00a0' : round === 1 ? '먼저 들어 본 뒤, 마이크를 눌러 따라 읽어요' : '한 번 더 읽어 볼까요?'} />
+        <MicBtn dim={fin} on={mic.on} busy={mic.busy} level={mic.level} locked={speaking} onClick={fin ? () => undefined : mic.on ? mic.stop : startMic} label={fin ? '\u00a0' : round === 1 ? '먼저 들어 본 뒤, 마이크를 눌러 따라 읽어요' : '한 번 더 읽어 볼까요?'} />
       </div>
       {!fin && mic.err && <Fb className="nv-fbmsg on nv-fbbad">{ERRMSG[mic.err]}</Fb>}
       <div className="nv-spstat"><button className="nv-btn nv-ghost nv-selfbtn" style={{ visibility: !fin && (mic.err === 'nosupport' || mic.err === 'denied' || mic.fails >= 2) ? 'visible' : 'hidden' }} onClick={() => { setFin(true); onDone([{ tag: 'speak', ok: true }]); }}>소리 내어 읽었어요</button></div>
@@ -161,6 +163,7 @@ export function RAloud({ item, onDone }: KindProps) {
 
 /** 역할극: 역할(A/B)을 고르고, 내 차례에는 말하고 상대 차례에는 들려준다 */
 export function Role({ item, pic, onDone }: KindProps) {
+  const speaking = useSpeaking();
   const lines: { who: string; text: string }[] = (item.lines ?? []).map((l: string) => { const m = l.match(/^\s*([A-Za-z]+)\s*[:：]\s*(.*)$/); return m ? { who: m[1].toUpperCase(), text: m[2] } : { who: '', text: l }; });
   const roles = [...new Set(lines.map((l) => l.who).filter(Boolean))].slice(0, 2);
   const [me, setMe] = useState<string | null>(null); const [pos, setPos] = useState(-1); const [g, setG] = useState<GW[] | null>(null); const fired = useRef(false);
@@ -191,7 +194,7 @@ export function Role({ item, pic, onDone }: KindProps) {
         {lines.map((l, i) => (
           <p key={i} className={(i === pos ? 'cur ' : '') + (l.who === me ? 'me' : '') + (i > pos ? ' later' : '')}><b>{l.who ? l.who + ' :' : ''}</b> {i === pos && g && l.who === me ? <Words g={g} /> : <Rich2 t={l.text} />}</p>))}
       </div>
-      <MicBtn dim={!mine} on={mic.on} busy={mic.busy} level={mic.level} onClick={mine ? (mic.on ? mic.stop : mic.start) : () => undefined} label={pos >= lines.length ? '\u00a0' : mine ? '내 차례예요. 마이크를 누르고 말해 보세요' : wait ? '상대 차례예요. 잘 들어 보세요…' : '\u00a0'} />
+      <MicBtn dim={!mine} on={mic.on} busy={mic.busy} level={mic.level} locked={speaking} onClick={mine ? (mic.on ? mic.stop : mic.start) : () => undefined} label={pos >= lines.length ? '\u00a0' : mine ? '내 차례예요. 마이크를 누르고 말해 보세요' : wait ? '상대 차례예요. 잘 들어 보세요…' : '\u00a0'} />
       {pos >= lines.length ? <Fb className="nv-fbmsg on">역할극을 마쳤어요! 👏</Fb> : mine && mic.err ? <Fb className="nv-fbmsg on nv-fbbad">{ERRMSG[mic.err]}</Fb> : null}
       <div className="nv-spstat"><button className="nv-btn nv-ghost nv-selfbtn" style={{ visibility: mine && (mic.err === 'nosupport' || mic.err === 'denied' || mic.fails >= 2) ? 'visible' : 'hidden' }} onClick={() => adv(pos)}>말했어요</button></div>
     </div>

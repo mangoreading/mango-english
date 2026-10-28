@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from 'react';
 export interface VWord { key: string; en: string; ko: string; image: string | null }
 export interface Res { tag?: string; ok: boolean; hint?: number }
 /** 어휘 활동 6종의 종류 코드 (기획서 p29~34). 이 종류는 React 정식 화면으로 재생한다. */
@@ -58,14 +59,28 @@ const ttsCache = new Map<string, string>();
 let curAudio: HTMLAudioElement | null = null;
 const stopAudio = () => { try { curAudio?.pause(); } catch { /* 무시 */ } curAudio = null; };
 
+/* ===== 소리가 나는 중인지: 음원이 끝나기 전에 마이크를 못 누르게 하려고 쓴다 =====
+   새 소리가 시작되면 앞 소리의 '끝' 신호는 무시하고, 끝 신호가 안 오는 경우를 위해 안전 시간 뒤에 풀어 준다. */
+let speaking = false; let curSpeech = 0; let spkTimer: ReturnType<typeof setTimeout> | null = null; const spkSubs = new Set<() => void>();
+const setSpeaking = (b: boolean) => { if (speaking === b) return; speaking = b; spkSubs.forEach((f) => f()); };
+function beginSpeech(maxMs: number): number {
+  const id = ++curSpeech; setSpeaking(true);
+  if (spkTimer) clearTimeout(spkTimer); spkTimer = setTimeout(() => endSpeech(id), maxMs);
+  return id;
+}
+function endSpeech(id: number) { if (id !== curSpeech) return; if (spkTimer) { clearTimeout(spkTimer); spkTimer = null; } setSpeaking(false); }
+export const isSpeaking = () => speaking;
+export const useSpeaking = () => useSyncExternalStore((f) => { spkSubs.add(f); return () => { spkSubs.delete(f); }; }, () => speaking, () => false);
+
 export function say(text: string) {
   stopAudio(); scriptGen++;
-  try { speechSynthesis.cancel(); speechSynthesis.speak(utter(text)); } catch { /* 소리가 안 되는 환경이면 조용히 넘어간다 */ }
+  const id = beginSpeech(Math.max(4000, text.length * 150 + 2000));
+  try { speechSynthesis.cancel(); const u = utter(text); u.onend = () => endSpeech(id); u.onerror = () => endSpeech(id); speechSynthesis.speak(u); } catch { endSpeech(id); /* 소리가 안 되는 환경이면 조용히 넘어간다 */ }
 }
 
 /** 읽어 주고, 다 읽으면 done()을 부른다. 소리가 안 되는 환경이거나 끝 신호가 안 오면 3초 뒤에 부른다. */
 export function sayThen(text: string, done: () => void, pitch = 1) {
-  let fin = false; const end = () => { if (!fin) { fin = true; done(); } };
+  let fin = false; const id = beginSpeech(Math.max(3000, text.length * 120) + 500); const end = () => { if (!fin) { fin = true; endSpeech(id); done(); } };
   setTimeout(end, Math.max(3000, text.length * 120));
   try {
     speechSynthesis.cancel();
@@ -99,8 +114,9 @@ export function sayScript(text: string, done?: () => void) {
   const play = (src: string) => {
     if (gen !== scriptGen) return;
     try { speechSynthesis.cancel(); } catch { /* 무시 */ }
-    const a = new Audio(src); curAudio = a; a.onended = () => done?.(); a.onerror = () => { if (gen === scriptGen) browser(); };
-    a.play().catch(() => { if (gen === scriptGen) browser(); });
+    const id = beginSpeech(60000);
+    const a = new Audio(src); curAudio = a; a.onended = () => { endSpeech(id); done?.(); }; a.onerror = () => { endSpeech(id); if (gen === scriptGen) browser(); };
+    a.play().catch(() => { endSpeech(id); if (gen === scriptGen) browser(); });
   };
   const hit = ttsCache.get(k);
   if (hit) { play(hit); return; }
