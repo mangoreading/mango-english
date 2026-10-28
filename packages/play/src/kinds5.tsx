@@ -132,8 +132,10 @@ export function RAloud({ item, onDone }: KindProps) {
     const opts = t.split(' | '); const best = opts.map((o) => grade(target, o)).sort((a, b) => pct(b) - pct(a))[0]; setG(attachAcc(best, info));
     // Azure 발음평가의 유창성(0~100)이 있으면 그것을 별 1~5개로, 없으면 속도로 추정
     setFlu(info?.fluency != null ? Math.max(1, Math.min(5, Math.round(info.fluency / 20))) : fluency(pct(best), target, Date.now() - t0.current));
-    if (round === 1) { firstOk.current = pct(best) >= 0.7; if (pct(best) >= 0.95) { setFin(true); onDone([{ tag: 'speak', ok: true }]); } else setRound(2); }
-    else { setFin(true); onDone([{ tag: 'speak', ok: firstOk.current }]); }
+    // 통과 기준: 정확도 50% 이상. Azure 발음평가의 정확도(0~100)가 있으면 그것을, 없으면 들린 단어 일치율을 쓴다
+    const accuracy = info?.accuracy != null ? info.accuracy : pct(best) * 100;
+    if (round === 1) { firstOk.current = accuracy >= 50; if (pct(best) >= 0.95) { setFin(true); onDone([{ tag: 'speak', ok: true }]); } else setRound(2); }
+    else { setFin(true); onDone([{ tag: 'speak', ok: firstOk.current || accuracy >= 50 }]); }
   }, () => target);
   const bads = g?.filter(isBad).map((x) => x.w.replace(/[^\w']/g, '')) ?? []; const stars = g ? Math.round(pct(g) * 5) : 0;
   const startMic = () => { t0.current = Date.now(); mic.start(); };
