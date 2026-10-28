@@ -669,3 +669,11 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-bar { position:absolute; left:0; right:0; bottom:0; height:.3em; background:rgba(255,255,255,.55); } .nv-bar i { display:block; height:100%; background:#3B6FD8; transition:width .35s; }
 .nv-sq { width:42em; max-width:100%; display:flex; flex-direction:column; gap:.8em; }
 .nv-scene .nv-ptools { margin-top:1.4em; }
+
+.nv-rv { width:42em; max-width:100%; display:flex; flex-direction:column; gap:.6em; }
+.nv-rv-t { margin:0; font-weight:800; font-size:1.15em; color:#20233e; }
+.nv-rv-list { max-height:15em; overflow:auto; background:#fff; border:.1em solid #D6DEEA; border-radius:1em; padding:.4em .9em; }
+.nv-rv-row { display:flex; gap:.7em; padding:.35em 0; border-bottom:.06em solid #EEF2F8; } .nv-rv-row:last-child { border-bottom:0; }
+.nv-rv-who { flex:none; width:4.2em; font-size:.85em; font-weight:700; color:#5B6B8C; padding-top:.15em; }
+.nv-rv-row b { display:block; font-weight:600; color:#20233e; } .nv-rv-row small { display:block; color:#7A7360; font-size:.9em; }
+.nv-rv-ex { background:#F2F6FD; border:.1em solid #D6DEEA; border-radius:1em; padding:.5em 1em; } .nv-rv-ex p { margin:.3em 0; line-height:1.5; }

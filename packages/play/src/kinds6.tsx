@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Fb } from './fb';
+import { Rich } from './kinds3';
 import { imgSrc, sayThen, shuffle, voicePitch, type KindProps } from './common';
 
 interface Sc { who?: string; en: string; ko?: string; pic?: string }
@@ -8,13 +9,14 @@ interface Q { q: string; ans: string; wrong: string[] }
 /** 장면 영상: 그림·대사가 이어지는 짧은 장면을 보고 듣는다. 확인 문항이 있으면 다 본 뒤 이어서 푼다. */
 export function SceneStory({ item, pic, onDone }: KindProps) {
   const scenes: Sc[] = item.scenes ?? []; const qs: Q[] = item.qs ?? []; const max: number = item.replay ?? 2;
-  const [phase, setPhase] = useState<'ready' | 'play' | 'after'>('ready');
+  const [phase, setPhase] = useState<'ready' | 'play' | 'after' | 'review'>('ready');
+  const hasReview = item.review !== false && (!!item.explain?.length || scenes.some((s) => s.ko));
   const [idx, setIdx] = useState(0); const [plays, setPlays] = useState(0); const [cc, setCc] = useState(item.sub !== 'none');
   const run = useRef(0); const fired = useRef(false);
   const [qi, setQi] = useState(0); const [res, setRes] = useState<boolean[]>([]); const wrong = useRef(false); const [bad, setBad] = useState<number | null>(null); const [okq, setOkq] = useState(false);
   const opts = useMemo(() => (qs[qi] ? shuffle([{ t: qs[qi].ans, c: true }, ...qs[qi].wrong.map((t) => ({ t, c: false }))]) : []), [qi]); // eslint-disable-line
   useEffect(() => () => { run.current++; try { speechSynthesis.cancel(); } catch { /* 소리가 안 되는 환경 */ } }, []);
-  useEffect(() => { if (phase === 'after' && !qs.length && !fired.current) { fired.current = true; onDone([]); } /* eslint-disable-next-line */ }, [phase]);
+  useEffect(() => { if (phase === 'after' && !qs.length) { if (hasReview) setPhase('review'); else if (!fired.current) { fired.current = true; onDone([]); } } if (phase === 'review' && !qs.length && !fired.current) { fired.current = true; onDone([]); } /* eslint-disable-next-line */ }, [phase]);
   const src = (k?: string) => (k ? (/^https?:|^word\//.test(k) ? imgSrc(k) : imgSrc(pic(k))) : '');
   function step(i: number, id: number) {
     if (id !== run.current) return;
@@ -28,14 +30,14 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
     if (opts[i].c) {
       setOkq(true);
       const r = [...res, !wrong.current];
-      setTimeout(() => { if (qi + 1 >= qs.length) { if (!fired.current) { fired.current = true; onDone(r.map((ok) => ({ tag: 'listen', ok }))); } setRes(r); setOkq(true); } else { setRes(r); setQi(qi + 1); setOkq(false); wrong.current = false; } }, 700);
+      setTimeout(() => { if (qi + 1 >= qs.length) { if (!fired.current) { fired.current = true; onDone(r.map((ok) => ({ tag: 'listen', ok }))); } setRes(r); setOkq(true); if (hasReview) setPhase('review'); } else { setRes(r); setQi(qi + 1); setOkq(false); wrong.current = false; } }, 700);
     } else { wrong.current = true; setBad(i); setTimeout(() => setBad(null), 500); }
   }
   const sc = scenes[Math.min(idx, scenes.length - 1)]; const img = src(sc?.pic) || src(scenes.find((s) => s.pic)?.pic);
-  const left = Math.max(0, max + 1 - plays); const quiz = phase === 'after' && qs.length > 0;
+  const left = Math.max(0, max + 1 - plays); const quiz = phase === 'after' && qs.length > 0; const review = phase === 'review';
   return (
     <div className="nv-body nv-scene">
-      {!quiz && (
+      {!quiz && !review && (
         <div className="nv-stage">
           {img ? <img className="nv-stage-img" src={img} alt="" draggable={false} /> : <div className="nv-stage-img nv-stage-ph" />}
           {phase === 'play' && sc.who && <span className="nv-who">{sc.who}</span>}
@@ -44,6 +46,15 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
             <div className="nv-subs">{phase === 'play' ? <><p>{sc.en}</p>{item.sub === 'enko' && sc.ko && <small>{sc.ko}</small>}</> : <p className="nv-subs-end">끝났어요</p>}</div>
           )}
           {phase !== 'ready' && <div className="nv-bar"><i style={{ width: `${phase === 'after' ? 100 : ((idx + 1) / scenes.length) * 100}%` }} /></div>}
+        </div>
+      )}
+      {review && (
+        <div className="nv-rv">
+          <p className="nv-rv-t">해석과 해설</p>
+          <div className="nv-rv-list">{scenes.map((x, i) => (
+            <div key={i} className="nv-rv-row"><span className="nv-rv-who">{x.who}</span><div><b>{x.en}</b>{x.ko && <small>{x.ko}</small>}</div></div>
+          ))}</div>
+          {!!item.explain?.length && <div className="nv-rv-ex">{item.explain.map((l: string, i: number) => <p key={i}><Rich text={l} /></p>)}</div>}
         </div>
       )}
       {quiz && qs[qi] && (
@@ -55,7 +66,7 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
       )}
       {phase !== 'ready' && (
         <div className="nv-ptools">
-          {item.sub !== 'none' && !quiz && <button className="nv-hintbtn" onClick={() => setCc(!cc)}>{cc ? '자막 끄기' : '자막 켜기'}</button>}
+          {item.sub !== 'none' && !quiz && !review && <button className="nv-hintbtn" onClick={() => setCc(!cc)}>{cc ? '자막 끄기' : '자막 켜기'}</button>}
           <button className="nv-hintbtn" disabled={phase === 'play' || !left} onClick={start}>다시 보기{phase === 'play' ? '' : ` (${left}회 남음)`}</button>
         </div>
       )}
