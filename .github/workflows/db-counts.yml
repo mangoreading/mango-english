@@ -11,6 +11,7 @@ jobs:
         run: |
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -At -F ' | ' > out.txt <<'SQL'
           select 'items total', count(*) from public.items;
+          select 'scene check', lesson::text, payload->'qs'->0->>'q' from public.items where template = 'scene' order by lesson;
           select 'items by unit', u.no::text || ' ' || u.title, i.status::text, count(*) from public.items i join public.units u on u.id=i.unit_id group by 2,3 order by 2,3;
           select 'items legacy-template', count(*) from public.items where template in ('learn','text','brief','choose','match','build','fill','write','compose','speak','fade','dialog');
           select 'items by template', template, count(*) from public.items group by template order by 3 desc;
