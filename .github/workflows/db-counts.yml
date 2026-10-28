@@ -10,6 +10,7 @@ jobs:
           DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -At -F ' | ' > out.txt <<'SQL'
+          select 'flow l2', coalesce(t.name,'unit'), s.pos::text, s.kind, s.name_ko, s.qty::text, s.minutes::text from public.flow_steps s join public.flow_lessons fl on fl.id=s.lesson_id left join public.flow_templates t on t.id=fl.template_id where fl.no=2 order by 2, s.pos;
           select 'items total', count(*) from public.items;
           select 'scene check', lesson::text, payload->'qs'->0->>'q' from public.items where template = 'scene' order by lesson;
           select 'items by unit', u.no::text || ' ' || u.title, i.status::text, count(*) from public.items i join public.units u on u.id=i.unit_id group by 2,3 order by 2,3;
