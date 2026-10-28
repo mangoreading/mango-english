@@ -23,7 +23,12 @@ registerAi({
 /** 음성 합성 연결: Supabase 서버 함수(tts)가 Azure 음성으로 만든 mp3 를 받아 온다. 실패하면 브라우저 음성으로 대신한다. */
 registerTts(async (lines) => {
   const { data, error } = await supabase.functions.invoke('tts', { body: { lines } });
-  if (error || !(data instanceof Blob)) throw new Error('tts');
+  if (error) {
+    let msg = (error as Error).message;
+    try { const j = await (error as unknown as { context: Response }).context.json(); msg = j.error ?? j.message ?? msg; } catch { /* 그대로 */ }
+    console.error('[tts] 서버 오류(브라우저 음성으로 대신 읽어요):', msg); throw new Error(msg);
+  }
+  if (!(data instanceof Blob)) throw new Error('tts');
   return data;
 });
 
