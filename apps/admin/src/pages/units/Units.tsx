@@ -5,8 +5,7 @@ import { UnitFlow } from '../flow/Flow';
 import { Items } from './Items';
 import { Review } from './Review';
 import { Source } from './Source';
-import { openPreview } from '../../shared/ui';
-import { buildUnitPreview } from '../../shared/unitPreview';
+import { openReviewPopup } from './ReviewPopup';
 import { UnitVocab } from './Vocab';
 
 type Status = 'draft' | 'review' | 'approved' | 'rejected';
@@ -69,7 +68,7 @@ export function Units({ uid }: { uid: string }) {
                     </span>
                   : <span className="mx-muted">흐름 없음</span>}</td>
                 <td><span className={`mx-chip ${u.status}`}>{STATUS_KO[u.status as Status] ?? u.status}</span></td>
-                <td><button className="mx-btn sec" onClick={async (e) => { e.stopPropagation(); const err = await openPreview(() => buildUnitPreview(u.id, `Lesson ${u.no} · ${u.title}`)); if (err) window.alert(err); }}>미리보기</button></td>
+                <td><button className="mx-btn sec" onClick={(e) => { e.stopPropagation(); const err = openReviewPopup(u.id); if (err) window.alert(err); }}>미리보기</button></td>
               </tr>
             ))}
           </tbody>
@@ -89,7 +88,7 @@ function UnitEditor({ unit, uid, onBack }: { unit: UnitRow; uid: string; onBack:
         <button className={tab === 'flow' ? 'on' : ''} onClick={() => setTab('flow')}>학습 흐름</button>
         <button className={tab === 'vocab' ? 'on' : ''} onClick={() => setTab('vocab')}>단어</button>
         <button className={tab === 'items' ? 'on' : ''} onClick={() => setTab('items')}>문항</button>
-        <button className={tab === 'review' ? 'on' : ''} onClick={async () => { setTab('review'); const err = await openPreview(() => buildUnitPreview(unit.id, `Lesson ${unit.no} · ${unit.title}`)); if (err) window.alert(err); }}>학생 화면 검수</button>
+        <button className={tab === 'review' ? 'on' : ''} onClick={() => { setTab('review'); const err = openReviewPopup(unit.id); if (err) window.alert(err); }}>학생 화면 검수</button>
         <button className={tab === 'source' ? 'on' : ''} onClick={() => setTab('source')}>교과서 자료</button>
       </div>
       {tab === 'flow' && <UnitFlow unitId={unit.id} />}
