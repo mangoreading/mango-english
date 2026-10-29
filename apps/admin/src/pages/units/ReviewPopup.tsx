@@ -55,6 +55,7 @@ export function ReviewPopup({ unitId }: { unitId: string }) {
   const cur = itemsOf(step);
   const play = only ? cur.filter((i) => i.id === only) : cur;
   const payloads = useMemo(() => play.map((i) => i.payload), [play.map((i) => i.id).join(',')]); // eslint-disable-line
+  const studySteps = lesson?.steps.filter((s) => s.study) ?? []; const sp = studySteps.findIndex((s) => s.id === stepId); const studyPos = sp < 0 ? undefined : { cur: sp, total: studySteps.length };
   const all = lessons.flatMap((l) => l.steps.map((s) => ({ ...s, lno: l.no })));
   const idx = all.findIndex((s) => s.id === stepId);
   function go(d: number) { const n = all[idx + d]; if (!n) return; setLno(n.lno); setStepId(n.id); setOnly(null); setRun((k) => k + 1); }
@@ -78,7 +79,7 @@ export function ReviewPopup({ unitId }: { unitId: string }) {
       <div className="mx-rp-stage">
         {!payloads.length ? <p className="mx-muted" style={{ padding: 30 }}>이 활동에는 {level} 문항이 없어요.</p>
           : !isNativeKind(payloads[0]?.k) ? <p className="mx-muted" style={{ padding: 30 }}>이 종류({payloads[0]?.k})는 여기서 재생할 수 없어요.</p>
-          : <NativePlayer key={`${stepId}:${only ?? 'all'}:${run}`} title={`${lno}차시 · ${step?.name ?? ''}`} items={payloads} vocab={vocab} onResult={() => {}} onFinish={(a) => { if (a === 'again') setRun((k) => k + 1); else go(1); }} />}
+          : <NativePlayer key={`${stepId}:${only ?? 'all'}:${run}`} title={`${lno}차시 · ${step?.name ?? ''}`} step={studyPos} items={payloads} vocab={vocab} onResult={() => {}} onFinish={(a) => { if (a === 'again') setRun((k) => k + 1); else go(1); }} />}
       </div>
       <aside className="mx-rp-side">
         <div className="mx-rp-h"><b>{title}</b>

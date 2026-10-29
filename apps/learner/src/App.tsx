@@ -189,6 +189,8 @@ function UnitView({ row, onBack }: { row: BundleRow; onBack: () => void }) {
 
   /** 다음 '학습' 활동 번호(숙제 전용 활동은 건너뜀). 없으면 -1 */
   const nextStudy = (no: number, idx: number) => { const m = meta.find((x) => x.no === no); const n = (lessons[String(no)] ?? []).length; for (let i = idx + 1; i < n; i++) if (m?.acts[i]?.study !== false) return i; return -1; };
+  /** 차시 안에서 지금 활동이 '학습' 활동 중 몇 번째인지 (숙제 전용 활동은 세지 않음) */
+  const stepPos = (no: number, idx: number) => { const m = meta.find((x) => x.no === no); if (!m) return undefined; const n = (lessons[String(no)] ?? []).length; const ids: number[] = []; for (let i = 0; i < n; i++) if (m.acts[i]?.study !== false) ids.push(i); const cur = ids.indexOf(idx); return cur < 0 ? undefined : { cur, total: ids.length }; };
   const reportNo = (() => { const core = (b.flow ?? []).filter((l) => (l.track ?? 'core') === 'core'); return core.length ? core[core.length - 1].no : -1; })();
   function start(no: number, idx: number) {
     const acts = lessons[String(no)] ?? [];
@@ -301,7 +303,7 @@ function UnitView({ row, onBack }: { row: BundleRow; onBack: () => void }) {
         </div>
       )}
       {nat && (
-        <NativePlayer key={nat.nonce} scope={b.unit.id + '|' + nat.lesson} title={nat.title} items={nat.items} vocab={b.vocab as VWord[]} nextLabel={nat.nextLabel}
+        <NativePlayer key={nat.nonce} scope={b.unit.id + '|' + nat.lesson} title={nat.title} items={nat.items} vocab={b.vocab as VWord[]} nextLabel={nat.nextLabel} step={stepPos(nat.lesson, nat.idx)}
           onResult={(r: NativeResult) => { void save(nat.lesson, nat.idx, { results: r.results, total: r.total, scored: r.scored }); }}
           onFinish={(act) => { const n = nat; setNat(null); if (act === 'next' && n.next) n.next(); else if (act === 'again') run(n.lesson, n.idx, n.title, n.items, undefined, n.next, n.nextLabel); }} />
       )}

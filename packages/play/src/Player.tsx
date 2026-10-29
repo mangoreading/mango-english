@@ -12,7 +12,7 @@ import { DChoice, LChList, LChPic, LChText, LMatch, PChoice, SqChoice, SqMulti, 
 
 export interface NativeResult { results: Res[]; total: number; scored: number }
 interface Props {
-  title: string; items: Record<string, any>[]; vocab: VWord[]; nextLabel?: string; quiet?: boolean; scope?: string; /* 같은 차시 안에서 산출물(내 글)을 나누는 구분값 */ // eslint-disable-line @typescript-eslint/no-explicit-any
+  title: string; items: Record<string, any>[]; vocab: VWord[]; nextLabel?: string; /** 차시 안에서 지금 활동의 위치 (헤더 위쪽 막대 + '활동 n/N') */ step?: { cur: number; total: number }; quiet?: boolean; scope?: string; /* 같은 차시 안에서 산출물(내 글)을 나누는 구분값 */ // eslint-disable-line @typescript-eslint/no-explicit-any
   onResult: (r: NativeResult) => void;
   onFinish: (a: 'next' | 'again' | 'exit') => void;
 }
@@ -83,7 +83,7 @@ const KIND = { scene: SceneStory, lookspeak: LookSpeak, saykor: SayKor, lspeak: 
   sqchoice: SqChoice, sqtf: SqTF, sqmulti: SqMulti } as const;
 
 /** 어휘 활동 6종 재생기: 문항(화면)을 차례로 보여 주고, 끝나면 결과 화면을 보여 준다. */
-export function NativePlayer({ title, items, vocab, nextLabel, quiet, scope, onResult, onFinish }: Props) {
+export function NativePlayer({ title, items, vocab, nextLabel, step, quiet, scope, onResult, onFinish }: Props) {
   setQuiet(!!quiet); setOutputScope(scope ?? 'preview');
   const [i, setI] = useState(0);
   const [done, setDone] = useState(false);
@@ -124,9 +124,10 @@ export function NativePlayer({ title, items, vocab, nextLabel, quiet, scope, onR
 
   return (
     <div className="nv-overlay" data-bgimg={VOCAB_BG.includes(it.k) ? "v" : undefined} data-hd={SPEAK_SKIN.includes(it.k) ? 'bg' : undefined} data-skin={VOCAB_SKIN.includes(it.k) ? 'forest' : SPEAK_SKIN.includes(it.k) ? 'mango' : BG_SKIN.includes(it.k) ? 'mangobg' : undefined}>
+      {step && step.total > 0 && <div className="nv-seg" aria-label={`활동 ${step.cur + 1} / ${step.total}`}>{Array.from({ length: step.total }, (_, k) => <i key={k} className={k < step.cur ? 'd1' : k === step.cur ? 'd2' : ''} />)}</div>}
       <div className="nv-head">
         <button className="nv-x" onClick={() => onFinish('exit')} aria-label="나가기">‹</button>
-        <b>{title}</b>
+        <b>{title}</b>{step && step.total > 0 && <span className="nv-stepno">활동 {step.cur + 1}/{step.total}</span>}
         <span className="nv-dots">{(prog ? Array.from({ length: prog.n }) : items).map((_, k) => { const c = prog ? prog.cur : i; return <i key={k} className={k < c ? 'd1' : k === c ? 'd2' : ''} />; })}</span>
         <span className="nv-pts"><i className="nv-star">★</i> 포인트 : +{pts}</span>
       </div>

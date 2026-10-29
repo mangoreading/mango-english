@@ -718,3 +718,9 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 
 .nv-pta { width:100%; min-height:7em; height:9em; margin:.4em 0; }
 .nv-recb:disabled { opacity:.35; cursor:not-allowed; }
+
+/* 차시 안 활동 위치: 헤더 맨 위 막대 + '활동 n/N' */
+.nv-seg { position:absolute; left:0; right:0; top:0; height:.42em; display:flex; gap:.25em; padding:0 .25em; z-index:30; }
+.nv-seg i { flex:1; background:rgba(120,130,150,.28); border-radius:0 0 .3em .3em; }
+.nv-seg i.d1 { background:#3979f3; } .nv-seg i.d2 { background:#ffbf00; }
+.nv-stepno { font-size:.8em; font-weight:700; color:#667; background:rgba(255,255,255,.7); border:1px solid #d6dbe6; border-radius:1em; padding:.1em .7em; margin-left:.6em; white-space:nowrap; }
