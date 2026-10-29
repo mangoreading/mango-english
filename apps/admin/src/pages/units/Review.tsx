@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { NativePlayer } from '@mango/play';
 import { supabase } from '../../shared/supabase';
 import { isNativeKind, nativeVocab } from '../../shared/samples';
+import { openPreview } from '../../shared/ui';
 import type { VocabOpt } from './ItemForm';
 import type { Status } from './Items';
 
@@ -60,6 +61,15 @@ export function Review({ unitId, uid }: { unitId: string; uid: string }) {
     const { error } = await supabase.from('items').update({ review_note: note || null }).eq('id', id);
     if (error) setMsg('메모 저장 실패: ' + error.message); else setItems((xs) => xs.map((x) => (x.id === id ? { ...x, review_note: note || null } : x)));
   }
+  async function popup(scope: 'step' | 'lesson') {
+    const list = scope === 'step' ? playItems : lesson.steps.flatMap((s) => stepItems(s));
+    const err = await openPreview(() => {
+      const ok = list.filter((i) => isNativeKind(i.payload.k));
+      if (!ok.length) return '재생할 문항이 없어요.';
+      return { kind: 'native', items: ok.map((i) => i.payload), vocab: vocab.map((v) => ({ key: v.key, en: v.en, ko: v.ko, image: v.image_path ?? null })), title: scope === 'step' ? `${lesson.no}차시 · ${step?.name ?? ''}` : `${lesson.no}차시 전체` };
+    });
+    if (err) setMsg(err);
+  }
   const allSteps = lessons.flatMap((l) => l.steps.map((s) => ({ ...s, lno: l.no })));
   const idx = allSteps.findIndex((s) => s.id === stepId);
   function go(d: number) { const n = allSteps[idx + d]; if (!n) return; setLno(n.lno); setStepId(n.id); setOnly(null); setRunKey((k) => k + 1); }
@@ -96,6 +106,8 @@ export function Review({ unitId, uid }: { unitId: string; uid: string }) {
             <b>{lesson.no}차시 · {step?.name}</b>
             {only ? <button className="mx-link" onClick={() => { setOnly(null); setRunKey((k) => k + 1); }}>전체 이어서 보기</button> : <span className="mx-muted">{cur.length}문항 이어서 재생</span>}
             <span style={{ flex: 1 }} />
+            <button className="mx-btn sec" onClick={() => popup('step')}>새 창(1280×800)</button>
+            <button className="mx-btn sec" onClick={() => popup('lesson')}>차시 전체 새 창</button>
             <button className="mx-btn sec" onClick={() => setRunKey((k) => k + 1)}>처음부터</button>
             <button className="mx-btn" disabled={idx >= allSteps.length - 1} onClick={() => go(1)}>다음 활동 ▶</button>
           </div>
