@@ -35,7 +35,7 @@ add('1-5', 'scene', 'listen', [{ title: '미나와 엄마의 가게 나들이', 
     { who: 'Clerk', en: 'Thank you! Have a nice day!', ko: '감사합니다! 좋은 하루 보내세요!' }],
   explain: ['물건이 하나일 때는 How much is this …?, 여러 개일 때는 How much are these …? 라고 물어요.', '대답은 하나면 It\'s …, 여러 개면 They\'re … 로 시작해요.', '가격은 숫자 뒤에 won 을 붙여요. (ten thousand won = 10,000원)'],
   qs: [{ q: '미나네 가족이 산 물건이 아닌 것은?', ans: '신발', wrong: ['모자', '반바지'] }, { q: '모자는 얼마였나요?', ans: '10,000원', wrong: ['15,000원', '50,000원'] }] }]);
-add('1-6', 'vmatch', 'vocab', [{ words: ['hat', 'jacket', 'shoes'] }, { words: ['shorts', 'socks', 'sunglasses'] }, { words: ['hat', 'socks', 'sunglasses'] }]);
+add('1-6', 'vmatch', 'vocab', [{ words: W }]); // 6단어를 한 화면에 (0052 에서 3문항 → 1문항으로 조정)
 
 /* ===== 2차시: 듣고 가격 구분하기 ===== */
 add('2-0', 'vcards', 'vocab', [{ words: W }]);
