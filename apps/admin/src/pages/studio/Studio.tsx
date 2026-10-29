@@ -6,8 +6,8 @@ const WORD_STYLE = 'A single cute 3D glossy emoji-style icon of the object, soft
 const SCENE_STYLE = 'A bright, friendly children\'s picture-book illustration for an English lesson, flat soft colors, rounded shapes, clean composition, consistent characters, no text unless asked.';
 type Preset = 'word' | 'scene' | 'free';
 const PRESETS: Record<Preset, { name: string; style: string; size: string; bg: string }> = {
-  word: { name: '단어 그림 (3D 아이콘)', style: WORD_STYLE, size: '1024x1024', bg: 'transparent' },
-  scene: { name: '장면 이미지 (영상용)', style: SCENE_STYLE, size: '1536x1024', bg: 'opaque' },
+  word: { name: '단어 그림 (3D 아이콘)', style: WORD_STYLE, size: '300x300', bg: 'transparent' },
+  scene: { name: '장면 이미지 (영상용)', style: SCENE_STYLE, size: '768x512', bg: 'opaque' },
   free: { name: '자유', style: '', size: '1024x1024', bg: 'auto' },
 };
 interface Img { id: number; b64: string; name: string; saved?: string }
@@ -29,14 +29,20 @@ async function fileToB64(f: Blob): Promise<string> {
   const url = c.toDataURL('image/png'); return url.slice(url.indexOf(',') + 1);
 }
 
-/** 300×300 으로 줄인다 (투명 배경 유지, 비율 유지하며 가운데 맞춤) */
-async function shrink300(b64: string): Promise<string> {
-  const bmp = await createImageBitmap(toBlob(b64)); const c = document.createElement('canvas'); c.width = 300; c.height = 300;
-  const k = Math.min(300 / bmp.width, 300 / bmp.height); const w = Math.round(bmp.width * k), h = Math.round(bmp.height * k);
-  c.getContext('2d')!.drawImage(bmp, Math.round((300 - w) / 2), Math.round((300 - h) / 2), w, h);
+/** 작은 크기 선택지: OpenAI 가 지원하는 큰 크기로 만든 뒤 이 크기로 줄인다 (투명 배경 유지, 비율 유지하며 가운데 맞춤) */
+const SMALL: Record<string, { api: string; w: number; h: number }> = {
+  '300x300': { api: '1024x1024', w: 300, h: 300 },
+  '768x512': { api: '1536x1024', w: 768, h: 512 },
+  '512x768': { api: '1024x1536', w: 512, h: 768 },
+};
+async function shrinkTo(b64: string, w0: number, h0: number): Promise<string> {
+  const bmp = await createImageBitmap(toBlob(b64)); const c = document.createElement('canvas'); c.width = w0; c.height = h0;
+  const k = Math.min(w0 / bmp.width, h0 / bmp.height); const w = Math.round(bmp.width * k), h = Math.round(bmp.height * k);
+  c.getContext('2d')!.drawImage(bmp, Math.round((w0 - w) / 2), Math.round((h0 - h) / 2), w, h);
   const u = c.toDataURL('image/png'); return u.slice(u.indexOf(',') + 1);
 }
-const apiSize = (s: string) => (s === '300x300' ? '1024x1024' : s);
+const apiSize = (s: string) => SMALL[s]?.api ?? s;
+const shrinkIf = (size: string, xs: string[]) => (SMALL[size] ? Promise.all(xs.map((x) => shrinkTo(x, SMALL[size].w, SMALL[size].h))) : Promise.resolve(xs));
 
 export function Studio() {
   const [preset, setPreset] = useState<Preset>('word');
@@ -96,7 +102,7 @@ export function Studio() {
       setProg(jobs.length > 1 ? `${j + 1}/${jobs.length} 만드는 중… (${jobs[j].base})` : '');
       let out = await call({ prompt: jobs[j].p, size: apiSize(size), quality, background: bg, n, refs: refs.map((r) => r.b64) });
       if (!out) { fail++; continue; }   // 오류 메시지는 call 이 이미 보여 줌. 남은 단어는 계속 만든다
-      if (size === '300x300') out = await Promise.all(out.map(shrink300));
+      out = await shrinkIf(size, out);
       const add = out.map((b64, i) => ({ id: ++uid, b64, name: out!.length > 1 ? `${jobs[j].base}_${i + 1}` : jobs[j].base }));
       setImgs((xs) => [...add, ...xs]); made += add.length;
       if (auto) for (const m of add) await saveLocal(m);
@@ -109,7 +115,7 @@ export function Studio() {
     const p = `Edit this image: ${oldT.trim() ? `replace the text "${oldT.trim()}" with "${newT.trim()}"` : `add the text "${newT.trim()}" where it fits`}. Spell the text exactly as given, same font style and position. Keep everything else in the image exactly the same.${editExtra.trim() ? ' ' + editExtra.trim() : ''}`;
     setBusy(true); setMsg(null);
     let out = await call({ prompt: p, size: apiSize(size), quality, background: 'auto', n: 1, refs: [im.b64] });
-    if (out && size === '300x300') out = await Promise.all(out.map(shrink300));
+    if (out) out = await shrinkIf(size, out);
     setBusy(false); if (!out) return;
     const made = { id: ++uid, b64: out[0], name: im.name + '_edit' };
     setImgs((xs) => [made, ...xs]); setEditId(null); setMsg({ t: 'ok', s: '글자를 고친 새 이미지를 만들었어요. (원본은 그대로 있어요)' });
@@ -147,7 +153,7 @@ export function Studio() {
               <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => void addRefs(e.target.files)} />
             </div></div>
           <div className="mx-row">
-            <label className="mx-f">크기<select value={size} onChange={(e) => setSize(e.target.value)}><option value="300x300">작게 300×300 (단어 그림용)</option><option value="1024x1024">정사각 1024×1024</option><option value="1536x1024">가로 1536×1024 (장면)</option><option value="1024x1536">세로 1024×1536</option></select></label>
+            <label className="mx-f">크기<select value={size} onChange={(e) => setSize(e.target.value)}><option value="300x300">작게 300×300 (단어 그림용)</option><option value="1024x1024">정사각 1024×1024</option><option value="768x512">가로 작게 768×512 (장면)</option><option value="1536x1024">가로 1536×1024 (장면)</option><option value="512x768">세로 작게 512×768 (장면)</option><option value="1024x1536">세로 1024×1536</option></select></label>
             <label className="mx-f">배경<select value={bg} onChange={(e) => setBg(e.target.value)}><option value="transparent">투명</option><option value="opaque">불투명</option><option value="auto">자동</option></select></label>
             <label className="mx-f">품질<select value={quality} onChange={(e) => setQuality(e.target.value)}><option value="low">낮음(저렴)</option><option value="medium">보통</option><option value="high">높음(비쌈)</option></select></label>
             <label className="mx-f">개수<select value={n} onChange={(e) => setN(Number(e.target.value))}>{[1, 2, 3, 4].map((v) => <option key={v}>{v}</option>)}</select></label>
