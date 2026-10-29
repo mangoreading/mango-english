@@ -88,8 +88,8 @@ function UnitEditor({ unit, uid, onBack }: { unit: UnitRow; uid: string; onBack:
         <button className={tab === 'flow' ? 'on' : ''} onClick={() => setTab('flow')}>학습 흐름</button>
         <button className={tab === 'vocab' ? 'on' : ''} onClick={() => setTab('vocab')}>단어</button>
         <button className={tab === 'items' ? 'on' : ''} onClick={() => setTab('items')}>문항</button>
-        <button title="새 창으로 열려요. 이 화면은 그대로 있어요" onClick={() => { const err = openReviewPopup(unit.id); if (err) window.alert(err); }}>학생 화면 검수 ↗</button>
         <button className={tab === 'source' ? 'on' : ''} onClick={() => setTab('source')}>교과서 자료</button>
+        <button title="새 창으로 열려요. 이 화면은 그대로 있어요" onClick={() => { const err = openReviewPopup(unit.id); if (err) window.alert(err); }}>학생 화면 검수 ↗</button>
       </div>
       {tab === 'flow' && <UnitFlow unitId={unit.id} />}
       {tab === 'vocab' && <UnitVocab unitId={unit.id} />}
