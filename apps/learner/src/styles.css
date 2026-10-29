@@ -34,3 +34,22 @@ input { font:inherit; padding:12px 14px; border:2px solid #CBD6E6; border-radius
 .mx-act.mx-done { background:#E7F6EC; }
 .mx-chip.mx-ok { background:#D8F2E0; color:#1E8E4E; }
 .mx-resume { margin:8px 0 4px; font-size:1.05rem; padding:14px 26px; background:#FF9F1C; color:#1F2A44; }
+
+/* 6차시 결과 리포트 */
+.mx-rep-top { display:flex; justify-content:space-between; gap:24px; align-items:center; flex-wrap:wrap; }
+.mx-rep-msg { font-size:1.2rem; font-weight:700; margin:12px 0 4px; }
+.mx-rep-big { display:flex; flex-direction:column; align-items:center; gap:4px; min-width:160px; }
+.mx-rep-big b { font-size:4rem; line-height:1; color:var(--blue); } .mx-rep-big b small { font-size:1.6rem; }
+.mx-rep-stars { color:#FF9F1C; font-size:1.5rem; letter-spacing:.1em; }
+.mx-rep-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:4px 16px; }
+.mx-rep-area { display:flex; flex-direction:column; gap:8px; margin:8px 0; }
+.mx-rep-h { display:flex; align-items:center; gap:8px; } .mx-rep-ico { font-size:1.5rem; } .mx-rep-h b { font-size:1.15rem; }
+.mx-rep-verdict { margin-left:auto; font-size:.8rem; font-weight:700; border-radius:999px; padding:4px 12px; background:#E0EAFB; color:var(--blue); }
+.mx-rep-verdict.mx-lv-good { background:#D8F2E0; color:#1E8E4E; } .mx-rep-verdict.mx-lv-mid { background:#FFEBC7; color:#B45F06; } .mx-rep-verdict.mx-lv-low { background:#FBD9D5; color:#C0392B; }
+.mx-rep-num { font-size:2.6rem; font-weight:800; line-height:1.1; } .mx-rep-num small { font-size:1.2rem; }
+.mx-rep-bar { height:12px; border-radius:999px; background:#E6ECF5; overflow:hidden; } .mx-rep-bar i { display:block; height:100%; border-radius:999px; background:var(--blue); }
+.mx-lv-good .mx-rep-bar i { background:#34A862; } .mx-lv-mid .mx-rep-bar i { background:#FF9F1C; } .mx-lv-low .mx-rep-bar i { background:#E5604F; }
+.mx-rep-steps { list-style:none; padding:0; margin:4px 0; display:flex; flex-direction:column; gap:6px; font-size:.92rem; }
+.mx-rep-steps li { display:flex; gap:8px; align-items:center; } .mx-rep-steps li > span:first-child { flex:1; }
+.mx-more { background:var(--blue); margin-top:4px; } .mx-more:disabled { background:#9AA7BC; }
+.mx-rep-foot { display:flex; justify-content:center; margin:20px 0; }

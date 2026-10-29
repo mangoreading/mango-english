@@ -4,6 +4,8 @@ import { configProblem, configured, supabase } from './supabase';
 import type { BundleRow, Level } from './types';
 import { NativePlayer, isNative, type NativeResult, type VWord } from '@mango/play';
 import '@mango/play/styles.css';
+import { ReportView } from './Report';
+import { areaOf, buildReport, practiceFor, type StepRef } from './reportCalc';
 import { books, lesson8, lessonMeta, playActivity, tallyTags, type BookMeta, type PlayResult, type TagStats } from './legacy';
 
 const LEVELS: Level[] = ['CORE', 'SUPPORT', 'ADVANCED'];
@@ -110,7 +112,7 @@ function Units() {
 }
 
 type Acts = unknown[][];
-interface LMeta { no: number; en: string; ko: string; goal: string; color: string; acts: { t: string; ko: string; min: number }[] }
+interface LMeta { no: number; en: string; ko: string; goal: string; color: string; acts: { t: string; ko: string; min: number; study: boolean; hw: boolean }[] }
 interface Prog { stars: number; ok: number; total: number; detail?: { tags: TagStats; plan: unknown; review: number; correct: number; total: number } | null }
 const pkey = (lv: string, no: number, i: number) => `${lv}:${no}:${i}`;
 const stars = (n: number) => '★'.repeat(n) + '☆'.repeat(3 - n);
@@ -139,7 +141,7 @@ function UnitView({ row, onBack }: { row: BundleRow; onBack: () => void }) {
   useEffect(() => {
     void loadProg();
     if (b.flow) {
-      setMeta(b.flow.map((l) => ({ no: l.no, en: l.en, ko: l.ko, goal: l.goal, color: l.color, acts: l.steps.map((s) => ({ t: s.name_en, ko: s.name_ko, min: s.min ?? 0 })) })));
+      setMeta(b.flow.map((l) => ({ no: l.no, en: l.en, ko: l.ko, goal: l.goal, color: l.color, acts: l.steps.map((s) => ({ t: s.name_en, ko: s.name_ko, min: s.min ?? 0, study: s.study !== false, hw: !!s.homework })) })));
       if (hasAdaptive) books().then(setBk).catch(() => {});
     } else {
       lessonMeta().then(setMeta).catch((e) => setErr(String(e.message || e)));
@@ -161,12 +163,12 @@ function UnitView({ row, onBack }: { row: BundleRow; onBack: () => void }) {
     const scored = res.results.filter((r) => r.tag);
     const ok = scored.filter((r) => r.ok).length, total = scored.length;
     const pct = total ? ok / total : 1;
-    const st = lesson === 7 ? 3 : pct >= 0.9 ? 3 : pct >= 0.6 ? 2 : 1;
+    const st = hasAdaptive && lesson === 7 ? 3 : pct >= 0.9 ? 3 : pct >= 0.6 ? 2 : 1;
     if (scored.length && lesson < 90) {
       await supabase.from('attempts').insert(scored.map((r) => ({ user_id: uid, unit_id: b.unit.id, lesson, tag: r.tag, ok: r.ok, hints: r.hint ?? 0 })));
     }
     const prev = prog[pkey(level, lesson, idx)];
-    const detail = lesson === 7 ? await tallyTags(res.results) : null;
+    const detail = hasAdaptive && lesson === 7 ? await tallyTags(res.results) : null;
     const row = { user_id: uid, unit_id: b.unit.id, level, lesson, act_idx: idx, stars: Math.max(st, prev?.stars ?? 0), ok, total, detail };
     const { error } = await supabase.from('activity_progress').upsert(row);
     if (error) setErr('진도를 저장하지 못했어요: ' + error.message); else void loadProg();
@@ -178,20 +180,24 @@ function UnitView({ row, onBack }: { row: BundleRow; onBack: () => void }) {
       return;
     }
     playActivity({
-      title, items, level, test: lesson === 7, color, nextLabel,
+      title, items, level, test: hasAdaptive && lesson === 7, color, nextLabel,
       onResult: (res) => { void save(lesson, idx, res); },
       onFinish: (action) => { if (action === 'next' && next) next(); else if (action === 'again') run(lesson, idx, title, items, color, next, nextLabel); },
       onExit: () => {},
     }).catch((e) => setErr(String(e.message || e)));
   }
 
+  /** 다음 '학습' 활동 번호(숙제 전용 활동은 건너뜀). 없으면 -1 */
+  const nextStudy = (no: number, idx: number) => { const m = meta.find((x) => x.no === no); const n = (lessons[String(no)] ?? []).length; for (let i = idx + 1; i < n; i++) if (m?.acts[i]?.study !== false) return i; return -1; };
+  const reportNo = (() => { const core = (b.flow ?? []).filter((l) => (l.track ?? 'core') === 'core'); return core.length ? core[core.length - 1].no : -1; })();
   function start(no: number, idx: number) {
     const acts = lessons[String(no)] ?? [];
     const m = meta.find((x) => x.no === no);
     if (!acts[idx]) return;
-    const hasNext = idx + 1 < acts.length;
+    const ni = nextStudy(no, idx);
+    const toReport = ni < 0 && no === reportNo;
     run(no, idx, `${no}차시 : ${m?.acts[idx]?.t ?? 'Activity'}`, acts[idx], m?.color,
-      hasNext ? () => start(no, idx + 1) : undefined, hasNext ? m?.acts[idx + 1]?.t ?? '다음 활동' : undefined);
+      ni >= 0 ? () => start(no, ni) : toReport ? () => setRep(true) : undefined, ni >= 0 ? m?.acts[ni]?.t ?? '다음 활동' : toReport ? '결과 보기' : undefined);
   }
   function start8(idx: number) {
     if (!l8) return;
@@ -203,12 +209,30 @@ function UnitView({ row, onBack }: { row: BundleRow; onBack: () => void }) {
     run(90, i, bk.list[i].title, bk.items(i), 'leaf', undefined);
   }
 
+  // 결과 리포트(마지막 core 차시 = 6차시 결과를 영역별로)
+  const [rep, setRep] = useState(false);
+  const progAt = (no: number, idx: number) => { const p = prog[pkey(level, no, idx)]; return p ? { ok: p.ok, total: p.total } : undefined; };
+  const report0 = b.flow ? buildReport(b.flow, progAt) : null;
+  const hasItems = (no: number, idx: number) => ((lessons[String(no)] ?? [])[idx] ?? []).length > 0;
+  /** [더 연습해요]: 고른 활동들을 차례로 풀고, 끝나면 결과 화면으로 돌아온다 */
+  function practiceSeq(list: StepRef[], i = 0) {
+    const r = list[i]; if (!r) { setRep(true); return; }
+    const acts = lessons[String(r.no)] ?? []; const more = i + 1 < list.length;
+    run(r.no, r.idx, `더 연습해요 · ${r.name}`, acts[r.idx], undefined, more ? () => practiceSeq(list, i + 1) : () => setRep(true), more ? list[i + 1].name : '결과 보기');
+  }
+  function retryStep(r: StepRef) { const acts = lessons[String(r.no)] ?? []; run(r.no, r.idx, `${r.no}차시 · ${r.name}`, acts[r.idx], undefined, () => setRep(true), '결과 보기'); }
+
   // 이어하기: 가장 먼저 끝내지 못한 활동
   const nos = Object.keys(lessons).map(Number).sort((a, c) => a - c);
   let resume: { no: number; idx: number } | null = null;
-  for (const no of nos) { const n = lessons[String(no)].length; for (let i = 0; i < n && !resume; i++) if (!prog[pkey(level, no, i)]) resume = { no, idx: i }; if (resume) break; }
-  const doneCount = (no: number) => lessons[String(no)].filter((_, i) => prog[pkey(level, no, i)]).length;
+  for (const no of nos) { const n = lessons[String(no)].length; for (let i = 0; i < n && !resume; i++) if (!prog[pkey(level, no, i)] && meta.find((x) => x.no === no)?.acts[i]?.study !== false) resume = { no, idx: i }; if (resume) break; }
+  const studyN = (no: number) => lessons[String(no)].filter((_, i) => meta.find((x) => x.no === no)?.acts[i]?.study !== false).length;
+  const doneCount = (no: number) => lessons[String(no)].filter((_, i) => prog[pkey(level, no, i)] && meta.find((x) => x.no === no)?.acts[i]?.study !== false).length;
 
+  if (rep && report0) return (<>
+    <ReportView title={`Lesson ${b.unit.no} · ${b.unit.title}`} report={report0} practice={(a) => practiceFor(a.area, b.flow, hasItems, report0.reportLesson)}
+      onPractice={(_a, list) => { setRep(false); practiceSeq(list); }} onRetry={(r) => { setRep(false); retryStep(r); }} onBack={() => setRep(false)} />
+  </>);
   return (
     <>
       <button className="mx-link" onClick={onBack}>← 목록으로</button>
@@ -228,14 +252,14 @@ function UnitView({ row, onBack }: { row: BundleRow; onBack: () => void }) {
         const dc = doneCount(no);
         return (
           <div className="mx-card" key={no}>
-            <h3>{no}차시 · {m?.en ?? ''} <span className="mx-muted">{m?.ko}</span> <span className={dc === acts.length ? 'mx-chip mx-ok' : 'mx-chip'}>{dc}/{acts.length}</span></h3>
+            <h3>{no}차시 · {m?.en ?? ''} <span className="mx-muted">{m?.ko}</span> <span className={dc === studyN(no) ? 'mx-chip mx-ok' : 'mx-chip'}>{dc}/{studyN(no)}</span>{no === reportNo && report0 && <button className="mx-link" style={{ marginLeft: 12 }} onClick={() => setRep(true)}>결과 보기</button>}</h3>
             {m && <p className="mx-muted">{m.goal}</p>}
             <div className="mx-acts">
               {acts.map((a, i) => {
                 const p = prog[pkey(level, no, i)];
                 return (
                   <button key={i} className={p ? 'mx-act mx-done' : 'mx-act'} onClick={() => start(no, i)}>
-                    <b>{p ? '✓ ' : ''}{m?.acts[i]?.t ?? `활동 ${i + 1}`}</b>
+                    <b>{p ? '✓ ' : ''}{m?.acts[i]?.t ?? `활동 ${i + 1}`}{m?.acts[i]?.study === false ? ' · 숙제' : ''}</b>
                     <span className="mx-muted">{m?.acts[i]?.ko} · {a.length}문항{p && no !== 7 ? ` · ${stars(p.stars)}` : ''}</span>
                   </button>
                 );
