@@ -167,7 +167,7 @@ export const MText = z.object({ ...T1, k: z.literal('mtext'), title: z.string().
 /* ===== 3단계: 쓰기류 =====  빈칸은 {} (정답은 ans 에 순서대로, "|" 로 여러 정답) */
 const alts = z.array(z.string()).optional();
 export const SBuild = z.object({ ...T1, k: z.literal('sbuild'), ko: z.string().optional(), ans: z.string().min(1), alts, hint, starter: z.string().optional(), tpl: z.string().optional() });
-export const SWrite = z.object({ ...T1, k: z.literal('swrite'), ko: z.string().optional(), ans: z.string().min(1), alts, hint, starter: z.string().optional() });
+export const SWrite = z.object({ ...T1, k: z.literal('swrite'), ko: z.string().optional(), ans: z.string().min(1), alts, hint, starter: z.string().optional(), tpl: z.string().optional() });
 export const SFill = z.object({ ...T1, k: z.literal('sfill'), ko: z.string().optional(), tpl: z.string().refine((v) => v.includes('{}'), '문장에 {} (빈칸)가 있어야 해요'), ans: z.string().min(1), hint });
 export const DFill = z.object({ ...T1, k: z.literal('dfill'), pic: z.string().optional(), tag2: z.string().optional(), lines: z.array(z.string().min(1)).min(1), ans: z.array(z.string().min(1)).min(1), blankHints: z.array(z.string()).optional(), hint });
 export const SScram = z.object({ ...T1, k: z.literal('sscram'), ko: z.string().optional(), ans: z.string().min(1), extra: z.array(z.string()).optional(), alts, hint });
