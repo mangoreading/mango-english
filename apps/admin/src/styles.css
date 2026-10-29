@@ -158,4 +158,4 @@ h3 + .mx-sec { border-top:0; padding-top:6px; }
 .mx-rp-r1 { display:flex; align-items:center; gap:6px; } .mx-rp-t { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .mx-rp-no { width:26px; height:26px; border-radius:50%; border:1px solid #999; background:#fff; cursor:pointer; flex:none; }
 .mx-rp-r2 { display:flex; gap:4px; } .mx-rp-it input { width:100%; box-sizing:border-box; }
-.mx-src-ta { width:100%; box-sizing:border-box; resize:vertical; line-height:1.5; }
+.mx-src-ta { min-height:0; width:100%; box-sizing:border-box; resize:vertical; line-height:1.5; }
