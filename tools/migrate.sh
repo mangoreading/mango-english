@@ -24,7 +24,9 @@ for f in $(ls *.sql | sort); do
   done_=$("${P[@]}" -c "select 1 from public.schema_migrations where name='$f'")
   if [ -z "$done_" ]; then
     echo "apply: $f"
-    "${P[@]}" -1 -f "$f"
+    if ! out=$("${P[@]}" -1 -f "$f" 2>&1); then
+      echo "::error title=migration $f failed::$(printf '%s' "$out" | tr '\n' ' ' | sed -E "s#$DATABASE_URL#<URL>#g" | cut -c1-900)"; exit 3
+    fi
     "${P[@]}" -c "insert into public.schema_migrations(name) values ('$f')"
     n=$((n+1))
   fi
