@@ -706,3 +706,8 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-gw .a-lo { color:#D64545; } .nv-gw .a-lo small { color:#D64545; }
 .nv-mic:disabled { opacity:.4; cursor:not-allowed; animation:none; }
 .nv-mtaudio { width:100%; height:2.4em; margin:.4em 0; }
+
+/* 글 점검(문법·철자) */
+.nv-wchk { margin-top:.8em; display:flex; flex-direction:column; gap:.5em; align-items:flex-start; }
+.nv-wchkbox { border:.1em solid #C9D4EA; border-radius:.5em; background:#fff; padding:.7em 1em; max-width:100%; }
+.nv-wchkbox p { margin:.25em 0; line-height:1.5; } .nv-wchkok { color:#1E7A46; font-weight:700; } .nv-wchkfoot { color:#7C8AA5; font-size:.9em; }

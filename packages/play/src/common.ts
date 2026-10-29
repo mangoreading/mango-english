@@ -142,6 +142,7 @@ export interface KindProps {
 export interface AiHandlers {
   chat?: (req: { situation: string; role?: string; history: { who: 'ai' | 'me'; text: string }[] }) => Promise<string>;
   check?: (req: { text: string; rules: string[] }) => Promise<boolean[]>;
+  grammar?: (req: { text: string; goal?: string }) => Promise<{ q: string; tip: string }[]>;
   hint?: (req: { kind: string; item: unknown; input: string; wrong: number; given: number; prev?: string[] }) => Promise<string>;
 }
 export const aiHandlers: AiHandlers = {};

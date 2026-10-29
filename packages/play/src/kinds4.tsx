@@ -3,6 +3,7 @@ import { aiHandlers, imgSrc, say, shuffle, type KindProps } from './common';
 import { Rich } from './kinds3';
 import { Hint } from './hint';
 import { Fb } from './fb';
+import { WriteCheck } from './wcheck';
 
 /* ===== 3단계 템플릿: 쓰기류 (듣고 쓰기 · 문장 쓰기 · 빈칸 쓰기 · 문장 만들기 · 대화 완성 · 문장 순서 · 보기로 글 완성 · 글 쓰기) ===== */
 const cmp = (s: string) => s.toLowerCase().replace(/[’‘`]/g, "'").replace(/[.?!,]/g, '').replace(/\s+/g, ' ').trim();
@@ -255,6 +256,7 @@ export function MFree({ item, onDone }: KindProps) {
               onFocus={() => setFoc(idx)} onChange={(e) => setV(v.map((x, k) => (k === idx ? e.target.value : x)))} onBlur={() => settle(v, topic)} onKeyDown={(e) => { if (e.key === 'Enter') settle(v, topic); }} />}</span>;
           })}</p>))}
       </div>
+      <WriteCheck getText={() => (topic.trim() ? topic.trim() + '\n' : '') + filled().join('\n').replace(/____/g, '')} goal={item.topicLabel ?? ''} />
       <HintBox lines={hintLines} item={item} ctx={() => ({ input: `Product: ${topic || '(not written yet)'}\nStudent is writing line ${fl != null ? fl + 1 : '?'}: "${fl != null ? lines[fl] : ''}"\nLine hint from teacher: ${fl != null ? lineHints[fl] ?? '' : ''}\nText so far:\n${filled().join('\n')}`, wrong: 0 })} />
     </div>
   );
@@ -291,6 +293,7 @@ export function SWrt({ item, onDone }: KindProps) {
         </div>
         <textarea className="nv-wta" disabled={ok} value={v} placeholder={item.starter ?? '여기에 써 보세요'} onChange={(e) => change(e.target.value)} />
       </div>
+      <WriteCheck getText={() => v} goal={rules.map((r) => r.label).join(' / ')} />
       <HintBox lines={item.hint ?? []} item={item} ctx={() => ({ input: v, wrong: 0 })} />
     </div>
   );
