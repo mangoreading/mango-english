@@ -160,3 +160,4 @@ h3 + .mx-sec { border-top:0; padding-top:6px; }
 .mx-rp-r2 { display:flex; gap:4px; } .mx-rp-it input { width:100%; box-sizing:border-box; }
 .mx-src-ta { min-height:0; width:100%; box-sizing:border-box; resize:vertical; line-height:1.5; }
 .mx-src-drop { margin-top:10px; padding:22px; border:2px dashed #c9c3b3; border-radius:10px; text-align:center; color:#777; } .mx-src-drop.on { border-color:#f2a900; background:#fff6dd; color:#333; }
+.mx-st-ta { min-height:0 !important; resize:vertical; }

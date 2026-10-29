@@ -29,6 +29,15 @@ async function fileToB64(f: Blob): Promise<string> {
   const url = c.toDataURL('image/png'); return url.slice(url.indexOf(',') + 1);
 }
 
+/** 300×300 으로 줄인다 (투명 배경 유지, 비율 유지하며 가운데 맞춤) */
+async function shrink300(b64: string): Promise<string> {
+  const bmp = await createImageBitmap(toBlob(b64)); const c = document.createElement('canvas'); c.width = 300; c.height = 300;
+  const k = Math.min(300 / bmp.width, 300 / bmp.height); const w = Math.round(bmp.width * k), h = Math.round(bmp.height * k);
+  c.getContext('2d')!.drawImage(bmp, Math.round((300 - w) / 2), Math.round((300 - h) / 2), w, h);
+  const u = c.toDataURL('image/png'); return u.slice(u.indexOf(',') + 1);
+}
+const apiSize = (s: string) => (s === '300x300' ? '1024x1024' : s);
+
 export function Studio() {
   const [preset, setPreset] = useState<Preset>('word');
   const [style, setStyle] = useState(PRESETS.word.style);
@@ -78,7 +87,8 @@ export function Studio() {
   async function generate() {
     const p = fullPrompt(); if (!p) { setMsg({ t: 'err', s: '프롬프트(또는 단어)를 입력해 주세요.' }); return; }
     setBusy(true); setMsg(null);
-    const out = await call({ prompt: p, size, quality, background: bg, n, refs: refs.map((r) => r.b64) });
+    let out = await call({ prompt: p, size: apiSize(size), quality, background: bg, n, refs: refs.map((r) => r.b64) });
+    if (out && size === '300x300') out = await Promise.all(out.map(shrink300));
     setBusy(false); if (!out) return;
     const base = safe(word || prompt.slice(0, 24) || 'image');
     const made = out.map((b64, i) => ({ id: ++uid, b64, name: out.length > 1 ? `${base}_${i + 1}` : base }));
@@ -89,7 +99,8 @@ export function Studio() {
     if (!newT.trim()) { setMsg({ t: 'err', s: '바꿀 글자를 입력해 주세요.' }); return; }
     const p = `Edit this image: ${oldT.trim() ? `replace the text "${oldT.trim()}" with "${newT.trim()}"` : `add the text "${newT.trim()}" where it fits`}. Spell the text exactly as given, same font style and position. Keep everything else in the image exactly the same.${editExtra.trim() ? ' ' + editExtra.trim() : ''}`;
     setBusy(true); setMsg(null);
-    const out = await call({ prompt: p, size, quality, background: 'auto', n: 1, refs: [im.b64] });
+    let out = await call({ prompt: p, size: apiSize(size), quality, background: 'auto', n: 1, refs: [im.b64] });
+    if (out && size === '300x300') out = await Promise.all(out.map(shrink300));
     setBusy(false); if (!out) return;
     const made = { id: ++uid, b64: out[0], name: im.name + '_edit' };
     setImgs((xs) => [made, ...xs]); setEditId(null); setMsg({ t: 'ok', s: '글자를 고친 새 이미지를 만들었어요. (원본은 그대로 있어요)' });
@@ -107,9 +118,9 @@ export function Studio() {
       <div className="mx-grid" style={{ gridTemplateColumns: '1fr 1.3fr' }}>
         <div className="mx-card">
           <div className="mx-seg">{(Object.keys(PRESETS) as Preset[]).map((p) => <button key={p} className={preset === p ? 'on' : ''} onClick={() => pickPreset(p)}>{PRESETS[p].name}</button>)}</div>
-          <label className="mx-f">스타일 문장 (그림 톤을 맞추는 고정 문장, 고쳐도 돼요)<textarea rows={3} value={style} onChange={(e) => setStyle(e.target.value)} /></label>
+          <label className="mx-f">스타일 문장 (그림 톤을 맞추는 고정 문장, 고쳐도 돼요)<textarea className="mx-st-ta" rows={5} value={style} onChange={(e) => setStyle(e.target.value)} /></label>
           {preset === 'word' && <div className="mx-row"><label className="mx-f" style={{ flex: 1 }}>영어 단어<input value={word} onChange={(e) => setWord(e.target.value)} placeholder="예: socks" /></label><label className="mx-f" style={{ flex: 1 }}>한글 뜻(선택)<input value={ko} onChange={(e) => setKo(e.target.value)} placeholder="예: 양말" /></label></div>}
-          <label className="mx-f">프롬프트 {preset === 'word' ? '(추가 설명, 선택)' : '(만들 그림 설명)'}<textarea rows={5} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder={preset === 'scene' ? '예: 가게에서 점원에게 모자 가격을 묻는 여자아이와 엄마. 가게 안, 모자가 진열된 선반.' : '예: 파란색 줄무늬 양말'} /></label>
+          <label className="mx-f">프롬프트 {preset === 'word' ? '(추가 설명, 선택)' : '(만들 그림 설명)'}<textarea className="mx-st-ta" rows={5} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder={preset === 'scene' ? '예: 가게에서 점원에게 모자 가격을 묻는 여자아이와 엄마. 가게 안, 모자가 진열된 선반.' : '예: 파란색 줄무늬 양말'} /></label>
           <div className="mx-f">참고 이미지 (최대 4장 — 올리면 이 그림을 바탕으로 만들어요)
             <div className="mx-row" style={{ marginTop: 6 }}>
               {refs.map((r) => <span key={r.id} className="mx-st-ref"><img src={'data:image/png;base64,' + r.b64} alt="참고" /><button onClick={() => setRefs((xs) => xs.filter((x) => x.id !== r.id))} aria-label="빼기">×</button></span>)}
@@ -117,7 +128,7 @@ export function Studio() {
               <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => void addRefs(e.target.files)} />
             </div></div>
           <div className="mx-row">
-            <label className="mx-f">크기<select value={size} onChange={(e) => setSize(e.target.value)}><option value="1024x1024">정사각 1024×1024</option><option value="1536x1024">가로 1536×1024 (장면)</option><option value="1024x1536">세로 1024×1536</option></select></label>
+            <label className="mx-f">크기<select value={size} onChange={(e) => setSize(e.target.value)}><option value="300x300">작게 300×300 (단어 그림용)</option><option value="1024x1024">정사각 1024×1024</option><option value="1536x1024">가로 1536×1024 (장면)</option><option value="1024x1536">세로 1024×1536</option></select></label>
             <label className="mx-f">배경<select value={bg} onChange={(e) => setBg(e.target.value)}><option value="transparent">투명</option><option value="opaque">불투명</option><option value="auto">자동</option></select></label>
             <label className="mx-f">품질<select value={quality} onChange={(e) => setQuality(e.target.value)}><option value="low">낮음(저렴)</option><option value="medium">보통</option><option value="high">높음(비쌈)</option></select></label>
             <label className="mx-f">개수<select value={n} onChange={(e) => setN(Number(e.target.value))}>{[1, 2, 3, 4].map((v) => <option key={v}>{v}</option>)}</select></label>
@@ -131,7 +142,7 @@ export function Studio() {
             <div className="mx-row" style={{ marginTop: 6 }}>
               {hasDir ? <><button className="mx-btn sec" onClick={chooseDir}>폴더 선택</button><span>{dir ? <b>{dir.name}</b> : <span className="mx-muted">선택 안 함 → 내려받기 폴더로 저장</span>}</span></>
                 : <span className="mx-muted">이 브라우저는 폴더 선택을 지원하지 않아요(크롬/엣지에서 가능). 저장하면 내려받기 폴더로 저장돼요.</span>}
-              <label><input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} /> 만들면 자동 저장</label>
+              <label style={{ whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: 6 }}><input type="checkbox" style={{ width: 'auto' }} checked={auto} onChange={(e) => setAuto(e.target.checked)} /> 만들면 자동 저장</label>
             </div>
           </div>
           {msg && <p className={msg.t === 'ok' ? 'mx-ok' : 'mx-err'}>{msg.s}</p>}
