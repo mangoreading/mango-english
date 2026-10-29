@@ -3,6 +3,8 @@ import { supabase } from '../../shared/supabase';
 import { PageHead } from '../../shared/ui';
 import { UnitFlow } from '../flow/Flow';
 import { Items } from './Items';
+import { Review } from './Review';
+import { Source } from './Source';
 import { UnitVocab } from './Vocab';
 
 type Status = 'draft' | 'review' | 'approved' | 'rejected';
@@ -76,7 +78,7 @@ export function Units({ uid }: { uid: string }) {
 }
 
 function UnitEditor({ unit, uid, onBack }: { unit: UnitRow; uid: string; onBack: () => void }) {
-  const [tab, setTab] = useState<'flow' | 'vocab' | 'items'>('flow');
+  const [tab, setTab] = useState<'flow' | 'vocab' | 'items' | 'review' | 'source'>('flow');
   return (
     <>
       <PageHead title={`Lesson ${unit.no} · ${unit.title}`} sub={<button className="mx-link" onClick={onBack}>← 단원 목록</button>} />
@@ -84,10 +86,14 @@ function UnitEditor({ unit, uid, onBack }: { unit: UnitRow; uid: string; onBack:
         <button className={tab === 'flow' ? 'on' : ''} onClick={() => setTab('flow')}>학습 흐름</button>
         <button className={tab === 'vocab' ? 'on' : ''} onClick={() => setTab('vocab')}>단어</button>
         <button className={tab === 'items' ? 'on' : ''} onClick={() => setTab('items')}>문항</button>
+        <button className={tab === 'review' ? 'on' : ''} onClick={() => setTab('review')}>학생 화면 검수</button>
+        <button className={tab === 'source' ? 'on' : ''} onClick={() => setTab('source')}>교과서 자료</button>
       </div>
       {tab === 'flow' && <UnitFlow unitId={unit.id} />}
       {tab === 'vocab' && <UnitVocab unitId={unit.id} />}
       {tab === 'items' && <Items unitId={unit.id} uid={uid} />}
+      {tab === 'review' && <Review unitId={unit.id} uid={uid} />}
+      {tab === 'source' && <Source unitId={unit.id} uid={uid} />}
     </>
   );
 }
