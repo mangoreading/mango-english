@@ -5,10 +5,11 @@ import { Types } from './pages/kinds/Kinds';
 import { Templates } from './pages/flow/Flow';
 import { Units } from './pages/units/Units';
 import { Books } from './pages/books/Books';
+import { Studio } from './pages/studio/Studio';
 import { PageHead } from './shared/ui';
 
-export type Tab = 'books' | 'units' | 'tpl' | 'types';
-const TABS: [Tab, string][] = [['books', '교재 관리'], ['units', '단원·콘텐츠'], ['tpl', '흐름 템플릿'], ['types', '활동 템플릿']];
+export type Tab = 'books' | 'units' | 'tpl' | 'types' | 'studio';
+const TABS: [Tab, string][] = [['books', '교재 관리'], ['units', '단원·콘텐츠'], ['tpl', '흐름 템플릿'], ['types', '활동 템플릿'], ['studio', '이미지/영상 제작']];
 
 
 export function App() {
@@ -79,6 +80,7 @@ function Main({ uid, tab }: { uid: string; tab: Tab }) {
       {tab === 'units' && <Units uid={uid} />}
       {tab === 'tpl' && <Templates />}
       {tab === 'types' && <Types />}
+      {tab === 'studio' && <Studio />}
     </>
   );
 }

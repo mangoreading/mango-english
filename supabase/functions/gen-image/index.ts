@@ -27,11 +27,44 @@ Deno.serve(async (req) => {
     if (!key) return json({ error: 'OPENAI_API_KEY 가 설정되어 있지 않아요' }, 500);
 
     const admin = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+
+    const b = await req.json();
+    // 이미지 제작 화면: 자유 프롬프트 + 참고 이미지(수정 모드) + 크기/품질/배경/개수
+    if (b.prompt !== undefined) {
+      const prompt = cut(b.prompt, 3000).trim();
+      if (!prompt) return json({ error: '프롬프트를 입력해 주세요' }, 400);
+      const size = ['1024x1024', '1536x1024', '1024x1536'].includes(b.size) ? b.size : '1024x1024';
+      const quality = ['low', 'medium', 'high'].includes(b.quality) ? b.quality : QUALITY;
+      const background = b.background === 'opaque' ? 'opaque' : b.background === 'transparent' ? 'transparent' : 'auto';
+      const count = Math.min(4, Math.max(1, Number(b.n) || 1));
+      const refs: string[] = Array.isArray(b.refs) ? b.refs.slice(0, 4).map((x: unknown) => String(x)) : [];
+      const outs: string[] = [];
+      for (let i = 0; i < count; i++) {
+        const { data: used, error: ue } = await admin.rpc('image_use', { p_user: u.user.id });
+        if (ue) throw ue;
+        if ((used as number) > DAILY_LIMIT) { if (outs.length) break; return json({ error: '오늘 만들 수 있는 그림 수를 모두 썼어요' }, 429); }
+        let r: Response;
+        if (refs.length) {
+          const fd = new FormData();
+          fd.append('model', MODEL); fd.append('prompt', prompt); fd.append('size', size); fd.append('quality', quality); fd.append('background', background); fd.append('output_format', 'png'); fd.append('n', '1');
+          refs.forEach((x, k) => { const bin = Uint8Array.from(atob(x), (c) => c.charCodeAt(0)); fd.append('image[]', new Blob([bin], { type: 'image/png' }), `ref${k}.png`); });
+          r = await fetch('https://api.openai.com/v1/images/edits', { method: 'POST', headers: { Authorization: 'Bearer ' + key }, body: fd });
+        } else {
+          r = await fetch('https://api.openai.com/v1/images/generations', {
+            method: 'POST', headers: { Authorization: 'Bearer ' + key, 'content-type': 'application/json' },
+            body: JSON.stringify({ model: MODEL, prompt, size, quality, background, output_format: 'png', n: 1 }),
+          });
+        }
+        if (!r.ok) throw new Error('OpenAI 오류 ' + r.status + ' ' + cut(await r.text(), 300));
+        const d = await r.json(); const x = d.data?.[0]?.b64_json;
+        if (!x) throw new Error('OpenAI 가 그림을 보내지 않았어요');
+        outs.push(x);
+      }
+      return json({ images: outs });
+    }
     const { data: n, error: e1 } = await admin.rpc('image_use', { p_user: u.user.id });
     if (e1) throw e1;
     if ((n as number) > DAILY_LIMIT) return json({ error: '오늘 만들 수 있는 그림 수를 모두 썼어요' }, 429);
-
-    const b = await req.json();
     const word = cut(b.word, 60).trim();
     if (!word) return json({ error: '단어를 입력해 주세요' }, 400);
     const extra = cut(b.extra, 200).trim();
