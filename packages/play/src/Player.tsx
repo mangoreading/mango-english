@@ -124,7 +124,6 @@ export function NativePlayer({ title, items, vocab, nextLabel, step, quiet, scop
 
   return (
     <div className="nv-overlay" data-bgimg={VOCAB_BG.includes(it.k) ? "v" : undefined} data-hd={SPEAK_SKIN.includes(it.k) ? 'bg' : undefined} data-skin={VOCAB_SKIN.includes(it.k) ? 'forest' : SPEAK_SKIN.includes(it.k) ? 'mango' : BG_SKIN.includes(it.k) ? 'mangobg' : undefined}>
-      {step && step.total > 0 && <div className="nv-seg" aria-label={`활동 ${step.cur + 1} / ${step.total}`}>{Array.from({ length: step.total }, (_, k) => <i key={k} className={k < step.cur ? 'd1' : k === step.cur ? 'd2' : ''} />)}</div>}
       <div className="nv-head">
         <button className="nv-x" onClick={() => onFinish('exit')} aria-label="나가기">‹</button>
         <b>{title}</b>{step && step.total > 0 && <span className="nv-stepno">활동 {step.cur + 1}/{step.total}</span>}
