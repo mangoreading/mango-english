@@ -161,3 +161,4 @@ h3 + .mx-sec { border-top:0; padding-top:6px; }
 .mx-src-ta { min-height:0; width:100%; box-sizing:border-box; resize:vertical; line-height:1.5; }
 .mx-src-drop { margin-top:10px; padding:22px; border:2px dashed #c9c3b3; border-radius:10px; text-align:center; color:#777; } .mx-src-drop.on { border-color:#f2a900; background:#fff6dd; color:#333; }
 .mx-st-ta { min-height:0 !important; resize:vertical; }
+.mx-st-words { width:100%; border-collapse:collapse; } .mx-st-words td { padding:3px 4px 3px 0; } .mx-st-words input { width:100%; box-sizing:border-box; padding:6px 9px; }

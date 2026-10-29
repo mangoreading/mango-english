@@ -41,7 +41,8 @@ const apiSize = (s: string) => (s === '300x300' ? '1024x1024' : s);
 export function Studio() {
   const [preset, setPreset] = useState<Preset>('word');
   const [style, setStyle] = useState(PRESETS.word.style);
-  const [word, setWord] = useState(''); const [ko, setKo] = useState('');
+  const [rows, setRows] = useState<{ en: string; ko: string }[]>(() => Array.from({ length: 6 }, () => ({ en: '', ko: '' })));
+  const [prog, setProg] = useState('');
   const [prompt, setPrompt] = useState('');
   const [size, setSize] = useState(PRESETS.word.size); const [bg, setBg] = useState(PRESETS.word.bg);
   const [quality, setQuality] = useState('medium'); const [n, setN] = useState(1);
@@ -80,20 +81,28 @@ export function Studio() {
     if (!data?.images?.length) { setMsg({ t: 'err', s: data?.error ?? '그림을 받지 못했어요' }); return null; }
     return data.images as string[];
   }
-  function fullPrompt() {
-    const obj = word.trim() ? `Object: "${word.trim()}"${ko.trim() ? ` (${ko.trim()})` : ''}.` : '';
+  function fullPrompt(w?: { en: string; ko: string }) {
+    const obj = w?.en.trim() ? `Object: "${w.en.trim()}"${w.ko.trim() ? ` (${w.ko.trim()})` : ''}.` : '';
     return [style.trim(), obj, prompt.trim()].filter(Boolean).join(' ');
   }
   async function generate() {
-    const p = fullPrompt(); if (!p) { setMsg({ t: 'err', s: '프롬프트(또는 단어)를 입력해 주세요.' }); return; }
+    const words = preset === 'word' ? rows.filter((r) => r.en.trim()) : [];
+    if (preset === 'word' && !words.length) { setMsg({ t: 'err', s: '단어를 한 개 이상 입력해 주세요.' }); return; }
+    if (preset !== 'word' && !fullPrompt()) { setMsg({ t: 'err', s: '프롬프트를 입력해 주세요.' }); return; }
     setBusy(true); setMsg(null);
-    let out = await call({ prompt: p, size: apiSize(size), quality, background: bg, n, refs: refs.map((r) => r.b64) });
-    if (out && size === '300x300') out = await Promise.all(out.map(shrink300));
-    setBusy(false); if (!out) return;
-    const base = safe(word || prompt.slice(0, 24) || 'image');
-    const made = out.map((b64, i) => ({ id: ++uid, b64, name: out.length > 1 ? `${base}_${i + 1}` : base }));
-    setImgs((xs) => [...made, ...xs]); setMsg({ t: 'ok', s: `${made.length}장 만들었어요.` });
-    if (auto) for (const m of made) await saveLocal(m);
+    const jobs: { p: string; base: string }[] = preset === 'word' ? words.map((w) => ({ p: fullPrompt(w), base: safe(w.en) })) : [{ p: fullPrompt(), base: safe(prompt.slice(0, 24) || 'image') }];
+    let made = 0; let fail = 0;
+    for (let j = 0; j < jobs.length; j++) {
+      setProg(jobs.length > 1 ? `${j + 1}/${jobs.length} 만드는 중… (${jobs[j].base})` : '');
+      let out = await call({ prompt: jobs[j].p, size: apiSize(size), quality, background: bg, n, refs: refs.map((r) => r.b64) });
+      if (!out) { fail++; continue; }   // 오류 메시지는 call 이 이미 보여 줌. 남은 단어는 계속 만든다
+      if (size === '300x300') out = await Promise.all(out.map(shrink300));
+      const add = out.map((b64, i) => ({ id: ++uid, b64, name: out!.length > 1 ? `${jobs[j].base}_${i + 1}` : jobs[j].base }));
+      setImgs((xs) => [...add, ...xs]); made += add.length;
+      if (auto) for (const m of add) await saveLocal(m);
+    }
+    setBusy(false); setProg('');
+    if (made) setMsg({ t: fail ? 'err' : 'ok', s: `${made}장 만들었어요.` + (fail ? ` (${fail}건은 실패했어요. 위 오류를 확인해 주세요)` : '') });
   }
   async function editText(im: Img) {
     if (!newT.trim()) { setMsg({ t: 'err', s: '바꿀 글자를 입력해 주세요.' }); return; }
@@ -119,7 +128,17 @@ export function Studio() {
         <div className="mx-card">
           <div className="mx-seg">{(Object.keys(PRESETS) as Preset[]).map((p) => <button key={p} className={preset === p ? 'on' : ''} onClick={() => pickPreset(p)}>{PRESETS[p].name}</button>)}</div>
           <label className="mx-f">스타일 문장 (그림 톤을 맞추는 고정 문장, 고쳐도 돼요)<textarea className="mx-st-ta" rows={5} value={style} onChange={(e) => setStyle(e.target.value)} /></label>
-          {preset === 'word' && <div className="mx-row"><label className="mx-f" style={{ flex: 1 }}>영어 단어<input value={word} onChange={(e) => setWord(e.target.value)} placeholder="예: socks" /></label><label className="mx-f" style={{ flex: 1 }}>한글 뜻(선택)<input value={ko} onChange={(e) => setKo(e.target.value)} placeholder="예: 양말" /></label></div>}
+          {preset === 'word' && (
+            <div className="mx-f">단어 (한 번에 여러 개 — 채운 줄만 만들어요)
+              <table className="mx-st-words"><tbody>
+                {rows.map((r, i) => (
+                  <tr key={i}><td className="mx-muted">{i + 1}</td>
+                    <td><input value={r.en} onChange={(e) => setRows((xs) => xs.map((x, k) => (k === i ? { ...x, en: e.target.value } : x)))} placeholder="영어 단어 (예: socks)" /></td>
+                    <td><input value={r.ko} onChange={(e) => setRows((xs) => xs.map((x, k) => (k === i ? { ...x, ko: e.target.value } : x)))} placeholder="한글 뜻 (선택)" /></td>
+                    <td><button className="mx-link" onClick={() => setRows((xs) => (xs.length > 1 ? xs.filter((_, k) => k !== i) : xs))} aria-label="줄 지우기">×</button></td></tr>))}
+              </tbody></table>
+              <div className="mx-row"><button className="mx-btn sec" onClick={() => setRows((xs) => [...xs, { en: '', ko: '' }])}>+ 행 추가</button><button className="mx-link" onClick={() => setRows(Array.from({ length: 6 }, () => ({ en: '', ko: '' })))}>모두 비우기</button></div>
+            </div>)}
           <label className="mx-f">프롬프트 {preset === 'word' ? '(추가 설명, 선택)' : '(만들 그림 설명)'}<textarea className="mx-st-ta" rows={5} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder={preset === 'scene' ? '예: 가게에서 점원에게 모자 가격을 묻는 여자아이와 엄마. 가게 안, 모자가 진열된 선반.' : '예: 파란색 줄무늬 양말'} /></label>
           <div className="mx-f">참고 이미지 (최대 4장 — 올리면 이 그림을 바탕으로 만들어요)
             <div className="mx-row" style={{ marginTop: 6 }}>
@@ -134,7 +153,7 @@ export function Studio() {
             <label className="mx-f">개수<select value={n} onChange={(e) => setN(Number(e.target.value))}>{[1, 2, 3, 4].map((v) => <option key={v}>{v}</option>)}</select></label>
           </div>
           <div className="mx-row" style={{ marginTop: 8 }}>
-            <button className="mx-btn" disabled={busy} onClick={generate}>{busy ? '만드는 중… (30초 안팎)' : refs.length ? '참고 이미지로 만들기' : '만들기'}</button>
+            <button className="mx-btn" disabled={busy} onClick={generate}>{busy ? (prog || '만드는 중… (30초 안팎)') : preset === 'word' ? `단어 ${rows.filter((r) => r.en.trim()).length}개 만들기` : refs.length ? '참고 이미지로 만들기' : '만들기'}</button>
             <span className="mx-muted">{refs.length ? '참고 이미지 있음 → 수정/참고 모드' : ''}</span>
           </div>
           <div className="mx-card" style={{ marginTop: 12, background: '#fafafa' }}>
@@ -142,7 +161,7 @@ export function Studio() {
             <div className="mx-row" style={{ marginTop: 6 }}>
               {hasDir ? <><button className="mx-btn sec" onClick={chooseDir}>폴더 선택</button><span>{dir ? <b>{dir.name}</b> : <span className="mx-muted">선택 안 함 → 내려받기 폴더로 저장</span>}</span></>
                 : <span className="mx-muted">이 브라우저는 폴더 선택을 지원하지 않아요(크롬/엣지에서 가능). 저장하면 내려받기 폴더로 저장돼요.</span>}
-              <label style={{ whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: 6 }}><input type="checkbox" style={{ width: 'auto' }} checked={auto} onChange={(e) => setAuto(e.target.checked)} /> 만들면 자동 저장</label>
+              <label className="mx-inline" style={{ whiteSpace: 'nowrap' }}><input type="checkbox" style={{ width: 'auto', padding: 0 }} checked={auto} onChange={(e) => setAuto(e.target.checked)} /> 만들면 자동 저장</label>
             </div>
           </div>
           {msg && <p className={msg.t === 'ok' ? 'mx-ok' : 'mx-err'}>{msg.s}</p>}
