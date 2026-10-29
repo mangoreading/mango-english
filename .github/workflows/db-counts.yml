@@ -11,6 +11,9 @@ jobs:
         run: |
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -At -F ' | ' > out.txt <<'SQL'
           select 'flow', fl.no::text, s.pos::text, s.kind, s.name_ko, s.qty::text, s.minutes::text, s.homework::text, s.study::text from public.flow_steps s join public.flow_lessons fl on fl.id=s.lesson_id join public.flow_templates t on t.id=fl.template_id order by fl.no, s.pos;
+          select 'L9 step items', fl.no::text || '-' || s.pos::text, s.kind, coalesce((select count(*) from public.items i where i.step_id = s.id and i.level::text = 'CORE'),0)::text || ' CORE', coalesce((select string_agg(distinct i.status::text, ',') from public.items i where i.step_id = s.id),'') from public.flow_steps s join public.flow_lessons fl on fl.id = s.lesson_id join public.units u on u.id = fl.unit_id join public.books b on b.id = u.book_id where b.title = '비상교육 초5 영어' and u.no = 9 order by fl.no, s.pos;
+          select 'L9 items no step', count(*)::text from public.items i join public.units u on u.id = i.unit_id join public.books b on b.id = u.book_id where b.title = '비상교육 초5 영어' and u.no = 9 and i.step_id is null;
+          select 'L9 vocab', v.key, v.en, v.ko, coalesce(v.image_path,'(no image)') from public.unit_vocab uv join public.vocab v on v.id = uv.vocab_id join public.units u on u.id = uv.unit_id join public.books b on b.id = u.book_id where b.title = '비상교육 초5 영어' and u.no = 9 order by v.key;
           select 'items total', count(*) from public.items;
           select 'scene check', lesson::text, payload->'qs'->0->>'q' from public.items where template = 'scene' order by lesson;
           select 'items by unit', u.no::text || ' ' || u.title, i.status::text, count(*) from public.items i join public.units u on u.id=i.unit_id group by 2,3 order by 2,3;
