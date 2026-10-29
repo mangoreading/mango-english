@@ -105,9 +105,8 @@ export function NativePlayer({ title, items, vocab, nextLabel, quiet, scope, onR
         <div className="nv-stars">{[1, 2, 3].map((n) => <span key={n} style={{ color: n <= st ? '#FFC000' : '#D9DEE8' }}>★</span>)}</div>
         <p className="nv-sum">{scored.length ? `첫 시도 정답 ${ok}/${scored.length}` : '모든 단어를 익혔어요'} · 포인트 +{pts}</p>
         <div className="nv-btns">
-          {nextLabel && <button className="nv-btn nv-btn-lg" onClick={() => onFinish('next')}>다음: {nextLabel}</button>}
+          <button className="nv-btn nv-btn-lg" onClick={() => onFinish('next')}>{nextLabel ? `다음: ${nextLabel}` : '다음'}</button>
           <button className="nv-btn nv-ghost" onClick={() => onFinish('again')}>다시 하기</button>
-          <button className="nv-btn nv-ghost" onClick={() => onFinish('exit')}>나가기</button>
         </div>
       </div></div>
     );
