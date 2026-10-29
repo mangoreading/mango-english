@@ -11,11 +11,20 @@ export function Source({ unitId, uid }: { unitId: string; uid: string }) {
   const [big, setBig] = useState<string | null>(null);
   const [paste, setPaste] = useState(''); const [showPaste, setShowPaste] = useState(false);
   const file = useRef<HTMLInputElement>(null);
+  const seeded = useRef(false);
+  const [lines, setLines] = useState<number>(() => { try { return Math.min(30, Math.max(2, Number(localStorage.getItem('mx:srcLines')) || 7)); } catch { return 7; } });
+  function setL(n: number) { const v = Math.min(30, Math.max(2, n)); setLines(v); try { localStorage.setItem('mx:srcLines', String(v)); } catch { /* 저장 못 해도 동작에는 문제 없음 */ } }
 
   async function load() {
     const r = await supabase.from('unit_sources').select('*').eq('unit_id', unitId).order('sort').order('created_at');
     if (r.error) { setMsg('불러오기 실패: ' + r.error.message + ' (마이그레이션 0051 이 적용됐는지 확인하세요)'); return; }
     const xs = (r.data ?? []) as Src[]; setRows(xs);
+    if (!xs.some((x) => x.kind === 'script') && !seeded.current) {   // 스크립트 표가 비어 있으면 5열×9행 빈 표를 만든다
+      seeded.current = true;
+      const recs = Array.from({ length: 9 }, (_, i) => ({ unit_id: unitId, kind: 'script', sort: i + 1, title: '음원', created_by: uid }));
+      const ins = await supabase.from('unit_sources').insert(recs).select('*');
+      if (!ins.error) { xs.push(...((ins.data ?? []) as Src[])); setRows([...xs]); }
+    }
     const paths = xs.filter((x) => x.file_path).map((x) => x.file_path!);
     if (paths.length) {
       const s = await supabase.storage.from('textbook').createSignedUrls(paths, 3600);
@@ -84,6 +93,7 @@ export function Source({ unitId, uid }: { unitId: string; uid: string }) {
       </div>
       <div className="mx-card mx-scroll">
         <div className="mx-row"><b>QR 음원·영상 스크립트 {scripts.length}줄</b><span style={{ flex: 1 }} />
+          <span className="mx-muted">행 높이</span><button className="mx-btn sec" onClick={() => setL(lines - 1)} aria-label="행 줄이기">−</button><b>{lines}줄</b><button className="mx-btn sec" onClick={() => setL(lines + 1)} aria-label="행 늘리기">+</button>
           <button className="mx-btn sec" onClick={() => setShowPaste(!showPaste)}>표 붙여넣기</button><button className="mx-btn" onClick={() => addScript()}>+ 줄 추가</button></div>
         {showPaste && <div style={{ marginTop: 8 }}><p className="mx-muted">엑셀·표에서 복사해 붙여넣으세요. 열 순서: 차시 | 구분(음원/영상) | 스크립트 | 활동 메모 | Remark</p>
           <textarea rows={6} value={paste} onChange={(e) => setPaste(e.target.value)} spellCheck={false} /><div className="mx-row" style={{ marginTop: 6 }}><button className="mx-btn" onClick={importPaste}>추가</button><button className="mx-btn sec" onClick={() => setShowPaste(false)}>닫기</button></div></div>}
@@ -91,11 +101,11 @@ export function Source({ unitId, uid }: { unitId: string; uid: string }) {
           <thead><tr><th style={{ width: 70 }}>차시</th><th style={{ width: 90 }}>구분</th><th>스크립트</th><th style={{ width: 200 }}>활동 메모</th><th style={{ width: 160 }}>Remark</th><th style={{ width: 50 }} /></tr></thead>
           <tbody>{scripts.map((s) => (
             <tr key={s.id}>
-              <td><select value={s.lesson_no ?? ''} onChange={(e) => patch(s.id, { lesson_no: e.target.value ? Number(e.target.value) : null })}><option value="">-</option>{[1, 2, 3, 4, 5, 6, 7, 8].map((n) => <option key={n} value={n}>{n}</option>)}</select></td>
-              <td><select value={s.title} onChange={(e) => patch(s.id, { title: e.target.value })}>{['음원', '영상', s.title].filter((v, i, a) => v && a.indexOf(v) === i).map((v) => <option key={v}>{v}</option>)}</select></td>
-              <td><textarea rows={3} defaultValue={s.body} onBlur={(e) => e.target.value !== s.body && patch(s.id, { body: e.target.value })} /></td>
-              <td><textarea rows={3} defaultValue={s.memo} onBlur={(e) => e.target.value !== s.memo && patch(s.id, { memo: e.target.value })} /></td>
-              <td><textarea rows={3} defaultValue={s.remark} onBlur={(e) => e.target.value !== s.remark && patch(s.id, { remark: e.target.value })} /></td>
+              <td style={{ verticalAlign: 'top' }}><select value={s.lesson_no ?? ''} onChange={(e) => patch(s.id, { lesson_no: e.target.value ? Number(e.target.value) : null })}><option value="">-</option>{[1, 2, 3, 4, 5, 6, 7, 8].map((n) => <option key={n} value={n}>{n}</option>)}</select></td>
+              <td style={{ verticalAlign: 'top' }}><select value={s.title} onChange={(e) => patch(s.id, { title: e.target.value })}>{['음원', '영상', s.title].filter((v, i, a) => v && a.indexOf(v) === i).map((v) => <option key={v}>{v}</option>)}</select></td>
+              <td><textarea rows={lines} className="mx-src-ta" defaultValue={s.body} onBlur={(e) => e.target.value !== s.body && patch(s.id, { body: e.target.value })} /></td>
+              <td><textarea rows={lines} className="mx-src-ta" defaultValue={s.memo} onBlur={(e) => e.target.value !== s.memo && patch(s.id, { memo: e.target.value })} /></td>
+              <td><textarea rows={lines} className="mx-src-ta" defaultValue={s.remark} onBlur={(e) => e.target.value !== s.remark && patch(s.id, { remark: e.target.value })} /></td>
               <td><button className="mx-link" onClick={() => del(s)}>삭제</button></td></tr>))}</tbody>
         </table>
         {!scripts.length && <p className="mx-muted">스크립트 표가 비어 있어요. 위의 "표 붙여넣기"로 한 번에 넣을 수 있어요.</p>}
