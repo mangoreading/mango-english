@@ -23,7 +23,7 @@ create table if not exists backup_20261029.flow_steps as select * from public.fl
 revoke all on schema backup_20261029 from anon, authenticated;
 
 do $do$
-declare v_unit uuid; v_tpl uuid; l record; s record; v_lesson uuid; v_n int; v_miss int;
+declare v_unit uuid; v_tpl uuid; rl record; rs record; v_lesson uuid; v_n int; v_miss int;
 begin
   select u.id into v_unit from units u join books b on b.id = u.book_id where b.title = '비상교육 초5 영어' and u.no = 9;
   select id into v_tpl from flow_templates where name = '비상 초5 6차시';
@@ -32,10 +32,10 @@ begin
   delete from items where unit_id = v_unit and lesson between 1 and 6;
   delete from flow_lessons where unit_id = v_unit and no between 1 and 6;
 
-  for l in select * from flow_lessons where template_id = v_tpl and no between 1 and 6 order by no loop
-    insert into flow_lessons(unit_id, no, en, ko, goal, color, track, src_id) values (v_unit, l.no, l.en, l.ko, l.goal, l.color, l.track, l.id) returning id into v_lesson;
-    for s in select * from flow_steps where lesson_id = l.id order by pos loop
-      insert into flow_steps(lesson_id, pos, name_en, name_ko, minutes, special, kind, qty, homework, study, src_id) values (v_lesson, s.pos, s.name_en, s.name_ko, s.minutes, s.special, s.kind, s.qty, s.homework, s.study, s.id);
+  for rl in select * from flow_lessons where template_id = v_tpl and no between 1 and 6 order by no loop
+    insert into flow_lessons(unit_id, no, en, ko, goal, color, track, src_id) values (v_unit, rl.no, rl.en, rl.ko, rl.goal, rl.color, rl.track, rl.id) returning id into v_lesson;
+    for rs in select * from flow_steps where lesson_id = rl.id order by pos loop
+      insert into flow_steps(lesson_id, pos, name_en, name_ko, minutes, special, kind, qty, homework, study, src_id) values (v_lesson, rs.pos, rs.name_en, rs.name_ko, rs.minutes, rs.special, rs.kind, rs.qty, rs.homework, rs.study, rs.id);
     end loop;
   end loop;
   update flow_steps u set ref_step_id = (select x.id from flow_steps x join flow_lessons xl on xl.id = x.lesson_id where xl.unit_id = v_unit and x.src_id = t.ref_step_id)
