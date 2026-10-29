@@ -170,14 +170,14 @@ add('6-3', 'lspeak', 'speak', [
   sp('How much is this jacket?', '30,000원이라고 대답해요', "It's thirty thousand won."), sp('How much are these shorts?', '15,000원이라고 대답해요', "They're fifteen thousand won."),
   sp('How much is this hat?', '8,000원이라고 대답해요', "It's eight thousand won."), sp('How much are these sunglasses?', '13,000원이라고 대답해요', "They're thirteen thousand won."),
   sp('May I help you?', '"네, 부탁해요"라고 대답해요', 'Yes, please.')]);
-add('6-4', 'sbuild', 'write', [
+add('6-5', 'sbuild', 'write', [
   { ko: '이 재킷은 얼마예요?', ans: 'How much is this jacket?', starter: 'How much' }, { ko: '이 신발은 50,000원이에요.', ans: "They're fifty thousand won.", alts: ['They are fifty thousand won.'], starter: "They're" },
   { ko: '이 반바지는 얼마예요?', ans: 'How much are these shorts?', starter: 'How much' }]);
-add('6-5', 'sqchoice', 'read', [
+add('6-6', 'sqchoice', 'read', [
   { title: 'At the Shop', text: ['Tom and his dad are at a shop.', 'Tom likes the jacket.', "It's thirty thousand won.", 'Dad has twenty thousand won.', "So they buy socks. They're two thousand won."], ko: '톰과 아빠는 가게에 있어요.\n톰은 재킷이 마음에 들어요.\n재킷은 30,000원이에요.\n아빠에게는 20,000원이 있어요.\n그래서 그들은 양말을 사요. 양말은 2,000원이에요.', q: 'What does Tom like?', opts: [opt('The jacket.'), opt('The hat.'), opt('The shoes.')], a: 0 },
   { title: 'At the Shop', text: ['Tom and his dad are at a shop.', 'Tom likes the jacket.', "It's thirty thousand won.", 'Dad has twenty thousand won.', "So they buy socks. They're two thousand won."], ko: '', q: 'How much is the jacket?', opts: [opt('Thirteen thousand won.'), opt('Thirty thousand won.'), opt('Twenty thousand won.')], a: 1 },
   { title: 'At the Shop', text: ['Tom and his dad are at a shop.', 'Tom likes the jacket.', "It's thirty thousand won.", 'Dad has twenty thousand won.', "So they buy socks. They're two thousand won."], ko: '', q: 'What do they buy?', opts: [opt('A hat.'), opt('Shorts.'), opt('Socks.')], a: 2 }]);
-add('6-6', 'role', 'speak', [
+add('6-4', 'role', 'speak', [
   { pic: 'jacket', price: '30,000원', lines: ['A: Hello! May I help you?', 'B: Yes, please. How much is this {{jacket}}?', "A: It's [[thirty thousand won]].", 'B: Thank you.'] },
   { pic: 'shorts', price: '15,000원', lines: ['A: May I help you?', 'B: Yes, please. How much are these {{shorts}}?', "A: They're [[fifteen thousand won]].", "B: I'll take them."] }]);
 add('6-7', 'aitalk', 'speak', [
