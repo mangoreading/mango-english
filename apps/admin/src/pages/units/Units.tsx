@@ -89,7 +89,7 @@ function UnitEditor({ unit, uid, onBack }: { unit: UnitRow; uid: string; onBack:
         <button className={tab === 'flow' ? 'on' : ''} onClick={() => setTab('flow')}>학습 흐름</button>
         <button className={tab === 'vocab' ? 'on' : ''} onClick={() => setTab('vocab')}>단어</button>
         <button className={tab === 'items' ? 'on' : ''} onClick={() => setTab('items')}>문항</button>
-        <button className={tab === 'review' ? 'on' : ''} onClick={() => setTab('review')}>학생 화면 검수</button>
+        <button className={tab === 'review' ? 'on' : ''} onClick={async () => { setTab('review'); const err = await openPreview(() => buildUnitPreview(unit.id, `Lesson ${unit.no} · ${unit.title}`)); if (err) window.alert(err); }}>학생 화면 검수</button>
         <button className={tab === 'source' ? 'on' : ''} onClick={() => setTab('source')}>교과서 자료</button>
       </div>
       {tab === 'flow' && <UnitFlow unitId={unit.id} />}
