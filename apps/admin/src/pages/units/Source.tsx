@@ -9,9 +9,9 @@ export function Source({ unitId, uid }: { unitId: string; uid: string }) {
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [msg, setMsg] = useState(''); const [busy, setBusy] = useState(false);
   const [big, setBig] = useState<string | null>(null);
-  const [paste, setPaste] = useState(''); const [showPaste, setShowPaste] = useState(false);
   const file = useRef<HTMLInputElement>(null);
   const seeded = useRef(false);
+  const [drag, setDrag] = useState(false);
   const [lines, setLines] = useState<number>(() => { try { return Math.min(30, Math.max(2, Number(localStorage.getItem('mx:srcLines')) || 7)); } catch { return 7; } });
   function setL(n: number) { const v = Math.min(30, Math.max(2, n)); setLines(v); try { localStorage.setItem('mx:srcLines', String(v)); } catch { /* 저장 못 해도 동작에는 문제 없음 */ } }
 
@@ -37,7 +37,7 @@ export function Source({ unitId, uid }: { unitId: string; uid: string }) {
   async function onFiles(fl: FileList | null) {
     if (!fl?.length) return; setBusy(true); setMsg('');
     let n = 0; let sort = Math.max(0, ...scans.map((s) => s.sort)) + 1;
-    for (const f of Array.from(fl)) {
+    for (const f of Array.from(fl).filter((x) => /^image\//.test(x.type) || /\.pdf$/i.test(x.name))) {
       const path = `${unitId}/${Date.now()}-${n}-${f.name.replace(/[^\w.\-]+/g, '_')}`;
       const up = await supabase.storage.from('textbook').upload(path, f, { contentType: f.type || 'image/jpeg' });
       if (up.error) { setMsg('업로드 실패: ' + up.error.message); break; }
@@ -62,16 +62,6 @@ export function Source({ unitId, uid }: { unitId: string; uid: string }) {
     const { error } = await supabase.from('unit_sources').insert({ unit_id: unitId, kind: 'script', sort, title: '음원', created_by: uid, ...p });
     if (error) setMsg('추가 실패: ' + error.message); else void load();
   }
-  async function importPaste() {
-    // 엑셀/표에서 복사한 줄: 차시 ⇥ 구분 ⇥ 스크립트 ⇥ 활동 메모 ⇥ Remark
-    const lines = paste.split(/\r?\n/).map((l) => l.split('\t')).filter((c) => c.some((x) => x.trim()));
-    if (!lines.length) return;
-    let sort = Math.max(0, ...scripts.map((s) => s.sort)) + 1;
-    const recs = lines.map((c) => ({ unit_id: unitId, kind: 'script', sort: sort++, lesson_no: parseInt(c[0]) || null, title: (c[1] ?? '').trim(), body: (c[2] ?? '').trim(), memo: (c[3] ?? '').trim(), remark: (c[4] ?? '').trim(), created_by: uid }));
-    const { error } = await supabase.from('unit_sources').insert(recs);
-    if (error) setMsg('붙여넣기 실패: ' + error.message); else { setMsg(`${recs.length}줄을 추가했어요.`); setPaste(''); setShowPaste(false); void load(); }
-  }
-
   return (
     <>
       <div className="mx-card">
@@ -79,6 +69,11 @@ export function Source({ unitId, uid }: { unitId: string; uid: string }) {
           <input ref={file} type="file" accept="image/*,application/pdf" multiple hidden onChange={(e) => void onFiles(e.target.files)} />
           <button className="mx-btn" disabled={busy} onClick={() => file.current?.click()}>{busy ? '올리는 중…' : '+ 스캔 올리기'}</button></div>
         {msg && <p className="mx-ok">{msg}</p>}
+        <div className={'mx-src-drop' + (drag ? ' on' : '')}
+          onDragOver={(e) => { e.preventDefault(); setDrag(true); }} onDragLeave={() => setDrag(false)}
+          onDrop={(e) => { e.preventDefault(); setDrag(false); void onFiles(e.dataTransfer.files); }}>
+          {drag ? '여기에 놓으면 올라가요' : '파일을 여기로 끌어다 놓거나 "+ 스캔 올리기"를 눌러 주세요 (이미지·PDF, 여러 장 가능)'}
+        </div>
         <div className="mx-src-grid">
           {scans.map((s) => (
             <div key={s.id} className="mx-src-card">
@@ -93,10 +88,7 @@ export function Source({ unitId, uid }: { unitId: string; uid: string }) {
       </div>
       <div className="mx-card mx-scroll">
         <div className="mx-row"><b>QR 음원·영상 스크립트 {scripts.length}줄</b><span style={{ flex: 1 }} />
-          <span className="mx-muted">행 높이</span><button className="mx-btn sec" onClick={() => setL(lines - 1)} aria-label="행 줄이기">−</button><b>{lines}줄</b><button className="mx-btn sec" onClick={() => setL(lines + 1)} aria-label="행 늘리기">+</button>
-          <button className="mx-btn sec" onClick={() => setShowPaste(!showPaste)}>표 붙여넣기</button><button className="mx-btn" onClick={() => addScript()}>+ 줄 추가</button></div>
-        {showPaste && <div style={{ marginTop: 8 }}><p className="mx-muted">엑셀·표에서 복사해 붙여넣으세요. 열 순서: 차시 | 구분(음원/영상) | 스크립트 | 활동 메모 | Remark</p>
-          <textarea rows={6} value={paste} onChange={(e) => setPaste(e.target.value)} spellCheck={false} /><div className="mx-row" style={{ marginTop: 6 }}><button className="mx-btn" onClick={importPaste}>추가</button><button className="mx-btn sec" onClick={() => setShowPaste(false)}>닫기</button></div></div>}
+          <span className="mx-muted">행 높이</span><button className="mx-btn sec" onClick={() => setL(lines - 1)} aria-label="행 줄이기">−</button><b>{lines}줄</b><button className="mx-btn sec" onClick={() => setL(lines + 1)} aria-label="행 늘리기">+</button><button className="mx-btn" onClick={() => addScript()}>+ 줄 추가</button></div>
         <table>
           <thead><tr><th style={{ width: 70 }}>차시</th><th style={{ width: 90 }}>구분</th><th>스크립트</th><th style={{ width: 200 }}>활동 메모</th><th style={{ width: 160 }}>Remark</th><th style={{ width: 50 }} /></tr></thead>
           <tbody>{scripts.map((s) => (
@@ -108,7 +100,7 @@ export function Source({ unitId, uid }: { unitId: string; uid: string }) {
               <td><textarea rows={lines} className="mx-src-ta" defaultValue={s.remark} onBlur={(e) => e.target.value !== s.remark && patch(s.id, { remark: e.target.value })} /></td>
               <td><button className="mx-link" onClick={() => del(s)}>삭제</button></td></tr>))}</tbody>
         </table>
-        {!scripts.length && <p className="mx-muted">스크립트 표가 비어 있어요. 위의 "표 붙여넣기"로 한 번에 넣을 수 있어요.</p>}
+        {!scripts.length && <p className="mx-muted">스크립트 표가 비어 있어요.</p>}
       </div>
       {big && <div className="mx-src-big" onClick={() => setBig(null)}><img src={big} alt="" /></div>}
     </>
