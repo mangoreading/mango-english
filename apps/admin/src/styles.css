@@ -143,7 +143,7 @@ h3 + .mx-sec { border-top:0; padding-top:6px; }
 /* 검수 팝업 (1280×800): 왼쪽 학생 화면 + 오른쪽 검수 패널 */
 .mx-rp { display:flex; height:100vh; overflow:hidden; background:#fff; }
 .mx-rp-stage { flex:1; min-width:0; position:relative; transform:translateZ(0); overflow:auto; }
-.mx-rp-side { width:340px; flex:none; border-left:2px solid #1f2a44; display:flex; flex-direction:column; background:#f7f8fb; font-size:13px; }
+.mx-rp-side { box-sizing:border-box; width:340px; flex:none; border-left:2px solid #1f2a44; display:flex; flex-direction:column; background:#f7f8fb; font-size:13px; }
 .mx-rp-h { display:flex; align-items:center; justify-content:space-between; gap:6px; padding:8px 10px; background:#1f2a44; color:#fff; }
 .mx-rp-tabs { display:flex; gap:4px; padding:6px 10px; }
 .mx-rp-tabs button { width:34px; height:30px; border:1px solid #bbb; border-radius:15px; background:#fff; cursor:pointer; font-weight:700; }

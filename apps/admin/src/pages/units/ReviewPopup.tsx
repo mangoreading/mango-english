@@ -13,9 +13,10 @@ interface It { id: string; step_id: string | null; level: string; status: Status
 const brief = (p: Record<string, any>) => String(p.q ?? p.title ?? p.target ?? p.ko ?? p.tpl ?? p.say ?? p.situation ?? p.ans ?? p.words?.join(', ') ?? p.word ?? p.items?.[0]?.en ?? p.text?.[0] ?? p.scenes?.[0]?.en ?? '').replace(/\s+/g, ' ').slice(0, 60); // eslint-disable-line @typescript-eslint/no-explicit-any
 
 export function popupUrl(unitId: string) { return '/#review=' + unitId; }
-/** 클릭 직후 1280×800 창을 연다 (팝업 차단 회피) */
+/** 클릭 직후 1620×800 창을 연다: 학생 화면 1280×800 + 오른쪽 검수 패널 (팝업 차단 회피) */
 export function openReviewPopup(unitId: string): string | null {
-  const w = window.open(popupUrl(unitId), 'mgReview', `popup=yes,width=1280,height=800,left=${Math.max(0, (screen.width - 1280) / 2)},top=${Math.max(0, (screen.height - 800) / 2)}`);
+  const W = Math.min(1280 + 340, screen.availWidth), H = Math.min(800, screen.availHeight); // 학생 화면 1280 + 오른쪽 검수 패널 340
+  const w = window.open(popupUrl(unitId), 'mgReview', `popup=yes,width=${W},height=${H},left=${Math.max(0, (screen.availWidth - W) / 2)},top=${Math.max(0, (screen.availHeight - H) / 2)}`);
   if (!w) return '팝업이 막혀 있어요. 주소창 오른쪽의 팝업 차단을 풀고 다시 눌러 주세요.';
   w.focus(); return null;
 }
