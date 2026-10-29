@@ -14,6 +14,7 @@ jobs:
           select 'L9 step items', fl.no::text || '-' || s.pos::text, s.kind, coalesce((select count(*) from public.items i where i.step_id = s.id and i.level::text = 'CORE'),0)::text || ' CORE', coalesce((select string_agg(distinct i.status::text, ',') from public.items i where i.step_id = s.id),'') from public.flow_steps s join public.flow_lessons fl on fl.id = s.lesson_id join public.units u on u.id = fl.unit_id join public.books b on b.id = u.book_id where b.title = '비상교육 초5 영어' and u.no = 9 order by fl.no, s.pos;
           select 'L9 items no step', count(*)::text from public.items i join public.units u on u.id = i.unit_id join public.books b on b.id = u.book_id where b.title = '비상교육 초5 영어' and u.no = 9 and i.step_id is null;
           select 'L9 vocab', v.key, v.en, v.ko, coalesce(v.image_path,'(no image)') from public.unit_vocab uv join public.vocab v on v.id = uv.vocab_id join public.units u on u.id = uv.unit_id join public.books b on b.id = u.book_id where b.title = '비상교육 초5 영어' and u.no = 9 order by v.key;
+          select 'L9 item', fl.no::text, s.pos::text, s.kind, i.level::text, i.status::text, i.act_idx::text, i.payload::text from public.items i join public.flow_steps s on s.id = i.step_id join public.flow_lessons fl on fl.id = s.lesson_id join public.units u on u.id = fl.unit_id join public.books b on b.id = u.book_id where b.title = '비상교육 초5 영어' and u.no = 9 order by fl.no, s.pos, i.act_idx;
           select 'items total', count(*) from public.items;
           select 'scene check', lesson::text, payload->'qs'->0->>'q' from public.items where template = 'scene' order by lesson;
           select 'items by unit', u.no::text || ' ' || u.title, i.status::text, count(*) from public.items i join public.units u on u.id=i.unit_id group by 2,3 order by 2,3;
@@ -29,6 +30,7 @@ jobs:
           select 'activity_progress', count(*) from public.activity_progress;
           select 'vocab', count(*) from public.vocab;
           SQL
+          echo '=====OUT-BEGIN====='; cat out.txt; echo '=====OUT-END====='
           python3 - <<'PY'
           t = open('out.txt').read().strip().replace('%','%25').replace('\r','').replace('\n','%0A')
           print('::notice title=counts::' + t)
