@@ -5,6 +5,8 @@ import { UnitFlow } from '../flow/Flow';
 import { Items } from './Items';
 import { Review } from './Review';
 import { Source } from './Source';
+import { openPreview } from '../../shared/ui';
+import { buildUnitPreview } from '../../shared/unitPreview';
 import { UnitVocab } from './Vocab';
 
 type Status = 'draft' | 'review' | 'approved' | 'rejected';
@@ -55,7 +57,7 @@ export function Units({ uid }: { uid: string }) {
           <span className="mx-muted">{shown.length} / {units.length}</span>
         </div>
         <table>
-          <thead><tr><th>출판사</th><th>교재</th><th>학년</th><th>Lesson</th><th>제목</th><th>입력 현황 (차시별)</th><th>상태</th></tr></thead>
+          <thead><tr><th>출판사</th><th>교재</th><th>학년</th><th>Lesson</th><th>제목</th><th>입력 현황 (차시별)</th><th>상태</th><th /></tr></thead>
           <tbody>
             {shown.map((u) => (
               <tr key={u.id} className="mx-click" onClick={() => setOpen(u)}>
@@ -67,6 +69,7 @@ export function Units({ uid }: { uid: string }) {
                     </span>
                   : <span className="mx-muted">흐름 없음</span>}</td>
                 <td><span className={`mx-chip ${u.status}`}>{STATUS_KO[u.status as Status] ?? u.status}</span></td>
+                <td><button className="mx-btn sec" onClick={async (e) => { e.stopPropagation(); const err = await openPreview(() => buildUnitPreview(u.id, `Lesson ${u.no} · ${u.title}`)); if (err) window.alert(err); }}>미리보기</button></td>
               </tr>
             ))}
           </tbody>
