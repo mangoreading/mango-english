@@ -32,6 +32,13 @@ jobs:
           SQL
           echo '=====OUT-BEGIN====='; cat out.txt; echo '=====OUT-END====='
           python3 - <<'PY'
-          t = open('out.txt').read().strip().replace('%','%25').replace('\r','').replace('\n','%0A')
-          print('::notice title=counts::' + t)
+          lines = open('out.txt').read().replace('\r','').split('\n')
+          chunks, cur = [], ''
+          for ln in lines:
+              if len(cur) + len(ln) > 2500 and cur:
+                  chunks.append(cur); cur = ''
+              cur += ln + '\n'
+          if cur: chunks.append(cur)
+          for n, c in enumerate(chunks):
+              print('::notice title=counts-%03d::' % n + c.strip().replace('%','%25').replace('\n','%0A'))
           PY
