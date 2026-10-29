@@ -92,13 +92,35 @@ export function sayThen(text: string, done: () => void, pitch = 1) {
 /** 여러 줄 지문 재생: 한 줄씩 차례로 읽는다. "이름: 문장" 이면 이름별로 목소리 높낮이를 달리한다. 새로 재생하면 앞 재생은 멈춘다. */
 let scriptGen = 0;
 export const isScript = (t?: string) => /\n/.test((t ?? '').trim());
+const rowsOf = (text: string) => text.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => {
+  const m = l.match(/^([A-Za-z][A-Za-z .'-]{0,14}(?:\(\s*[A-Za-z]{3,6}\s*\))?|[가-힣]{1,6}):\s*(.+)$/);
+  return m ? { who: m[1], t: m[2] } : { who: undefined as string | undefined, t: l };
+});
+/** 다음에 읽을 소리를 미리 만들어 둔다(Azure 음성일 때만). 줄 사이 끊김을 줄인다 */
+export function prefetchSay(text: string) {
+  if (!ttsHook) return;
+  const rows = rowsOf(text); const k = JSON.stringify(rows);
+  if (ttsCache.has(k)) return;
+  ttsHook(rows).then((b) => { if (!ttsCache.has(k)) ttsCache.set(k, URL.createObjectURL(b)); }).catch(() => { /* 재생할 때 다시 시도 */ });
+}
+let seqGen = 0;
+/** 줄 단위 순차 재생(지금 읽는 줄 알림용). gap(i)ms 쉬었다가 다음 줄. stopSeq 로 멈춘다 */
+export function saySeq(lines: string[], o: { onLine?: (i: number) => void; onDone?: () => void; gap?: (i: number) => number }) {
+  const gen = ++seqGen; let i = 0;
+  const next = () => {
+    if (gen !== seqGen) return;
+    if (i >= lines.length) { o.onDone?.(); return; }
+    const k = i++; o.onLine?.(k);
+    if (i < lines.length) prefetchSay(lines[i]);
+    sayScript(lines[k], () => { if (gen === seqGen) setTimeout(next, o.gap?.(k) ?? 400); });
+  };
+  next();
+}
+export function stopSeq() { seqGen++; scriptGen++; stopAudio(); try { speechSynthesis.cancel(); } catch { /* 무시 */ } endSpeech(curSpeech); }
 export function sayScript(text: string, done?: () => void) {
   stopAudio();
   const gen = ++scriptGen;
-  const rows = text.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => {
-    const m = l.match(/^([A-Za-z][A-Za-z .'-]{0,14}(?:\(\s*[A-Za-z]{3,6}\s*\))?|[가-힣]{1,6}):\s*(.+)$/);
-    return m ? { who: m[1], t: m[2] } : { who: undefined as string | undefined, t: l };
-  });
+  const rows = rowsOf(text);
   const browser = () => {
   let i = 0;
   const next = () => {

@@ -1,4 +1,4 @@
-import { registerAi, registerStt, registerTts } from '@mango/play';
+import { registerAi, registerOutputs, registerStt, registerTts } from '@mango/play';
 import { supabase } from './supabase';
 
 /** AI 도우미 연결: Supabase 서버 함수(ai-assist)를 통해 힌트·대화를 받는다. 함수가 아직 없거나 실패하면 문항에 적힌 내용으로 대신한다. */
@@ -43,4 +43,29 @@ registerStt(async (wav, ref) => {
   }
   if (!data || typeof (data as { text?: string }).text !== 'string') throw new Error('stt');
   return data as { text: string; accuracy?: number; fluency?: number; completeness?: number; pron?: number };
+});
+
+/** 학습 산출물 저장: 내가 쓴 글(mfree)과 발표 영상(present)을 본인 계정에 저장하고, 같은 차시의 뒤 활동이 가져다 쓴다. scope = "단원id|차시" */
+registerOutputs({
+  async load(scope, kind) {
+    const [unit, lesson] = scope.split('|'); if (!lesson) return null;
+    const { data: u } = await supabase.auth.getUser(); if (!u.user) return null;
+    const { data } = await supabase.from('student_outputs').select('text').eq('user_id', u.user.id).eq('unit_id', unit).eq('lesson', Number(lesson)).eq('kind', kind).maybeSingle();
+    return data ? { text: (data as { text: string | null }).text ?? undefined } : null;
+  },
+  async save(scope, kind, d) {
+    const [unit, lesson] = scope.split('|'); if (!lesson) throw new Error('scope');
+    const { data: u } = await supabase.auth.getUser(); if (!u.user) throw new Error('login');
+    let video_path: string | undefined;
+    if (d.video) {
+      video_path = `${u.user.id}/${unit}/${lesson}-${kind}-${Date.now()}.webm`;
+      const up = await supabase.storage.from('outputs').upload(video_path, d.video, { contentType: 'video/webm' });
+      if (up.error) throw up.error;
+    }
+    const row: Record<string, unknown> = { user_id: u.user.id, unit_id: unit, lesson: Number(lesson), kind, updated_at: new Date().toISOString() };
+    if (d.text != null) row.text = d.text;
+    if (video_path) row.video_path = video_path;
+    const { error } = await supabase.from('student_outputs').upsert(row, { onConflict: 'user_id,unit_id,lesson,kind' });
+    if (error) throw error;
+  },
 });

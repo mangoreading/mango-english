@@ -11,7 +11,7 @@ const STATUS_KO: Record<Status, string> = { draft: '초안', review: '검수중'
 const LEVELS = ['CORE', 'SUPPORT', 'ADVANCED'];
 
 interface ItemRow { id: string; unit_id: string; lesson: number; act_idx: number; level: string; template: string; tag: string | null; status: Status; version: number; step_id: string | null; tpl_ver?: number; payload: Record<string, any> }
-interface StepInfo { id: string; lessonNo: number; pos: number; name: string }
+interface StepInfo { id: string; lessonNo: number; pos: number; name: string; ref?: string | null }
 type Msg = { t: 'ok' | 'err'; s: string } | null;
 
 function summary(p: Record<string, any>): string {
@@ -39,7 +39,7 @@ export function Items({ unitId, uid }: { unitId: string; uid: string }) {
     setLoading(true);
     const it = await supabase.from('items').select('id,unit_id,lesson,act_idx,level,template,tag,status,version,step_id,tpl_ver,payload').eq('unit_id', unitId).order('lesson').order('act_idx').limit(5000);
     if (it.error) setMsg({ t: 'err', s: it.error.message }); else setItems((it.data ?? []) as unknown as ItemRow[]);
-    const fl = await supabase.from('flow_lessons').select('no, flow_steps(id,pos,name_en,name_ko)').eq('unit_id', unitId).order('no');
+    const fl = await supabase.from('flow_lessons').select('no, flow_steps(id,pos,name_en,name_ko,ref_step_id)').eq('unit_id', unitId).order('no');
     const st: StepInfo[] = [];
     ((fl.data ?? []) as any[]).forEach((l) => (l.flow_steps ?? []).forEach((s: any) => st.push({ id: s.id, lessonNo: l.no, pos: s.pos, name: s.name_ko || s.name_en })));
     st.sort((a, b) => a.lessonNo - b.lessonNo || a.pos - b.pos);
@@ -114,7 +114,8 @@ export function Items({ unitId, uid }: { unitId: string; uid: string }) {
           {(['review', 'approved', 'rejected'] as Status[]).map((s) => <button key={s} className="mx-btn sec" disabled={busy || !shown.length} onClick={() => bulk(s)}>{STATUS_KO[s]}</button>)}
           <button className="mx-btn" onClick={() => setAdding(!adding)}>+ 문항 추가</button>
         </div>
-        {adding && <AddBar kinds={kinds} steps={steps} level={level === 'all' ? 'CORE' : level} step={stepF} onAdd={create} onCancel={() => setAdding(false)} />}
+        {stepOf[stepF]?.ref && <p className="mx-muted" style={{ margin: '8px 0 0' }}>이 활동은 {stepOf[stepOf[stepF].ref!]?.lessonNo}차시 · {stepOf[stepOf[stepF].ref!]?.name} 의 문항을 그대로 씁니다. 문항은 그 활동에서 고쳐 주세요.</p>}
+        {adding && <AddBar kinds={kinds} steps={steps.filter((s) => !s.ref)} level={level === 'all' ? 'CORE' : level} step={stepF} onAdd={create} onCancel={() => setAdding(false)} />}
       </div>
       <div className="mx-grid">
         <div className="mx-card mx-scroll">

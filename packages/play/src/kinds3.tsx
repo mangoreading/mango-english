@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useCardProgress } from './fb';
-import { imgSrc, say, sayAuto, sayThen, type KindProps } from './common';
+import { imgSrc, say, sayAuto, sayThen, saySeq, stopSeq, type KindProps } from './common';
 
 /* ===== 2단계 템플릿: 듣고 익히기 · 따라 말하기 · 학습목표 · 문장 바꿔 말하기 · 글 듣고 읽기 · 모범 글 =====
    강조 표기: [[파랑]]  {{빨강}}  (문항 글 안에 그대로 쓴다) */
@@ -181,19 +181,33 @@ export function PRead({ item, onDone }: KindProps) {
   const pages: string[][] = ((item.text ?? []) as string[]).reduce<string[][]>((a, l) => { if (l.trim() === '---') a.push([]); else a[a.length - 1].push(l); return a; }, [[]]).filter((g) => g.length);
   const kos: string[] = item.ko ? String(item.ko).split(/\n-{3,}\n/) : [];
   const [p, setP] = useState(0); const [seen, setSeen] = useState<Set<number>>(new Set()); const [ko, setKo] = useState(false); const fired = useRef(false);
+  const [mode, setMode] = useState<'' | 'listen' | 'follow'>(''); const [hl, setHl] = useState(-1); const [wait, setWait] = useState(false);
   useCardProgress(pages.length, p);
   useEffect(() => { if (!fired.current && seen.size === pages.length) { fired.current = true; onDone([]); } /* eslint-disable-next-line */ }, [seen]);
+  useEffect(() => () => stopSeq(), []);
   const heard = () => setSeen((s) => new Set(s).add(p));
-  const go = (n: number) => { if (n >= 0 && n < pages.length) { setP(n); setKo(false); } };
+  const stop = () => { stopSeq(); setMode(''); setHl(-1); setWait(false); };
+  const go = (n: number) => { if (n >= 0 && n < pages.length) { stop(); setP(n); setKo(false); } };
+  /** 한 줄(한 문장)씩 읽어 주며 지금 읽는 줄을 표시한다. 따라 읽기는 줄마다 학생이 따라 읽을 시간을 준다(마이크·평가 없음) */
+  function play(m: 'listen' | 'follow') {
+    stop(); const lines = pages[p].map(plain); setMode(m); heard();
+    saySeq(lines, {
+      onLine: (i) => { setHl(i); setWait(false); },
+      gap: (i) => { if (m === 'follow') { setWait(true); return 1200 + lines[i].split(/\s+/).length * 650; } return 350; },
+      onDone: () => { setMode(''); setHl(-1); setWait(false); },
+    });
+  }
   return (
     <div className="nv-body nv-bodyw">
       <div className="nv-row nv-row-w">
         <button className="nv-arrow" disabled={p === 0} onClick={() => go(p - 1)} aria-label="이전">‹</button>
-        <div className="nv-pbox">{pages[p].map((l, i) => <p key={i}><Rich text={l} /></p>)}</div>
+        <div className="nv-pbox">{pages[p].map((l, i) => <p key={i} className={hl === i ? 'nv-hl' : ''}><Rich text={l} />{hl === i && wait && <span className="nv-ftag"> 🗣 따라 읽어 보세요</span>}</p>)}</div>
         <button className="nv-arrow" disabled={p === pages.length - 1} onClick={() => go(p + 1)} aria-label="다음">›</button>
       </div>
       <div className="nv-ptools">
-        <button className="nv-listen nv-listen-s" onClick={() => { say(pages[p].map(plain).join(' ')); heard(); }}><i className="nv-sico" aria-hidden="true" /> <b>전체 듣기</b></button>
+        {mode ? <button className="nv-listen nv-listen-s" onClick={stop}><b>■ 멈추기</b></button> : <>
+          <button className="nv-listen nv-listen-s" onClick={() => play('listen')}><i className="nv-sico" aria-hidden="true" /> <b>전체 듣기</b></button>
+          <button className="nv-listen nv-listen-s" onClick={() => play('follow')}><i className="nv-sico" aria-hidden="true" /> <b>따라 읽기</b></button></>}
         {kos[p] && <button className="nv-hintbtn" onClick={() => setKo(!ko)}>{ko ? '해설 닫기' : '해설 보기'}</button>}
       </div>
       {ko && kos[p] && <div className="nv-hintbox on nv-kobox">{kos[p].split('\n').map((l, i) => <p key={i}>{l}</p>)}</div>}

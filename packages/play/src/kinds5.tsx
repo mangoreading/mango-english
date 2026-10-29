@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { aiHandlers, getStt, imgSrc, isSpeaking, useSpeaking, say, sayAuto, sayThen, type KindProps, type SttInfo } from './common';
+import { loadOutput, outputsPersist, saveOutput } from './outputs';
 import { canRecord, startRecording, type Recording } from './rec';
 import { Hint } from './hint';
 import { Fb } from './fb';
@@ -204,37 +205,55 @@ const Rich2 = ({ t }: { t: string }) => <>{t.split(/(\[\[.*?\]\]|\{\{.*?\}\})/g)
 
 /** 발표 영상 찍기: 대본을 보며 카메라로 녹화한다. 영상은 이 기기 안에서만 다시 볼 수 있다 */
 export function Present({ item, onDone }: KindProps) {
-  const lines: string[] = item.text ?? []; const vid = useRef<HTMLVideoElement>(null); const rec = useRef<MediaRecorder | null>(null); const chunks = useRef<Blob[]>([]); const stream = useRef<MediaStream | null>(null);
+  const model: string[] = item.text ?? []; const vid = useRef<HTMLVideoElement>(null); const rec = useRef<MediaRecorder | null>(null); const chunks = useRef<Blob[]>([]); const stream = useRef<MediaStream | null>(null);
   const [state, setState] = useState<'idle' | 'ready' | 'rec' | 'done'>('idle'); const [sec, setSec] = useState(0); const [url, setUrl] = useState(''); const [err, setErr] = useState('');
+  /** 발표할 글: 같은 차시의 '나만의 글 쓰기' 결과가 있으면 가져오고, 없으면 여기서 새로 쓴다 */
+  const [src, setSrc] = useState<'load' | 'mfree' | 'new'>('load'); const [mine, setMine] = useState(''); const [showModel, setShowModel] = useState(false);
+  const [saved, setSaved] = useState<'' | 'saving' | 'ok' | 'local' | 'fail'>(''); const textRef = useRef('');
+  useEffect(() => { let on = true; void loadOutput('mfree').then((o) => { if (!on) return; if (o?.text?.trim()) { setMine(o.text); setSrc('mfree'); } else setSrc('new'); }); return () => { on = false; }; }, []);
+  textRef.current = mine;
   useEffect(() => () => { stream.current?.getTracks().forEach((t) => t.stop()); }, []);
   useEffect(() => { if (state !== 'rec') return; const id = setInterval(() => setSec((s) => s + 1), 1000); return () => clearInterval(id); }, [state]);
   async function open() {
-    try { const s = await navigator.mediaDevices.getUserMedia({ video: true, audio: true }); stream.current = s; if (vid.current) { vid.current.srcObject = s; void vid.current.play(); } setState('ready'); setErr(''); }
+    try { const st = await navigator.mediaDevices.getUserMedia({ video: true, audio: true }); stream.current = st; if (vid.current) { vid.current.srcObject = st; void vid.current.play(); } setState('ready'); setErr(''); }
     catch { setErr('카메라·마이크를 열 수 없어요. 허용해 주세요. 어려우면 아래 버튼으로 건너뛸 수 있어요.'); }
   }
   function start() { if (!stream.current) return; chunks.current = []; const r = new MediaRecorder(stream.current); rec.current = r; r.ondataavailable = (e) => chunks.current.push(e.data);
-    r.onstop = () => { const u = URL.createObjectURL(new Blob(chunks.current, { type: 'video/webm' })); setUrl(u); setState('done'); stream.current?.getTracks().forEach((t) => t.stop()); onDone([{ tag: 'speak', ok: true }]); };
+    r.onstop = () => {
+      const blob = new Blob(chunks.current, { type: 'video/webm' }); setUrl(URL.createObjectURL(blob)); setState('done'); stream.current?.getTracks().forEach((t) => t.stop()); onDone([{ tag: 'speak', ok: true }]);
+      setSaved('saving'); void saveOutput('present', { text: textRef.current, video: blob }).then((ok) => setSaved(ok ? 'ok' : outputsPersist() ? 'fail' : 'local'));
+    };
     setSec(0); r.start(); setState('rec'); }
   const mm = (n: number) => String(Math.floor(n / 60)).padStart(2, '0') + ':' + String(n % 60).padStart(2, '0');
+  const needText = src === 'new' && mine.trim().length < 2;
   return (
     <div className="nv-body nv-wbody nv-bodyw nv-wtop">
       <div className="nv-pres">
-        <div className="nv-script">{lines.map((l, i) => <p key={i}><Rich2 t={l} /></p>)}</div>
+        <div className="nv-script">
+          {src === 'load' && <p className="nv-muted">글을 불러오는 중…</p>}
+          {src === 'mfree' && <><b className="nv-chkt">내가 쓴 글</b>{mine.split('\n').map((l, i) => <p key={i}>{l}</p>)}</>}
+          {src === 'new' && <>
+            <b className="nv-chkt">발표할 글을 써 보세요</b>
+            <textarea className="nv-wta nv-pta" value={mine} disabled={state === 'rec' || state === 'done'} placeholder="여기에 발표할 글을 써요" onChange={(e) => setMine(e.target.value)} />
+            {model.length > 0 && <><button type="button" className="nv-hintbtn" onClick={() => setShowModel(!showModel)}>{showModel ? '모범 글 닫기' : '모범 글 보기'}</button>
+              {showModel && <div className="nv-hintbox on">{model.map((l, i) => <p key={i}><Rich2 t={l} /></p>)}</div>}</>}
+          </>}
+        </div>
         <div className="nv-cam">
           {state === 'done' ? <video src={url} controls playsInline /> : <video ref={vid} muted playsInline />}
-          {state === 'idle' && <div className="nv-camph">빨간 버튼을 눌러 카메라를 켜고 발표해 볼까요?</div>}
+          {state === 'idle' && <div className="nv-camph">{needText ? '먼저 발표할 글을 써 보세요.' : '빨간 버튼을 눌러 카메라를 켜고 발표해 볼까요?'}</div>}
           {state === 'rec' && <span className="nv-rect">● {mm(sec)}</span>}
         </div>
         <div className="nv-recrow">
-        {state === 'idle' && <button className="nv-recb" onClick={open} aria-label="카메라 켜기" />}
+        {state === 'idle' && <button className="nv-recb" disabled={needText || src === 'load'} onClick={open} aria-label="카메라 켜기" />}
         {state === 'ready' && <button className="nv-recb" onClick={start} aria-label="녹화 시작" />}
         {state === 'rec' && <button className="nv-recb on" onClick={() => rec.current?.stop()} aria-label="녹화 끝내기" />}
         </div>
       </div>
       <div className="nv-ra-btns">
         {state === 'done' && <span />}
-        {state === 'done' && <Fb className="nv-fbmsg on">발표를 마쳤어요! 👏 (영상은 이 기기에만 있어요)</Fb>}
-        {(state === 'idle' || state === 'ready') && err && <button className="nv-btn nv-ghost" onClick={() => { setState('done'); onDone([{ tag: 'speak', ok: true }]); }}>건너뛰기</button>}
+        {state === 'done' && <Fb className="nv-fbmsg on">{saved === 'saving' ? '발표를 마쳤어요! 👏 저장하고 있어요…' : saved === 'ok' ? '발표를 마쳤어요! 👏 영상과 글을 저장했어요.' : saved === 'fail' ? '발표를 마쳤어요! 👏 저장하지 못했어요. (영상은 이 기기에만 있어요)' : '발표를 마쳤어요! 👏 (영상은 이 기기에만 있어요)'}</Fb>}
+        {(state === 'idle' || state === 'ready') && err && <button className="nv-btn nv-ghost" onClick={() => { setState('done'); setSaved(''); onDone([{ tag: 'speak', ok: true }]); }}>건너뛰기</button>}
       </div>
       {err && state === 'idle' && <Fb className="nv-fbmsg on nv-fbbad">{err}</Fb>}
     </div>

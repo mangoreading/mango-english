@@ -3,6 +3,7 @@ import { FbSlot, ProgCtx, type CardProg } from './fb';
 import { imgSrc, setQuiet, TEXT_KINDS, type Res, type VWord } from './common';
 import { VCards, VMatch, VSound, VSpell, VType1, VWrite } from './kinds';
 import { AiTalk, LookSpeak, LSpeak, Present, RAloud, Role, SayKor } from './kinds5';
+import { setOutputScope } from './outputs';
 import { DFill, LWrite, MFree, MWBank, SBuild, SCloze, SFill, SOrder, SScram, SWrite, SWrt } from './kinds4';
 import { SceneStory } from './kinds6';
 import { MicTest } from './mictest';
@@ -11,7 +12,7 @@ import { DChoice, LChList, LChPic, LChText, LMatch, PChoice, SqChoice, SqMulti, 
 
 export interface NativeResult { results: Res[]; total: number; scored: number }
 interface Props {
-  title: string; items: Record<string, any>[]; vocab: VWord[]; nextLabel?: string; quiet?: boolean; // eslint-disable-line @typescript-eslint/no-explicit-any
+  title: string; items: Record<string, any>[]; vocab: VWord[]; nextLabel?: string; quiet?: boolean; scope?: string; /* 같은 차시 안에서 산출물(내 글)을 나누는 구분값 */ // eslint-disable-line @typescript-eslint/no-explicit-any
   onResult: (r: NativeResult) => void;
   onFinish: (a: 'next' | 'again' | 'exit') => void;
 }
@@ -82,8 +83,8 @@ const KIND = { scene: SceneStory, lookspeak: LookSpeak, saykor: SayKor, lspeak: 
   sqchoice: SqChoice, sqtf: SqTF, sqmulti: SqMulti } as const;
 
 /** 어휘 활동 6종 재생기: 문항(화면)을 차례로 보여 주고, 끝나면 결과 화면을 보여 준다. */
-export function NativePlayer({ title, items, vocab, nextLabel, quiet, onResult, onFinish }: Props) {
-  setQuiet(!!quiet);
+export function NativePlayer({ title, items, vocab, nextLabel, quiet, scope, onResult, onFinish }: Props) {
+  setQuiet(!!quiet); setOutputScope(scope ?? 'preview');
   const [i, setI] = useState(0);
   const [done, setDone] = useState(false);
   const [all, setAll] = useState<Res[]>([]);

@@ -711,3 +711,10 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-wchk { margin-top:.8em; display:flex; flex-direction:column; gap:.5em; align-items:flex-start; }
 .nv-wchkbox { border:.1em solid #C9D4EA; border-radius:.5em; background:#fff; padding:.7em 1em; max-width:100%; }
 .nv-wchkbox p { margin:.25em 0; line-height:1.5; } .nv-wchkok { color:#1E7A46; font-weight:700; } .nv-wchkfoot { color:#7C8AA5; font-size:.9em; }
+
+/* 글 듣기·따라 읽기: 지금 읽는 문장 표시 */
+.nv-pbox p.nv-hl { background:#FFF3B8; border-radius:.3em; box-shadow:0 0 0 .25em #FFF3B8; transition:background .15s; }
+.nv-ftag { color:#C2410C; font-weight:700; font-size:.85em; white-space:nowrap; }
+
+.nv-pta { width:100%; min-height:7em; height:9em; margin:.4em 0; }
+.nv-recb:disabled { opacity:.35; cursor:not-allowed; }

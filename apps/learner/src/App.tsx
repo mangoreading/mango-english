@@ -277,7 +277,7 @@ function UnitView({ row, onBack }: { row: BundleRow; onBack: () => void }) {
         </div>
       )}
       {nat && (
-        <NativePlayer key={nat.nonce} title={nat.title} items={nat.items} vocab={b.vocab as VWord[]} nextLabel={nat.nextLabel}
+        <NativePlayer key={nat.nonce} scope={b.unit.id + '|' + nat.lesson} title={nat.title} items={nat.items} vocab={b.vocab as VWord[]} nextLabel={nat.nextLabel}
           onResult={(r: NativeResult) => { void save(nat.lesson, nat.idx, { results: r.results, total: r.total, scored: r.scored }); }}
           onFinish={(act) => { const n = nat; setNat(null); if (act === 'next' && n.next) n.next(); else if (act === 'again') run(n.lesson, n.idx, n.title, n.items, undefined, n.next, n.nextLabel); }} />
       )}

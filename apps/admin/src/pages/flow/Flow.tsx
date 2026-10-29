@@ -4,7 +4,7 @@ import { PageHead, openPreview } from '../../shared/ui';
 import { CATEGORIES, catLabel } from '../kinds/Kinds';
 import { isNativeKind, NATIVE_SAMPLES, SAMPLE_VOCAB } from '../../shared/samples';
 
-interface Step { id: string; lesson_id: string; pos: number; name_en: string; name_ko: string; minutes: number | null; special: string | null; src_id: string | null; kind: string | null; qty: number | null; homework?: boolean; study?: boolean }
+interface Step { id: string; lesson_id: string; pos: number; name_en: string; name_ko: string; minutes: number | null; special: string | null; src_id: string | null; kind: string | null; qty: number | null; homework?: boolean; study?: boolean; ref_step_id?: string | null }
 interface Lesson { id: string; no: number; track?: string; en: string; ko: string; goal: string; color: string; src_id: string | null; flow_steps: Step[] }
 export type Owner = { kind: 'template'; id: string } | { kind: 'unit'; id: string };
 
@@ -108,8 +108,8 @@ export function FlowEditor({ owner }: { owner: Owner }) {
             <button className="mx-btn sec" onClick={() => delLesson(l)}>차시 삭제</button>
           </div>
           <table className="mx-fixed" style={{ minWidth: 1000 }}>
-            <colgroup><col style={{ width: 26 }} /><col style={{ width: 36 }} /><col style={{ width: 108 }} /><col style={{ width: '20%' }} /><col style={{ width: '19%' }} /><col style={{ width: '21%' }} /><col style={{ width: 68 }} /><col style={{ width: 60 }} /><col style={{ width: 56 }} /><col style={{ width: 56 }} /><col style={{ width: 72 }} />{owner.kind === 'unit' && <col style={{ width: 56 }} />}<col style={{ width: 84 }} /></colgroup>
-            <thead><tr><th /><th>#</th><th>미리보기</th><th>활동 (영문)</th><th>활동 (한글)</th><th>활동 템플릿</th><th>문항 수</th><th>분</th><th>학습</th><th>숙제</th><th>구분</th>{owner.kind === 'unit' && <th>문항</th>}<th /></tr></thead>
+            <colgroup><col style={{ width: 26 }} /><col style={{ width: 36 }} /><col style={{ width: 108 }} /><col style={{ width: '20%' }} /><col style={{ width: '19%' }} /><col style={{ width: '21%' }} /><col style={{ width: 68 }} /><col style={{ width: 60 }} /><col style={{ width: 56 }} /><col style={{ width: 56 }} /><col style={{ width: 150 }} /><col style={{ width: 72 }} />{owner.kind === 'unit' && <col style={{ width: 56 }} />}<col style={{ width: 84 }} /></colgroup>
+            <thead><tr><th /><th>#</th><th>미리보기</th><th>활동 (영문)</th><th>활동 (한글)</th><th>활동 템플릿</th><th>문항 수</th><th>분</th><th>학습</th><th>숙제</th><th>문항 출처</th><th>구분</th>{owner.kind === 'unit' && <th>문항</th>}<th /></tr></thead>
             <tbody>
               {l.flow_steps.map((s, i) => (
                 <tr key={s.id} style={{ opacity: drag?.lesson === l.id && drag.from === i ? 0.4 : 1, boxShadow: over?.lesson === l.id && over.at === i ? 'inset 0 3px 0 var(--navy)' : over?.lesson === l.id && over.at === l.flow_steps.length && i === l.flow_steps.length - 1 ? 'inset 0 -3px 0 var(--navy)' : undefined }}
@@ -127,6 +127,10 @@ export function FlowEditor({ owner }: { owner: Owner }) {
                   <td><Txt value={s.minutes == null ? '' : String(s.minutes)} w={44} onSave={(v) => updStep(s.id, { minutes: v === '' ? null : Math.max(0, parseInt(v, 10) || 0) })} /></td>
                   <td style={{ textAlign: 'center' }}><input type="checkbox" checked={s.study !== false} title="수업(학습)에서 하는 활동" onChange={(e) => updStep(s.id, { study: e.target.checked })} /></td>
                   <td style={{ textAlign: 'center' }}><input type="checkbox" checked={!!s.homework} title="숙제로 낼 수 있는 활동" onChange={(e) => updStep(s.id, { homework: e.target.checked })} /></td>
+                  <td><select className="mx-cell" value={s.ref_step_id ?? ''} title="다른 활동의 문항을 그대로 가져다 쓸 때 고르세요" onChange={(e) => updStep(s.id, { ref_step_id: e.target.value || null })}>
+                    <option value="">(이 활동 문항)</option>
+                    {ls.flatMap((x) => x.flow_steps.filter((y) => y.id !== s.id && y.kind && y.kind === s.kind).map((y) => <option key={y.id} value={y.id}>{x.no}차시 · {y.name_ko || y.name_en}</option>))}
+                  </select></td>
                   <td>{s.special ? <span className="mx-tag">{SPECIAL_KO[s.special]}</span> : owner.kind === 'unit' && !s.src_id ? <span className="mx-tag">추가됨</span> : ''}</td>
                   {owner.kind === 'unit' && <td>{counts[s.id] ?? 0}</td>}
                   <td className="mx-act">

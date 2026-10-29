@@ -4,6 +4,7 @@ import { Rich } from './kinds3';
 import { Hint } from './hint';
 import { Fb } from './fb';
 import { WriteCheck } from './wcheck';
+import { saveOutput } from './outputs';
 
 /* ===== 3단계 템플릿: 쓰기류 (듣고 쓰기 · 문장 쓰기 · 빈칸 쓰기 · 문장 만들기 · 대화 완성 · 문장 순서 · 보기로 글 완성 · 글 쓰기) ===== */
 const cmp = (s: string) => s.toLowerCase().replace(/[’‘`]/g, "'").replace(/[.?!,]/g, '').replace(/\s+/g, ' ').trim();
@@ -243,7 +244,8 @@ export function MFree({ item, onDone }: KindProps) {
   const hintLines = fl != null && lineHints[fl] ? [lineHints[fl]] : item.hint?.length ? item.hint : lineHints.filter(Boolean);
   const filled = () => { let q = 0; return lines.map((l) => l.split('{}').map((seg, si, arr) => seg + (si < arr.length - 1 ? (v[q++] || '____') : '')).join('')); };
   let bi = 0;
-  function settle(vals: string[], t: string) { if (!fired.current && t.trim().length >= 2 && vals.every((x) => x.trim().length >= 2)) { fired.current = true; setOk(true); onDone([{ tag: 'write', ok: true }]); } }
+  const compose = (vals: string[], t: string) => { let q = 0; return (t.trim() ? t.trim() + '\n' : '') + lines.map((l) => l.split('{}').map((seg, si, arr) => seg + (si < arr.length - 1 ? (vals[q++] || '') : '')).join('')).join('\n'); };
+  function settle(vals: string[], t: string) { if (!fired.current && t.trim().length >= 2 && vals.every((x) => x.trim().length >= 2)) { fired.current = true; setOk(true); void saveOutput('mfree', { text: compose(vals, t) }); onDone([{ tag: 'write', ok: true }]); } }
   return (
     <div className="nv-body nv-wbody">
       <div className="nv-topic">{item.topicLabel || '상품'} : <input className="nv-topicin" value={topic} disabled={ok} autoCapitalize="off" spellCheck={false}
