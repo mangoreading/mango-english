@@ -93,3 +93,9 @@
 .mr-root.mr-theme-lime .video-stage .video-placeholder { background: linear-gradient(135deg, #0B3D2E, #06281F); color: #C6FA73; }
 .mr-root.mr-theme-lime .video-btn.stop { background: var(--forest); color: var(--lime); }
 .mr-root.mr-theme-lime .script-title { color: var(--forest); }
+
+/* 버튼 글자는 굵지 않게(bold 제거) */
+.mr-root.mr-theme-lime .btn, .mr-root.mr-theme-lime .nav-arrow, .mr-root.mr-theme-lime .mode-btn, .mr-root.mr-theme-lime .view-btn,
+.mr-root.mr-theme-lime .page-counter, .mr-root.mr-theme-lime .play-btn, .mr-root.mr-theme-lime .btn-status-link, .mr-root.mr-theme-lime .user-chip,
+.mr-root.mr-theme-lime .sub-chip, .mr-root.mr-theme-lime .btn-cam-start, .mr-root.mr-theme-lime .video-btn, .mr-root.mr-theme-lime .week-nav .week-label,
+.mr-root.mr-theme-lime .week-nav button { font-weight: 500; }
