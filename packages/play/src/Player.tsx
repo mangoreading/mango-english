@@ -127,7 +127,17 @@ export function NativePlayer({ title, items, vocab, nextLabel, step, quiet, scop
       <div className="nv-head">
         <button className="nv-x" onClick={() => onFinish('exit')} aria-label="나가기">‹</button>
         <b>{title}</b>{step && step.total > 0 && <span className="nv-stepno">활동 {step.cur + 1}/{step.total}</span>}
-        <span className="nv-dots">{(prog ? Array.from({ length: prog.n }) : items).map((_, k) => { const c = prog ? prog.cur : i; return <i key={k} className={k < c ? 'd1' : k === c ? 'd2' : ''} />; })}</span>
+        {(() => {
+          const n = prog ? prog.n : items.length, c = prog ? prog.cur : i;   // 지금 활동 안의 문항 위치
+          const inner = n > 10 ? <b className="nv-ind-n">{Math.min(c + 1, n)}/{n}</b> : Array.from({ length: n }, (_, k) => <i key={k} className={'nv-ic ' + (k < c ? 'd1' : k === c ? 'd2' : '')} />);
+          return (
+            <span className="nv-ind" aria-label={step ? `활동 ${step.cur + 1}/${step.total}, 문항 ${Math.min(c + 1, n)}/${n}` : `문항 ${Math.min(c + 1, n)}/${n}`}>
+              {step && step.total > 0 && Array.from({ length: step.cur }, (_, k) => <i key={'a' + k} className="nv-ia d1" />)}
+              <span className="nv-ic-grp">{inner}</span>
+              {step && step.total > 0 && Array.from({ length: Math.max(0, step.total - step.cur - 1) }, (_, k) => <i key={'z' + k} className="nv-ia" />)}
+            </span>
+          );
+        })()}
         <span className="nv-pts"><i className="nv-star">★</i> 포인트 : +{pts}</span>
       </div>
       <div className="nv-instrow">

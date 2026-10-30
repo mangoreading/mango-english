@@ -721,3 +721,12 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 
 /* 차시 안 활동 위치: 헤더 맨 위 막대 + '활동 n/N' */
 .nv-stepno { font-size:.8em; font-weight:700; color:#667; background:rgba(255,255,255,.7); border:1px solid #d6dbe6; border-radius:1em; padding:.1em .7em; margin-left:.6em; white-space:nowrap; }
+
+/* 헤더 진행 표시: 활동 = 둥근 네모, 지금 활동 안의 문항 = 동그라미 (모든 스킨 공통) */
+.nv-ind { display:flex; align-items:center; gap:.5em; margin:0 auto; }
+.nv-ic-grp { display:flex; align-items:center; gap:.4em; }
+.nv-ia { width:1.7em; height:.8em; border-radius:.3em; border:.14em solid #b9c3d6; background:#fff; display:inline-block; }
+.nv-ia.d1 { background:#3979f3; border-color:#3979f3; }
+.nv-ic { width:.8em; height:.8em; border-radius:50%; border:.14em solid #b9c3d6; background:#fff; display:inline-block; }
+.nv-ic.d1 { background:#3979f3; border-color:#3979f3; } .nv-ic.d2 { background:#ffbf00; border-color:#ffbf00; }
+.nv-ind-n { font-size:.8em; padding:.05em .7em; border-radius:1em; background:#ffbf00; color:#3a2c00; }
