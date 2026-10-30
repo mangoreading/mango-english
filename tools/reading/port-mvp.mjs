@@ -89,7 +89,7 @@ const EXTRA = `
 fs.writeFileSync(out + '/mr.css', '/* MVP(Pre_Level_Prototype.html)의 스타일을 .mr-root 안으로 한정한 것. 자동 생성: tools/reading/port-mvp.mjs */\n' + res.css + EXTRA);
 
 /* ---------- 마크업 ---------- */
-markup = markup.replace(' style="display:none;">', '>').replace(/src="data:image\/jpeg;base64,[^"]+"/, 'src="/reading/logo.jpg"');
+markup = markup.replace(' style="display:none;">', '>').replace(/src="data:image\/jpeg;base64,[^"]+"/, 'src="/img/logo.png"');
 markup = markup.replace('👤 <span id="userChipName">mango01</span> · 로그아웃', '<span id="userChipName">← 학습앱으로</span>').replace('title="로그아웃"', 'title="학습앱으로 돌아가기"');
 markup = markup.replace(/<h2>I Can Read This Book!<\/h2>/, '<h2>I Can Read This Book!</h2>');
 fs.writeFileSync(out + '/mrMarkup.ts', '// 자동 생성: tools/reading/port-mvp.mjs (MVP 화면 구조 그대로)\nexport const MR_MARKUP = ' + JSON.stringify(markup) + ';\n');
