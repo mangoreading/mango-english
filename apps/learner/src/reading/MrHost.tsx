@@ -38,6 +38,14 @@ export function MrHost({ uid, startCode, onExit }: { uid: string; startCode?: st
       const byId = new Map(books.map((x) => [x.id, x]));
       const byCode = new Map(books.map((x) => [x.code, x]));
       const covers = await sign('reading', books.map((x) => x.cover_path ?? ''));
+      // 단어 이미지(이모지 대체): 등록된 단어만. 실패해도 이모지로 보여 주면 되므로 조용히 넘어간다.
+      const words: Record<string, string> = {};
+      try {
+        const wr = await supabase.from('reading_words').select('word,image_path');
+        const rows = (wr.data ?? []) as { word: string; image_path: string }[];
+        const u = await sign('reading', rows.map((r) => r.image_path));
+        for (const r of rows) if (u[r.image_path]) words[r.word.toLowerCase()] = u[r.image_path];
+      } catch { /* 이모지로 대체 */ }
       const progress: MrCtx['progress'] = {};
       for (const r of (p.data ?? []) as { book_id: string; step_reached: number; completed: boolean }[]) {
         const bk = byId.get(r.book_id); if (bk) progress[bk.code] = { stepReached: r.step_reached, completed: r.completed };
@@ -70,6 +78,7 @@ export function MrHost({ uid, startCode, onExit }: { uid: string; startCode?: st
           const ins = await supabase.from('reading_videos').insert({ user_id: uid, book_id: bk.id, video_path: path });
           if (ins.error) throw ins.error;
         },
+        wordImg: (w) => words[String(w).toLowerCase()],
         exit: () => exitRef.current(),
       };
       if (alive) setCtx(c);

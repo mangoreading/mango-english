@@ -2,7 +2,7 @@
 // 자동 생성: tools/reading/port-mvp.mjs — MVP(Pre_Level_Prototype.html)의 동작 코드를 그대로 옮기고, 책·진도·영상·로그인만 학습앱 연결로 바꿈.
 export interface MrCtx { userId: string; books: { code: string; title: string; emoji: string | null; week: number; ar: string | null; coverUrl?: string }[]; progress: Record<string, { stepReached: number; completed: boolean }>;
   loadBook: (code: string) => Promise<any>; saveProgress: (code: string, p: { stepReached: number; completed: boolean }) => void;
-  listTakes: () => Promise<any[]>; saveTake: (code: string, blob: Blob) => Promise<void>; exit: () => void; }
+  listTakes: () => Promise<any[]>; saveTake: (code: string, blob: Blob) => Promise<void>; exit: () => void; wordImg?: (word: string) => string | undefined; }
 export function startMr(ctx: MrCtx): () => void {
   // ---------- State ----------
   let currentStep = 0;
@@ -23,7 +23,6 @@ export function startMr(ctx: MrCtx): () => void {
   const bookProgress = {};
   ALL_BOOKS.forEach(b => { bookProgress[b.id] = { stepReached: 0, completed: false }; });
   // Seed dummy progress so the Status page looks alive
-  bookProgress['THE_PIE'].stepReached = 0;
 
   // ---------- Progress Bar (dot row in topbar) ----------
   const progressEl = document.getElementById('progress');
@@ -133,6 +132,10 @@ export function startMr(ctx: MrCtx): () => void {
   function loadBook(bookId) { return ctx.loadBook(bookId); }
 
 
+  function wimg(word, fallback) {
+    const u = ctx.wordImg && ctx.wordImg(word);
+    return u ? '<img class="word-img" src="' + u + '" alt="' + String(word).replace(/"/g, '') + '" draggable="false" />' : (fallback || '');
+  }
   function applyBookData(data) {
     currentBookData = data;
 
@@ -731,7 +734,7 @@ export function startMr(ctx: MrCtx): () => void {
         <div class="big-letter" onclick="speak('${p.letter}')" style="cursor:pointer">${p.letter.toUpperCase()}${p.letter.toLowerCase()}</div>
         <div class="sound-hint">${p.hint}</div>
         <div class="cvc-row">
-          ${(p.cvc || []).map(c => `<div class="cvc-card" onclick="speak('${c.word}')"><span class="pic">${c.pic}</span>${c.word}</div>`).join('')}
+          ${(p.cvc || []).map(c => `<div class="cvc-card" onclick="speak('${c.word}')"><span class="pic">${wimg(c.word, c.pic)}</span>${c.word}</div>`).join('')}
         </div>
       `;
     }
@@ -748,19 +751,19 @@ export function startMr(ctx: MrCtx): () => void {
     const card = document.getElementById('keyCard');
     if (tapState === 0) {
       card.innerHTML = `
-        <div class="kw-emoji">${k.emoji}</div>
+        <div class="kw-emoji">${wimg(k.word, k.emoji)}</div>
         <div class="kw-hint">이게 뭘까요? (탭!)</div>
       `;
     } else if (tapState === 1) {
       card.innerHTML = `
-        <div class="kw-emoji">${k.emoji}</div>
+        <div class="kw-emoji">${wimg(k.word, k.emoji)}</div>
         <div class="kw-word">${k.word}</div>
       `;
       speak(k.word);
     } else {
       card.innerHTML = `
         <div class="kw-row">
-          <div class="kw-emoji sm">${k.emoji}</div>
+          <div class="kw-emoji sm">${wimg(k.word, k.emoji)}</div>
           <div class="kw-text">
             <div class="kw-word" style="font-size:64px">${k.word}</div>
             <div class="kw-kor">${k.kor}</div>
@@ -2289,6 +2292,6 @@ export function startMr(ctx: MrCtx): () => void {
   enterApp();
 
 
-  Object.assign(window, { updateProgress, showView, changeWeek, renderHome, loadBook, applyBookData, speakBookTitle, openBook, renderStatus, showStep, nextStep, prevStep, goTo, getFemaleVoice, getAudioCtx, playShhSound, playZzzSound, playMmmSound, playBrrrSound, playBuzzSound, normalizeForTTS, findSfx, parseStutterToken, tokenizeForSpeech, ttsUtter, speak, cancelSpeak, switchPhonics, renderPhonicsTabs, _rhymeEnding, renderPhonics, renderKey, tapKeyCard, nextKeyWord, prevKeyWord, showPrompt, cancelPlay, setMode, getWords, getChunks, isChunkMode, getWordChunkIdx, renderPage, speakWord, onWordTap, echoNext, playPage, nextPage, prevPage, renderQuiz, answerQuiz, renderTrace, placeWord, resetTrace, nextTrace, prevTrace, getRecognizer, normalizeWord, tokenize, evaluatePronunciation, renderSpeak, speakListen, speakRecord, showSpeakScore, speakRetry, nextSpeak, prevSpeak, renderVideoScript, videoStartCamera, videoReRecord, pickRecorderMime, videoStartRecord, videoStopRecord, videoStopCamera, videoSubmit, launchConfetti, probeStorage, warnIfStorageDisabled, progressKey, loadProgress, saveProgress, persistProgress, openIDB, idbTx, idbPutRecording, idbDeleteRecording, idbGetByAccount, idbGetById, buildTakeFilename, openVideoModal, closeVideoModal, closeVideoModalIfBackdrop, refreshVideoTakes, getCurrentUser, setCurrentUser, clearCurrentUser, showLoginScreen, enterApp, computeNextWeek, doLogin, doLogout, applyStageBackground });
+  Object.assign(window, { updateProgress, showView, changeWeek, renderHome, loadBook, wimg, applyBookData, speakBookTitle, openBook, renderStatus, showStep, nextStep, prevStep, goTo, getFemaleVoice, getAudioCtx, playShhSound, playZzzSound, playMmmSound, playBrrrSound, playBuzzSound, normalizeForTTS, findSfx, parseStutterToken, tokenizeForSpeech, ttsUtter, speak, cancelSpeak, switchPhonics, renderPhonicsTabs, _rhymeEnding, renderPhonics, renderKey, tapKeyCard, nextKeyWord, prevKeyWord, showPrompt, cancelPlay, setMode, getWords, getChunks, isChunkMode, getWordChunkIdx, renderPage, speakWord, onWordTap, echoNext, playPage, nextPage, prevPage, renderQuiz, answerQuiz, renderTrace, placeWord, resetTrace, nextTrace, prevTrace, getRecognizer, normalizeWord, tokenize, evaluatePronunciation, renderSpeak, speakListen, speakRecord, showSpeakScore, speakRetry, nextSpeak, prevSpeak, renderVideoScript, videoStartCamera, videoReRecord, pickRecorderMime, videoStartRecord, videoStopRecord, videoStopCamera, videoSubmit, launchConfetti, probeStorage, warnIfStorageDisabled, progressKey, loadProgress, saveProgress, persistProgress, openIDB, idbTx, idbPutRecording, idbDeleteRecording, idbGetByAccount, idbGetById, buildTakeFilename, openVideoModal, closeVideoModal, closeVideoModalIfBackdrop, refreshVideoTakes, getCurrentUser, setCurrentUser, clearCurrentUser, showLoginScreen, enterApp, computeNextWeek, doLogin, doLogout, applyStageBackground });
   return () => { try { cancelPlay(); } catch (e) {} try { videoStopCamera(); } catch (e) {} try { window.speechSynthesis.cancel(); } catch (e) {} videoTakes.forEach(t => { try { URL.revokeObjectURL(t.url); } catch (_) {} }); };
 }

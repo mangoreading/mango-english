@@ -1917,3 +1917,9 @@
     transition: background .15s;
   }
   .mr-root .user-chip:hover { background: #FDE68A; }
+/* 단어 이미지(이모지 대체) */
+.mr-root .word-img { display: block; width: auto; object-fit: contain; -webkit-user-drag: none; user-select: none; }
+.mr-root .kw-emoji .word-img { height: 170px; max-width: 280px; margin: 0 auto; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.12)); }
+.mr-root .kw-emoji.sm .word-img { height: 110px; max-width: 160px; }
+.mr-root .cvc-card:has(.word-img) { flex-direction: column; padding: 12px 22px 14px; gap: 4px; }
+.mr-root .cvc-card .pic .word-img { height: 92px; max-width: 120px; }
