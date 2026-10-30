@@ -17,10 +17,11 @@ function BookPick({ books, bookId, onBook }: { books: BookOpt[]; bookId: string;
 }
 
 /** 교과서: 지금 학습 중인 Lesson 의 8개 박스(1~6차시 · 보충/확장 학습 · Lesson Report) */
-export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUnit, onOpenUnit, onReport }: {
+export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUnit, onOpenUnit, onStart, onReport }: {
   name: string; books: BookOpt[]; bookId: string; onBook: (id: string) => void; units: UnitInfo[]; rows: ProgRow[]; unit: UnitInfo | null;
-  onUnit: (id: string) => void; onOpenUnit: (u: UnitInfo, focusNo?: number) => void; onReport: (u: UnitInfo) => void;
+  onUnit: (id: string) => void; onOpenUnit: (u: UnitInfo, focusNo?: number) => void; onStart: (u: UnitInfo, a: { no: number; idx: number }) => void; onReport: (u: UnitInfo) => void;
 }) {
+  const [sel, setSel] = useState<number | 'x' | null>(null);
   if (!unit) return <div className="mx-card"><h2>학습할 Lesson이 아직 없어요</h2><p className="mx-muted">관리자가 Lesson을 발행하면 여기에 나타나요.</p></div>;
   const up = unitProgress(unit, rows);
   const idx = units.findIndex((u) => u.unit_id === unit.unit_id);
@@ -28,6 +29,8 @@ export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUni
   const curNo = up.current?.no;
   const core = (unit.bundle.flow ?? []).filter((l) => (l.track ?? 'core') === 'core').slice(0, 6);
   const goals = Object.entries((unit.bundle.unit.goals ?? {}) as Record<string, { ko?: string }>).sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true })).map(([, v]) => v?.ko ?? '').filter(Boolean);
+  const shown: number | 'x' = sel === 'x' && up.extra.total ? 'x' : typeof sel === 'number' && up.lessons.some((l) => l.no === sel) ? sel : (curNo ?? up.lessons[0]?.no ?? 1);
+  const detailLessons = shown === 'x' ? up.extra.lessons : up.lessons.filter((l) => l.no === shown);
   const pct = (d: number, t: number) => (t ? Math.round((d / t) * 100) : 0);
   return (
     <>
@@ -46,33 +49,52 @@ export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUni
         </div>
         <div className="mx-pbar" role="img" aria-label={`진행 ${up.pct}%`}><i style={{ width: up.pct + '%' }} /></div>
         <div className="mx-nowbody">
-        <div className="mx-lgrid">
-          {Array.from({ length: 6 }, (_, i) => core[i]).map((l, i) => {
-            const info = l ? up.lessons.find((x) => x.no === l.no) : undefined;
-            if (!l || !info) return <div key={i} className="mx-lbox mx-lbox-off"><span className="mx-lbox-tag">{i + 1}차시</span><b className="mx-lbox-title">{l ? (l.ko || l.en) : '준비 중'}</b><span className="mx-lbox-en">{l?.en ?? ''}</span><span className="mx-lbox-bar"><i style={{ width: '0%' }} /></span><small>준비 중</small></div>;
-            const full = info.doneN >= info.studyN, on = !up.complete && info.no === curNo;
-            return (
-              <button key={i} className={'mx-lbox' + (full ? ' mx-lbox-done' : '') + (on ? ' mx-lbox-cur' : '')} onClick={() => onOpenUnit(unit, info.no)}>
-                <span className="mx-lbox-tag">{full ? '✓ ' : ''}{info.no}차시{on ? ' · 지금 할 차시' : ''}</span>
-                <b className="mx-lbox-title">{info.ko || info.en}</b><span className="mx-lbox-en">{info.en}</span>
-                <span className="mx-lbox-bar"><i style={{ width: pct(info.doneN, info.studyN) + '%' }} /></span><small>{info.doneN}/{info.studyN} 활동</small>
-              </button>);
-          })}
-          <button className={'mx-lbox mx-lbox-x' + (up.extra.total && up.extra.done >= up.extra.total ? ' mx-lbox-done' : '')} disabled={!up.extra.total} onClick={() => onOpenUnit(unit, up.extra.firstNo ?? undefined)}>
-            <span className="mx-lbox-tag">보충 · 확장</span><b className="mx-lbox-title">보충/확장 학습</b><span className="mx-lbox-en">Support &amp; Challenge</span>
-            <span className="mx-lbox-bar"><i style={{ width: pct(up.extra.done, up.extra.total) + '%' }} /></span><small>{up.extra.total ? `${up.extra.done}/${up.extra.total} 활동` : '준비 중'}</small>
-          </button>
-          <button className={'mx-lbox mx-lbox-rep' + (up.complete ? ' mx-lbox-done' : '')} disabled={!up.complete} onClick={() => onReport(unit)}>
-            <span className="mx-lbox-tag">Lesson Report</span><b className="mx-lbox-title">결과 리포트</b><span className="mx-lbox-en">Result</span>
-            <span className="mx-lbox-bar"><i style={{ width: up.pct + '%' }} /></span><small>{up.complete ? '리포트 보기' : '차시를 모두 마치면 열려요'}</small>
-          </button>
-        </div>
-        {goals.length > 0 && (
-          <aside className="mx-goals" aria-label="학습목표">
-            <h3>이번 Lesson 학습목표</h3>
-            <ol>{goals.map((g, i) => <li key={i}><b>{i + 1}</b><span>{g}</span></li>)}</ol>
-          </aside>
-        )}
+          <div className="mx-lside">
+            {Array.from({ length: 6 }, (_, i) => core[i]).map((l, i) => {
+              const info = l ? up.lessons.find((x) => x.no === l.no) : undefined;
+              if (!l || !info) return <div key={i} className="mx-lrow mx-lrow-off"><span className="mx-lrow-no">{i + 1}</span><span className="mx-lrow-t"><b>{l ? (l.ko || l.en) : '준비 중'}</b><small>준비 중</small></span></div>;
+              const full = info.doneN >= info.studyN, on = !up.complete && info.no === curNo;
+              return (
+                <button key={i} className={'mx-lrow' + (full ? ' mx-lrow-done' : '') + (on ? ' mx-lrow-cur' : '') + (shown === info.no ? ' mx-lrow-sel' : '')} onClick={() => setSel(info.no)}>
+                  <span className="mx-lrow-no">{full ? '✓' : info.no}</span>
+                  <span className="mx-lrow-t"><b>{info.ko || info.en}</b><small>{on ? '지금 할 차시 · ' : ''}{info.doneN}/{info.studyN} 활동</small></span>
+                  <span className="mx-lrow-bar"><i style={{ width: pct(info.doneN, info.studyN) + '%' }} /></span>
+                </button>);
+            })}
+            <button className={'mx-lrow mx-lrow-x' + (up.extra.total && up.extra.done >= up.extra.total ? ' mx-lrow-done' : '') + (shown === 'x' ? ' mx-lrow-sel' : '')} disabled={!up.extra.total} onClick={() => setSel('x')}>
+              <span className="mx-lrow-no">＋</span>
+              <span className="mx-lrow-t"><b>보충/확장 학습</b><small>{up.extra.total ? `${up.extra.done}/${up.extra.total} 활동` : '준비 중'}</small></span>
+              <span className="mx-lrow-bar"><i style={{ width: pct(up.extra.done, up.extra.total) + '%' }} /></span>
+            </button>
+            <button className={'mx-lrow mx-lrow-rep' + (up.complete ? ' mx-lrow-done' : '')} disabled={!up.complete} onClick={() => onReport(unit)}>
+              <span className="mx-lrow-no">★</span>
+              <span className="mx-lrow-t"><b>Lesson Report</b><small>{up.complete ? '결과 리포트 보기' : '차시를 모두 마치면 열려요'}</small></span>
+              <span className="mx-lrow-bar"><i style={{ width: up.pct + '%' }} /></span>
+            </button>
+          </div>
+          <section className="mx-detail" aria-label="차시 상세">
+            {detailLessons.map((l) => (
+              <div key={l.no} className="mx-dl">
+                <div className="mx-dl-h"><span className="mx-lchip">{shown === 'x' ? '보충·확장' : `${l.no}차시`}</span><h3>{l.ko || l.en}</h3><span className="mx-muted">{l.en}</span></div>
+                {l.goal && <p className="mx-dl-goal">{l.goal}</p>}
+                <ul className="mx-dl-acts">
+                  {l.acts.filter((a) => a.n > 0).map((a) => (
+                    <li key={a.idx}>
+                      <button className={a.done ? 'mx-da mx-da-done' : 'mx-da'} onClick={() => onStart(unit, { no: l.no, idx: a.idx })}>
+                        <span className="mx-da-mark">{a.done ? '✓' : '▶'}</span>
+                        <span className="mx-da-t"><b>{a.t}</b><small>{a.ko}{a.study ? '' : ' · 숙제'} · {a.n}문항</small></span>
+                        <span className="mx-da-st">{a.done ? stars(a.stars) : (up.current && l.no === up.current.no && up.current.idx === a.idx ? '지금 할 활동' : '')}</span>
+                      </button>
+                    </li>))}
+                </ul>
+              </div>))}
+            {goals.length > 0 && (
+              <aside className="mx-goals" aria-label="학습목표">
+                <h4>이번 Lesson 학습목표</h4>
+                <ol>{goals.map((g, i) => <li key={i}><b>{i + 1}</b><span>{g}</span></li>)}</ol>
+              </aside>
+            )}
+          </section>
         </div>
       </div>
     </>

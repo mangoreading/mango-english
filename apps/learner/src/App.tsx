@@ -139,8 +139,8 @@ function Main({ session, tab, setTab, homeNonce }: { session: Session; tab: Tab;
   }
   return (
     <>
-      {tab === 'home' && <HomeView name={prof.name} books={books} bookId={bookId} onBook={pickBook} units={bUnits} rows={rows} unit={cur ?? null} onUnit={setViewId}
-        onOpenUnit={(u, n) => setOpen({ u, focusNo: n })} onReport={(u) => setOpen({ u, report: true })} />}
+      {tab === 'home' && <HomeView key={cur?.unit_id} name={prof.name} books={books} bookId={bookId} onBook={pickBook} units={bUnits} rows={rows} unit={cur ?? null} onUnit={setViewId}
+        onOpenUnit={(u, n) => setOpen({ u, focusNo: n })} onStart={(u, a) => setOpen({ u, auto: a })} onReport={(u) => setOpen({ u, report: true })} />}
       {tab === 'reading' && <ReadingTab uid={uid} openCode={null} onOpened={() => {}} onExit={() => setTab('home')} />}
       {tab === 'report' && <ReadingSummary uid={uid} />}
       {tab === 'report' && <ReportsView units={bUnits} rows={rows} onOpen={(u) => setOpen({ u, report: true })} />}
@@ -275,6 +275,8 @@ function UnitView({ row, onBack, autoStart, startReport, focusNo }: { row: Bundl
 
   const started = useRef(false);
   useEffect(() => { if (autoStart && meta.length && !started.current) { started.current = true; start(autoStart.no, autoStart.idx); } /* eslint-disable-next-line */ }, [meta]);
+  // 홈에서 활동을 눌러 열었다면, 활동(과 결과 리포트)이 끝났을 때 팝업을 닫고 홈으로 돌아간다
+  useEffect(() => { if (autoStart && started.current && !nat && !rep) onBack(); /* eslint-disable-next-line */ }, [nat, rep]);
 
   // 이어하기: 가장 먼저 끝내지 못한 활동
   const only = focusNo && !startReport ? focusNo : null;   // 차시 박스에서 열면 그 차시만 보여 준다
