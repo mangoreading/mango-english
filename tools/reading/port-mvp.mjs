@@ -47,6 +47,9 @@ const EXTRA = `
 .mr-root .rhyme-box > span:active { transform: scale(0.95); box-shadow: none; }
 /* 상단 '처음부터' 버튼은 작게 */
 .mr-root .topbar #btnRestart { padding: 6px 16px; font-size: 13px; border-radius: 999px; }
+/* 라인 아이콘 */
+.mr-root .line-ico { width: 1.15em; height: 1.15em; vertical-align: -0.2em; margin-right: 7px; }
+.mr-root .line-ico.big { width: 64px; height: 64px; margin: 0; vertical-align: middle; stroke-width: 1.5; }
 /* STEP 5 Write: 카드와 글자를 크게 */
 .mr-root .trace-wrap .nav-frame { max-width: 1080px; width: 100%; }
 .mr-root .trace-card { flex: 1 1 0; min-width: 0; width: min(100%, 900px); padding: 28px 40px 30px; }
@@ -472,6 +475,13 @@ markup = markup.replace('<span class="page-counter" id="pageCount">', `<div clas
           </div>
           <span class="page-counter" id="pageCount">`);
 must('보기 전환 마크업', markup.includes('id="pv2"'));
+// 카메라 아이콘: 이모지 대신 라인 아이콘(SVG, 글자색을 따라간다)
+const CAM = '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.2"/>';
+const camSvg = (cls) => '<svg class="' + cls + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + CAM + '</svg>';
+markup = markup.replace('>📷 카메라 켜기</button>', '>' + camSvg('line-ico') + '카메라 켜기</button>');
+markup = markup.replace('<div class="icon">📹</div>', '<div class="icon">' + camSvg('line-ico big') + '</div>');
+must('카메라 라인 아이콘', !markup.includes('📷') && !markup.includes('📹'));
+
 fs.writeFileSync(out + '/mrMarkup.ts', '// 자동 생성: tools/reading/port-mvp.mjs (MVP 화면 구조 그대로)\nexport const MR_MARKUP = ' + JSON.stringify(markup) + ';\n');
 // 5f) 라임 단어는 버튼처럼 보이므로 사이의 가운뎃점은 뺀다
 js = js.replace("${p.rhyme.map(renderWord).join(' · ')}", "${p.rhyme.map(renderWord).join(' ')}");
