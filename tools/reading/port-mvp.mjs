@@ -31,10 +31,11 @@ const EXTRA = `
 .mr-root .view-toggle { display: inline-flex; background: #F1F5F9; border-radius: 999px; padding: 4px; gap: 2px; flex-shrink: 0; }
 .mr-root .view-btn { width: 40px; height: 34px; border-radius: 999px; border: none; background: transparent; color: var(--muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background 0.18s, color 0.18s; }
 .mr-root .view-btn.active { background: var(--purple); color: #fff; box-shadow: 0 2px 6px rgba(124, 58, 237, 0.35); }
-.mr-root .book-frame.two { max-width: 1120px; gap: 14px; }
-.mr-root .book-frame.two .book-page { width: min(100%, 440px); flex: 0 1 440px; }
-.mr-root .book-frame.two .page-text { font-size: 25px; padding-left: 26px; padding-right: 16px; }
-.mr-root .book-frame.two .page-text.bs3 { font-size: 20px; padding-left: 22px; }
+.mr-root .book-frame.two { width: 100%; max-width: 1250px; min-height: 580px; gap: 6px; }
+.mr-root .book-frame.two .nav-arrow { width: 48px; height: 48px; margin: 0 -14px; position: relative; z-index: 2; }   /* 화살표를 페이지 가장자리에 살짝 겹쳐 페이지를 최대한 크게 */   /* 1페이지 보기와 같은 높이를 유지해 아래 도구 영역 위치가 안 바뀐다 */
+.mr-root .book-frame.two .book-page { flex: 1 1 0; width: auto; min-width: 0; max-width: 580px; }
+.mr-root .book-frame.two .page-text { font-size: 27px; padding-left: 38px; }
+.mr-root .book-frame.two .page-text.bs3 { font-size: 24px; padding-left: 30px; }
 .mr-root .page-nav { width: min(100%, 700px); }
 /* 단어 이미지(이모지 대체) */
 .mr-root .word-img { display: block; width: auto; object-fit: contain; -webkit-user-drag: none; user-select: none; }
