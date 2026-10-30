@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../supabase';
-import { MR_MARKUP, startMr, type MrCtx } from '@mango/mr';
+import { MR_MARKUP, mrThemeClass, startMr, type MrCtx } from '@mango/mr';
 import type { RBook } from './types';
 import '@mango/mr/mr.css';
 
@@ -103,5 +103,5 @@ export function MrHost({ uid, startCode, onExit }: { uid: string; startCode?: st
   if (err) return <div className="mx-card"><h2>원서를 불러오지 못했어요</h2><p className="mx-muted">{err}</p><button className="mx-btn" onClick={onExit}>돌아가기</button></div>;
   if (!ctx) return <p className="mx-muted">불러오는 중…</p>;
   if (!ctx.books.length) return <div className="mx-card"><h2>읽을 원서가 아직 없어요</h2><p className="mx-muted">선생님이 원서를 열어 주면 여기에 나타나요.</p><button className="mx-btn" onClick={onExit}>돌아가기</button></div>;
-  return <div className="mr-root" style={{ position: 'fixed', inset: 0, zIndex: 1000, overflow: 'auto' }} ref={root} dangerouslySetInnerHTML={{ __html: MR_MARKUP }} />;
+  return <div className={'mr-root ' + mrThemeClass()} style={{ position: 'fixed', inset: 0, zIndex: 1000, overflow: 'auto' }} ref={root} dangerouslySetInnerHTML={{ __html: MR_MARKUP }} />;
 }

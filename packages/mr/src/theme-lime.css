@@ -1,0 +1,95 @@
+/* 원서앱 라임 테마: 라임 그린 배경 + 짙은 포레스트 그린 글자/버튼 (.mr-theme-lime 이 붙어 있을 때만 적용)
+   되돌리기: ① packages/mr/src/index.ts 의 MR_DEFAULT_THEME 을 'classic' 으로 바꾸거나 ② 주소 뒤에 ?theme=classic 을 붙인다(?theme=lime 으로 다시 전환). */
+.mr-root.mr-theme-lime {
+  --lime: #B4F550; --lime-hi: #C6FA73; --lime-soft: #EAFFC4; --forest: #06281F; --forest-2: #0B3D2E; --leaf: #5DB60A;
+  --mango: #06281F; --mango-dark: #0B3D2E; --pink: #06281F; --blue: #06281F; --blue-dark: #0B3D2E; --purple: #06281F; --green: #5DB60A;
+  --cream: #F1FFD6; --ink: #06281F; --muted: #4A6B3A;
+  --shadow: 0 10px 26px rgba(6, 40, 31, 0.14); --shadow-lg: 0 16px 40px rgba(6, 40, 31, 0.2);
+  font-family: 'Pretendard Variable', Pretendard, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #BDF863 0%, #B4F550 55%, #A6EC3E 100%);
+}
+.mr-root.mr-theme-lime .app { background: linear-gradient(135deg, #BDF863 0%, #B4F550 55%, #A6EC3E 100%); box-shadow: 0 24px 60px rgba(6, 40, 31, 0.28); }
+.mr-root.mr-theme-lime .stage { background: transparent !important; }
+.mr-root.mr-theme-lime .stage::before { background: transparent; }
+.mr-root.mr-theme-lime .topbar { background: rgba(240, 255, 200, 0.88); border-bottom: 3px solid var(--forest); }
+.mr-root.mr-theme-lime .brand { color: var(--forest); }
+.mr-root.mr-theme-lime .book-chip { color: var(--forest); }
+.mr-root.mr-theme-lime .book-chip .book-back { border-color: var(--forest); color: var(--forest); background: #fff; }
+
+/* 버튼: 짙은 초록 알약 + 라임 글자 */
+.mr-root.mr-theme-lime .btn { border-radius: 999px; }
+.mr-root.mr-theme-lime .btn-primary, .mr-root.mr-theme-lime .btn-next, .mr-root.mr-theme-lime .btn-status-link, .mr-root.mr-theme-lime .user-chip {
+  background: var(--forest); color: var(--lime); border: 1.5px solid var(--forest); text-shadow: none; box-shadow: 0 3px 0 #02130F, 0 8px 16px rgba(6, 40, 31, 0.22);
+}
+.mr-root.mr-theme-lime .btn-primary:hover, .mr-root.mr-theme-lime .btn-next:hover, .mr-root.mr-theme-lime .btn-status-link:hover, .mr-root.mr-theme-lime .user-chip:hover {
+  background: var(--forest-2); border-color: var(--forest-2); box-shadow: 0 4px 0 #02130F, 0 10px 20px rgba(6, 40, 31, 0.28);
+}
+.mr-root.mr-theme-lime .btn-primary:active, .mr-root.mr-theme-lime .btn-next:active { transform: translateY(3px); box-shadow: 0 0 0 #02130F; }
+.mr-root.mr-theme-lime .btn-ghost { background: #fff; color: var(--forest); border: 2px solid var(--forest); box-shadow: 0 3px 0 var(--forest); }
+.mr-root.mr-theme-lime .btn-ghost:hover { background: var(--lime-soft); border-color: var(--forest); box-shadow: 0 4px 0 var(--forest); }
+.mr-root.mr-theme-lime .btn-ghost:active { transform: translateY(3px); box-shadow: 0 0 0 var(--forest); }
+.mr-root.mr-theme-lime .btn-cam-start, .mr-root.mr-theme-lime .video-btn.record { background: var(--forest); color: var(--lime); }
+.mr-root.mr-theme-lime .nav-arrow { background: #fff; border: 2px solid var(--forest); color: var(--forest); }
+.mr-root.mr-theme-lime .nav-arrow:hover:not(:disabled) { background: var(--forest); color: var(--lime); }
+.mr-root.mr-theme-lime .nav-arrow:disabled { background: rgba(255, 255, 255, 0.5); border-color: rgba(6, 40, 31, 0.25); color: rgba(6, 40, 31, 0.3); }
+
+/* 단계 태그·진행 점 */
+.mr-root.mr-theme-lime .step-tag { background: var(--forest) !important; color: var(--lime); }
+.mr-root.mr-theme-lime .step-dot { background: rgba(6, 40, 31, 0.2); }
+.mr-root.mr-theme-lime .step-dot.active { background: var(--forest); }
+.mr-root.mr-theme-lime .step-dot.done { background: var(--leaf); }
+.mr-root.mr-theme-lime .dots-progress .dot { background: rgba(6, 40, 31, 0.2); }
+.mr-root.mr-theme-lime .dots-progress .dot.done { background: var(--leaf); }
+.mr-root.mr-theme-lime .dots-progress .dot.current { background: var(--forest); }
+.mr-root.mr-theme-lime .tap-indicator .dot { background: rgba(255, 255, 255, 0.7); border-color: rgba(6, 40, 31, 0.25); color: rgba(6, 40, 31, 0.45); }
+.mr-root.mr-theme-lime .tap-indicator .dot.done { background: var(--leaf); border-color: var(--leaf); color: #fff; }
+.mr-root.mr-theme-lime .tap-indicator .dot.active { background: var(--forest); border-color: var(--forest); color: var(--lime); box-shadow: 0 3px 10px rgba(6, 40, 31, 0.35); }
+
+/* 토글·칩 */
+.mr-root.mr-theme-lime .mode-toggle, .mr-root.mr-theme-lime .view-toggle { background: var(--lime-soft); }
+.mr-root.mr-theme-lime .mode-btn, .mr-root.mr-theme-lime .view-btn { color: var(--forest-2); }
+.mr-root.mr-theme-lime .mode-btn.active, .mr-root.mr-theme-lime .view-btn.active { background: var(--forest); color: var(--lime); box-shadow: none; }
+.mr-root.mr-theme-lime .sub-chip { background: rgba(255, 255, 255, 0.75); color: var(--forest-2); border-color: rgba(6, 40, 31, 0.15); }
+.mr-root.mr-theme-lime .sub-chip.active { background: var(--forest); color: var(--lime); border-color: var(--forest); }
+.mr-root.mr-theme-lime .page-counter { background: var(--lime-soft); color: var(--forest); }
+
+/* 홈: 책 카드·주차 */
+.mr-root.mr-theme-lime .book-card .cover { background: linear-gradient(135deg, #F1FFD6, #D4F98F); }
+.mr-root.mr-theme-lime .book-card .book-bar { background: var(--lime-soft); }
+.mr-root.mr-theme-lime .book-card .book-bar > span { background: linear-gradient(90deg, var(--forest), var(--leaf)); }
+.mr-root.mr-theme-lime .book-card .book-status { background: var(--lime-soft); color: var(--forest-2); }
+.mr-root.mr-theme-lime .book-card .book-status.done { background: var(--leaf); color: #fff; }
+.mr-root.mr-theme-lime .book-card .book-status.current { background: var(--forest); color: var(--lime); }
+.mr-root.mr-theme-lime .book-card .book-ar { background: var(--lime-soft); border-color: #CDEF8E; color: var(--forest-2); }
+.mr-root.mr-theme-lime .week-nav button:hover:not(:disabled) { background: var(--lime-soft); }
+
+/* Phonics·Key Words·Quiz·Write */
+.mr-root.mr-theme-lime .cvc-card { background: var(--lime-soft); border-color: var(--forest); }
+.mr-root.mr-theme-lime .cvc-card:hover { background: #fff; }
+.mr-root.mr-theme-lime .rhyme-box { background: var(--lime-soft); color: var(--forest-2); }
+.mr-root.mr-theme-lime .rhyme-box > span { background: #fff; border-color: var(--forest); }
+.mr-root.mr-theme-lime .rhyme-box > span:hover { background: var(--lime-hi); border-color: var(--forest); box-shadow: 0 8px 16px rgba(6, 40, 31, 0.25); }
+.mr-root.mr-theme-lime .keyword-card { border-color: var(--forest); }
+.mr-root.mr-theme-lime .kw-word { color: var(--forest-2); }
+.mr-root.mr-theme-lime .kw-scene { background: var(--lime-soft); color: var(--forest); }
+.mr-root.mr-theme-lime .option:hover { border-color: var(--forest); }
+.mr-root.mr-theme-lime .option.correct { background: #DDF8B5; border-color: var(--leaf); }
+.mr-root.mr-theme-lime .drop-zone { background: var(--lime-soft); border-color: var(--forest); }
+.mr-root.mr-theme-lime .drop-zone.complete { background: #DDF8B5; border-color: var(--leaf); }
+.mr-root.mr-theme-lime .drop-zone .placed { background: var(--forest); color: var(--lime); }
+.mr-root.mr-theme-lime .word-chip, .mr-root.mr-theme-lime .word-bank .chip { border-color: var(--forest); }
+
+/* 읽기 화면 */
+.mr-root.mr-theme-lime .page-text .word:hover { background: var(--lime-hi); }
+.mr-root.mr-theme-lime .page-text .word.speaking { background: var(--forest); color: var(--lime); }
+.mr-root.mr-theme-lime .page-text .word.expected { outline-color: var(--leaf); }
+.mr-root.mr-theme-lime .play-btn { background: var(--forest); color: var(--lime); }
+
+/* 남은 부분(카드 바탕·영상·축하) */
+.mr-root.mr-theme-lime .welcome-copy { background: #F7FFE3; }
+.mr-root.mr-theme-lime .char-card { border-left-color: var(--forest); }
+.mr-root.mr-theme-lime .badge { background: radial-gradient(circle at 30% 30%, #FFFFFF, #D4F98F 70%, #B4F550); box-shadow: 0 14px 34px rgba(6, 40, 31, 0.28); }
+.mr-root.mr-theme-lime .video-stage { background: var(--forest-2); }
+.mr-root.mr-theme-lime .video-stage .video-placeholder { background: linear-gradient(135deg, #0B3D2E, #06281F); color: #C6FA73; }
+.mr-root.mr-theme-lime .video-btn.stop { background: var(--forest); color: var(--lime); }
+.mr-root.mr-theme-lime .script-title { color: var(--forest); }

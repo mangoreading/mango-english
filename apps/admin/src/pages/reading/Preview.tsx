@@ -1,5 +1,5 @@
 import { memo, useEffect, useRef, useState } from 'react';
-import { MR_MARKUP, startMr } from '@mango/mr';
+import { MR_MARKUP, mrThemeClass, startMr } from '@mango/mr';
 import '@mango/mr/mr.css';
 import { supabase } from '../../shared/supabase';
 import { signReading, type RBook } from './shared';
@@ -48,7 +48,7 @@ export function Preview({ book, onClose, bare }: { book: RBook; onClose: () => v
   if (!ready) return null;
   // 1280×800 화면을 창 크기에 맞춰 줄이고 가운데에 둔다(스크롤 없음)
   return (
-    <div className="mr-root mr-fit" style={{ position: 'fixed', inset: 0, zIndex: 1000 }}>
+    <div className={'mr-root mr-fit ' + mrThemeClass()} style={{ position: 'fixed', inset: 0, zIndex: 1000 }}>
       <div style={{ position: 'absolute', left: (window.innerWidth - 1280 * k) / 2, top: (window.innerHeight - 800 * k) / 2, width: 1280, height: 800, transform: `scale(${k})`, transformOrigin: 'top left' }}><Markup /></div>
       {!bare && <button className="mx-btn" style={{ position: 'fixed', top: 10, right: 14, zIndex: 1001 }} onClick={onClose}>✕ 미리보기 닫기</button>}
     </div>
