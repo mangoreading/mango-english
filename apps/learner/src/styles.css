@@ -110,7 +110,7 @@ input { font:inherit; padding:12px 14px; border:2px solid #CBD6E6; border-radius
 /* ── 헤더: 로고 · 메뉴 · 로그인 정보 ── */
 .mx-top { gap:16px; padding:10px 0 12px; }
 .mx-logo { background:none; border:0; padding:0; cursor:pointer; flex:none; display:flex; }
-.mx-logo img { height:40px; width:auto; display:block; }
+.mx-logo img { height:32px; width:auto; display:block; }
 .mx-top .mx-nav { position:static; margin:0; flex:0 1 460px; }
 .mx-top .mx-who { margin-left:auto; flex:none; }
 
