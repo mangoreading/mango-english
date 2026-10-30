@@ -1,0 +1,365 @@
+import { useEffect, useRef, useState } from 'react';
+import type { Session } from '@supabase/supabase-js';
+import { configProblem, configured, supabase } from './supabase';
+import type { BundleRow, Level } from './types';
+import { NativePlayer, isNative, type NativeResult, type VWord } from '@mango/play';
+import '@mango/play/styles.css';
+import { ReportView } from './Report';
+import { ReadingSummary, ReadingTab } from './reading/ReadingTab';
+import { HomeView, MyView, Nav, ReportsView, type BookOpt, type Tab } from './Home';
+import { currentUnit, type ProgRow, type UnitInfo } from './home';
+import { areaOf, buildReport, practiceFor, type StepRef } from './reportCalc';
+import { books, lesson8, lessonMeta, playActivity, tallyTags, type BookMeta, type PlayResult, type TagStats } from './legacy';
+
+const LEVELS: Level[] = ['CORE', 'SUPPORT', 'ADVANCED'];
+const LEVEL_KO: Record<Level, string> = { CORE: '기본', SUPPORT: '도움', ADVANCED: '도전' };
+
+export function App() {
+  const [session, setSession] = useState<Session | null>(null);
+  const [ready, setReady] = useState(false);
+  const [tab, setTab] = useState<Tab>('home');
+  const [homeNonce, setHomeNonce] = useState(0);
+
+  useEffect(() => {
+    if (!configured) { setReady(true); return; }
+    supabase.auth.getSession().then(({ data }) => { setSession(data.session); setReady(true); });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  if (!configured) return <Shell><Notice title="설정이 필요해요">{configProblem}</Notice></Shell>;
+  if (!ready) return <Shell><p className="mx-muted">불러오는 중…</p></Shell>;
+  return <Shell session={session} tab={tab} setTab={setTab} onLogo={() => { setTab('home'); setHomeNonce((n) => n + 1); }}>{session ? <Main session={session} tab={tab} setTab={setTab} homeNonce={homeNonce} /> : <Login />}</Shell>;
+}
+
+/** 화면 기준 1280×800. 창이 작으면 비율만 줄인다(교과서 홈은 높이까지 맞춰 한 화면에 들어가게). 모바일 폭(820 이하)은 그대로. */
+function stageZoom(tab?: Tab) { const w = window.innerWidth, h = window.innerHeight; if (w <= 820) return 1; return Math.min(1, w / 1280, !tab || tab === 'home' ? h / 800 : 1); }
+function useStageZoom(tab?: Tab) { const [z, setZ] = useState(() => stageZoom(tab)); useEffect(() => { const f = () => setZ(stageZoom(tab)); f(); window.addEventListener('resize', f); return () => window.removeEventListener('resize', f); }, [tab]); return z; }
+
+function Shell({ children, session, tab, setTab, onLogo }: { children: React.ReactNode; session?: Session | null; tab?: Tab; setTab?: (t: Tab) => void; onLogo?: () => void }) {
+  const z = useStageZoom(tab);
+  return (
+    <div className="mx-shell" style={{ zoom: z }}>
+      <header className="mx-top">
+        <button className="mx-logo" onClick={onLogo} aria-label="Mango English 처음으로"><img src="/img/logo.png" alt="Mango English" /></button>
+        {session && tab && setTab && <Nav tab={tab} setTab={setTab} />}
+        {session && (
+          <span className="mx-who">
+            {session.user.email}
+            <button className="mx-link" onClick={() => supabase.auth.signOut()}>로그아웃</button>
+          </span>
+        )}
+      </header>
+      <main className="mx-main-clean">{children}</main>
+    </div>
+  );
+}
+
+function Notice({ title, children }: { title: string; children: React.ReactNode }) {
+  return <div className="mx-card"><h2>{title}</h2><p className="mx-muted">{children}</p></div>;
+}
+
+function Login() {
+  const [mode, setMode] = useState<'in' | 'up'>('in');
+  const [email, setEmail] = useState('');
+  const [pw, setPw] = useState('');
+  const [msg, setMsg] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault(); setBusy(true); setMsg('');
+    const r = mode === 'in'
+      ? await supabase.auth.signInWithPassword({ email, password: pw })
+      : await supabase.auth.signUp({ email, password: pw });
+    setBusy(false);
+    if (r.error) setMsg(r.error.message);
+    else if (mode === 'up' && !r.data.session) setMsg('가입 확인 메일을 보냈어요. 메일의 링크를 누른 뒤 로그인해 주세요.');
+  }
+
+  return (
+    <form className="mx-card mx-login" onSubmit={submit}>
+      <h2>{mode === 'in' ? '로그인' : '회원가입'}</h2>
+      <label>이메일<input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" /></label>
+      <label>비밀번호<input type="password" required minLength={6} value={pw} onChange={(e) => setPw(e.target.value)} autoComplete={mode === 'in' ? 'current-password' : 'new-password'} /></label>
+      {msg && <p className="mx-err">{msg}</p>}
+      <button className="mx-btn" disabled={busy}>{mode === 'in' ? '로그인' : '가입하기'}</button>
+      <button type="button" className="mx-link" onClick={() => { setMode(mode === 'in' ? 'up' : 'in'); setMsg(''); }}>
+        {mode === 'in' ? '처음이에요 → 회원가입' : '이미 계정이 있어요 → 로그인'}
+      </button>
+    </form>
+  );
+}
+
+function Main({ session, tab, setTab, homeNonce }: { session: Session; tab: Tab; setTab: (t: Tab) => void; homeNonce: number }) {
+  const uid = session.user.id;
+  const [units, setUnits] = useState<UnitInfo[] | null>(null);
+  const [rows, setRows] = useState<ProgRow[]>([]);
+  const [prof, setProf] = useState<{ name: string; grade: number | null; book: string | null }>({ name: '', grade: null, book: null });
+  const [err, setErr] = useState('');
+  const [bookSel, setBookSel] = useState<string | null>(null);
+  const [viewId, setViewId] = useState<string | null>(null);
+  const [open, setOpen] = useState<{ u: UnitInfo; auto?: { no: number; idx: number }; report?: boolean; focusNo?: number } | null>(null);
+  const [nonce, setNonce] = useState(0);
+  const [popScale, setPopScale] = useState(1);   // 팝업은 1280×800 기준(화면 전체 배율 stageZoom 을 뺀 나머지만 보정)
+  useEffect(() => { const f = () => { const w = window.innerWidth, h = window.innerHeight; setPopScale(Math.min(1, w / 1280, h / 800) / stageZoom(tab)); }; f(); window.addEventListener('resize', f); return () => window.removeEventListener('resize', f); }, [tab]);
+  useEffect(() => { setOpen(null); }, [homeNonce]);
+
+  useEffect(() => {
+    supabase.from('learner_units').select('unit_id, version, bundle, unit_no, unit_title, book_id, book_title, grade, publisher').then(({ data, error }) => {
+      if (error) setErr(error.message); else setUnits(((data ?? []) as unknown as UnitInfo[]).sort((a, b) => a.unit_no - b.unit_no));
+    });
+    supabase.from('profiles').select('display_name, grade, current_book_id').eq('id', uid).maybeSingle().then(({ data }) => {
+      if (data) setProf({ name: (data.display_name as string) ?? '', grade: (data.grade as number | null) ?? null, book: (data.current_book_id as string | null) ?? null });
+    });
+  }, [uid]);
+  useEffect(() => {
+    supabase.from('activity_progress').select('unit_id, level, lesson, act_idx, stars, ok, total, updated_at').eq('user_id', uid).then(({ data }) => setRows((data ?? []) as ProgRow[]));
+  }, [uid, nonce]);
+
+  if (err) return <Notice title="Lesson을 불러오지 못했어요">{err}</Notice>;
+  if (!units) return <p className="mx-muted">불러오는 중…</p>;
+
+  const books: BookOpt[] = [...new Map(units.map((u) => [u.book_id, { id: u.book_id, label: `${u.publisher} ${u.book_title}`, grade: u.grade }])).values()].sort((a, b) => a.grade - b.grade || a.label.localeCompare(b.label));
+  // 학습 중인 교재: 직접 고른 것 → 저장된 것 → 가장 최근에 공부한 교재 → 내 학년 교재 → 첫 교재
+  const lastBook = (() => { const last = [...rows].sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0]; return last ? units.find((u) => u.unit_id === last.unit_id)?.book_id : undefined; })();
+  const bookId = [bookSel, prof.book, lastBook, books.find((x) => x.grade === prof.grade)?.id, books[0]?.id].find((x) => x && books.some((b) => b.id === x)) ?? '';
+  const bUnits = units.filter((u) => u.book_id === bookId);
+  const cur = bUnits.find((u) => u.unit_id === viewId) ?? currentUnit(bUnits, rows);
+  const mk = (u: UnitInfo): BundleRow => ({ unit_id: u.unit_id, version: u.version, bundle: u.bundle, published_at: '' });
+
+  async function pickBook(id: string) {
+    setBookSel(id); setViewId(null);
+    await supabase.from('profiles').update({ current_book_id: id }).eq('id', uid);
+    setProf((p) => ({ ...p, book: id }));
+  }
+  async function saveProfile(name: string, grade: number | null): Promise<string> {
+    const { error } = await supabase.from('profiles').update({ display_name: name, grade }).eq('id', uid);
+    if (error) return '저장하지 못했어요: ' + error.message;
+    setProf((p) => ({ ...p, name, grade })); return '저장했어요.';
+  }
+  return (
+    <>
+      {tab === 'home' && <HomeView name={prof.name} books={books} bookId={bookId} onBook={pickBook} units={bUnits} rows={rows} unit={cur ?? null} onUnit={setViewId}
+        onOpenUnit={(u, n) => setOpen({ u, focusNo: n })} onReport={(u) => setOpen({ u, report: true })} />}
+      {tab === 'reading' && <ReadingTab uid={uid} openCode={null} onOpened={() => {}} onExit={() => setTab('home')} />}
+      {tab === 'report' && <ReadingSummary uid={uid} />}
+      {tab === 'report' && <ReportsView units={bUnits} rows={rows} onOpen={(u) => setOpen({ u, report: true })} />}
+      {open && (
+        <div className="mx-modal" role="dialog" aria-modal="true" onMouseDown={(e) => { if (e.target === e.currentTarget && !open.auto) { setOpen(null); setNonce((n) => n + 1); } }}>
+          <div className="mx-modal-box" style={{ transform: `translate(-50%,-50%) scale(${popScale})` }}>
+            <button className="mx-modal-x" aria-label="닫기" onClick={() => { setOpen(null); setNonce((n) => n + 1); }}>✕</button>
+            <div className="mx-modal-body">
+              <UnitView key={open.u.unit_id + (open.auto ? 'a' : '') + (open.report ? 'r' : '')} row={mk(open.u)} autoStart={open.auto} startReport={open.report} focusNo={open.focusNo} onBack={() => { setOpen(null); setNonce((n) => n + 1); }} />
+            </div>
+          </div>
+        </div>
+      )}
+      {tab === 'my' && <MyView email={session.user.email ?? ''} name={prof.name} grade={prof.grade} books={books} bookId={bookId} rows={rows} units={bUnits} onSave={saveProfile} onBook={pickBook} onLogout={() => supabase.auth.signOut()} />}
+    </>
+  );
+}
+
+type Acts = unknown[][];
+interface LMeta { no: number; en: string; ko: string; goal: string; color: string; acts: { t: string; ko: string; min: number; study: boolean; hw: boolean }[] }
+interface Prog { stars: number; ok: number; total: number; detail?: { tags: TagStats; plan: unknown; review: number; correct: number; total: number } | null }
+const pkey = (lv: string, no: number, i: number) => `${lv}:${no}:${i}`;
+const stars = (n: number) => '★'.repeat(n) + '☆'.repeat(3 - n);
+
+function UnitView({ row, onBack, autoStart, startReport, focusNo }: { row: BundleRow; onBack: () => void; autoStart?: { no: number; idx: number }; startReport?: boolean; focusNo?: number }) {
+  useEffect(() => { if (focusNo) setTimeout(() => document.getElementById('les-' + focusNo)?.scrollIntoView({ block: 'start' }), 300); }, [focusNo]);
+  const lvKey = 'mg:level';
+  const [level, setLevelState] = useState<Level>(() => { if (autoStart || startReport) return 'CORE'; try { const v = localStorage.getItem(lvKey) as Level; return LEVELS.includes(v) ? v : 'CORE'; } catch { return 'CORE'; } });
+  const setLevel = (l: Level) => { setLevelState(l); try { localStorage.setItem(lvKey, l); } catch { /* 무시 */ } };
+  const [meta, setMeta] = useState<LMeta[]>([]);
+  const [err, setErr] = useState('');
+  const [prog, setProg] = useState<Record<string, Prog>>({});
+  const [bk, setBk] = useState<{ list: BookMeta[]; items: (i: number) => unknown[] } | null>(null);
+  const [l8, setL8] = useState<{ acts: { t: string; ko: string; min: number }[]; items: (i: number) => unknown[] } | null>(null);
+  const b = row.bundle;
+  const hasAdaptive = !!b.flow?.some((l) => l.steps.some((s) => s.special === 'adaptive'));
+  const [nat, setNat] = useState<{ nonce: number; title: string; items: Record<string, any>[]; nextLabel?: string; lesson: number; idx: number; next?: () => void } | null>(null);
+  const lessons = (b.items[level] ?? {}) as Record<string, Acts>;
+
+  const loadProg = async () => {
+    const { data, error } = await supabase.from('activity_progress').select('level, lesson, act_idx, stars, ok, total, detail').eq('unit_id', b.unit.id);
+    if (error) { setErr('진도를 불러오지 못했어요: ' + error.message); return; }
+    const m: Record<string, Prog> = {};
+    (data ?? []).forEach((r: any) => { m[pkey(r.level, r.lesson, r.act_idx)] = { stars: r.stars, ok: r.ok, total: r.total, detail: r.detail }; });
+    setProg(m);
+  };
+  useEffect(() => {
+    void loadProg();
+    if (b.flow) {
+      setMeta(b.flow.map((l) => ({ no: l.no, en: l.en, ko: l.ko, goal: l.goal, color: l.color, acts: l.steps.map((s) => ({ t: s.name_en, ko: s.name_ko, min: s.min ?? 0, study: s.study !== false, hw: !!s.homework })) })));
+      if (hasAdaptive) books().then(setBk).catch(() => {});
+    } else {
+      lessonMeta().then(setMeta).catch((e) => setErr(String(e.message || e)));
+      books().then(setBk).catch(() => {});
+    }
+    /* eslint-disable-next-line */
+  }, []);
+
+  const test = prog[pkey(level, 7, 0)];
+  useEffect(() => {
+    setL8(null);
+    if (hasAdaptive && test?.detail) lesson8(level, test.detail.plan, test.detail.tags).then(setL8).catch((e) => setErr(String(e.message || e)));
+  }, [level, test?.detail]);
+
+  async function save(lesson: number, idx: number, res: PlayResult) {
+    const { data } = await supabase.auth.getUser();
+    const uid = data.user?.id;
+    if (!uid) return;
+    const scored = res.results.filter((r) => r.tag);
+    const ok = scored.filter((r) => r.ok).length, total = scored.length;
+    const pct = total ? ok / total : 1;
+    const st = hasAdaptive && lesson === 7 ? 3 : pct >= 0.9 ? 3 : pct >= 0.6 ? 2 : 1;
+    if (scored.length && lesson < 90) {
+      await supabase.from('attempts').insert(scored.map((r) => ({ user_id: uid, unit_id: b.unit.id, lesson, tag: r.tag, ok: r.ok, hints: r.hint ?? 0 })));
+    }
+    const prev = prog[pkey(level, lesson, idx)];
+    const detail = hasAdaptive && lesson === 7 ? await tallyTags(res.results) : null;
+    const row = { user_id: uid, unit_id: b.unit.id, level, lesson, act_idx: idx, stars: Math.max(st, prev?.stars ?? 0), ok, total, detail };
+    const { error } = await supabase.from('activity_progress').upsert(row);
+    if (error) setErr('진도를 저장하지 못했어요: ' + error.message); else void loadProg();
+  }
+
+  function run(lesson: number, idx: number, title: string, items: unknown[], color: string | undefined, next: (() => void) | undefined, nextLabel?: string) {
+    if (items.length && items.every(isNative)) {
+      setNat({ nonce: Date.now(), title, items: items as Record<string, any>[], nextLabel, lesson, idx, next });
+      return;
+    }
+    playActivity({
+      title, items, level, test: hasAdaptive && lesson === 7, color, nextLabel,
+      onResult: (res) => { void save(lesson, idx, res); },
+      onFinish: (action) => { if (action === 'next' && next) next(); else if (action === 'again') run(lesson, idx, title, items, color, next, nextLabel); },
+      onExit: () => {},
+    }).catch((e) => setErr(String(e.message || e)));
+  }
+
+  /** 다음 '학습' 활동 번호(숙제 전용 활동은 건너뜀). 없으면 -1 */
+  const nextStudy = (no: number, idx: number) => { const m = meta.find((x) => x.no === no); const n = (lessons[String(no)] ?? []).length; for (let i = idx + 1; i < n; i++) if (m?.acts[i]?.study !== false) return i; return -1; };
+  /** 차시 안에서 지금 활동이 '학습' 활동 중 몇 번째인지 (숙제 전용 활동은 세지 않음) */
+  const stepPos = (no: number, idx: number) => { const m = meta.find((x) => x.no === no); if (!m) return undefined; const n = (lessons[String(no)] ?? []).length; const ids: number[] = []; for (let i = 0; i < n; i++) if (m.acts[i]?.study !== false) ids.push(i); const cur = ids.indexOf(idx); return cur < 0 ? undefined : { cur, total: ids.length }; };
+  const reportNo = (() => { const core = (b.flow ?? []).filter((l) => (l.track ?? 'core') === 'core'); return core.length ? core[core.length - 1].no : -1; })();
+  function start(no: number, idx: number) {
+    const acts = lessons[String(no)] ?? [];
+    const m = meta.find((x) => x.no === no);
+    if (!acts[idx]) return;
+    const ni = nextStudy(no, idx);
+    const toReport = ni < 0 && no === reportNo;
+    run(no, idx, `${no}차시 : ${m?.acts[idx]?.t ?? 'Activity'}`, acts[idx], m?.color,
+      ni >= 0 ? () => start(no, ni) : toReport ? () => setRep(true) : undefined, ni >= 0 ? m?.acts[ni]?.t ?? '다음 활동' : toReport ? '결과 보기' : undefined);
+  }
+  function start8(idx: number) {
+    if (!l8) return;
+    const hasNext = idx + 1 < l8.acts.length;
+    run(8, idx, `8차시 · ${l8.acts[idx].t}`, l8.items(idx), 'grape', hasNext ? () => start8(idx + 1) : undefined, hasNext ? l8.acts[idx + 1].t : undefined);
+  }
+  function startBook(i: number) {
+    if (!bk) return;
+    run(90, i, bk.list[i].title, bk.items(i), 'leaf', undefined);
+  }
+
+  // 결과 리포트(마지막 core 차시 = 6차시 결과를 영역별로)
+  const [rep, setRep] = useState(!!startReport);
+  const progAt = (no: number, idx: number) => { const p = prog[pkey(level, no, idx)]; return p ? { ok: p.ok, total: p.total } : undefined; };
+  const report0 = b.flow ? buildReport(b.flow, progAt) : null;
+  const hasItems = (no: number, idx: number) => ((lessons[String(no)] ?? [])[idx] ?? []).length > 0;
+  /** [더 연습해요]: 고른 활동들을 차례로 풀고, 끝나면 결과 화면으로 돌아온다 */
+  function practiceSeq(list: StepRef[], i = 0) {
+    const r = list[i]; if (!r) { setRep(true); return; }
+    const acts = lessons[String(r.no)] ?? []; const more = i + 1 < list.length;
+    run(r.no, r.idx, `더 연습해요 · ${r.name}`, acts[r.idx], undefined, more ? () => practiceSeq(list, i + 1) : () => setRep(true), more ? list[i + 1].name : '결과 보기');
+  }
+  function retryStep(r: StepRef) { const acts = lessons[String(r.no)] ?? []; run(r.no, r.idx, `${r.no}차시 · ${r.name}`, acts[r.idx], undefined, () => setRep(true), '결과 보기'); }
+
+  const started = useRef(false);
+  useEffect(() => { if (autoStart && meta.length && !started.current) { started.current = true; start(autoStart.no, autoStart.idx); } /* eslint-disable-next-line */ }, [meta]);
+
+  // 이어하기: 가장 먼저 끝내지 못한 활동
+  const only = focusNo && !startReport ? focusNo : null;   // 차시 박스에서 열면 그 차시만 보여 준다
+  const nos = Object.keys(lessons).map(Number).sort((a, c) => a - c).filter((n) => !only || n === only);
+  let resume: { no: number; idx: number } | null = null;
+  for (const no of nos) { const n = lessons[String(no)].length; for (let i = 0; i < n && !resume; i++) if (!prog[pkey(level, no, i)] && meta.find((x) => x.no === no)?.acts[i]?.study !== false) resume = { no, idx: i }; if (resume) break; }
+  const studyN = (no: number) => lessons[String(no)].filter((_, i) => meta.find((x) => x.no === no)?.acts[i]?.study !== false).length;
+  const doneCount = (no: number) => lessons[String(no)].filter((_, i) => prog[pkey(level, no, i)] && meta.find((x) => x.no === no)?.acts[i]?.study !== false).length;
+
+  if (rep && report0) return (<>
+    <ReportView title={`Lesson ${b.unit.no} · ${b.unit.title}`} report={report0} practice={(a) => practiceFor(a.area, b.flow, hasItems, report0.reportLesson)}
+      onPractice={(_a, list) => { setRep(false); practiceSeq(list); }} onRetry={(r) => { setRep(false); retryStep(r); }} onBack={() => (startReport ? onBack() : setRep(false))} />
+  </>);
+  return (
+    <>
+      {!only && <button className="mx-link" onClick={onBack}>← 목록으로</button>}
+      <h1>Lesson {b.unit.no} · {b.unit.title}</h1>
+      {!only && <div className="mx-tabs">
+        {LEVELS.map((l) => <button key={l} className={l === level ? 'mx-tab mx-on' : 'mx-tab'} onClick={() => setLevel(l)}>{LEVEL_KO[l]} ({l})</button>)}
+      </div>}
+      {err && <p className="mx-err">{err}</p>}
+      {meta.length > 0 && resume && (
+        <button className="mx-btn mx-resume" onClick={() => start(resume!.no, resume!.idx)}>
+          {Object.keys(prog).some((k) => k.startsWith(level + ':')) ? '이어하기' : '시작하기'} → {resume.no}차시 · {meta.find((x) => x.no === resume!.no)?.acts[resume.idx]?.t}
+        </button>
+      )}
+      {nos.map((no) => {
+        const m = meta.find((x) => x.no === no);
+        const acts = lessons[String(no)];
+        const dc = doneCount(no);
+        return (
+          <div className="mx-card" key={no} id={'les-' + no}>
+            <h3>{no}차시 · {m?.en ?? ''} <span className="mx-muted">{m?.ko}</span> <span className={dc === studyN(no) ? 'mx-chip mx-ok' : 'mx-chip'}>{dc}/{studyN(no)}</span>{no === reportNo && report0 && <button className="mx-link" style={{ marginLeft: 12 }} onClick={() => setRep(true)}>결과 보기</button>}</h3>
+            {m && <p className="mx-muted">{m.goal}</p>}
+            <div className="mx-acts">
+              {acts.map((a, i) => {
+                const p = prog[pkey(level, no, i)];
+                return (
+                  <button key={i} className={p ? 'mx-act mx-done' : 'mx-act'} onClick={() => start(no, i)}>
+                    <b>{p ? '✓ ' : ''}{m?.acts[i]?.t ?? `활동 ${i + 1}`}{m?.acts[i]?.study === false ? ' · 숙제' : ''}</b>
+                    <span className="mx-muted">{m?.acts[i]?.ko} · {a.length}문항{p && no !== 7 ? ` · ${stars(p.stars)}` : ''}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+
+      {!only && hasAdaptive && <div className="mx-card">
+        <h3>8차시 · Personalized Mastery <span className="mx-muted">내 결과에 맞춘 보강</span></h3>
+        {!test ? <p className="mx-muted">7차시 Lesson Check를 마치면 내 결과에 맞는 8차시가 열려요.</p> : !l8 ? <p className="mx-muted">불러오는 중…</p> : (
+          <div className="mx-acts">
+            {l8.acts.map((a, i) => {
+              const p = prog[pkey(level, 8, i)];
+              return (
+                <button key={i} className={p ? 'mx-act mx-done' : 'mx-act'} onClick={() => start8(i)}>
+                  <b>{p ? '✓ ' : ''}{a.t}</b><span className="mx-muted">{a.ko}{p ? ` · ${stars(p.stars)}` : ''}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>}
+
+      {!only && hasAdaptive && bk && (
+        <div className="mx-card">
+          <h3>Reading Pack <span className="mx-muted">원서 읽기 (차시 학습과 별도)</span></h3>
+          <div className="mx-acts">
+            {bk.list.filter((x) => x.level === level).map((x) => {
+              const p = prog[pkey(level, 90, x.idx)];
+              return (
+                <button key={x.id} className={p ? 'mx-act mx-done' : 'mx-act'} onClick={() => startBook(x.idx)}>
+                  <b>{p ? '✓ ' : ''}{x.title}</b><span className="mx-muted">{x.ko}{p ? ` · ${stars(p.stars)}` : ''}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      {nat && (
+        <NativePlayer key={nat.nonce} scope={b.unit.id + '|' + nat.lesson} title={nat.title} items={nat.items} vocab={b.vocab as VWord[]} nextLabel={nat.nextLabel} step={stepPos(nat.lesson, nat.idx)}
+          onResult={(r: NativeResult) => { void save(nat.lesson, nat.idx, { results: r.results, total: r.total, scored: r.scored }); }}
+          onFinish={(act) => { const n = nat; setNat(null); if (act === 'next' && n.next) n.next(); else if (act === 'again') run(n.lesson, n.idx, n.title, n.items, undefined, n.next, n.nextLabel); }} />
+      )}
+    </>
+  );
+}
