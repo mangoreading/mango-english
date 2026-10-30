@@ -101,3 +101,8 @@
 .mr-root.mr-theme-lime .week-nav button { font-weight: 500; }
 
 .mr-root.mr-theme-lime .topbar #btnRestart { padding: 5px 15px; font-size: 13px; box-shadow: 0 2px 0 var(--forest); }
+
+.mr-root.mr-theme-lime .wb-word { background: #fff; border: 2px solid var(--forest); color: var(--forest); font-weight: 500; }
+.mr-root.mr-theme-lime .wb-word:hover { background: var(--lime-hi); }
+.mr-root.mr-theme-lime .trace-target { color: rgba(6, 40, 31, 0.28); border-bottom-color: rgba(6, 40, 31, 0.2); }
+.mr-root.mr-theme-lime .drop-zone .placed { font-weight: 500; }

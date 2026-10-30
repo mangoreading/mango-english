@@ -47,6 +47,14 @@ const EXTRA = `
 .mr-root .rhyme-box > span:active { transform: scale(0.95); box-shadow: none; }
 /* 상단 '처음부터' 버튼은 작게 */
 .mr-root .topbar #btnRestart { padding: 6px 16px; font-size: 13px; border-radius: 999px; }
+/* STEP 5 Write: 카드와 글자를 크게 */
+.mr-root .trace-wrap .nav-frame { max-width: 1080px; width: 100%; }
+.mr-root .trace-card { flex: 1 1 0; min-width: 0; width: min(100%, 900px); padding: 28px 40px 30px; }
+.mr-root .trace-target { font-size: 42px; letter-spacing: 1px; margin-bottom: 18px; padding-bottom: 16px; line-height: 1.25; }
+.mr-root .word-bank { gap: 14px; margin-bottom: 18px; }
+.mr-root .wb-word { font-size: 30px; padding: 10px 22px; border-radius: 16px; }
+.mr-root .drop-zone { min-height: 96px; gap: 12px; padding: 14px; }
+.mr-root .drop-zone .placed { font-size: 30px; padding: 8px 20px; border-radius: 14px; }
 /* STEP 6 Speak: 카드와 문장 글자를 크게 */
 .mr-root .speak-wrap .nav-frame { max-width: 1080px; width: 100%; }
 .mr-root .speak-card { flex: 1 1 0; min-width: 0; width: min(100%, 900px); padding: 28px 40px 30px; gap: 16px; }
