@@ -1,12 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { MR_MARKUP, startMr } from '@mango/mr';
 import '@mango/mr/mr.css';
 import { supabase } from '../../shared/supabase';
 import { signReading, type RBook } from './shared';
 
+const Markup = memo(function Markup() { return <div style={{ width: 1280, height: 800 }} dangerouslySetInnerHTML={{ __html: MR_MARKUP }} />; });
+const fit = () => Math.min(window.innerWidth / 1280, window.innerHeight / 800);
+
 /** 학습앱과 같은 화면으로 이 책을 미리 본다(저장하지 않은 편집 내용 그대로, 진도는 저장하지 않음) */
 export function Preview({ book, onClose, bare }: { book: RBook; onClose: () => void; bare?: boolean }) {
   const [ready, setReady] = useState(false); const [err, setErr] = useState('');
+  const [k, setK] = useState(fit());
+  useEffect(() => { const f = () => setK(fit()); window.addEventListener('resize', f); return () => window.removeEventListener('resize', f); }, []);
   const urls = useRef<Record<string, string>>({}); const words = useRef<Record<string, string>>({});
   const closeRef = useRef(onClose); closeRef.current = onClose;
   useEffect(() => {
@@ -35,9 +40,10 @@ export function Preview({ book, onClose, bare }: { book: RBook; onClose: () => v
   }, [ready, book]);
   if (err) return <div className="mx-card"><p className="mx-err">{err}</p><button className="mx-btn" onClick={onClose}>닫기</button></div>;
   if (!ready) return null;
+  // 1280×800 화면을 창 크기에 맞춰 줄이고 가운데에 둔다(스크롤 없음)
   return (
-    <div className="mr-root" style={{ position: 'fixed', inset: 0, zIndex: 1000, overflow: 'auto' }}>
-      <div dangerouslySetInnerHTML={{ __html: MR_MARKUP }} />
+    <div className="mr-root mr-fit" style={{ position: 'fixed', inset: 0, zIndex: 1000 }}>
+      <div style={{ position: 'absolute', left: (window.innerWidth - 1280 * k) / 2, top: (window.innerHeight - 800 * k) / 2, width: 1280, height: 800, transform: `scale(${k})`, transformOrigin: 'top left' }}><Markup /></div>
       {!bare && <button className="mx-btn" style={{ position: 'fixed', top: 10, right: 14, zIndex: 1001 }} onClick={onClose}>✕ 미리보기 닫기</button>}
     </div>
   );

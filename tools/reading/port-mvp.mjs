@@ -27,6 +27,9 @@ const res = await postcss([
   } },
 ]).process(css, { from: undefined });
 const EXTRA = `
+/* 관리자 미리보기: 1280x800 캔버스를 창 크기에 맞춰 줄여 보여 줘서 스크롤이 생기지 않게 한다 */
+.mr-root.mr-fit { display: block; padding: 0; min-height: 0; overflow: hidden; }
+.mr-root.mr-fit .app { width: 1280px; height: 800px; min-height: 0; border-radius: 0; box-shadow: none; }
 /* 1페이지/2페이지 보기 */
 .mr-root .view-toggle { display: inline-flex; background: #F1F5F9; border-radius: 999px; padding: 4px; gap: 2px; flex-shrink: 0; }
 .mr-root .view-btn { width: 40px; height: 34px; border-radius: 999px; border: none; background: transparent; color: var(--muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background 0.18s, color 0.18s; }
