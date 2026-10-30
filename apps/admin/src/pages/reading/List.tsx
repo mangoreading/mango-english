@@ -9,6 +9,7 @@ export function BookList({ onEdit, nonce }: { onEdit: (code: string) => void; no
   const [rows, setRows] = useState<RBookRow[] | null>(null); const [level, setLevel] = useState<'PRE' | 'BASIC'>('PRE');
   const [msg, setMsg] = useState<{ t: 'ok' | 'err'; s: string } | null>(null);
   const [add, setAdd] = useState<{ code: string; title: string; week: number } | null>(null);
+  const [dragId, setDragId] = useState<string | null>(null); const [overId, setOverId] = useState<string | null>(null);
   useEffect(() => { if (msg?.t === 'ok') { const id = setTimeout(() => setMsg(null), 1500); return () => clearTimeout(id); } }, [msg]);
   async function load() {
     const { data, error } = await supabase.from('reading_books').select(COLS).order('level').order('ord');
@@ -21,10 +22,25 @@ export function BookList({ onEdit, nonce }: { onEdit: (code: string) => void; no
     const { error } = await supabase.from('reading_books').update({ ...p, updated_at: new Date().toISOString() }).eq('id', r.id);
     if (error) { setMsg({ t: 'err', s: error.message }); load(); }
   }
-  async function swap(list: RBookRow[], i: number, d: number) {
-    const a = list[i], b = list[i + d]; if (!a || !b) return;
-    const [r1, r2] = await Promise.all([supabase.from('reading_books').update({ ord: b.ord }).eq('id', a.id), supabase.from('reading_books').update({ ord: a.ord }).eq('id', b.id)]);
-    if (r1.error || r2.error) setMsg({ t: 'err', s: (r1.error ?? r2.error)!.message }); load();
+  /** 끌어서 순서 바꾸기: 놓은 자리에 끼워 넣고, 같은 단계의 ord 값을 순서대로 다시 배정한다 */
+  async function drop(targetId: string) {
+    const from = dragId; setDragId(null); setOverId(null);
+    if (!from || from === targetId) return;
+    const arr = [...list]; const i = arr.findIndex((r) => r.id === from), j = arr.findIndex((r) => r.id === targetId);
+    if (i < 0 || j < 0) return;
+    const [m] = arr.splice(i, 1); arr.splice(j, 0, m);
+    const ords = list.map((r) => r.ord);            // 기존 ord 값(오름차순)을 새 순서에 다시 나눠 준다
+    const next = arr.map((r, k) => ({ ...r, ord: ords[k] }));
+    const changed = next.filter((r) => r.ord !== list.find((x) => x.id === r.id)!.ord);
+    setRows((x) => (x ? x.map((r) => next.find((n) => n.id === r.id) ?? r).sort((p, q) => (p.level === q.level ? p.ord - q.ord : p.level.localeCompare(q.level))) : x));
+    const res = await Promise.all(changed.map((r) => supabase.from('reading_books').update({ ord: r.ord }).eq('id', r.id)));
+    const e = res.find((r) => r.error)?.error; if (e) { setMsg({ t: 'err', s: e.message }); load(); } else setMsg({ t: 'ok', s: '순서를 바꿨어요' });
+  }
+  /** 1280×800 별도 창에서 학습 화면으로 미리 본다 */
+  function preview(code: string) {
+    const w = window.open('', 'mgReadPreview', `popup=yes,width=1280,height=800,left=${Math.max(0, (screen.width - 1280) / 2)},top=${Math.max(0, (screen.height - 800) / 2)}`);
+    if (!w) { setMsg({ t: 'err', s: '팝업이 막혀 있어요. 주소창 오른쪽의 팝업 차단을 풀고 다시 눌러 주세요.' }); return; }
+    w.location.href = '/#readpreview=' + encodeURIComponent(code); w.focus();
   }
   async function setAll(status: 'draft' | 'published') {
     const ids = list.map((r) => r.id); if (!ids.length) return;
@@ -42,20 +58,13 @@ export function BookList({ onEdit, nonce }: { onEdit: (code: string) => void; no
     if (error) { setMsg({ t: 'err', s: error.message }); return; }
     setAdd(null); onEdit(code);
   }
-  async function del(r: RBookRow) {
-    if (r.status === 'published') { setMsg({ t: 'err', s: '공개 중인 책은 먼저 비공개로 바꿔 주세요' }); return; }
-    if (!confirm(`「${r.title}」을(를) 삭제할까요?\n학생 진도와 영상 기록도 함께 지워져요.`)) return;
-    const { error } = await supabase.from('reading_books').delete().eq('id', r.id);
-    if (error) setMsg({ t: 'err', s: error.message }); else load();
-  }
-
   const list = (rows ?? []).filter((r) => r.level === level);
   const pub = list.filter((r) => r.status === 'published').length;
   return (
     <div className="mx-card">
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', marginBottom: 12 }}>
         <div className="mx-seg" style={{ margin: 0 }}>{(['PRE', 'BASIC'] as const).map((l) => <button key={l} className={level === l ? 'on' : ''} onClick={() => setLevel(l)}>{l === 'PRE' ? 'Pre' : 'Basic'}</button>)}</div>
-        <span className="mx-muted">{list.length}권 · 공개 {pub}권</span>
+        <span className="mx-muted">{list.length}권 · 공개 {pub}권 · ⠿ 를 끌어서 순서를 바꿔요</span>
         <span style={{ flex: 1 }} />
         {msg && <span className={msg.t === 'ok' ? 'mx-ok' : 'mx-err'}>{msg.s}</span>}
         <button className="mx-btn sec" onClick={() => setAll('published')} disabled={!list.length}>전체 공개</button>
@@ -71,18 +80,22 @@ export function BookList({ onEdit, nonce }: { onEdit: (code: string) => void; no
         </div>)}
       {!rows ? <p className="mx-muted">불러오는 중…</p> : !list.length ? <p className="mx-muted">이 단계에는 아직 책이 없어요.</p> : (
         <table>
-          <thead><tr><th>순서</th><th>주차</th><th>이모지</th><th>제목</th><th>코드</th><th>AR</th><th>버전</th><th>상태</th><th /></tr></thead>
+          <thead><tr><th style={{ width: 90 }}>순서</th><th>주차</th><th>이모지</th><th>제목</th><th>AR</th><th>버전</th><th>상태</th><th /></tr></thead>
           <tbody>{list.map((r, i) => (
-            <tr key={r.id}>
-              <td><button className="mx-btn sec" disabled={i === 0} onClick={() => swap(list, i, -1)}>↑</button> <button className="mx-btn sec" disabled={i === list.length - 1} onClick={() => swap(list, i, 1)}>↓</button> {i + 1}</td>
+            <tr key={r.id} onDragOver={(e) => { if (dragId) { e.preventDefault(); setOverId(r.id); } }} onDrop={(e) => { e.preventDefault(); void drop(r.id); }}
+              style={{ opacity: dragId === r.id ? 0.4 : 1, boxShadow: overId === r.id && dragId && dragId !== r.id ? 'inset 0 3px 0 var(--navy)' : undefined }}>
+              <td>
+                <span draggable title="끌어서 순서 바꾸기" style={{ cursor: 'grab', userSelect: 'none', fontSize: 18, marginRight: 8, color: 'var(--sub)' }}
+                  onDragStart={(e) => { setDragId(r.id); e.dataTransfer.effectAllowed = 'move'; const tr = (e.target as HTMLElement).closest('tr'); if (tr) e.dataTransfer.setDragImage(tr, 10, 10); }}
+                  onDragEnd={() => { setDragId(null); setOverId(null); }}>⠿</span>{i + 1}
+              </td>
               <td><input className="mx-cell" type="number" min={1} style={{ width: 60 }} defaultValue={r.week} onBlur={(e) => { const v = Math.max(1, +e.target.value || 1); if (v !== r.week) patch(r, { week: v }); }} /></td>
               <td><input className="mx-cell" style={{ width: 56 }} defaultValue={r.emoji ?? ''} onBlur={(e) => { if (e.target.value !== (r.emoji ?? '')) patch(r, { emoji: e.target.value }); }} /></td>
-              <td><input className="mx-cell" style={{ minWidth: 220 }} defaultValue={r.title} onBlur={(e) => { const v = e.target.value.trim(); if (v && v !== r.title) patch(r, { title: v }); }} /></td>
-              <td className="mx-muted">{r.code}</td>
+              <td style={{ minWidth: 240 }}>{r.title}</td>
               <td><input className="mx-cell" style={{ width: 60 }} defaultValue={r.ar ?? ''} onBlur={(e) => { const v = e.target.value.trim() || null; if (v !== r.ar) patch(r, { ar: v }); }} /></td>
               <td>v{r.version}</td>
               <td><select value={r.status} onChange={(e) => patch(r, { status: e.target.value as 'draft' | 'published' })}><option value="published">공개</option><option value="draft">비공개</option></select></td>
-              <td><button className="mx-btn" onClick={() => onEdit(r.code)}>내용 편집</button> <button className="mx-btn sec" onClick={() => del(r)}>삭제</button></td>
+              <td style={{ textAlign: 'right' }}><button className="mx-btn" onClick={() => onEdit(r.code)}>Edit</button> <button className="mx-btn sec" onClick={() => preview(r.code)}>미리보기</button></td>
             </tr>))}</tbody>
         </table>)}
     </div>

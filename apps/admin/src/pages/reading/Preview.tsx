@@ -5,7 +5,7 @@ import { supabase } from '../../shared/supabase';
 import { signReading, type RBook } from './shared';
 
 /** 학습앱과 같은 화면으로 이 책을 미리 본다(저장하지 않은 편집 내용 그대로, 진도는 저장하지 않음) */
-export function Preview({ book, onClose }: { book: RBook; onClose: () => void }) {
+export function Preview({ book, onClose, bare }: { book: RBook; onClose: () => void; bare?: boolean }) {
   const [ready, setReady] = useState(false); const [err, setErr] = useState('');
   const urls = useRef<Record<string, string>>({}); const words = useRef<Record<string, string>>({});
   const closeRef = useRef(onClose); closeRef.current = onClose;
@@ -38,7 +38,7 @@ export function Preview({ book, onClose }: { book: RBook; onClose: () => void })
   return (
     <div className="mr-root" style={{ position: 'fixed', inset: 0, zIndex: 1000, overflow: 'auto' }}>
       <div dangerouslySetInnerHTML={{ __html: MR_MARKUP }} />
-      <button className="mx-btn" style={{ position: 'fixed', top: 10, right: 14, zIndex: 1001 }} onClick={onClose}>✕ 미리보기 닫기</button>
+      {!bare && <button className="mx-btn" style={{ position: 'fixed', top: 10, right: 14, zIndex: 1001 }} onClick={onClose}>✕ 미리보기 닫기</button>}
     </div>
   );
 }
