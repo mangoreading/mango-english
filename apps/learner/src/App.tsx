@@ -95,6 +95,8 @@ function Main({ session, tab, setTab, homeNonce }: { session: Session; tab: Tab;
   const [viewId, setViewId] = useState<string | null>(null);
   const [open, setOpen] = useState<{ u: UnitInfo; auto?: { no: number; idx: number }; report?: boolean; focusNo?: number } | null>(null);
   const [nonce, setNonce] = useState(0);
+  const [popScale, setPopScale] = useState(1);   // 팝업은 1280×800 기준, 창이 작으면 비율만 줄인다
+  useEffect(() => { const f = () => setPopScale(Math.min(1, window.innerWidth / 1280, window.innerHeight / 800)); f(); window.addEventListener('resize', f); return () => window.removeEventListener('resize', f); }, []);
   useEffect(() => { setOpen(null); }, [homeNonce]);
 
   useEffect(() => {
@@ -139,7 +141,7 @@ function Main({ session, tab, setTab, homeNonce }: { session: Session; tab: Tab;
       {tab === 'report' && <ReportsView units={bUnits} rows={rows} onOpen={(u) => setOpen({ u, report: true })} />}
       {open && (
         <div className="mx-modal" role="dialog" aria-modal="true" onMouseDown={(e) => { if (e.target === e.currentTarget && !open.auto) { setOpen(null); setNonce((n) => n + 1); } }}>
-          <div className="mx-modal-box">
+          <div className="mx-modal-box" style={{ transform: `translate(-50%,-50%) scale(${popScale})` }}>
             <button className="mx-modal-x" aria-label="닫기" onClick={() => { setOpen(null); setNonce((n) => n + 1); }}>✕</button>
             <div className="mx-modal-body">
               <UnitView key={open.u.unit_id + (open.auto ? 'a' : '') + (open.report ? 'r' : '')} row={mk(open.u)} autoStart={open.auto} startReport={open.report} focusNo={open.focusNo} onBack={() => { setOpen(null); setNonce((n) => n + 1); }} />
