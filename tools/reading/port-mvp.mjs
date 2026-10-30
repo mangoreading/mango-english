@@ -47,6 +47,16 @@ const EXTRA = `
 .mr-root .rhyme-box > span:active { transform: scale(0.95); box-shadow: none; }
 /* 상단 '처음부터' 버튼은 작게 */
 .mr-root .topbar #btnRestart { padding: 6px 16px; font-size: 13px; border-radius: 999px; }
+/* STEP 6 Speak: 카드와 문장 글자를 크게 */
+.mr-root .speak-wrap .nav-frame { max-width: 1080px; width: 100%; }
+.mr-root .speak-card { flex: 1 1 0; min-width: 0; width: min(100%, 900px); padding: 28px 40px 30px; gap: 16px; }
+.mr-root .speak-illustration { font-size: 84px; }
+.mr-root .speak-target { font-size: 46px; line-height: 1.35; padding: 6px 0; }
+.mr-root .speak-target .word { margin: 0 6px; padding: 2px 6px; }
+.mr-root .speak-status { font-size: 19px; min-height: 26px; }
+.mr-root .speak-recognized { font-size: 18px; min-height: 28px; padding: 8px 14px; }
+.mr-root .speak-score { font-size: 42px; min-height: 48px; }
+.mr-root .speak-btn { min-width: 124px; padding: 14px 24px; font-size: 18px; }
 /* STEP 6 발음 평가: 단어별 점수 색 */
 .mr-root .speak-target .word.w-ok { color: #15803D; }
 .mr-root .speak-target .word.w-mid { color: #D97706; }
