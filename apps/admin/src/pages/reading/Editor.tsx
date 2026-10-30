@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { supabase } from '../../shared/supabase';
 import { Preview } from './Preview';
+import { resultText, saveBookAudio } from './Tts';
 import { move, signReading, spellOf, uploadReadingImage, validate, type RBook, type RContent, type RKey, type RPhonics, type RQuiz } from './shared';
 
 const TABS = ['기본 정보', '0 Warm Up', '1 Phonics', '2 Key Words', '3 Read Aloud', '4 Quiz', '5 Write', '6 Speak'] as const;
@@ -25,6 +26,7 @@ export function BookEditor({ code, onBack }: { code: string; onBack: () => void 
   const [tab, setTab] = useState<(typeof TABS)[number]>('기본 정보');
   const [msg, setMsg] = useState<{ t: 'ok' | 'err'; s: string } | null>(null); const [busy, setBusy] = useState(false);
   const [urls, setUrls] = useState<Record<string, string>>({}); const [prev, setPrev] = useState(false);
+  const [aud, setAud] = useState('');
 
   useEffect(() => { if (msg?.t === 'ok') { const id = setTimeout(() => setMsg(null), 1800); return () => clearTimeout(id); } }, [msg]);
   useEffect(() => {
@@ -52,6 +54,13 @@ export function BookEditor({ code, onBack }: { code: string; onBack: () => void 
     if (error) { setMsg({ t: 'err', s: error.message }); return; }
     const nb = { ...book, version: nv }; setBook(nb); setOrig(JSON.stringify(nb)); setMsg({ t: 'ok', s: `저장했어요 (v${nv})` });
   }
+  /** 이 책의 모든 소리를 미리 만들어 저장 → 학습 중에는 저장된 음원을 바로 재생해요 */
+  async function saveAudio() {
+    if (!book) return;
+    setAud('음성을 확인하는 중…');
+    try { const r = await saveBookAudio({ title: book.title, content: book.content }, (d, t) => setAud(`음성 저장 중… ${d}/${t}`)); setAud(resultText(r)); }
+    catch (e) { setAud('음성 저장 실패: ' + (e as Error).message); }
+  }
   async function pickImage(kind: 'pages' | 'covers', file: File | undefined, apply: (path: string) => void) {
     if (!file) return;
     try { setMsg({ t: 'ok', s: '이미지를 올리는 중…' }); const p = await uploadReadingImage(book!.code, kind, file); setUrls((o) => ({ ...o, ...{ [p]: URL.createObjectURL(file) } })); apply(p); setMsg({ t: 'ok', s: '이미지를 올렸어요. 저장하면 반영돼요' }); }
@@ -68,6 +77,8 @@ export function BookEditor({ code, onBack }: { code: string; onBack: () => void 
         <b style={{ fontSize: 18 }}>{book.emoji} {book.title}</b><span className="mx-muted">{book.code} · v{book.version} · {book.status === 'published' ? '공개 중' : '비공개'}</span>
         <span style={{ flex: 1 }} />
         {msg && <span className={msg.t === 'ok' ? 'mx-ok' : 'mx-err'}>{msg.s}</span>}
+        {aud && <span className="mx-muted">{aud}</span>}
+        <button className="mx-btn sec" onClick={saveAudio} title="이 책의 모든 소리를 미리 만들어 저장해요(저장된 음원은 학습 때 그대로 재사용)">🔊 음성 저장</button>
         <button className="mx-btn sec" onClick={() => setPrev(true)}>👁 학습 화면 미리보기</button>
         <button className="mx-btn" disabled={busy || !dirty} onClick={save}>{dirty ? '저장' : '저장됨'}</button>
       </div>

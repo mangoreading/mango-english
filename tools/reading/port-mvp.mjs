@@ -185,6 +185,30 @@ cut(/  \/\/ Single TTS utterance promise/, /\n  \/\/ ---------- STEP 1: PHONICS 
     });
   }
 
+  // 이 책에서 읽게 될 모든 소리의 (글, 속도) 목록 — 관리자의 '음성 저장'이 미리 만들어 저장하는 데 쓴다.
+  // 화면에서 실제로 speak()/ttsUtter 를 부르는 글·속도와 같아야 저장한 소리를 그대로 다시 쓴다.
+  function collectTts(d) {
+    const out = []; const seen = new Set();
+    const add = (t, r) => { t = (t || '').trim(); if (!t) return; const text = normalizeForTTS(t); const rate = azRate(r); const k = rate + '|' + text; if (!seen.has(k)) { seen.add(k); out.push({ text, rate }); } };
+    const addSpeak = (t, r) => { if (!t) return; tokenizeForSpeech(t).forEach(sg => { if (sg.kind !== 'sfx') add(sg.text, r); }); };
+    const cl = (t) => String(t || '').replace(/[.,!?]/g, '');
+    addSpeak(d.title, 0.85);
+    ((d.warmup && d.warmup.characters) || []).forEach(c => addSpeak(c.name, 0.85));
+    (d.phonics || []).forEach(p => { addSpeak(p.letter, 0.85); (p.cvc || []).forEach(c => addSpeak(c.word, 0.85)); (p.rhyme || []).forEach(w => addSpeak(w, 0.85)); if (p.rhyme) addSpeak(p.rhyme[0] || p.letter, 0.85); });
+    (d.keyWords || []).forEach(k => addSpeak(k.word, 0.85));
+    (d.pages || []).forEach(pg => {
+      const ws = getWords(pg.text); const full = ws.join(' ');
+      tokenizeForSpeech(full).forEach(sg => { if (sg.kind !== 'sfx') add(sg.text, 0.45); });   // Listen
+      ws.forEach(w => addSpeak(cl(w), 0.9));                                                    // 단어 누르기
+      getChunks(pg.text).forEach(c => { addSpeak(cl(c.text), 0.65); addSpeak(cl(c.text), 0.85); });   // Echo
+      addSpeak(cl(full), 0.65); addSpeak(cl(full), 0.7);
+    });
+    (d.traceSentences || []).forEach(t => { addSpeak(t, 0.85); String(t).split(/\s+/).forEach(w => { addSpeak(w, 0.85); addSpeak(cl(w), 0.85); }); });
+    (d.speakSentences || []).forEach(s => addSpeak(s.text, 0.85));
+    ['Great job!', 'Try again!', 'Try again', 'Hooray! I can read this book!'].forEach(t => addSpeak(t, 0.85));
+    return out;
+  }
+
   // Token to track / cancel an in-progress sequential play
   let _speakAbort = null;
 

@@ -54,13 +54,30 @@ Deno.serve(async (req) => {
     const body = lines.map((l) => { const v = voiceFor(l.who); return `<voice name="${v.voice}"><prosody rate="${rateIn}"${v.pitch ? ` pitch="${v.pitch}"` : ''}>${esc(l.t)}</prosody><break time="450ms"/></voice>`; }).join('');
     const ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US">${body}</speak>`;
 
-    const r = await fetch(`https://${REGION}.tts.speech.microsoft.com/cognitiveservices/v1`, {
-      method: 'POST',
-      headers: { 'Ocp-Apim-Subscription-Key': key, 'Content-Type': 'application/ssml+xml', 'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3', 'User-Agent': 'mango-english' },
-      body: ssml,
-    });
-    if (!r.ok) throw new Error('Azure 오류 ' + r.status + ' ' + (await r.text()).slice(0, 200));
-    return new Response(await r.arrayBuffer(), { headers: { ...CORS, 'Content-Type': 'audio/mpeg', 'Cache-Control': 'private, max-age=86400' } });
+    // 같은 글·목소리·속도는 한 번만 만들고 저장해 둔다(비용·지연 절약). 저장소: 비공개 버킷 tts-cache (서버만 접근)
+    const admin = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
+    const hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(ssml)))).map((x) => x.toString(16).padStart(2, '0')).join('');
+    const path = `${hash}.mp3`;
+    const prefetch = b.prefetch === true;      // 미리 만들어 저장만 하기(본사 전용): 소리는 돌려주지 않고 결과만 알려 준다
+    if (prefetch) {
+      const { data: pr } = await asUser.from('profiles').select('role').eq('id', u.user.id).maybeSingle();
+      if (!['hq_admin', 'hq_editor'].includes(String(pr?.role))) return json({ error: '본사 권한이 필요해요' }, 403);
+    }
+    let audio: ArrayBuffer | null = null;
+    try { const { data } = await admin.storage.from('tts-cache').download(path); if (data) audio = await data.arrayBuffer(); } catch { /* 없으면 새로 만든다 */ }
+    const hit = !!audio;
+    if (!audio) {
+      const r = await fetch(`https://${REGION}.tts.speech.microsoft.com/cognitiveservices/v1`, {
+        method: 'POST',
+        headers: { 'Ocp-Apim-Subscription-Key': key, 'Content-Type': 'application/ssml+xml', 'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3', 'User-Agent': 'mango-english' },
+        body: ssml,
+      });
+      if (!r.ok) throw new Error('Azure 오류 ' + r.status + ' ' + (await r.text()).slice(0, 200));
+      audio = await r.arrayBuffer();
+      try { await admin.storage.from('tts-cache').upload(path, audio, { contentType: 'audio/mpeg', upsert: false }); } catch { /* 저장 실패해도 소리는 돌려준다 */ }
+    }
+    if (prefetch) return json({ cached: hit });
+    return new Response(audio, { headers: { ...CORS, 'Content-Type': 'audio/mpeg', 'Cache-Control': 'private, max-age=86400', 'X-Cache': hit ? 'HIT' : 'MISS' } });
   } catch (e) {
     return json({ error: String((e as Error).message ?? e) }, 500);
   }

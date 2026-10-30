@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../shared/supabase';
-import { emptyContent, type RBookRow } from './shared';
+import { emptyContent, type RBookRow, type RContent } from './shared';
+import { collectBookTts, resultText, saveItems, type SaveResult } from './Tts';
 
 const COLS = 'id,code,level,title,emoji,week,ord,ar,cover_path,status,version,updated_at';
 
@@ -48,6 +49,20 @@ export function BookList({ onEdit, nonce }: { onEdit: (code: string) => void; no
     const { error } = await supabase.from('reading_books').update({ status }).in('id', ids);
     if (error) setMsg({ t: 'err', s: error.message }); else { setMsg({ t: 'ok', s: '바꿨어요' }); load(); }
   }
+  /** 이 단계의 모든 책 음성을 미리 만들어 저장(이미 저장된 것은 건너뜀) */
+  async function saveAllAudio() {
+    const books = list; if (!books.length) return;
+    if (!confirm(`${level} ${books.length}권의 모든 소리를 미리 저장할까요?\n처음에는 Azure에서 새로 만들어서 시간이 걸리고 사용량이 늘어요. 이미 저장된 소리는 건너뛰어요.`)) return;
+    const sum: SaveResult = { total: 0, created: 0, existing: 0, failed: 0 };
+    for (let i = 0; i < books.length; i++) {
+      setMsg({ t: 'ok', s: `음성 저장 중… ${i + 1}/${books.length}권 (${books[i].title})` });
+      const { data, error } = await supabase.from('reading_books').select('title,content').eq('id', books[i].id).maybeSingle();
+      if (error || !data) { sum.failed++; continue; }
+      const r = await saveItems(collectBookTts((data as { title: string }).title, (data as unknown as { content: RContent }).content));
+      sum.total += r.total; sum.created += r.created; sum.existing += r.existing; sum.failed += r.failed; sum.firstError ??= r.firstError;
+    }
+    setMsg({ t: sum.failed ? 'err' : 'ok', s: resultText(sum) });
+  }
   async function create() {
     if (!add) return;
     const code = add.code.trim().toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_|_$/g, '');
@@ -69,6 +84,7 @@ export function BookList({ onEdit, nonce }: { onEdit: (code: string) => void; no
         {msg && <span className={msg.t === 'ok' ? 'mx-ok' : 'mx-err'}>{msg.s}</span>}
         <button className="mx-btn sec" onClick={() => setAll('published')} disabled={!list.length}>전체 공개</button>
         <button className="mx-btn sec" onClick={() => setAll('draft')} disabled={!list.length}>전체 비공개</button>
+        <button className="mx-btn sec" onClick={saveAllAudio} disabled={!list.length} title="모든 책의 소리를 미리 만들어 저장해요">🔊 전체 음성 저장</button>
         <button className="mx-btn" onClick={() => setAdd({ code: '', title: '', week: list.length ? list[list.length - 1].week : 1 })}>+ 책 추가</button>
       </div>
       {add && (
