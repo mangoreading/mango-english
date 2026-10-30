@@ -61,9 +61,9 @@ const EXTRA = `
 .mr-root .speak-illustration { font-size: 84px; }
 .mr-root .speak-target { font-size: 46px; line-height: 1.35; padding: 6px 0; }
 .mr-root .speak-target .word { margin: 0 6px; padding: 2px 6px; }
-.mr-root .speak-status { font-size: 19px; min-height: 26px; }
-.mr-root .speak-recognized { font-size: 18px; min-height: 28px; padding: 8px 14px; }
-.mr-root .speak-score { font-size: 42px; min-height: 48px; }
+.mr-root .speak-status { font-size: 19px; height: 28px; line-height: 28px; white-space: nowrap; overflow: hidden; }
+.mr-root .speak-recognized { font-size: 18px; height: 44px; line-height: 28px; padding: 8px 14px; display: flex; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden; }   /* 평가 전후에 카드 높이가 변하지 않게 고정 */
+.mr-root .speak-score { font-size: 42px; height: 52px; line-height: 52px; overflow: hidden; }
 .mr-root .speak-btn { min-width: 124px; padding: 14px 24px; font-size: 18px; }
 /* STEP 6 발음 평가: 단어별 점수 색 */
 .mr-root .speak-target .word.w-ok { color: #15803D; }
