@@ -21,9 +21,10 @@ const fileKey = (w: string) => w.toLowerCase().replace(/[-\s]+/g, '_');
 
 /** 단어 이미지: 원서에 나오는 모든 단어(키워드·파닉스)의 그림을 올려요. 파일 이름이 단어와 같으면(apple.png) 한꺼번에 올릴 수 있어요. */
 export function WordImages() {
+  const [titles, setTitles] = useState<string[]>([]);
   const [words, setWords] = useState<W[] | null>(null); const [rows, setRows] = useState<Record<string, string>>({});
   const [urls, setUrls] = useState<Record<string, string>>({}); const [msg, setMsg] = useState<{ t: 'ok' | 'err'; s: string } | null>(null);
-  const [busy, setBusy] = useState(false); const [q, setQ] = useState(''); const [only, setOnly] = useState<'all' | 'missing' | 'done'>('all');
+  const [busy, setBusy] = useState(false); const [q, setQ] = useState(''); const [bookSel, setBookSel] = useState(''); const [only, setOnly] = useState<'all' | 'missing' | 'done'>('all');
   const one = useRef<{ word: string } | null>(null); const oneInput = useRef<HTMLInputElement>(null);
 
   async function load() {
@@ -32,6 +33,7 @@ export function WordImages() {
       supabase.from('reading_words').select('word,image_path'),
     ]);
     const e = b.error ?? w.error; if (e) { setMsg({ t: 'err', s: e.message }); return; }
+    setTitles(((b.data ?? []) as unknown as { title: string }[]).map((x) => x.title));
     const map = new Map<string, W>();
     const add = (word: string, kor: string, kind: string, title: string) => {
       const k = word.toLowerCase().trim(); if (!k) return;
@@ -83,7 +85,7 @@ export function WordImages() {
     void supabase.storage.from('reading').remove([rows[word]]); setRows((r) => { const x = { ...r }; delete x[word]; return x; });
   }
 
-  const list = useMemo(() => (words ?? []).filter((w) => (only === 'all' || (only === 'done') === !!rows[w.word]) && (!q || w.word.includes(q.toLowerCase()) || w.kor.includes(q))), [words, rows, q, only]);
+  const list = useMemo(() => (words ?? []).filter((w) => (only === 'all' || (only === 'done') === !!rows[w.word]) && (!bookSel || w.books.has(bookSel)) && (!q || w.word.includes(q.toLowerCase()) || w.kor.includes(q) || [...w.books].some((t) => t.toLowerCase().includes(q.toLowerCase())))), [words, rows, q, only, bookSel]);
   if (!words) return <div className="mx-card">{msg ? <p className="mx-err">{msg.s}</p> : <p className="mx-muted">불러오는 중…</p>}</div>;
   const done = words.filter((w) => rows[w.word]).length;
   return (
@@ -97,9 +99,11 @@ export function WordImages() {
         <span className="mx-muted">파일 이름 = 영어 단어 (예: apple.png, fox_trot.png). 자동으로 512px로 줄여 올려요.</span>
         <span style={{ flex: 1 }} />
         {msg && <span className={msg.t === 'ok' ? 'mx-ok' : 'mx-err'}>{msg.s}</span>}
-        <input placeholder="단어/뜻 검색" value={q} onChange={(e) => setQ(e.target.value)} style={{ width: 150 }} />
+        <select value={bookSel} onChange={(e) => setBookSel(e.target.value)} title="등장 책으로 찾기"><option value="">모든 책</option>{titles.map((t) => <option key={t} value={t}>{t}</option>)}</select>
+        <input placeholder="단어/뜻/책 검색" value={q} onChange={(e) => setQ(e.target.value)} style={{ width: 170 }} />
         <select value={only} onChange={(e) => setOnly(e.target.value as 'all' | 'missing' | 'done')}><option value="all">전체</option><option value="missing">이미지 없음</option><option value="done">이미지 있음</option></select>
       </div>
+      <p className="mx-muted">{list.length}개 표시{bookSel ? ` · 「${bookSel}」에 나오는 단어 ${list.filter((w) => rows[w.word]).length}/${list.length}개에 이미지가 있어요` : ''}</p>
       <table>
         <thead><tr><th>이미지</th><th>단어</th><th>뜻</th><th>구분</th><th>등장 책</th><th /></tr></thead>
         <tbody>{list.map((w) => {
@@ -107,7 +111,7 @@ export function WordImages() {
           return (
             <tr key={w.word}>
               <td style={{ width: 90 }}>{u ? <img src={u} alt={w.word} style={{ height: 64, maxWidth: 80, objectFit: 'contain' }} /> : <span className="mx-muted">없음</span>}</td>
-              <td><b>{w.word}</b></td><td>{w.kor}</td><td>{[...w.kinds].join('/')}</td><td>{w.books.size}권</td>
+              <td><b>{w.word}</b></td><td>{w.kor}</td><td>{[...w.kinds].join('/')}</td><td title={[...w.books].join(', ')} style={{ whiteSpace: 'normal', maxWidth: 320 }}>{[...w.books].slice(0, 2).join(', ')}{w.books.size > 2 ? ` 외 ${w.books.size - 2}권` : ''}</td>
               <td><button className="mx-btn sec" disabled={busy} onClick={() => { one.current = { word: w.word }; oneInput.current?.click(); }}>{p ? '교체' : '올리기'}</button>{p && <> <button className="mx-btn sec" onClick={() => remove(w.word)}>삭제</button></>}</td>
             </tr>);
         })}</tbody>
