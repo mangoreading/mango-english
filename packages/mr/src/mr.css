@@ -1917,6 +1917,15 @@
     transition: background .15s;
   }
   .mr-root .user-chip:hover { background: #FDE68A; }
+/* 1페이지/2페이지 보기 */
+.mr-root .view-toggle { display: inline-flex; background: #F1F5F9; border-radius: 999px; padding: 4px; gap: 2px; flex-shrink: 0; }
+.mr-root .view-btn { width: 40px; height: 34px; border-radius: 999px; border: none; background: transparent; color: var(--muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background 0.18s, color 0.18s; }
+.mr-root .view-btn.active { background: var(--purple); color: #fff; box-shadow: 0 2px 6px rgba(124, 58, 237, 0.35); }
+.mr-root .book-frame.two { max-width: 1120px; gap: 14px; }
+.mr-root .book-frame.two .book-page { width: min(100%, 440px); flex: 0 1 440px; }
+.mr-root .book-frame.two .page-text { font-size: 25px; padding-left: 26px; padding-right: 16px; }
+.mr-root .book-frame.two .page-text.bs3 { font-size: 20px; padding-left: 22px; }
+.mr-root .page-nav { width: min(100%, 700px); }
 /* 단어 이미지(이모지 대체) */
 .mr-root .word-img { display: block; width: auto; object-fit: contain; -webkit-user-drag: none; user-select: none; }
 .mr-root .kw-emoji .word-img { height: 170px; max-width: 280px; margin: 0 auto; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.12)); }

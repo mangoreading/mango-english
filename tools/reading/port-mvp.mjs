@@ -27,6 +27,15 @@ const res = await postcss([
   } },
 ]).process(css, { from: undefined });
 const EXTRA = `
+/* 1페이지/2페이지 보기 */
+.mr-root .view-toggle { display: inline-flex; background: #F1F5F9; border-radius: 999px; padding: 4px; gap: 2px; flex-shrink: 0; }
+.mr-root .view-btn { width: 40px; height: 34px; border-radius: 999px; border: none; background: transparent; color: var(--muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background 0.18s, color 0.18s; }
+.mr-root .view-btn.active { background: var(--purple); color: #fff; box-shadow: 0 2px 6px rgba(124, 58, 237, 0.35); }
+.mr-root .book-frame.two { max-width: 1120px; gap: 14px; }
+.mr-root .book-frame.two .book-page { width: min(100%, 440px); flex: 0 1 440px; }
+.mr-root .book-frame.two .page-text { font-size: 25px; padding-left: 26px; padding-right: 16px; }
+.mr-root .book-frame.two .page-text.bs3 { font-size: 20px; padding-left: 22px; }
+.mr-root .page-nav { width: min(100%, 700px); }
 /* 단어 이미지(이모지 대체) */
 .mr-root .word-img { display: block; width: auto; object-fit: contain; -webkit-user-drag: none; user-select: none; }
 .mr-root .kw-emoji .word-img { height: 170px; max-width: 280px; margin: 0 auto; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.12)); }
@@ -96,6 +105,112 @@ rep('<span class="pic">${c.pic}</span>${c.word}', '<span class="pic">${wimg(c.wo
 // 5c) MVP 의 시험용 시드(THE_PIE 진도 0)는 THE_PIE 가 없으면 오류가 나므로 뺀다
 js = js.replace("  bookProgress['THE_PIE'].stepReached = 0;\n", '');
 must('THE_PIE 시드 제거', !js.includes("bookProgress['THE_PIE']"));
+// 5d) Read Aloud: 1페이지 보기 / 2페이지 보기(펼침면) 전환
+js = js.replace("      if (!abort.cancelled) {\n          clearHighlights();\n          const h = modeHints[readMode];\n          showPrompt(h.msg, h.cls);\n        }\n      };", "      if (!abort.cancelled) {\n          clearHighlights();\n          const h = modeHints[readMode];\n          showPrompt(h.msg, h.cls);\n          if (twoNext()) { activeSide = 1; playActive(); }\n        }\n      };");
+must('listen 이어 읽기', js.includes('playActive(); }\n        }\n      };'));
+js = js.replace("        playTimer = setTimeout(() => {\n          const h = modeHints[readMode];\n          showPrompt(h.msg, h.cls);\n        }, 3000);\n        return;", "        playTimer = setTimeout(() => {\n          const h = modeHints[readMode];\n          showPrompt(h.msg, h.cls);\n          if (twoNext()) { activeSide = 1; echoNext(0, getWords(pages[readIdx()].text)); }\n        }, 3000);\n        return;");
+must('echo 이어 읽기', js.includes('echoNext(0, getWords(pages[readIdx()]'.replace('readIdx()','pageIdx')) || js.includes('activeSide = 1; echoNext'));
+// 재생 함수: 시작은 cancel + 왼쪽, 본문은 playActive
+js = js.replace("  function playPage() {\n    cancelPlay();\n    const words = getWords(pages[pageIdx].text);", "  function playPage() { cancelPlay(); activeSide = 0; playActive(); }\n  function playActive() {\n    const words = getWords(pages[pageIdx].text);");
+must('playActive', js.includes('function playActive()'));
+// cancelPlay: 양쪽 페이지의 표시를 모두 지우고 활성 쪽을 왼쪽으로
+js = js.replace("    echoExpected = -1;\n    document.querySelectorAll('#pageText .word.expected').forEach(e => e.classList.remove('expected'));\n    document.querySelectorAll('#pageText .word.speaking').forEach(e => e.classList.remove('speaking'));", "    echoExpected = -1; activeSide = 0;\n    document.querySelectorAll('.book-frame .word.expected').forEach(e => e.classList.remove('expected'));\n    document.querySelectorAll('.book-frame .word.speaking').forEach(e => e.classList.remove('speaking'));");
+must('cancelPlay', js.includes("activeSide = 0;\n    document.querySelectorAll('.book-frame"));
+js = js.replace("document.querySelectorAll('#pageText .word.speaking')\n          .forEach(e => e.classList.remove('speaking'));", "document.querySelectorAll('.book-frame .word.speaking')\n          .forEach(e => e.classList.remove('speaking'));");
+// 지금 읽는 쪽(왼쪽/오른쪽)에 맞춰 글·요소를 고른다
+js = js.split("pages[pageIdx]").join("pages[readIdx()]");
+js = js.split("'#pageText .word").join("T() + ' .word").split("`#pageText .word").join("`${T()} .word");
+// renderPage / nextPage / prevPage 교체
+cut(/  function renderPage\(\) \{/, /\n  function speakWord\(w, i\) \{/, `  // ----- 1페이지/2페이지 보기 -----
+  let pageView = 1;                       // 1 | 2
+  try { if (localStorage.getItem('mr_pageview') === '2') pageView = 2; } catch (e) {}
+  let activeSide = 0;                     // 지금 읽어 주는 쪽: 0=왼쪽(현재 페이지), 1=오른쪽(다음 페이지)
+  const T = () => (activeSide === 1 ? '#pageText2' : '#pageText');
+  const readIdx = () => pageIdx + activeSide;
+  const twoNext = () => pageView === 2 && activeSide === 0 && pageIdx + 1 < pages.length;
+  function onWordTapSide(side, i) {
+    if (side === activeSide) { onWordTap(i); return; }
+    // 지금 읽는 쪽이 아닌 페이지의 단어: 소리만 들려준다
+    const w = getWords(pages[pageIdx + side].text)[i];
+    const cleaned = (w || '').replace(/[.,!?]/g, '');
+    if (cleaned) speak(cleaned, 0.9);
+    const el = document.querySelector((side === 1 ? '#pageText2' : '#pageText') + ' .word[data-i="' + i + '"]');
+    if (el) { el.classList.add('speaking'); setTimeout(() => el.classList.remove('speaking'), 500); }
+  }
+  function setPageView(n) {
+    pageView = n === 2 ? 2 : 1;
+    try { localStorage.setItem('mr_pageview', String(pageView)); } catch (e) {}
+    renderPage();
+  }
+  function renderOne(idx, artId, textId, side) {
+    const p = pages[idx];
+    const ptEl = document.getElementById(textId);
+    const artEl = document.getElementById(artId);
+    const bookMeta = ALL_BOOKS.find(b => b.id === currentBookId);
+    if (bookMeta && bookMeta.week >= 9) ptEl.classList.add('bs3'); else ptEl.classList.remove('bs3');
+    const centeredBooks = ['BIG_PIG', 'NAT_THE_CAT', 'TUG_THE_PUP', 'PEN_HEN', 'THE_EGG', 'THE_FIREFLIES', 'THE_SNOWFLAKE'];
+    const isFinalIllustPage = (idx === pages.length - 1);
+    if (centeredBooks.includes(currentBookId) && !isFinalIllustPage) ptEl.classList.add('centered'); else ptEl.classList.remove('centered');
+    [...artEl.children].forEach(c => { if (c !== ptEl) c.remove(); });
+    artEl.style.fontSize = ''; artEl.style.display = ''; artEl.style.alignItems = ''; artEl.style.justifyContent = '';
+    if (p.img) {
+      const img = document.createElement('img'); img.className = 'page-img'; img.src = p.img; img.alt = ''; artEl.insertBefore(img, ptEl);
+    } else if (p.art) {
+      const span = document.createElement('span'); span.className = 'legacy-art'; span.textContent = p.art; span.style.fontSize = '160px';
+      artEl.insertBefore(span, ptEl); artEl.style.display = 'flex'; artEl.style.alignItems = 'center'; artEl.style.justifyContent = 'center';
+    }
+    const lines = (p.text || '').split('/').map(s => s.trim()).filter(Boolean);
+    let wi = 0;
+    ptEl.innerHTML = lines.map(line => {
+      const wordsHtml = line.split(/\\s+/).filter(Boolean).map(w => {
+        const i = wi++;
+        const safe = w.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+        return '<span class="word" data-i="' + i + '" onclick="onWordTapSide(' + side + ',' + i + ')">' + safe + '</span>';
+      }).join(' ');
+      return '<div class="text-line">' + wordsHtml + '</div>';
+    }).join('');
+  }
+  function renderPage() {
+    cancelPlay();
+    if (pageView === 2) pageIdx -= pageIdx % 2;       // 펼침면은 (1,2) (3,4) … 로 묶는다
+    const two = pageView === 2;
+    const hasRight = two && pageIdx + 1 < pages.length;
+    const frame = document.querySelector('.book-frame');
+    if (frame) frame.classList.toggle('two', two);
+    const p2 = document.getElementById('bookPage2'); if (p2) p2.style.display = hasRight ? '' : 'none';
+    renderOne(pageIdx, 'pageArt', 'pageText', 0);
+    if (hasRight) renderOne(pageIdx + 1, 'pageArt2', 'pageText2', 1);
+    document.getElementById('pageCount').textContent = hasRight ? (pageIdx + 1) + '–' + (pageIdx + 2) + ' / ' + pages.length : (pageIdx + 1) + ' / ' + pages.length;
+    const step = two ? 2 : 1;
+    const prevBtn = document.getElementById('navPrev'); const nextBtn = document.getElementById('navNext');
+    if (prevBtn) prevBtn.disabled = (pageIdx <= 0);
+    if (nextBtn) nextBtn.disabled = (pageIdx + step >= pages.length);
+    [1, 2].forEach(n => { const b = document.getElementById('pv' + n); if (b) b.classList.toggle('active', pageView === n); });
+    const h = modeHints[readMode];
+    showPrompt(h.msg, h.cls);
+  }
+`, 'renderPage');
+cut(/  function nextPage\(\) \{/, /\n  \/\/ ---------- STEP 4: COMPREHENSION QUIZ ----------/, `  function nextPage() {
+    const step = pageView === 2 ? 2 : 1;
+    if (pageIdx + step < pages.length) { pageIdx += step; renderPage(); }
+    else nextStep();
+  }
+  function prevPage() {
+    const step = pageView === 2 ? 2 : 1;
+    if (pageIdx > 0) { pageIdx = Math.max(0, pageIdx - step); renderPage(); }
+  }
+`, 'nextPage');
+must('selector 정리', !js.includes("'#pageText .word") && !js.includes("`#pageText .word"));
+// 마크업: 두 번째 페이지 + 보기 전환 아이콘
+markup = markup.replace('<div class="page-text" id="pageText"></div>\n            </div>\n          </div>', '<div class="page-text" id="pageText"></div>\n            </div>\n          </div>\n          <div class="book-page" id="bookPage2" style="display:none;">\n            <div class="page-art" id="pageArt2">\n              <div class="page-text" id="pageText2"></div>\n            </div>\n          </div>');
+must('두 번째 페이지 마크업', markup.includes('id="bookPage2"'));
+markup = markup.replace('<span class="page-counter" id="pageCount">', `<div class="view-toggle" role="group" aria-label="페이지 보기">
+            <button class="view-btn active" id="pv1" onclick="setPageView(1)" title="1페이지 보기" aria-label="1페이지 보기"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="6.5" y="3.5" width="11" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+            <button class="view-btn" id="pv2" onclick="setPageView(2)" title="2페이지 보기" aria-label="2페이지 보기"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="2.5" y="4.5" width="8.5" height="15" rx="1.8" fill="none" stroke="currentColor" stroke-width="2"/><rect x="13" y="4.5" width="8.5" height="15" rx="1.8" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+          </div>
+          <span class="page-counter" id="pageCount">`);
+must('보기 전환 마크업', markup.includes('id="pv2"'));
+fs.writeFileSync(out + '/mrMarkup.ts', '// 자동 생성: tools/reading/port-mvp.mjs (MVP 화면 구조 그대로)\nexport const MR_MARKUP = ' + JSON.stringify(markup) + ';\n');
 // 6) 배경 이미지 경로
 js = js.replace("'assets/bg/study_desk1.png'", "'/reading/bg/study_desk1.png'").replace("'assets/bg/study_desk2.png'", "'/reading/bg/study_desk2.png'");
 // 7) 시작: DOMContentLoaded 대신 바로 시작

@@ -842,9 +842,9 @@ export function startMr(ctx: MrCtx): () => void {
     if (playTimer) { clearTimeout(playTimer); playTimer = null; }
     if (typeof cancelSpeak === 'function') cancelSpeak();
     else if (window.speechSynthesis) window.speechSynthesis.cancel();
-    echoExpected = -1;
-    document.querySelectorAll('#pageText .word.expected').forEach(e => e.classList.remove('expected'));
-    document.querySelectorAll('#pageText .word.speaking').forEach(e => e.classList.remove('speaking'));
+    echoExpected = -1; activeSide = 0;
+    document.querySelectorAll('.book-frame .word.expected').forEach(e => e.classList.remove('expected'));
+    document.querySelectorAll('.book-frame .word.speaking').forEach(e => e.classList.remove('speaking'));
   }
 
   function setMode(m, e) {
@@ -1219,88 +1219,80 @@ export function startMr(ctx: MrCtx): () => void {
     return -1;
   }
 
-  function renderPage() {
-    cancelPlay();
-    const p = pages[pageIdx];
-
-    // Box Set 3 (weeks 9–11) uses a slightly smaller caption font — long 3-line captions.
-    const ptEl0 = document.getElementById('pageText');
-    if (ptEl0) {
-      const bookMeta = (typeof ALL_BOOKS !== 'undefined') ? ALL_BOOKS.find(b => b.id === currentBookId) : null;
-      if (bookMeta && bookMeta.week >= 9) ptEl0.classList.add('bs3');
-      else ptEl0.classList.remove('bs3');
-
-      // Box Set 1 books 1-7 (week 1-3) follow the "alternating text-page / illustration-page"
-      // format where the printed caption sits centered on a mostly white text page.
-      // Center our overlay caption to cover it properly — EXCEPT page 11 which is the final
-      // illustration page with a bottom-positioned caption baked into the image.
-      const centeredBooks = [
-        'BIG_PIG', 'NAT_THE_CAT', 'TUG_THE_PUP',           // week 1
-        'PEN_HEN', 'THE_EGG', 'THE_FIREFLIES',             // week 2
-        'THE_SNOWFLAKE'                                    // week 3
-      ];
-      const isFinalIllustPage = (pageIdx === pages.length - 1); // page 11 of the 11-page books
-      if (centeredBooks.includes(currentBookId) && !isFinalIllustPage) ptEl0.classList.add('centered');
-      else ptEl0.classList.remove('centered');
-    }
-
-    // ---- Image (top) ----
-    // pageText overlay is a child of pageArt — preserve it across page swaps.
-    const artEl = document.getElementById('pageArt');
-    const ptEl = document.getElementById('pageText');
-    // Strip any previous artwork (img / legacy emoji) but keep the caption overlay.
+  // ----- 1페이지/2페이지 보기 -----
+  let pageView = 1;                       // 1 | 2
+  try { if (localStorage.getItem('mr_pageview') === '2') pageView = 2; } catch (e) {}
+  let activeSide = 0;                     // 지금 읽어 주는 쪽: 0=왼쪽(현재 페이지), 1=오른쪽(다음 페이지)
+  const T = () => (activeSide === 1 ? '#pageText2' : '#pageText');
+  const readIdx = () => pageIdx + activeSide;
+  const twoNext = () => pageView === 2 && activeSide === 0 && pageIdx + 1 < pages.length;
+  function onWordTapSide(side, i) {
+    if (side === activeSide) { onWordTap(i); return; }
+    // 지금 읽는 쪽이 아닌 페이지의 단어: 소리만 들려준다
+    const w = getWords(pages[pageIdx + side].text)[i];
+    const cleaned = (w || '').replace(/[.,!?]/g, '');
+    if (cleaned) speak(cleaned, 0.9);
+    const el = document.querySelector((side === 1 ? '#pageText2' : '#pageText') + ' .word[data-i="' + i + '"]');
+    if (el) { el.classList.add('speaking'); setTimeout(() => el.classList.remove('speaking'), 500); }
+  }
+  function setPageView(n) {
+    pageView = n === 2 ? 2 : 1;
+    try { localStorage.setItem('mr_pageview', String(pageView)); } catch (e) {}
+    renderPage();
+  }
+  function renderOne(idx, artId, textId, side) {
+    const p = pages[idx];
+    const ptEl = document.getElementById(textId);
+    const artEl = document.getElementById(artId);
+    const bookMeta = ALL_BOOKS.find(b => b.id === currentBookId);
+    if (bookMeta && bookMeta.week >= 9) ptEl.classList.add('bs3'); else ptEl.classList.remove('bs3');
+    const centeredBooks = ['BIG_PIG', 'NAT_THE_CAT', 'TUG_THE_PUP', 'PEN_HEN', 'THE_EGG', 'THE_FIREFLIES', 'THE_SNOWFLAKE'];
+    const isFinalIllustPage = (idx === pages.length - 1);
+    if (centeredBooks.includes(currentBookId) && !isFinalIllustPage) ptEl.classList.add('centered'); else ptEl.classList.remove('centered');
     [...artEl.children].forEach(c => { if (c !== ptEl) c.remove(); });
-    artEl.style.fontSize = '';
-    artEl.style.display = '';
-    artEl.style.alignItems = '';
-    artEl.style.justifyContent = '';
+    artEl.style.fontSize = ''; artEl.style.display = ''; artEl.style.alignItems = ''; artEl.style.justifyContent = '';
     if (p.img) {
-      const img = document.createElement('img');
-      img.className = 'page-img';
-      img.src = p.img;
-      img.alt = '';
-      artEl.insertBefore(img, ptEl);
+      const img = document.createElement('img'); img.className = 'page-img'; img.src = p.img; img.alt = ''; artEl.insertBefore(img, ptEl);
     } else if (p.art) {
-      // Legacy emoji fallback
-      const span = document.createElement('span');
-      span.className = 'legacy-art';
-      span.textContent = p.art;
-      span.style.fontSize = '160px';
-      artEl.insertBefore(span, ptEl);
-      artEl.style.display = 'flex';
-      artEl.style.alignItems = 'center';
-      artEl.style.justifyContent = 'center';
+      const span = document.createElement('span'); span.className = 'legacy-art'; span.textContent = p.art; span.style.fontSize = '160px';
+      artEl.insertBefore(span, ptEl); artEl.style.display = 'flex'; artEl.style.alignItems = 'center'; artEl.style.justifyContent = 'center';
     }
-
-    // ---- Caption text (bottom) ----
-    // '/' in text = line break. Word indices are global across lines.
     const lines = (p.text || '').split('/').map(s => s.trim()).filter(Boolean);
     let wi = 0;
-    const linesHtml = lines.map(line => {
-      const words = line.split(/\s+/).filter(Boolean);
-      const wordsHtml = words.map(w => {
+    ptEl.innerHTML = lines.map(line => {
+      const wordsHtml = line.split(/\s+/).filter(Boolean).map(w => {
         const i = wi++;
         const safe = w.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
-        return `<span class="word" data-i="${i}" onclick="onWordTap(${i})">${safe}</span>`;
+        return '<span class="word" data-i="' + i + '" onclick="onWordTapSide(' + side + ',' + i + ')">' + safe + '</span>';
       }).join(' ');
-      return `<div class="text-line">${wordsHtml}</div>`;
+      return '<div class="text-line">' + wordsHtml + '</div>';
     }).join('');
-    document.getElementById('pageText').innerHTML = linesHtml;
-
-    document.getElementById('pageCount').textContent = `${pageIdx + 1} / ${pages.length}`;
-    // Disable prev/next arrows at boundaries
-    const prevBtn = document.getElementById('navPrev');
-    const nextBtn = document.getElementById('navNext');
+  }
+  function renderPage() {
+    cancelPlay();
+    if (pageView === 2) pageIdx -= pageIdx % 2;       // 펼침면은 (1,2) (3,4) … 로 묶는다
+    const two = pageView === 2;
+    const hasRight = two && pageIdx + 1 < pages.length;
+    const frame = document.querySelector('.book-frame');
+    if (frame) frame.classList.toggle('two', two);
+    const p2 = document.getElementById('bookPage2'); if (p2) p2.style.display = hasRight ? '' : 'none';
+    renderOne(pageIdx, 'pageArt', 'pageText', 0);
+    if (hasRight) renderOne(pageIdx + 1, 'pageArt2', 'pageText2', 1);
+    document.getElementById('pageCount').textContent = hasRight ? (pageIdx + 1) + '–' + (pageIdx + 2) + ' / ' + pages.length : (pageIdx + 1) + ' / ' + pages.length;
+    const step = two ? 2 : 1;
+    const prevBtn = document.getElementById('navPrev'); const nextBtn = document.getElementById('navNext');
     if (prevBtn) prevBtn.disabled = (pageIdx <= 0);
-    if (nextBtn) nextBtn.disabled = (pageIdx >= pages.length - 1);
+    if (nextBtn) nextBtn.disabled = (pageIdx + step >= pages.length);
+    [1, 2].forEach(n => { const b = document.getElementById('pv' + n); if (b) b.classList.toggle('active', pageView === n); });
     const h = modeHints[readMode];
     showPrompt(h.msg, h.cls);
   }
 
+
   function speakWord(w, i) {
     const cleaned = (w || '').replace(/[.,!?]/g, '');
     if (cleaned) speak(cleaned, 0.9);
-    const el = document.querySelector(`#pageText .word[data-i="${i}"]`);
+    const el = document.querySelector(`${T()} .word[data-i="${i}"]`);
     if (el) {
       el.classList.add('speaking');
       setTimeout(() => el.classList.remove('speaking'), 500);
@@ -1309,18 +1301,18 @@ export function startMr(ctx: MrCtx): () => void {
 
   // Click on a word in the sentence — behavior depends on mode and book level
   function onWordTap(i) {
-    const words = getWords(pages[pageIdx].text);
+    const words = getWords(pages[readIdx()].text);
 
     // Chunk-based echo (applies to all books — see isChunkMode())
     if (readMode === 'echo' && isChunkMode()) {
-      const chunks = getChunks(pages[pageIdx].text);
+      const chunks = getChunks(pages[readIdx()].text);
       const tappedChunkIdx = getWordChunkIdx(i, chunks);
       if (tappedChunkIdx === echoExpected && tappedChunkIdx >= 0) {
         // Child repeated the expected chunk → speak full chunk and advance
         const chunk = chunks[tappedChunkIdx];
         const chunkText = chunk.text.replace(/[.,!?]/g, '');
         speak(chunkText, 0.85);
-        document.querySelectorAll('#pageText .word.expected')
+        document.querySelectorAll(T() + ' .word.expected')
           .forEach(e => e.classList.remove('expected'));
         echoExpected = -1;
         playTimer = setTimeout(() => echoNext(tappedChunkIdx + 1, words), 400);
@@ -1335,7 +1327,7 @@ export function startMr(ctx: MrCtx): () => void {
     if (readMode === 'echo' && echoExpected === i) {
       // Child repeated the expected word → advance
       speakWord(words[i], i);
-      const el = document.querySelector(`#pageText .word[data-i="${i}"]`);
+      const el = document.querySelector(`${T()} .word[data-i="${i}"]`);
       if (el) el.classList.remove('expected');
       echoExpected = -1;
       // After child's tap, advance to next word
@@ -1349,15 +1341,16 @@ export function startMr(ctx: MrCtx): () => void {
   function echoNext(i, words) {
     // Chunk mode (default for all books): 'i' is the chunk index
     if (isChunkMode()) {
-      const chunks = getChunks(pages[pageIdx].text);
+      const chunks = getChunks(pages[readIdx()].text);
       if (i >= chunks.length) {
         // All chunks done — read full sentence as wrap-up
         showPrompt('🎉 다 같이 한 번 더 읽어요!', 'cheer');
-        const cleanedFull = getWords(pages[pageIdx].text).join(' ').replace(/[.,!?]/g, '');
+        const cleanedFull = getWords(pages[readIdx()].text).join(' ').replace(/[.,!?]/g, '');
         speak(cleanedFull, 0.65);
         playTimer = setTimeout(() => {
           const h = modeHints[readMode];
           showPrompt(h.msg, h.cls);
+          if (twoNext()) { activeSide = 1; echoNext(0, getWords(pages[readIdx()].text)); }
         }, 3000);
         return;
       }
@@ -1368,7 +1361,7 @@ export function startMr(ctx: MrCtx): () => void {
       showPrompt(`👉 "${chunkText}" — 따라 말해요!`, 'echo');
       // Mark every word in the chunk as expected
       for (let w = chunk.start; w <= chunk.end; w++) {
-        const el = document.querySelector(`#pageText .word[data-i="${w}"]`);
+        const el = document.querySelector(`${T()} .word[data-i="${w}"]`);
         if (el) el.classList.add('expected');
       }
       echoExpected = i;       // store chunk index
@@ -1380,7 +1373,7 @@ export function startMr(ctx: MrCtx): () => void {
       const safetyMs = 1000 + wc * 1000;   // 1-word: 2000ms, 2-word: 3000ms, 3-word: 4000ms
       playTimer = setTimeout(() => {
         if (echoExpected === i) {
-          document.querySelectorAll('#pageText .word.expected')
+          document.querySelectorAll(T() + ' .word.expected')
             .forEach(e => e.classList.remove('expected'));
           echoExpected = -1;
           echoNext(i + 1, words);
@@ -1395,7 +1388,7 @@ export function startMr(ctx: MrCtx): () => void {
     if (i >= words.length) {
       // Whole sentence done — read the full sentence naturally as a wrap-up
       showPrompt('🎉 다 같이 한 번 더 읽어요!', 'cheer');
-      const cleanedFull = getWords(pages[pageIdx].text).join(' ').replace(/[.,!?]/g, '');
+      const cleanedFull = getWords(pages[readIdx()].text).join(' ').replace(/[.,!?]/g, '');
       speak(cleanedFull, 0.7);
       playTimer = setTimeout(() => {
         const h = modeHints[readMode];
@@ -1409,7 +1402,7 @@ export function startMr(ctx: MrCtx): () => void {
     showPrompt(`👉 "${cleaned}" — 따라 말해요!`, 'echo');
     // Mark expected word for child to tap
     echoExpected = i;
-    const el = document.querySelector(`#pageText .word[data-i="${i}"]`);
+    const el = document.querySelector(`${T()} .word[data-i="${i}"]`);
     if (el) el.classList.add('expected');
     // Safety: if child doesn't tap within a while, auto-advance
     playTimer = setTimeout(() => {
@@ -1421,9 +1414,9 @@ export function startMr(ctx: MrCtx): () => void {
     }, 1800);
   }
 
-  function playPage() {
-    cancelPlay();
-    const words = getWords(pages[pageIdx].text);
+  function playPage() { cancelPlay(); activeSide = 0; playActive(); }
+  function playActive() {
+    const words = getWords(pages[readIdx()].text);
 
     if (readMode === 'listen') {
       showPrompt('🎧 잘 듣고 따라와봐요', '');
@@ -1440,12 +1433,12 @@ export function startMr(ctx: MrCtx): () => void {
       _speakAbort = abort;
 
       const clearHighlights = () => {
-        document.querySelectorAll('#pageText .word.speaking')
+        document.querySelectorAll('.book-frame .word.speaking')
           .forEach(e => e.classList.remove('speaking'));
       };
       const highlight = (i) => {
         clearHighlights();
-        const el = document.querySelector(`#pageText .word[data-i="${i}"]`);
+        const el = document.querySelector(`${T()} .word[data-i="${i}"]`);
         if (el) el.classList.add('speaking');
       };
 
@@ -1500,6 +1493,7 @@ export function startMr(ctx: MrCtx): () => void {
           clearHighlights();
           const h = modeHints[readMode];
           showPrompt(h.msg, h.cls);
+          if (twoNext()) { activeSide = 1; playActive(); }
         }
       };
 
@@ -1516,12 +1510,15 @@ export function startMr(ctx: MrCtx): () => void {
   }
 
   function nextPage() {
-    if (pageIdx < pages.length - 1) { pageIdx++; renderPage(); }
+    const step = pageView === 2 ? 2 : 1;
+    if (pageIdx + step < pages.length) { pageIdx += step; renderPage(); }
     else nextStep();
   }
   function prevPage() {
-    if (pageIdx > 0) { pageIdx--; renderPage(); }
+    const step = pageView === 2 ? 2 : 1;
+    if (pageIdx > 0) { pageIdx = Math.max(0, pageIdx - step); renderPage(); }
   }
+
 
   // ---------- STEP 4: COMPREHENSION QUIZ ----------
   let quizzes = [];
@@ -2292,6 +2289,6 @@ export function startMr(ctx: MrCtx): () => void {
   enterApp();
 
 
-  Object.assign(window, { updateProgress, showView, changeWeek, renderHome, loadBook, wimg, applyBookData, speakBookTitle, openBook, renderStatus, showStep, nextStep, prevStep, goTo, getFemaleVoice, getAudioCtx, playShhSound, playZzzSound, playMmmSound, playBrrrSound, playBuzzSound, normalizeForTTS, findSfx, parseStutterToken, tokenizeForSpeech, ttsUtter, speak, cancelSpeak, switchPhonics, renderPhonicsTabs, _rhymeEnding, renderPhonics, renderKey, tapKeyCard, nextKeyWord, prevKeyWord, showPrompt, cancelPlay, setMode, getWords, getChunks, isChunkMode, getWordChunkIdx, renderPage, speakWord, onWordTap, echoNext, playPage, nextPage, prevPage, renderQuiz, answerQuiz, renderTrace, placeWord, resetTrace, nextTrace, prevTrace, getRecognizer, normalizeWord, tokenize, evaluatePronunciation, renderSpeak, speakListen, speakRecord, showSpeakScore, speakRetry, nextSpeak, prevSpeak, renderVideoScript, videoStartCamera, videoReRecord, pickRecorderMime, videoStartRecord, videoStopRecord, videoStopCamera, videoSubmit, launchConfetti, probeStorage, warnIfStorageDisabled, progressKey, loadProgress, saveProgress, persistProgress, openIDB, idbTx, idbPutRecording, idbDeleteRecording, idbGetByAccount, idbGetById, buildTakeFilename, openVideoModal, closeVideoModal, closeVideoModalIfBackdrop, refreshVideoTakes, getCurrentUser, setCurrentUser, clearCurrentUser, showLoginScreen, enterApp, computeNextWeek, doLogin, doLogout, applyStageBackground });
+  Object.assign(window, { updateProgress, showView, changeWeek, renderHome, loadBook, wimg, applyBookData, speakBookTitle, openBook, renderStatus, showStep, nextStep, prevStep, goTo, getFemaleVoice, getAudioCtx, playShhSound, playZzzSound, playMmmSound, playBrrrSound, playBuzzSound, normalizeForTTS, findSfx, parseStutterToken, tokenizeForSpeech, ttsUtter, speak, cancelSpeak, switchPhonics, renderPhonicsTabs, _rhymeEnding, renderPhonics, renderKey, tapKeyCard, nextKeyWord, prevKeyWord, showPrompt, cancelPlay, setMode, getWords, getChunks, isChunkMode, getWordChunkIdx, onWordTapSide, setPageView, renderOne, renderPage, speakWord, onWordTap, echoNext, playPage, playActive, nextPage, prevPage, renderQuiz, answerQuiz, renderTrace, placeWord, resetTrace, nextTrace, prevTrace, getRecognizer, normalizeWord, tokenize, evaluatePronunciation, renderSpeak, speakListen, speakRecord, showSpeakScore, speakRetry, nextSpeak, prevSpeak, renderVideoScript, videoStartCamera, videoReRecord, pickRecorderMime, videoStartRecord, videoStopRecord, videoStopCamera, videoSubmit, launchConfetti, probeStorage, warnIfStorageDisabled, progressKey, loadProgress, saveProgress, persistProgress, openIDB, idbTx, idbPutRecording, idbDeleteRecording, idbGetByAccount, idbGetById, buildTakeFilename, openVideoModal, closeVideoModal, closeVideoModalIfBackdrop, refreshVideoTakes, getCurrentUser, setCurrentUser, clearCurrentUser, showLoginScreen, enterApp, computeNextWeek, doLogin, doLogout, applyStageBackground });
   return () => { try { cancelPlay(); } catch (e) {} try { videoStopCamera(); } catch (e) {} try { window.speechSynthesis.cancel(); } catch (e) {} videoTakes.forEach(t => { try { URL.revokeObjectURL(t.url); } catch (_) {} }); };
 }
