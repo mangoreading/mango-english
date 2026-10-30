@@ -5,6 +5,7 @@ import type { BundleRow, Level } from './types';
 import { NativePlayer, isNative, type NativeResult, type VWord } from '@mango/play';
 import '@mango/play/styles.css';
 import { ReportView } from './Report';
+import { FridayReading, ReadingSummary, ReadingTab } from './reading/ReadingTab';
 import { HomeView, LessonsView, MyView, Nav, ReportsView, type BookOpt, type Tab } from './Home';
 import { currentUnit, type ProgRow, type UnitInfo } from './home';
 import { areaOf, buildReport, practiceFor, type StepRef } from './reportCalc';
@@ -92,6 +93,7 @@ function Main({ session }: { session: Session }) {
   const [viewId, setViewId] = useState<string | null>(null);
   const [open, setOpen] = useState<{ u: UnitInfo; auto?: { no: number; idx: number }; report?: boolean } | null>(null);
   const [nonce, setNonce] = useState(0);
+  const [readCode, setReadCode] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.from('learner_units').select('unit_id, version, bundle, unit_no, unit_title, book_id, book_title, grade, publisher').then(({ data, error }) => {
@@ -130,9 +132,12 @@ function Main({ session }: { session: Session }) {
   return (
     <>
       <Nav tab={tab} setTab={setTab} />
+      {tab === 'home' && <FridayReading uid={uid} onGo={(c) => { setReadCode(c); setTab('reading'); }} />}
       {tab === 'home' && <HomeView name={prof.name} books={books} bookId={bookId} onBook={pickBook} units={bUnits} rows={rows} unit={cur ?? null} onUnit={setViewId}
         onStart={(u, a) => setOpen({ u, auto: a })} onOpenUnit={(u) => setOpen({ u })} onReport={(u) => setOpen({ u, report: true })} />}
       {tab === 'lessons' && <LessonsView books={books} bookId={bookId} onBook={pickBook} units={bUnits} rows={rows} currentId={cur?.unit_id ?? null} onPick={(id) => { setViewId(id); setTab('home'); }} />}
+      {tab === 'reading' && <ReadingTab uid={uid} openCode={readCode} onOpened={() => setReadCode(null)} />}
+      {tab === 'report' && <ReadingSummary uid={uid} />}
       {tab === 'report' && <ReportsView units={bUnits} rows={rows} onOpen={(u) => setOpen({ u, report: true })} />}
       {tab === 'my' && <MyView email={session.user.email ?? ''} name={prof.name} grade={prof.grade} books={books} bookId={bookId} rows={rows} units={bUnits} onSave={saveProfile} onBook={pickBook} onLogout={() => supabase.auth.signOut()} />}
     </>

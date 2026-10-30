@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { buildReport } from './reportCalc';
 import { unitProgress, type ProgRow, type UnitInfo } from './home';
 
-export type Tab = 'home' | 'lessons' | 'report' | 'my';
-export const TAB_KO: [Tab, string][] = [['home', '홈'], ['lessons', 'Lesson'], ['report', '리포트'], ['my', 'My Page']];
+export type Tab = 'home' | 'lessons' | 'reading' | 'report' | 'my';
+export const TAB_KO: [Tab, string][] = [['home', '홈'], ['lessons', 'Lesson'], ['reading', '원서'], ['report', '리포트'], ['my', 'My Page']];
 const stars = (n: number) => '★'.repeat(n) + '☆'.repeat(3 - n);
 export interface BookOpt { id: string; label: string; grade: number }
 
