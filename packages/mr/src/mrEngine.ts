@@ -806,7 +806,7 @@ export function startMr(ctx: MrCtx): () => void {
         <div class="big-letter" style="cursor:pointer" onclick="speak('${headline}')">${headline}</div>
         <div class="sound-hint">${p.hint}</div>
         <div class="rhyme-box">
-          ${p.rhyme.map(renderWord).join(' · ')}
+          ${p.rhyme.map(renderWord).join(' ')}
         </div>
         <div style="color:var(--muted); font-size:16px">단어를 눌러 소리를 들어보세요!</div>
       `;

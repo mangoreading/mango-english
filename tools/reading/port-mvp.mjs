@@ -40,6 +40,11 @@ const EXTRA = `
 .mr-root .book-frame.two .page-text { font-size: 27px; padding-left: 38px; }
 .mr-root .book-frame.two .page-text.bs3 { font-size: 24px; padding-left: 30px; }
 .mr-root .page-nav { width: min(100%, 700px); }
+/* 라임 단어: 눌러서 듣는 버튼처럼 보이게(점선 테두리 + 마우스를 올리면 변화) */
+.mr-root .rhyme-box > span { padding: 6px 16px; margin: 6px 7px; background: #fff; border: 3px dashed var(--mango); border-radius: 16px; transition: transform 0.15s, background 0.15s, border-color 0.15s, box-shadow 0.15s; user-select: none; }
+.mr-root .rhyme-box > span span { margin: 0; }
+.mr-root .rhyme-box > span:hover { background: #FFF2C5; border-style: solid; border-color: var(--mango-dark); transform: translateY(-3px) scale(1.08); box-shadow: 0 8px 16px rgba(247, 154, 31, 0.3); }
+.mr-root .rhyme-box > span:active { transform: scale(0.95); box-shadow: none; }
 /* 단어 이미지(이모지 대체) */
 .mr-root .word-img { display: block; width: auto; object-fit: contain; -webkit-user-drag: none; user-select: none; }
 .mr-root .kw-emoji .word-img { height: 170px; max-width: 280px; margin: 0 auto; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.12)); }
@@ -350,6 +355,9 @@ markup = markup.replace('<span class="page-counter" id="pageCount">', `<div clas
           <span class="page-counter" id="pageCount">`);
 must('보기 전환 마크업', markup.includes('id="pv2"'));
 fs.writeFileSync(out + '/mrMarkup.ts', '// 자동 생성: tools/reading/port-mvp.mjs (MVP 화면 구조 그대로)\nexport const MR_MARKUP = ' + JSON.stringify(markup) + ';\n');
+// 5f) 라임 단어는 버튼처럼 보이므로 사이의 가운뎃점은 뺀다
+js = js.replace("${p.rhyme.map(renderWord).join(' · ')}", "${p.rhyme.map(renderWord).join(' ')}");
+must('라임 단어 구분점', js.includes("p.rhyme.map(renderWord).join(' ')"));
 // 6) 배경 이미지 경로
 js = js.replace("'assets/bg/study_desk1.png'", "'/reading/bg/study_desk1.png'").replace("'assets/bg/study_desk2.png'", "'/reading/bg/study_desk2.png'");
 // 7) 시작: DOMContentLoaded 대신 바로 시작
