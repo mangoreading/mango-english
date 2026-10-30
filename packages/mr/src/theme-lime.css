@@ -6,9 +6,9 @@
   --cream: #F1FFD6; --ink: #06281F; --muted: #4A6B3A;
   --shadow: 0 10px 26px rgba(6, 40, 31, 0.14); --shadow-lg: 0 16px 40px rgba(6, 40, 31, 0.2);
   font-family: 'Pretendard Variable', Pretendard, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Segoe UI', sans-serif;
-  background: linear-gradient(135deg, #BDF863 0%, #B4F550 55%, #A6EC3E 100%);
+  background: #fff;   /* 앱(1280×800) 바깥쪽 바탕은 흰색 */
 }
-.mr-root.mr-theme-lime .app { background: linear-gradient(135deg, #BDF863 0%, #B4F550 55%, #A6EC3E 100%); box-shadow: 0 24px 60px rgba(6, 40, 31, 0.28); }
+.mr-root.mr-theme-lime .app { background: linear-gradient(135deg, #BDF863 0%, #B4F550 55%, #A6EC3E 100%); box-shadow: 0 16px 48px rgba(6, 40, 31, 0.18); }
 .mr-root.mr-theme-lime .stage { background: transparent !important; }
 .mr-root.mr-theme-lime .stage::before { background: transparent; }
 .mr-root.mr-theme-lime .topbar { background: rgba(240, 255, 200, 0.88); border-bottom: 3px solid var(--forest); }

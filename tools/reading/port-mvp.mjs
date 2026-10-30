@@ -47,6 +47,8 @@ const EXTRA = `
 .mr-root .rhyme-box > span:active { transform: scale(0.95); box-shadow: none; }
 /* 상단 '처음부터' 버튼은 작게 */
 .mr-root .topbar #btnRestart { padding: 6px 16px; font-size: 13px; border-radius: 999px; }
+/* 앱 바깥쪽 바탕은 흰색 */
+.mr-root { background: #fff; }
 /* 라인 아이콘 */
 .mr-root .line-ico { width: 1.15em; height: 1.15em; vertical-align: -0.2em; margin-right: 7px; }
 .mr-root .line-ico.big { width: 64px; height: 64px; margin: 0; vertical-align: middle; stroke-width: 1.5; }
