@@ -47,6 +47,8 @@ const EXTRA = `
 .mr-root .rhyme-box > span:active { transform: scale(0.95); box-shadow: none; }
 /* 상단 '처음부터' 버튼은 작게 */
 .mr-root .topbar #btnRestart { padding: 6px 16px; font-size: 13px; border-radius: 999px; }
+/* STEP 1 Phonics: 탭(Short a/u/e, 라임)을 눌러도 박스 높이가 같게 고정 */
+.mr-root .phonics-panel { height: 424px; }
 /* 앱 바깥쪽 바탕은 흰색 */
 .mr-root { background: #fff; }
 /* 라인 아이콘 */
