@@ -270,7 +270,8 @@ function UnitView({ row, onBack, autoStart, startReport, focusNo }: { row: Bundl
   useEffect(() => { if (autoStart && meta.length && !started.current) { started.current = true; start(autoStart.no, autoStart.idx); } /* eslint-disable-next-line */ }, [meta]);
 
   // 이어하기: 가장 먼저 끝내지 못한 활동
-  const nos = Object.keys(lessons).map(Number).sort((a, c) => a - c);
+  const only = focusNo && !startReport ? focusNo : null;   // 차시 박스에서 열면 그 차시만 보여 준다
+  const nos = Object.keys(lessons).map(Number).sort((a, c) => a - c).filter((n) => !only || n === only);
   let resume: { no: number; idx: number } | null = null;
   for (const no of nos) { const n = lessons[String(no)].length; for (let i = 0; i < n && !resume; i++) if (!prog[pkey(level, no, i)] && meta.find((x) => x.no === no)?.acts[i]?.study !== false) resume = { no, idx: i }; if (resume) break; }
   const studyN = (no: number) => lessons[String(no)].filter((_, i) => meta.find((x) => x.no === no)?.acts[i]?.study !== false).length;
@@ -282,11 +283,11 @@ function UnitView({ row, onBack, autoStart, startReport, focusNo }: { row: Bundl
   </>);
   return (
     <>
-      <button className="mx-link" onClick={onBack}>← 목록으로</button>
+      {!only && <button className="mx-link" onClick={onBack}>← 목록으로</button>}
       <h1>Lesson {b.unit.no} · {b.unit.title}</h1>
-      <div className="mx-tabs">
+      {!only && <div className="mx-tabs">
         {LEVELS.map((l) => <button key={l} className={l === level ? 'mx-tab mx-on' : 'mx-tab'} onClick={() => setLevel(l)}>{LEVEL_KO[l]} ({l})</button>)}
-      </div>
+      </div>}
       {err && <p className="mx-err">{err}</p>}
       {meta.length > 0 && resume && (
         <button className="mx-btn mx-resume" onClick={() => start(resume!.no, resume!.idx)}>
@@ -316,7 +317,7 @@ function UnitView({ row, onBack, autoStart, startReport, focusNo }: { row: Bundl
         );
       })}
 
-      {hasAdaptive && <div className="mx-card">
+      {!only && hasAdaptive && <div className="mx-card">
         <h3>8차시 · Personalized Mastery <span className="mx-muted">내 결과에 맞춘 보강</span></h3>
         {!test ? <p className="mx-muted">7차시 Lesson Check를 마치면 내 결과에 맞는 8차시가 열려요.</p> : !l8 ? <p className="mx-muted">불러오는 중…</p> : (
           <div className="mx-acts">
@@ -332,7 +333,7 @@ function UnitView({ row, onBack, autoStart, startReport, focusNo }: { row: Bundl
         )}
       </div>}
 
-      {hasAdaptive && bk && (
+      {!only && hasAdaptive && bk && (
         <div className="mx-card">
           <h3>Reading Pack <span className="mx-muted">원서 읽기 (차시 학습과 별도)</span></h3>
           <div className="mx-acts">
