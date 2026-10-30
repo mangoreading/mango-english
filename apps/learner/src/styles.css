@@ -142,3 +142,13 @@ input { font:inherit; padding:12px 14px; border:2px solid #CBD6E6; border-radius
 .mx-modal-body { height:100%; overflow:auto; padding:22px 24px; }
 .mx-modal-x { position:absolute; top:10px; right:12px; z-index:2; width:36px; height:36px; border-radius:50%; border:0; background:#fff; box-shadow:0 1px 6px rgba(0,0,0,.2); font-size:16px; cursor:pointer; color:var(--navy); }
 
+
+/* 교과서 홈: 차시 박스(왼쪽) + 이번 Lesson 학습목표(오른쪽) */
+.mx-nowbody { display:grid; grid-template-columns:minmax(0,1fr) 270px; gap:16px; align-items:start; margin-top:16px; }
+.mx-nowbody .mx-lgrid { margin-top:0; }
+.mx-goals { background:#F4F8FF; border:1px solid #E1E8F4; border-radius:18px; padding:16px 16px 14px; }
+.mx-goals h3 { margin:0 0 10px; font-size:.95rem; color:var(--blue); }
+.mx-goals ol { list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+.mx-goals li { display:flex; gap:10px; align-items:flex-start; background:#fff; border-radius:12px; padding:9px 11px; font-size:.92rem; line-height:1.4; color:var(--ink); }
+.mx-goals li b { flex:none; width:22px; height:22px; border-radius:50%; background:var(--blue); color:#fff; font-size:.78rem; display:grid; place-items:center; }
+@media (max-width:820px) { .mx-nowbody { grid-template-columns:1fr; } }
