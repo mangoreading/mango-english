@@ -1,4 +1,4 @@
-// 사용: (postcss, postcss-prefix-selector 설치 후) node tools/reading/port-mvp.mjs <Pre_Level_Prototype.html> apps/learner/src/reading
+// 사용: (postcss, postcss-prefix-selector 설치 후) node tools/reading/port-mvp.mjs <Pre_Level_Prototype.html> packages/mr/src
 // MVP(Pre_Level_Prototype.html) → 학습앱 모듈 변환: CSS(범위 한정) / 마크업 / 동작 코드
 import fs from 'node:fs';
 import postcss from 'postcss';

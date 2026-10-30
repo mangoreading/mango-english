@@ -9,6 +9,7 @@ export default defineConfig({
     alias: {
       '@mango/schema': path.resolve(__dirname, '../../packages/schema/src/index.ts'),
       '@mango/play': path.resolve(__dirname, '../../packages/play/src'),
+      '@mango/mr': path.resolve(__dirname, '../../packages/mr/src'),
       react: path.resolve(__dirname, 'node_modules/react'),
       'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
       zod: path.resolve(__dirname, 'node_modules/zod'),

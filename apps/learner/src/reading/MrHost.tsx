@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../supabase';
-import { MR_MARKUP } from './mrMarkup';
-import { startMr, type MrCtx } from './mrEngine';
+import { MR_MARKUP, startMr, type MrCtx } from '@mango/mr';
 import type { RBook } from './types';
-import './mr.css';
+import '@mango/mr/mr.css';
 
 const COLS = 'id,code,level,title,emoji,week,ord,ar,cover_path,content';
 type Take = { id: string; bookId: string; createdAt: string; filename: string; url: string };
