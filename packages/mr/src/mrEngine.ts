@@ -1854,7 +1854,7 @@ export function startMr(ctx: MrCtx): () => void {
   function azMarkWords(info, target) {
     const spans = [...document.querySelectorAll('#speakTarget .word')]; if (!spans.length) return;
     const ws = (info.words || []).filter(x => x.err !== 'Insertion').map(x => ({ w: normalizeWord(x.w), acc: (typeof x.acc === 'number') ? x.acc : (x.err === 'Omission' ? 0 : undefined) }));
-    const tw = tokenize(target); const used = new Set();
+    const tw = tokenize(target); const used = new Set(); let worst = null;
     spans.forEach((sp, i) => {
       let acc;
       if (ws.length === tw.length) acc = ws[i].acc;
@@ -1862,7 +1862,9 @@ export function startMr(ctx: MrCtx): () => void {
       sp.classList.remove('w-ok', 'w-mid', 'w-bad'); const old = sp.querySelector('small'); if (old) old.remove();
       if (typeof acc !== 'number') return;
       sp.classList.add(acc >= 70 ? 'w-ok' : acc >= 40 ? 'w-mid' : 'w-bad');
+      if (acc < 70 && (!worst || acc < worst.acc)) worst = { acc, word: sp.textContent.replace(/[.,!?]/g, '') };
     });
+    return worst ? worst.word : null;
   }
   function speakRecordAzure() {
     const status = document.getElementById('speakStatus'); const recDiv = document.getElementById('speakRecognized'); const spRecord = document.getElementById('spRecord'); const illus = document.getElementById('speakIllus');
@@ -1889,9 +1891,9 @@ export function startMr(ctx: MrCtx): () => void {
         azSttFails = 0;
         if (azCancelled) return;
         if (!info || !String(info.text || '').trim()) { speakIdleUi(); status.textContent = '🎤 소리가 안 들렸어요. 다시 해볼까요?'; return; }
-        recDiv.textContent = '들린 말: "' + (info.display || info.text) + '"'; recDiv.classList.add('show');
         const stars = azStars(info, item.text);
-        azMarkWords(info, item.text);
+        const worst = azMarkWords(info, item.text);          // 가장 아쉬운 단어 하나를 짚어 준다(없으면 안내 줄을 숨김)
+        if (worst) { recDiv.textContent = worst + '를 정확히 발음해 보세요.'; recDiv.classList.add('show'); } else { recDiv.textContent = ''; recDiv.classList.remove('show'); }
         showSpeakScore(stars);
         if (stars >= 3) { status.textContent = '🎉 잘했어요!'; status.className = 'speak-status success'; }
         else { status.textContent = '👍 다시 해볼까요? 빨간 단어를 또박또박 읽어 봐요'; status.className = 'speak-status'; }
