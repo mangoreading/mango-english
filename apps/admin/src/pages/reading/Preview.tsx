@@ -32,6 +32,12 @@ export function Preview({ book, onClose, bare }: { book: RBook; onClose: () => v
       books: [{ code: b.code, title: b.title, emoji: b.emoji, week: b.week, ar: b.ar, coverUrl: b.cover_path ? u[b.cover_path] : undefined }],
       async loadBook() { return { id: b.code, title: b.title, cover: b.cover_path ? u[b.cover_path] ?? '' : '', ar: b.ar, ...b.content, pages: b.content.pages.map((p) => ({ ...p, img: u[p.img] ?? '' })) }; },
       wordImg: (w: string) => words.current[String(w).toLowerCase()],
+      async tts(text: string, rate: string) {
+        const { data, error } = await supabase.functions.invoke('tts', { body: { lines: [{ t: text }], rate } });
+        if (error) throw new Error((error as Error).message);
+        if (!(data instanceof Blob)) throw new Error('tts');
+        return data;
+      },
       saveProgress() { /* 미리보기는 저장하지 않는다 */ },
       async listTakes() { return []; }, async saveTake() { /* 저장 안 함 */ }, exit: () => closeRef.current(),
     });

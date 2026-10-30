@@ -109,8 +109,110 @@ rep('<span class="pic">${c.pic}</span>${c.word}', '<span class="pic">${wimg(c.wo
 // 5c) MVP 의 시험용 시드(THE_PIE 진도 0)는 THE_PIE 가 없으면 오류가 나므로 뺀다
 js = js.replace("  bookProgress['THE_PIE'].stepReached = 0;\n", '');
 must('THE_PIE 시드 제거', !js.includes("bookProgress['THE_PIE']"));
-js = js.replace("      renderPage();\n    }\n    if (n === 4) renderQuiz();", "      renderPage();\n      autoPlay();\n    }\n    if (n === 4) renderQuiz();");
-must('showStep 자동 재생', js.includes('autoPlay();\n    }\n    if (n === 4)'));
+js = js.replace("      renderPage();\n    }\n    if (n === 4) renderQuiz();", "      renderPage();\n      autoPlay(1000);\n    }\n    if (n === 4) renderQuiz();");
+must('showStep 자동 재생', js.includes('autoPlay(1000);\n    }\n    if (n === 4)'));
+// 5e) 음성: Azure TTS(서버 함수)가 연결돼 있으면 사용하고, 없거나 실패하면 브라우저 음성으로 대신한다
+cut(/  \/\/ Single TTS utterance promise/, /\n  \/\/ ---------- STEP 1: PHONICS ----------/, `  // ---- 브라우저 음성(대체용) ----
+  function browserUtter(text, rate, opts = {}) {
+    return new Promise(resolve => {
+      if (!('speechSynthesis' in window) || !text) return resolve();
+      const u = new SpeechSynthesisUtterance(normalizeForTTS(text));
+      u.lang = 'en-US';
+      const v = getFemaleVoice();
+      if (v) u.voice = v;
+      u.rate = rate;
+      u.pitch = 1.15;
+      if (opts.onboundary) u.onboundary = opts.onboundary;
+      if (opts.onstart)    u.onstart    = opts.onstart;
+      u.onend = () => resolve();
+      u.onerror = () => resolve();
+      window.speechSynthesis.speak(u);
+    });
+  }
+
+  // ---- Azure TTS ----
+  const _azCache = new Map();          // '속도|글' → Promise<blob 주소 | null>
+  let _azCur = null;                   // 지금 재생 중인 음원 { a, done }
+  const azRate = (r) => Math.max(-35, Math.min(0, Math.round((r - 1) * 55))) + '%';   // 브라우저 속도(0.45~0.9) → Azure 속도
+  function azFetch(text, rate) {
+    if (!ctx.tts || !text) return Promise.resolve(null);
+    const t = normalizeForTTS(text); const key = azRate(rate) + '|' + t;
+    if (!_azCache.has(key)) _azCache.set(key, ctx.tts(t, azRate(rate)).then(b => URL.createObjectURL(b)).catch(e => { console.warn('[tts] Azure 실패, 브라우저 음성으로 대신해요:', e && e.message ? e.message : e); _azCache.delete(key); return null; }));
+    return _azCache.get(key);
+  }
+  function stopAzure() {
+    if (_azCur) { const c = _azCur; _azCur = null; try { c.a.pause(); } catch (e) {} c.done(); }
+  }
+  // 단어별 하이라이트 시각: 단어 길이(+문장부호 쉼)에 비례해 음원 길이를 나눈다
+  function wordSchedule(text, dur) {
+    const ws = text.split(/\\s+/).filter(Boolean);
+    const wt = ws.map(w => w.replace(/[^A-Za-z']/g, '').length + 1.2 + (/[.!?]$/.test(w) ? 3 : /[,;:]$/.test(w) ? 1.5 : 0));
+    const total = wt.reduce((a, b) => a + b, 0) || 1;
+    const speech = Math.max(0.4, dur - 0.55);     // 음원 끝의 쉼(0.45초)을 뺀 말하는 시간
+    let acc = 0; return wt.map(w => { const t = 0.08 + speech * (acc / total); acc += w; return t * 1000; });
+  }
+  function ttsUtter(text, rate, opts = {}) {
+    if (!text) return Promise.resolve();
+    return azFetch(text, rate).then(url => {
+      if (!url) return browserUtter(text, rate, opts);
+      return new Promise(resolve => {
+        stopAzure();
+        const a = new Audio(url); let fin = false; const timers = [];
+        const done = () => { if (fin) return; fin = true; timers.forEach(clearTimeout); if (_azCur && _azCur.a === a) _azCur = null; resolve(); };
+        _azCur = { a, done };
+        a.onended = done; a.onerror = done;
+        a.play().then(() => {
+          if (fin) return;
+          if (opts.onstart) opts.onstart({});
+          if (opts.onboundary) {
+            const sched = () => wordSchedule(text, isFinite(a.duration) && a.duration > 0 ? a.duration : Math.max(1, text.length / 12))
+              .forEach(ms => timers.push(setTimeout(() => { if (!fin) opts.onboundary({ name: 'word' }); }, ms)));
+            if (isFinite(a.duration) && a.duration > 0) sched(); else a.onloadedmetadata = sched;
+          }
+        }).catch(() => { if (fin) return; fin = true; browserUtter(text, rate, opts).then(resolve); });
+      });
+    });
+  }
+  // 이 페이지(들)에서 곧 읽을 소리를 미리 받아 둔다 → 재생 시작이 빨라진다
+  function warmPage() {
+    if (!ctx.tts) return;
+    const idxs = pageView === 2 ? [pageIdx, pageIdx + 1] : [pageIdx];
+    idxs.forEach(i => {
+      const p = pages[i]; if (!p) return;
+      const ws = getWords(p.text);
+      if (readMode === 'listen') tokenizeForSpeech(ws.join(' ')).forEach(sg => { if (sg.kind !== 'sfx') azFetch(sg.text, 0.45); });
+      else { getChunks(p.text).forEach(c => azFetch(c.text.replace(/[.,!?]/g, ''), 0.65)); azFetch(ws.join(' ').replace(/[.,!?]/g, ''), 0.65); }
+    });
+  }
+
+  // Token to track / cancel an in-progress sequential play
+  let _speakAbort = null;
+
+  // Top-level speak — handles standalone words and full sentences with SFX
+  async function speak(text, rate = 0.85) {
+    if (!text) return;
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    stopAzure();
+    const abort = { cancelled: false };
+    _speakAbort = abort;
+    const segs = tokenizeForSpeech(text);
+    for (const seg of segs) {
+      if (abort.cancelled) return;
+      if (seg.kind === 'sfx') {
+        await seg.play();
+      } else {
+        await ttsUtter(seg.text, rate);
+      }
+    }
+  }
+
+  function cancelSpeak() {
+    if (_speakAbort) _speakAbort.cancelled = true;
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    stopAzure();
+  }
+`, 'tts');
+// 페이지가 그려질 때 소리를 미리 받아 둔다
 // 5d) Read Aloud: 1페이지 보기 / 2페이지 보기(펼침면) 전환
 js = js.replace("      if (!abort.cancelled) {\n          clearHighlights();\n          const h = modeHints[readMode];\n          showPrompt(h.msg, h.cls);\n        }\n      };", "      if (!abort.cancelled) {\n          clearHighlights();\n          const h = modeHints[readMode];\n          showPrompt(h.msg, h.cls);\n          if (twoNext()) { activeSide = 1; playActive(); }\n        }\n      };");
 must('listen 이어 읽기', js.includes('playActive(); }\n        }\n      };'));
@@ -145,9 +247,9 @@ cut(/  function renderPage\(\) \{/, /\n  function speakWord\(w, i\) \{/, `  // -
   }
   // 첫 페이지 진입/페이지 넘김 시 바로 읽어 준다(렌더가 끝난 뒤 시작, 그 사이 또 넘기면 앞의 예약은 취소)
   let autoTok = 0;
-  function autoPlay() {
+  function autoPlay(delay = 400) {
     const tok = ++autoTok;
-    setTimeout(() => { if (tok === autoTok && currentView === 'book' && currentStep === 3) playPage(); }, 400);
+    setTimeout(() => { if (tok === autoTok && currentView === 'book' && currentStep === 3) playPage(); }, delay);
   }
   function setPageView(n) {
     pageView = n === 2 ? 2 : 1;
@@ -200,6 +302,7 @@ cut(/  function renderPage\(\) \{/, /\n  function speakWord\(w, i\) \{/, `  // -
     [1, 2].forEach(n => { const b = document.getElementById('pv' + n); if (b) b.classList.toggle('active', pageView === n); });
     const h = modeHints[readMode];
     showPrompt(h.msg, h.cls);
+    warmPage();
   }
 `, 'renderPage');
 cut(/  function nextPage\(\) \{/, /\n  \/\/ ---------- STEP 4: COMPREHENSION QUIZ ----------/, `  function nextPage() {
@@ -237,7 +340,7 @@ const body = `// @ts-nocheck
 // 자동 생성: tools/reading/port-mvp.mjs — MVP(Pre_Level_Prototype.html)의 동작 코드를 그대로 옮기고, 책·진도·영상·로그인만 학습앱 연결로 바꿈.
 export interface MrCtx { userId: string; books: { code: string; title: string; emoji: string | null; week: number; ar: string | null; coverUrl?: string }[]; progress: Record<string, { stepReached: number; completed: boolean }>;
   loadBook: (code: string) => Promise<any>; saveProgress: (code: string, p: { stepReached: number; completed: boolean }) => void;
-  listTakes: () => Promise<any[]>; saveTake: (code: string, blob: Blob) => Promise<void>; exit: () => void; wordImg?: (word: string) => string | undefined; }
+  listTakes: () => Promise<any[]>; saveTake: (code: string, blob: Blob) => Promise<void>; exit: () => void; tts?: (text: string, rate: string) => Promise<Blob>; wordImg?: (word: string) => string | undefined; }
 export function startMr(ctx: MrCtx): () => void {
 ${js}
   Object.assign(window, { ${names.join(', ')} });

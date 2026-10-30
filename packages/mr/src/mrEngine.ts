@@ -2,7 +2,7 @@
 // 자동 생성: tools/reading/port-mvp.mjs — MVP(Pre_Level_Prototype.html)의 동작 코드를 그대로 옮기고, 책·진도·영상·로그인만 학습앱 연결로 바꿈.
 export interface MrCtx { userId: string; books: { code: string; title: string; emoji: string | null; week: number; ar: string | null; coverUrl?: string }[]; progress: Record<string, { stepReached: number; completed: boolean }>;
   loadBook: (code: string) => Promise<any>; saveProgress: (code: string, p: { stepReached: number; completed: boolean }) => void;
-  listTakes: () => Promise<any[]>; saveTake: (code: string, blob: Blob) => Promise<void>; exit: () => void; wordImg?: (word: string) => string | undefined; }
+  listTakes: () => Promise<any[]>; saveTake: (code: string, blob: Blob) => Promise<void>; exit: () => void; tts?: (text: string, rate: string) => Promise<Blob>; wordImg?: (word: string) => string | undefined; }
 export function startMr(ctx: MrCtx): () => void {
   // ---------- State ----------
   let currentStep = 0;
@@ -285,7 +285,7 @@ export function startMr(ctx: MrCtx): () => void {
         else b.classList.remove('active');
       });
       renderPage();
-      autoPlay();
+      autoPlay(1000);
     }
     if (n === 4) renderQuiz();
     if (n === 5) renderTrace();
@@ -632,10 +632,8 @@ export function startMr(ctx: MrCtx): () => void {
     return segs;
   }
 
-  // Single TTS utterance promise — used by both `speak()` and Step 3 listen mode.
-  // Applies TTS_NORMALIZE so vocalised onomatopoeia (Mmmm, Hmm, Ah, …) read
-  // naturally instead of being spelled out.
-  function ttsUtter(text, rate, opts = {}) {
+  // ---- 브라우저 음성(대체용) ----
+  function browserUtter(text, rate, opts = {}) {
     return new Promise(resolve => {
       if (!('speechSynthesis' in window) || !text) return resolve();
       const u = new SpeechSynthesisUtterance(normalizeForTTS(text));
@@ -652,6 +650,61 @@ export function startMr(ctx: MrCtx): () => void {
     });
   }
 
+  // ---- Azure TTS ----
+  const _azCache = new Map();          // '속도|글' → Promise<blob 주소 | null>
+  let _azCur = null;                   // 지금 재생 중인 음원 { a, done }
+  const azRate = (r) => Math.max(-35, Math.min(0, Math.round((r - 1) * 55))) + '%';   // 브라우저 속도(0.45~0.9) → Azure 속도
+  function azFetch(text, rate) {
+    if (!ctx.tts || !text) return Promise.resolve(null);
+    const t = normalizeForTTS(text); const key = azRate(rate) + '|' + t;
+    if (!_azCache.has(key)) _azCache.set(key, ctx.tts(t, azRate(rate)).then(b => URL.createObjectURL(b)).catch(e => { console.warn('[tts] Azure 실패, 브라우저 음성으로 대신해요:', e && e.message ? e.message : e); _azCache.delete(key); return null; }));
+    return _azCache.get(key);
+  }
+  function stopAzure() {
+    if (_azCur) { const c = _azCur; _azCur = null; try { c.a.pause(); } catch (e) {} c.done(); }
+  }
+  // 단어별 하이라이트 시각: 단어 길이(+문장부호 쉼)에 비례해 음원 길이를 나눈다
+  function wordSchedule(text, dur) {
+    const ws = text.split(/\s+/).filter(Boolean);
+    const wt = ws.map(w => w.replace(/[^A-Za-z']/g, '').length + 1.2 + (/[.!?]$/.test(w) ? 3 : /[,;:]$/.test(w) ? 1.5 : 0));
+    const total = wt.reduce((a, b) => a + b, 0) || 1;
+    const speech = Math.max(0.4, dur - 0.55);     // 음원 끝의 쉼(0.45초)을 뺀 말하는 시간
+    let acc = 0; return wt.map(w => { const t = 0.08 + speech * (acc / total); acc += w; return t * 1000; });
+  }
+  function ttsUtter(text, rate, opts = {}) {
+    if (!text) return Promise.resolve();
+    return azFetch(text, rate).then(url => {
+      if (!url) return browserUtter(text, rate, opts);
+      return new Promise(resolve => {
+        stopAzure();
+        const a = new Audio(url); let fin = false; const timers = [];
+        const done = () => { if (fin) return; fin = true; timers.forEach(clearTimeout); if (_azCur && _azCur.a === a) _azCur = null; resolve(); };
+        _azCur = { a, done };
+        a.onended = done; a.onerror = done;
+        a.play().then(() => {
+          if (fin) return;
+          if (opts.onstart) opts.onstart({});
+          if (opts.onboundary) {
+            const sched = () => wordSchedule(text, isFinite(a.duration) && a.duration > 0 ? a.duration : Math.max(1, text.length / 12))
+              .forEach(ms => timers.push(setTimeout(() => { if (!fin) opts.onboundary({ name: 'word' }); }, ms)));
+            if (isFinite(a.duration) && a.duration > 0) sched(); else a.onloadedmetadata = sched;
+          }
+        }).catch(() => { if (fin) return; fin = true; browserUtter(text, rate, opts).then(resolve); });
+      });
+    });
+  }
+  // 이 페이지(들)에서 곧 읽을 소리를 미리 받아 둔다 → 재생 시작이 빨라진다
+  function warmPage() {
+    if (!ctx.tts) return;
+    const idxs = pageView === 2 ? [pageIdx, pageIdx + 1] : [pageIdx];
+    idxs.forEach(i => {
+      const p = pages[i]; if (!p) return;
+      const ws = getWords(p.text);
+      if (readMode === 'listen') tokenizeForSpeech(ws.join(' ')).forEach(sg => { if (sg.kind !== 'sfx') azFetch(sg.text, 0.45); });
+      else { getChunks(p.text).forEach(c => azFetch(c.text.replace(/[.,!?]/g, ''), 0.65)); azFetch(ws.join(' ').replace(/[.,!?]/g, ''), 0.65); }
+    });
+  }
+
   // Token to track / cancel an in-progress sequential play
   let _speakAbort = null;
 
@@ -659,6 +712,7 @@ export function startMr(ctx: MrCtx): () => void {
   async function speak(text, rate = 0.85) {
     if (!text) return;
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    stopAzure();
     const abort = { cancelled: false };
     _speakAbort = abort;
     const segs = tokenizeForSpeech(text);
@@ -675,7 +729,9 @@ export function startMr(ctx: MrCtx): () => void {
   function cancelSpeak() {
     if (_speakAbort) _speakAbort.cancelled = true;
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    stopAzure();
   }
+
 
   // ---------- STEP 1: PHONICS ----------
   let phonicsData = [];
@@ -1238,9 +1294,9 @@ export function startMr(ctx: MrCtx): () => void {
   }
   // 첫 페이지 진입/페이지 넘김 시 바로 읽어 준다(렌더가 끝난 뒤 시작, 그 사이 또 넘기면 앞의 예약은 취소)
   let autoTok = 0;
-  function autoPlay() {
+  function autoPlay(delay = 400) {
     const tok = ++autoTok;
-    setTimeout(() => { if (tok === autoTok && currentView === 'book' && currentStep === 3) playPage(); }, 400);
+    setTimeout(() => { if (tok === autoTok && currentView === 'book' && currentStep === 3) playPage(); }, delay);
   }
   function setPageView(n) {
     pageView = n === 2 ? 2 : 1;
@@ -1293,6 +1349,7 @@ export function startMr(ctx: MrCtx): () => void {
     [1, 2].forEach(n => { const b = document.getElementById('pv' + n); if (b) b.classList.toggle('active', pageView === n); });
     const h = modeHints[readMode];
     showPrompt(h.msg, h.cls);
+    warmPage();
   }
 
 
@@ -2296,6 +2353,6 @@ export function startMr(ctx: MrCtx): () => void {
   enterApp();
 
 
-  Object.assign(window, { updateProgress, showView, changeWeek, renderHome, loadBook, wimg, applyBookData, speakBookTitle, openBook, renderStatus, showStep, nextStep, prevStep, goTo, getFemaleVoice, getAudioCtx, playShhSound, playZzzSound, playMmmSound, playBrrrSound, playBuzzSound, normalizeForTTS, findSfx, parseStutterToken, tokenizeForSpeech, ttsUtter, speak, cancelSpeak, switchPhonics, renderPhonicsTabs, _rhymeEnding, renderPhonics, renderKey, tapKeyCard, nextKeyWord, prevKeyWord, showPrompt, cancelPlay, setMode, getWords, getChunks, isChunkMode, getWordChunkIdx, onWordTapSide, autoPlay, setPageView, renderOne, renderPage, speakWord, onWordTap, echoNext, playPage, playActive, nextPage, prevPage, renderQuiz, answerQuiz, renderTrace, placeWord, resetTrace, nextTrace, prevTrace, getRecognizer, normalizeWord, tokenize, evaluatePronunciation, renderSpeak, speakListen, speakRecord, showSpeakScore, speakRetry, nextSpeak, prevSpeak, renderVideoScript, videoStartCamera, videoReRecord, pickRecorderMime, videoStartRecord, videoStopRecord, videoStopCamera, videoSubmit, launchConfetti, probeStorage, warnIfStorageDisabled, progressKey, loadProgress, saveProgress, persistProgress, openIDB, idbTx, idbPutRecording, idbDeleteRecording, idbGetByAccount, idbGetById, buildTakeFilename, openVideoModal, closeVideoModal, closeVideoModalIfBackdrop, refreshVideoTakes, getCurrentUser, setCurrentUser, clearCurrentUser, showLoginScreen, enterApp, computeNextWeek, doLogin, doLogout, applyStageBackground });
+  Object.assign(window, { updateProgress, showView, changeWeek, renderHome, loadBook, wimg, applyBookData, speakBookTitle, openBook, renderStatus, showStep, nextStep, prevStep, goTo, getFemaleVoice, getAudioCtx, playShhSound, playZzzSound, playMmmSound, playBrrrSound, playBuzzSound, normalizeForTTS, findSfx, parseStutterToken, tokenizeForSpeech, browserUtter, azFetch, stopAzure, wordSchedule, ttsUtter, warmPage, speak, cancelSpeak, switchPhonics, renderPhonicsTabs, _rhymeEnding, renderPhonics, renderKey, tapKeyCard, nextKeyWord, prevKeyWord, showPrompt, cancelPlay, setMode, getWords, getChunks, isChunkMode, getWordChunkIdx, onWordTapSide, autoPlay, setPageView, renderOne, renderPage, speakWord, onWordTap, echoNext, playPage, playActive, nextPage, prevPage, renderQuiz, answerQuiz, renderTrace, placeWord, resetTrace, nextTrace, prevTrace, getRecognizer, normalizeWord, tokenize, evaluatePronunciation, renderSpeak, speakListen, speakRecord, showSpeakScore, speakRetry, nextSpeak, prevSpeak, renderVideoScript, videoStartCamera, videoReRecord, pickRecorderMime, videoStartRecord, videoStopRecord, videoStopCamera, videoSubmit, launchConfetti, probeStorage, warnIfStorageDisabled, progressKey, loadProgress, saveProgress, persistProgress, openIDB, idbTx, idbPutRecording, idbDeleteRecording, idbGetByAccount, idbGetById, buildTakeFilename, openVideoModal, closeVideoModal, closeVideoModalIfBackdrop, refreshVideoTakes, getCurrentUser, setCurrentUser, clearCurrentUser, showLoginScreen, enterApp, computeNextWeek, doLogin, doLogout, applyStageBackground });
   return () => { try { cancelPlay(); } catch (e) {} try { videoStopCamera(); } catch (e) {} try { window.speechSynthesis.cancel(); } catch (e) {} videoTakes.forEach(t => { try { URL.revokeObjectURL(t.url); } catch (_) {} }); };
 }

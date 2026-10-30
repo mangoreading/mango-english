@@ -78,6 +78,13 @@ export function MrHost({ uid, startCode, onExit }: { uid: string; startCode?: st
           const ins = await supabase.from('reading_videos').insert({ user_id: uid, book_id: bk.id, video_path: path });
           if (ins.error) throw ins.error;
         },
+        // 음성: Azure TTS(서버 함수 tts). 실패하면 화면 쪽에서 브라우저 음성으로 대신한다
+        async tts(text, rate) {
+          const { data, error } = await supabase.functions.invoke('tts', { body: { lines: [{ t: text }], rate } });
+          if (error) { let m = (error as Error).message; try { const j = await (error as unknown as { context: Response }).context.json(); m = j.error ?? m; } catch { /* 그대로 */ } throw new Error(m); }
+          if (!(data instanceof Blob)) throw new Error('tts');
+          return data;
+        },
         wordImg: (w) => words[String(w).toLowerCase()],
         exit: () => exitRef.current(),
       };

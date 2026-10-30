@@ -49,7 +49,9 @@ Deno.serve(async (req) => {
     if (!lines.length) return json({ error: '읽을 글이 없어요' }, 400);
     if (lines.reduce((n, l) => n + l.t.length, 0) > MAX_CHARS) return json({ error: '글이 너무 길어요' }, 400);
 
-    const body = lines.map((l) => { const v = voiceFor(l.who); return `<voice name="${v.voice}"><prosody rate="${RATE}"${v.pitch ? ` pitch="${v.pitch}"` : ''}>${esc(l.t)}</prosody><break time="450ms"/></voice>`; }).join('');
+    // 속도: 호출한 쪽이 '-30%' 처럼 지정할 수 있다(원서 읽기). 범위 밖이면 기본값.
+    const rateIn = typeof b.rate === 'string' && /^[+-]?\d{1,3}%$/.test(b.rate) && Math.abs(parseInt(b.rate)) <= 50 ? b.rate : RATE;
+    const body = lines.map((l) => { const v = voiceFor(l.who); return `<voice name="${v.voice}"><prosody rate="${rateIn}"${v.pitch ? ` pitch="${v.pitch}"` : ''}>${esc(l.t)}</prosody><break time="450ms"/></voice>`; }).join('');
     const ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US">${body}</speak>`;
 
     const r = await fetch(`https://${REGION}.tts.speech.microsoft.com/cognitiveservices/v1`, {
