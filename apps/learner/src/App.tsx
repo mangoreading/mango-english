@@ -130,7 +130,6 @@ function Main({ session, tab, setTab, homeNonce }: { session: Session; tab: Tab;
     if (error) return '저장하지 못했어요: ' + error.message;
     setProf((p) => ({ ...p, name, grade })); return '저장했어요.';
   }
-  if (open) return <UnitView key={open.u.unit_id + (open.auto ? 'a' : '') + (open.report ? 'r' : '')} row={mk(open.u)} autoStart={open.auto} startReport={open.report} focusNo={open.focusNo} onBack={() => { setOpen(null); setNonce((n) => n + 1); }} />;
   return (
     <>
       {tab === 'home' && <HomeView name={prof.name} books={books} bookId={bookId} onBook={pickBook} units={bUnits} rows={rows} unit={cur ?? null} onUnit={setViewId}
@@ -138,6 +137,16 @@ function Main({ session, tab, setTab, homeNonce }: { session: Session; tab: Tab;
       {tab === 'reading' && <ReadingTab uid={uid} openCode={null} onOpened={() => {}} onExit={() => setTab('home')} />}
       {tab === 'report' && <ReadingSummary uid={uid} />}
       {tab === 'report' && <ReportsView units={bUnits} rows={rows} onOpen={(u) => setOpen({ u, report: true })} />}
+      {open && (
+        <div className="mx-modal" role="dialog" aria-modal="true" onMouseDown={(e) => { if (e.target === e.currentTarget && !open.auto) { setOpen(null); setNonce((n) => n + 1); } }}>
+          <div className="mx-modal-box">
+            <button className="mx-modal-x" aria-label="닫기" onClick={() => { setOpen(null); setNonce((n) => n + 1); }}>✕</button>
+            <div className="mx-modal-body">
+              <UnitView key={open.u.unit_id + (open.auto ? 'a' : '') + (open.report ? 'r' : '')} row={mk(open.u)} autoStart={open.auto} startReport={open.report} focusNo={open.focusNo} onBack={() => { setOpen(null); setNonce((n) => n + 1); }} />
+            </div>
+          </div>
+        </div>
+      )}
       {tab === 'my' && <MyView email={session.user.email ?? ''} name={prof.name} grade={prof.grade} books={books} bookId={bookId} rows={rows} units={bUnits} onSave={saveProfile} onBook={pickBook} onLogout={() => supabase.auth.signOut()} />}
     </>
   );
