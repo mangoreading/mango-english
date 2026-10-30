@@ -47,6 +47,11 @@ const EXTRA = `
 .mr-root .rhyme-box > span:active { transform: scale(0.95); box-shadow: none; }
 /* 상단 '처음부터' 버튼은 작게 */
 .mr-root .topbar #btnRestart { padding: 6px 16px; font-size: 13px; border-radius: 999px; }
+/* STEP 6 발음 평가: 단어별 점수 색 */
+.mr-root .speak-target .word.w-ok { color: #15803D; }
+.mr-root .speak-target .word.w-mid { color: #D97706; }
+.mr-root .speak-target .word.w-bad { color: #DC2626; }
+.mr-root .speak-target .word small { font-size: 0.45em; font-weight: 700; margin-left: 3px; }
 /* Key Words 카드: 1·2·3번째 탭에서 크기가 달라지지 않게 높이를 고정 */
 .mr-root .keyword-card { height: 380px; min-height: 380px; }
 /* 단어 이미지(이모지 대체) */
@@ -246,6 +251,96 @@ cut(/  \/\/ Single TTS utterance promise/, /\n  \/\/ ---------- STEP 1: PHONICS 
   }
 `, 'tts');
 // 페이지가 그려질 때 소리를 미리 받아 둔다
+// 5g) STEP 6 발음 평가: Azure STT(서버 함수 stt) 연결. 없거나 연속 실패하면 브라우저 음성 인식으로 대신한다
+js = js.replace("  function speakRecord() {\n    if (isRecording) {", `  // ----- Azure 발음 평가 -----
+  let azRec = null; let azBusy = false; let azSttFails = 0; let azCancelled = false;
+  const azureSpeakOk = () => !!(ctx.record && ctx.stt) && azSttFails < 2;
+  function speakIdleUi() {
+    isRecording = false; azBusy = false; azRec = null;
+    const b = document.getElementById('spRecord'); if (b) { b.classList.remove('recording'); b.textContent = '🎤 녹음'; b.disabled = false; }
+    const il = document.getElementById('speakIllus'); if (il) il.classList.remove('recording', 'listening');
+    const rt = document.getElementById('spRetry'); if (rt) rt.disabled = false;
+  }
+  // 발음 점수 → 별(0~4). 정확도 60% + 완성도 40%, 유치부 기준으로 후하게 잡는다(70점 이상 '잘했어요')
+  function azStars(info, target) {
+    const acc = (typeof info.accuracy === 'number') ? info.accuracy : info.pron;
+    if (typeof acc !== 'number') return evaluatePronunciation(target, info.text).stars;
+    const comp = (typeof info.completeness === 'number') ? info.completeness : 100;
+    const v = acc * 0.6 + comp * 0.4;
+    return v >= 85 ? 4 : v >= 70 ? 3 : v >= 50 ? 2 : v >= 30 ? 1 : 0;
+  }
+  // 단어별 정확도를 목표 문장의 단어에 붙인다(70% 이상 초록, 40~69% 주황, 40% 미만 빨강)
+  function azMarkWords(info, target) {
+    const spans = [...document.querySelectorAll('#speakTarget .word')]; if (!spans.length) return;
+    const ws = (info.words || []).filter(x => x.err !== 'Insertion').map(x => ({ w: normalizeWord(x.w), acc: (typeof x.acc === 'number') ? x.acc : (x.err === 'Omission' ? 0 : undefined) }));
+    const tw = tokenize(target); const used = new Set();
+    spans.forEach((sp, i) => {
+      let acc;
+      if (ws.length === tw.length) acc = ws[i].acc;
+      else { const j = ws.findIndex((y, k) => !used.has(k) && y.w === tw[i]); if (j >= 0) { used.add(j); acc = ws[j].acc; } else acc = 0; }
+      sp.classList.remove('w-ok', 'w-mid', 'w-bad'); const old = sp.querySelector('small'); if (old) old.remove();
+      if (typeof acc !== 'number') return;
+      sp.classList.add(acc >= 70 ? 'w-ok' : acc >= 40 ? 'w-mid' : 'w-bad');
+      if (acc < 70) { const sm = document.createElement('small'); sm.textContent = Math.round(acc) + '%'; sp.appendChild(sm); }
+    });
+  }
+  function speakRecordAzure() {
+    const status = document.getElementById('speakStatus'); const recDiv = document.getElementById('speakRecognized'); const spRecord = document.getElementById('spRecord'); const illus = document.getElementById('speakIllus');
+    if (azRec) { try { azRec.stop(); } catch (e) {} return; }      // 녹음 중에 다시 누르면 바로 끝낸다
+    if (azBusy) return;
+    const item = speakSentences[speakIdx];
+    cancelSpeak();                                                // 읽어 주던 소리가 마이크에 들어가지 않게 멈춘다
+    azBusy = true; azCancelled = false;
+    status.textContent = '🎤 마이크를 켜고 있어요…'; status.className = 'speak-status recording';
+    recDiv.textContent = ''; recDiv.classList.remove('show'); document.getElementById('speakScore').innerHTML = '';
+    document.querySelectorAll('#speakTarget .word').forEach(e => { e.classList.remove('w-ok', 'w-mid', 'w-bad'); const sm = e.querySelector('small'); if (sm) sm.remove(); });
+    spRecord.textContent = '⏹ 중지'; spRecord.classList.add('recording'); illus.classList.add('recording');
+    let rec;
+    try {
+      rec = ctx.record({ onReady: () => { if (azRec === rec) { isRecording = true; status.textContent = '🎤 녹음 중... 또박또박 말해보세요'; } } });
+    } catch (e) { speakIdleUi(); status.textContent = '🎤 다시 시도해주세요'; status.className = 'speak-status'; return; }
+    azRec = rec;
+    rec.result.then(async (wav) => {
+      isRecording = false; azRec = null;
+      spRecord.disabled = true; spRecord.textContent = '확인 중…'; illus.classList.remove('recording');
+      status.textContent = '🔎 확인하고 있어요…'; status.className = 'speak-status';
+      try {
+        const info = await ctx.stt(wav, item.text);
+        azSttFails = 0;
+        if (azCancelled) return;
+        if (!info || !String(info.text || '').trim()) { speakIdleUi(); status.textContent = '🎤 소리가 안 들렸어요. 다시 해볼까요?'; return; }
+        recDiv.textContent = '들린 말: "' + (info.display || info.text) + '"'; recDiv.classList.add('show');
+        const stars = azStars(info, item.text);
+        azMarkWords(info, item.text);
+        showSpeakScore(stars);
+        if (stars >= 3) { status.textContent = '🎉 잘했어요!'; status.className = 'speak-status success'; }
+        else { status.textContent = '👍 다시 해볼까요? 빨간 단어를 또박또박 읽어 봐요'; status.className = 'speak-status'; }
+        speakIdleUi();
+      } catch (e) {
+        console.warn('[stt] 실패', e && e.message ? e.message : e);
+        azSttFails++; if (azCancelled) return; speakIdleUi();
+        status.textContent = azSttFails >= 2 ? '🎤 평가가 잠시 어려워요. 다음부터는 간단히 확인할게요' : '🎤 평가에 문제가 생겼어요. 다시 해볼까요?'; status.className = 'speak-status';
+      }
+    }).catch((c) => {
+      if (azCancelled) return;
+      speakIdleUi();
+      status.textContent = c === 'denied' ? '🎤 마이크 사용을 허용해 주세요' : (c === 'nospeech' || c === 'silent') ? '🎤 소리가 안 들렸어요. 다시 해볼까요?' : '🎤 다시 시도해주세요';
+      status.className = 'speak-status';
+    });
+  }
+
+  function speakRecord() {
+    if (azureSpeakOk()) { speakRecordAzure(); return; }
+    speakRecordBrowser();
+  }
+  function speakRecordBrowser() {
+    if (isRecording) {`);
+must('speakRecord 교체', js.includes('function speakRecordBrowser()'));
+// 단계를 벗어나면 녹음 취소
+js = js.replace("    // If leaving STEP 7, release camera/mic", "    if (currentStep === 6 && n !== 6 && azRec) { azCancelled = true; try { azRec.cancel(); } catch (e) {} speakIdleUi(); }\n    // If leaving STEP 7, release camera/mic");
+must('step6 이탈 시 취소', js.includes('azCancelled = true; try { azRec.cancel()'));
+// 다시 버튼: 단어 색 지우기
+js = js.replace("  function speakRetry() {\n", "  function speakRetry() {\n    document.querySelectorAll('#speakTarget .word').forEach(e => { e.classList.remove('w-ok', 'w-mid', 'w-bad'); const sm = e.querySelector('small'); if (sm) sm.remove(); });\n");
 // 5d) Read Aloud: 1페이지 보기 / 2페이지 보기(펼침면) 전환
 js = js.replace("      if (!abort.cancelled) {\n          clearHighlights();\n          const h = modeHints[readMode];\n          showPrompt(h.msg, h.cls);\n        }\n      };", "      if (!abort.cancelled) {\n          clearHighlights();\n          const h = modeHints[readMode];\n          showPrompt(h.msg, h.cls);\n          if (twoNext()) { activeSide = 1; playActive(); }\n        }\n      };");
 must('listen 이어 읽기', js.includes('playActive(); }\n        }\n      };'));
@@ -376,11 +471,11 @@ const body = `// @ts-nocheck
 // 자동 생성: tools/reading/port-mvp.mjs — MVP(Pre_Level_Prototype.html)의 동작 코드를 그대로 옮기고, 책·진도·영상·로그인만 학습앱 연결로 바꿈.
 export interface MrCtx { userId: string; books: { code: string; title: string; emoji: string | null; week: number; ar: string | null; coverUrl?: string }[]; progress: Record<string, { stepReached: number; completed: boolean }>;
   loadBook: (code: string) => Promise<any>; saveProgress: (code: string, p: { stepReached: number; completed: boolean }) => void;
-  listTakes: () => Promise<any[]>; saveTake: (code: string, blob: Blob) => Promise<void>; exit: () => void; tts?: (text: string, rate: string) => Promise<Blob>; wordImg?: (word: string) => string | undefined; }
+  listTakes: () => Promise<any[]>; saveTake: (code: string, blob: Blob) => Promise<void>; exit: () => void; record?: (opts?: { onReady?: () => void; onLevel?: (v: number) => void }) => { stop: () => void; cancel: () => void; result: Promise<Blob> }; stt?: (wav: Blob, ref: string) => Promise<{ text: string; display?: string; accuracy?: number; fluency?: number; completeness?: number; pron?: number; words?: { w: string; acc?: number; err?: string }[] }>; tts?: (text: string, rate: string) => Promise<Blob>; wordImg?: (word: string) => string | undefined; }
 export function startMr(ctx: MrCtx): () => void {
 ${js}
   Object.assign(window, { ${names.join(', ')} });
-  return () => { try { cancelPlay(); } catch (e) {} try { videoStopCamera(); } catch (e) {} try { window.speechSynthesis.cancel(); } catch (e) {} videoTakes.forEach(t => { try { URL.revokeObjectURL(t.url); } catch (_) {} }); };
+  return () => { azCancelled = true; try { azRec && azRec.cancel(); } catch (e) {} try { cancelPlay(); } catch (e) {} try { videoStopCamera(); } catch (e) {} try { window.speechSynthesis.cancel(); } catch (e) {} videoTakes.forEach(t => { try { URL.revokeObjectURL(t.url); } catch (_) {} }); };
 }
 `;
 fs.writeFileSync(out + '/mrEngine.ts', body);

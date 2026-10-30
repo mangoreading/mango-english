@@ -1,5 +1,6 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import { MR_MARKUP, mrThemeClass, startMr } from '@mango/mr';
+import { canRecord, startRecording } from '@mango/play';
 import '@mango/mr/mr.css';
 import { supabase } from '../../shared/supabase';
 import { signReading, type RBook } from './shared';
@@ -31,6 +32,12 @@ export function Preview({ book, onClose, bare }: { book: RBook; onClose: () => v
       userId: 'preview', progress: {},
       books: [{ code: b.code, title: b.title, emoji: b.emoji, week: b.week, ar: b.ar, coverUrl: b.cover_path ? u[b.cover_path] : undefined }],
       async loadBook() { return { id: b.code, title: b.title, cover: b.cover_path ? u[b.cover_path] ?? '' : '', ar: b.ar, ...b.content, pages: b.content.pages.map((p) => ({ ...p, img: u[p.img] ?? '' })) }; },
+      record: canRecord() ? (o?: { onReady?: () => void; onLevel?: (v: number) => void }) => startRecording(o) : undefined,
+      async stt(wav: Blob, ref: string) {
+        const { data, error } = await supabase.functions.invoke('stt', { body: wav, headers: { 'Content-Type': 'audio/wav', 'x-ref': encodeURIComponent(ref ?? '') } });
+        if (error) throw new Error((error as Error).message);
+        return data as { text: string; display?: string; accuracy?: number; fluency?: number; completeness?: number; pron?: number; words?: { w: string; acc?: number; err?: string }[] };
+      },
       wordImg: (w: string) => words.current[String(w).toLowerCase()],
       async tts(text: string, rate: string) {
         const { data, error } = await supabase.functions.invoke('tts', { body: { lines: [{ t: text }], rate } });

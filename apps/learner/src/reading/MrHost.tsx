@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../supabase';
 import { MR_MARKUP, mrThemeClass, startMr, type MrCtx } from '@mango/mr';
+import { canRecord, startRecording } from '@mango/play';
 import type { RBook } from './types';
 import '@mango/mr/mr.css';
 
@@ -84,6 +85,14 @@ export function MrHost({ uid, startCode, onExit }: { uid: string; startCode?: st
           if (error) { let m = (error as Error).message; try { const j = await (error as unknown as { context: Response }).context.json(); m = j.error ?? m; } catch { /* 그대로 */ } throw new Error(m); }
           if (!(data instanceof Blob)) throw new Error('tts');
           return data;
+        },
+        // 발음 평가(STEP 6): 마이크 녹음(16kHz WAV) → 서버 함수 stt(Azure 발음 평가)
+        record: canRecord() ? (o) => startRecording(o) : undefined,
+        async stt(wav, ref) {
+          const { data, error } = await supabase.functions.invoke('stt', { body: wav, headers: { 'Content-Type': 'audio/wav', 'x-ref': encodeURIComponent(ref ?? '') } });
+          if (error) { let m = (error as Error).message; try { const j = await (error as unknown as { context: Response }).context.json(); m = j.error ?? m; } catch { /* 그대로 */ } throw new Error(m); }
+          if (!data || typeof (data as { text?: string }).text !== 'string') throw new Error('stt');
+          return data as { text: string; display?: string; accuracy?: number; fluency?: number; completeness?: number; pron?: number; words?: { w: string; acc?: number; err?: string }[] };
         },
         wordImg: (w) => words[String(w).toLowerCase()],
         exit: () => exitRef.current(),
