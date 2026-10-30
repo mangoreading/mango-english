@@ -105,3 +105,31 @@ input { font:inherit; padding:12px 14px; border:2px solid #CBD6E6; border-radius
 .mx-curacts li { background:#fff; border:1px solid #E7EDF7; }
 .mx-curacts li.mx-ca-now { outline:2px solid #FF9F1C; border-color:transparent; } .mx-curacts li.mx-ca-done { background:#fff; color:#6b7890; }
 .mx-s6 { background:none; } .mx-s6-cur { background:none; border-color:transparent; } .mx-s6-cur b { box-shadow:0 0 0 4px #FFE5BD; }
+
+/* ── 헤더: 로고 · 메뉴 · 로그인 정보 ── */
+.mx-top { gap:16px; padding:10px 0 12px; }
+.mx-logo { background:none; border:0; padding:0; cursor:pointer; flex:none; display:flex; }
+.mx-logo img { height:40px; width:auto; display:block; }
+.mx-top .mx-nav { position:static; margin:0; flex:0 1 460px; }
+.mx-top .mx-who { margin-left:auto; flex:none; }
+
+/* ── 교과서: 4×2 차시 박스 ── */
+.mx-lessonpick { font:inherit; font-size:.85rem; margin-top:6px; padding:4px 8px; border:1px solid #E1E8F4; border-radius:10px; background:#fff; color:var(--navy); max-width:100%; }
+.mx-lgrid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:16px; }
+.mx-lbox { font:inherit; text-align:left; display:flex; flex-direction:column; gap:4px; min-height:140px; padding:14px; background:#fff; border:1px solid #E1E8F4; border-radius:18px; cursor:pointer; color:var(--navy); box-shadow:0 2px 10px rgba(40,70,120,.06); }
+.mx-lbox:hover:not(:disabled) { border-color:var(--blue); }
+.mx-lbox:disabled, .mx-lbox-off { opacity:.5; cursor:default; }
+.mx-lbox-tag { font-size:.78rem; font-weight:800; color:var(--blue); }
+.mx-lbox-title { font-size:1rem; line-height:1.25; }
+.mx-lbox-en { font-size:.8rem; color:#6b7488; flex:1; }
+.mx-lbox-bar { display:block; height:8px; background:#EDF1F8; border-radius:99px; overflow:hidden; }
+.mx-lbox-bar i { display:block; height:100%; background:var(--blue); border-radius:99px; }
+.mx-lbox small { color:#6b7488; font-size:.78rem; }
+.mx-lbox-cur { border:2px solid var(--blue); background:#F4F8FF; }
+.mx-lbox-done .mx-lbox-bar i { background:#34c38f; }
+.mx-lbox-done .mx-lbox-tag { color:#1f9d6e; }
+@media (max-width:820px) {
+  .mx-top { flex-wrap:wrap; }
+  .mx-top .mx-nav { order:3; flex:1 0 100%; }
+  .mx-lgrid { grid-template-columns:repeat(2,1fr); }
+}

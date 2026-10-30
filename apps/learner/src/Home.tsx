@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { buildReport } from './reportCalc';
 import { unitProgress, type ProgRow, type UnitInfo } from './home';
 
-export type Tab = 'home' | 'lessons' | 'reading' | 'report' | 'my';
-export const TAB_KO: [Tab, string][] = [['home', '홈'], ['lessons', 'Lesson'], ['reading', '원서'], ['report', '리포트'], ['my', 'My Page']];
+export type Tab = 'home' | 'reading' | 'report' | 'my';
+export const TAB_KO: [Tab, string][] = [['home', '교과서'], ['reading', '영어원서'], ['report', 'Report'], ['my', 'MyPage']];
 const stars = (n: number) => '★'.repeat(n) + '☆'.repeat(3 - n);
 export interface BookOpt { id: string; label: string; grade: number }
 
@@ -16,89 +16,55 @@ function BookPick({ books, bookId, onBook }: { books: BookOpt[]; bookId: string;
   return <select className="mx-bookpick" value={bookId} onChange={(e) => onBook(e.target.value)} aria-label="교재">{books.map((b) => <option key={b.id} value={b.id}>{b.label}</option>)}</select>;
 }
 
-/** 홈: 지금 학습 중인 Lesson 과 차시 (핵심) */
-export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUnit, onStart, onOpenUnit, onReport }: {
+/** 교과서: 지금 학습 중인 Lesson 의 8개 박스(1~6차시 · 보충/확장 학습 · Lesson Report) */
+export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUnit, onOpenUnit, onReport }: {
   name: string; books: BookOpt[]; bookId: string; onBook: (id: string) => void; units: UnitInfo[]; rows: ProgRow[]; unit: UnitInfo | null;
-  onUnit: (id: string) => void; onStart: (u: UnitInfo, a?: { no: number; idx: number }) => void; onOpenUnit: (u: UnitInfo) => void; onReport: (u: UnitInfo) => void;
+  onUnit: (id: string) => void; onOpenUnit: (u: UnitInfo, focusNo?: number) => void; onReport: (u: UnitInfo) => void;
 }) {
   if (!unit) return <div className="mx-card"><h2>학습할 Lesson이 아직 없어요</h2><p className="mx-muted">관리자가 Lesson을 발행하면 여기에 나타나요.</p></div>;
   const up = unitProgress(unit, rows);
   const idx = units.findIndex((u) => u.unit_id === unit.unit_id);
-  const cur = up.current ? up.lessons.find((l) => l.no === up.current!.no)! : up.lessons[up.lessons.length - 1];
   const next = idx >= 0 ? units[idx + 1] : undefined, prev = idx > 0 ? units[idx - 1] : undefined;
-  const curAct = up.current ? cur?.acts.find((a) => a.idx === up.current!.idx) : undefined;
+  const curNo = up.current?.no;
+  const core = (unit.bundle.flow ?? []).filter((l) => (l.track ?? 'core') === 'core').slice(0, 6);
+  const pct = (d: number, t: number) => (t ? Math.round((d / t) * 100) : 0);
   return (
     <>
       <div className="mx-hello"><h1>{name ? `${name}님, ` : ''}오늘도 Mango English!</h1><BookPick books={books} bookId={bookId} onBook={onBook} /></div>
       <div className="mx-card mx-now">
         <div className="mx-now-top">
           <button className="mx-arrow" disabled={!prev} onClick={() => prev && onUnit(prev.unit_id)} aria-label="이전 Lesson">◀</button>
-          <div className="mx-now-title"><span className="mx-chip">LESSON {unit.unit_no}</span><h2>{unit.unit_title}</h2><span className="mx-muted">{up.started ? '지금 학습 중' : '아직 시작 전'} · 활동 {up.done}/{up.total}</span></div>
+          <div className="mx-now-title">
+            <span className="mx-chip">LESSON {unit.unit_no}</span><h2>{unit.unit_title}</h2>
+            <span className="mx-muted">{up.complete ? '모든 활동을 마쳤어요' : up.started ? '지금 학습 중' : '아직 시작 전'} · 활동 {up.done}/{up.total}</span>
+            <select className="mx-lessonpick" value={unit.unit_id} onChange={(e) => onUnit(e.target.value)} aria-label="Lesson 이동">
+              {units.map((u) => <option key={u.unit_id} value={u.unit_id}>Lesson {u.unit_no} · {u.unit_title}</option>)}
+            </select>
+          </div>
           <button className="mx-arrow" disabled={!next} onClick={() => next && onUnit(next.unit_id)} aria-label="다음 Lesson">▶</button>
         </div>
         <div className="mx-pbar" role="img" aria-label={`진행 ${up.pct}%`}><i style={{ width: up.pct + '%' }} /></div>
-        <div className="mx-steps6">
-          {up.lessons.map((l) => {
-            const full = l.doneN >= l.studyN, on = cur && l.no === cur.no;
-            return <button key={l.no} className={'mx-s6' + (full ? ' mx-s6-done' : '') + (on && !up.complete ? ' mx-s6-cur' : '')} onClick={() => onOpenUnit(unit)} title={l.ko || l.en}><b>{full ? '✓' : l.no}</b><span>{l.no}차시</span><small>{l.doneN}/{l.studyN}</small></button>;
+        <div className="mx-lgrid">
+          {Array.from({ length: 6 }, (_, i) => core[i]).map((l, i) => {
+            const info = l ? up.lessons.find((x) => x.no === l.no) : undefined;
+            if (!l || !info) return <div key={i} className="mx-lbox mx-lbox-off"><span className="mx-lbox-tag">{i + 1}차시</span><b className="mx-lbox-title">{l ? (l.ko || l.en) : '준비 중'}</b><span className="mx-lbox-en">{l?.en ?? ''}</span><span className="mx-lbox-bar"><i style={{ width: '0%' }} /></span><small>준비 중</small></div>;
+            const full = info.doneN >= info.studyN, on = !up.complete && info.no === curNo;
+            return (
+              <button key={i} className={'mx-lbox' + (full ? ' mx-lbox-done' : '') + (on ? ' mx-lbox-cur' : '')} onClick={() => onOpenUnit(unit, info.no)}>
+                <span className="mx-lbox-tag">{full ? '✓ ' : ''}{info.no}차시{on ? ' · 지금 할 차시' : ''}</span>
+                <b className="mx-lbox-title">{info.ko || info.en}</b><span className="mx-lbox-en">{info.en}</span>
+                <span className="mx-lbox-bar"><i style={{ width: pct(info.doneN, info.studyN) + '%' }} /></span><small>{info.doneN}/{info.studyN} 활동</small>
+              </button>);
           })}
+          <button className={'mx-lbox mx-lbox-x' + (up.extra.total && up.extra.done >= up.extra.total ? ' mx-lbox-done' : '')} disabled={!up.extra.total} onClick={() => onOpenUnit(unit, up.extra.firstNo ?? undefined)}>
+            <span className="mx-lbox-tag">보충 · 확장</span><b className="mx-lbox-title">보충/확장 학습</b><span className="mx-lbox-en">Support &amp; Challenge</span>
+            <span className="mx-lbox-bar"><i style={{ width: pct(up.extra.done, up.extra.total) + '%' }} /></span><small>{up.extra.total ? `${up.extra.done}/${up.extra.total} 활동` : '준비 중'}</small>
+          </button>
+          <button className={'mx-lbox mx-lbox-rep' + (up.complete ? ' mx-lbox-done' : '')} disabled={!up.complete} onClick={() => onReport(unit)}>
+            <span className="mx-lbox-tag">Lesson Report</span><b className="mx-lbox-title">결과 리포트</b><span className="mx-lbox-en">Result</span>
+            <span className="mx-lbox-bar"><i style={{ width: up.pct + '%' }} /></span><small>{up.complete ? '리포트 보기' : '차시를 모두 마치면 열려요'}</small>
+          </button>
         </div>
-        {up.complete ? (
-          <div className="mx-cur">
-            <h3>Lesson {unit.unit_no} 완료!</h3><p className="mx-muted">모든 활동을 마쳤어요. 결과 리포트를 확인해 보세요.</p>
-            <div className="mx-row"><button className="mx-btn mx-go" onClick={() => onReport(unit)}>리포트 보기</button>{next && <button className="mx-btn mx-sec" onClick={() => onUnit(next.unit_id)}>다음 Lesson으로</button>}<button className="mx-link" onClick={() => onOpenUnit(unit)}>다시 풀어 보기</button></div>
-          </div>
-        ) : cur && (
-          <div className="mx-cur">
-            <div className="mx-cur-h"><span className="mx-cur-tag">지금 할 차시</span><h3>{cur.no}차시 · {cur.ko || cur.en}</h3></div>
-            {cur.goal && <p className="mx-muted">{cur.goal}</p>}
-            <ul className="mx-curacts">
-              {cur.acts.filter((a) => a.study && a.n > 0).map((a) => (
-                <li key={a.idx} className={(a.done ? 'mx-ca-done ' : '') + (up.current && a.idx === up.current.idx && cur.no === up.current.no ? 'mx-ca-now' : '')}>
-                  <span className="mx-ca-mark">{a.done ? '✓' : up.current && a.idx === up.current.idx ? '▶' : '○'}</span>
-                  <button className="mx-ca-name" onClick={() => onStart(unit, { no: cur.no, idx: a.idx })}>{a.t}</button>
-                  <span className="mx-muted">{a.min ? a.min + '분 · ' : ''}{a.n}문항{a.done ? ' · ' + stars(a.stars) : ''}</span>
-                </li>))}
-            </ul>
-            <div className="mx-row">
-              {curAct && <button className="mx-btn mx-go" onClick={() => onStart(unit, up.current!)}>{up.started ? '이어하기' : '시작하기'} → {curAct.t}</button>}
-              <button className="mx-link" onClick={() => onOpenUnit(unit)}>이 Lesson 전체 보기</button>
-            </div>
-          </div>
-        )}
-      </div>
-      <div className="mx-moveblk">
-        <h3>Lesson 이동</h3>
-        <LessonChips units={units} rows={rows} currentId={unit.unit_id} onPick={onUnit} />
-      </div>
-    </>
-  );
-}
-
-function LessonChips({ units, rows, currentId, onPick }: { units: UnitInfo[]; rows: ProgRow[]; currentId: string; onPick: (id: string) => void }) {
-  return (
-    <div className="mx-chips">
-      {units.map((u) => { const p = unitProgress(u, rows); return (
-        <button key={u.unit_id} className={'mx-lchip' + (u.unit_id === currentId ? ' mx-lchip-on' : '') + (p.complete ? ' mx-lchip-done' : '')} onClick={() => onPick(u.unit_id)}>
-          <b>{p.complete ? '✓ ' : ''}Lesson {u.unit_no}</b><span>{u.unit_title}</span><small>{p.pct}%</small></button>); })}
-    </div>
-  );
-}
-
-/** Lesson 탭: 교재의 모든 Lesson 을 한눈에 보고 이동 */
-export function LessonsView({ books, bookId, onBook, units, rows, currentId, onPick }: { books: BookOpt[]; bookId: string; onBook: (id: string) => void; units: UnitInfo[]; rows: ProgRow[]; currentId: string | null; onPick: (id: string) => void }) {
-  return (
-    <>
-      <div className="mx-hello"><h1>Lesson 이동</h1><BookPick books={books} bookId={bookId} onBook={onBook} /></div>
-      {!units.length && <div className="mx-card"><p className="mx-muted">이 교재에는 발행된 Lesson이 아직 없어요.</p></div>}
-      <div className="mx-grid">
-        {units.map((u) => { const p = unitProgress(u, rows); return (
-          <button key={u.unit_id} className={'mx-unit' + (u.unit_id === currentId ? ' mx-unit-cur' : '')} onClick={() => onPick(u.unit_id)}>
-            <span className="mx-chip">LESSON {u.unit_no}{u.unit_id === currentId ? ' · 학습 중' : ''}</span>
-            <b>{u.unit_title}</b>
-            <div className="mx-pbar"><i style={{ width: p.pct + '%' }} /></div>
-            <span className="mx-muted">{p.complete ? '✓ 완료' : p.started ? `진행 중 · 활동 ${p.done}/${p.total}` : p.total ? '시작 전' : '준비 중'}</span>
-          </button>); })}
       </div>
     </>
   );

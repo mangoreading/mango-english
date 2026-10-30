@@ -39,24 +39,6 @@ export function ReadingTab({ uid, openCode, onOpened, onExit }: { uid: string; o
   return <MrHost uid={uid} startCode={code.current} onExit={onExit} />;
 }
 
-const isFriday = () => new Date(Date.now() + 9 * 3600_000).getUTCDay() === 5; // 한국 시간 기준 금요일
-
-/** 홈의 '금요일 원서 읽기' 카드: 다음에 읽을 책으로 바로 들어간다. 금요일에는 강조해서 보여 준다. */
-export function FridayReading({ uid, onGo }: { uid: string; onGo: (code: string) => void }) {
-  const { data } = useReading(uid);
-  const b = nextBook(data);
-  const urls = useSignedUrls([b?.cover_path]);
-  if (!data || !b) return null;
-  const p = data.prog[b.id]; const fri = isFriday();
-  return (
-    <button className={'rd-fri' + (fri ? ' hot' : '')} onClick={() => onGo(b.code)}>
-      {b.cover_path && urls[b.cover_path] ? <img src={urls[b.cover_path]} alt="" /> : <span className="rd-bke">{b.emoji}</span>}
-      <span><small>{fri ? '📚 오늘은 금요일! 원서 읽기' : '📚 오늘의 원서'}</small><b>{b.title}</b><em>{p && !p.completed && p.step_reached > 0 ? '이어서 읽기' : '시작하기'}</em></span>
-    </button>
-  );
-}
-
-/** 리포트의 원서 요약 */
 export function ReadingSummary({ uid }: { uid: string }) {
   const { data } = useReading(uid);
   if (!data || !data.books.length) return null;

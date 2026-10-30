@@ -5,8 +5,8 @@ import type { BundleRow, Level } from './types';
 import { NativePlayer, isNative, type NativeResult, type VWord } from '@mango/play';
 import '@mango/play/styles.css';
 import { ReportView } from './Report';
-import { FridayReading, ReadingSummary, ReadingTab } from './reading/ReadingTab';
-import { HomeView, LessonsView, MyView, Nav, ReportsView, type BookOpt, type Tab } from './Home';
+import { ReadingSummary, ReadingTab } from './reading/ReadingTab';
+import { HomeView, MyView, Nav, ReportsView, type BookOpt, type Tab } from './Home';
 import { currentUnit, type ProgRow, type UnitInfo } from './home';
 import { areaOf, buildReport, practiceFor, type StepRef } from './reportCalc';
 import { books, lesson8, lessonMeta, playActivity, tallyTags, type BookMeta, type PlayResult, type TagStats } from './legacy';
@@ -17,6 +17,8 @@ const LEVEL_KO: Record<Level, string> = { CORE: '기본', SUPPORT: '도움', ADV
 export function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
+  const [tab, setTab] = useState<Tab>('home');
+  const [homeNonce, setHomeNonce] = useState(0);
 
   useEffect(() => {
     if (!configured) { setReady(true); return; }
@@ -27,14 +29,15 @@ export function App() {
 
   if (!configured) return <Shell><Notice title="설정이 필요해요">{configProblem}</Notice></Shell>;
   if (!ready) return <Shell><p className="mx-muted">불러오는 중…</p></Shell>;
-  return <Shell session={session}>{session ? <Main session={session} /> : <Login />}</Shell>;
+  return <Shell session={session} tab={tab} setTab={setTab} onLogo={() => { setTab('home'); setHomeNonce((n) => n + 1); }}>{session ? <Main session={session} tab={tab} setTab={setTab} homeNonce={homeNonce} /> : <Login />}</Shell>;
 }
 
-function Shell({ children, session }: { children: React.ReactNode; session?: Session | null }) {
+function Shell({ children, session, tab, setTab, onLogo }: { children: React.ReactNode; session?: Session | null; tab?: Tab; setTab?: (t: Tab) => void; onLogo?: () => void }) {
   return (
     <div className="mx-shell">
       <header className="mx-top">
-        <b className="mx-brand">Mango English</b>
+        <button className="mx-logo" onClick={onLogo} aria-label="Mango English 처음으로"><img src="/img/logo.png" alt="Mango English" /></button>
+        {session && tab && setTab && <Nav tab={tab} setTab={setTab} />}
         {session && (
           <span className="mx-who">
             {session.user.email}
@@ -82,18 +85,17 @@ function Login() {
   );
 }
 
-function Main({ session }: { session: Session }) {
+function Main({ session, tab, setTab, homeNonce }: { session: Session; tab: Tab; setTab: (t: Tab) => void; homeNonce: number }) {
   const uid = session.user.id;
   const [units, setUnits] = useState<UnitInfo[] | null>(null);
   const [rows, setRows] = useState<ProgRow[]>([]);
   const [prof, setProf] = useState<{ name: string; grade: number | null; book: string | null }>({ name: '', grade: null, book: null });
   const [err, setErr] = useState('');
-  const [tab, setTab] = useState<Tab>('home');
   const [bookSel, setBookSel] = useState<string | null>(null);
   const [viewId, setViewId] = useState<string | null>(null);
-  const [open, setOpen] = useState<{ u: UnitInfo; auto?: { no: number; idx: number }; report?: boolean } | null>(null);
+  const [open, setOpen] = useState<{ u: UnitInfo; auto?: { no: number; idx: number }; report?: boolean; focusNo?: number } | null>(null);
   const [nonce, setNonce] = useState(0);
-  const [readCode, setReadCode] = useState<string | null>(null);
+  useEffect(() => { setOpen(null); }, [homeNonce]);
 
   useEffect(() => {
     supabase.from('learner_units').select('unit_id, version, bundle, unit_no, unit_title, book_id, book_title, grade, publisher').then(({ data, error }) => {
@@ -128,15 +130,12 @@ function Main({ session }: { session: Session }) {
     if (error) return '저장하지 못했어요: ' + error.message;
     setProf((p) => ({ ...p, name, grade })); return '저장했어요.';
   }
-  if (open) return <UnitView key={open.u.unit_id + (open.auto ? 'a' : '') + (open.report ? 'r' : '')} row={mk(open.u)} autoStart={open.auto} startReport={open.report} onBack={() => { setOpen(null); setNonce((n) => n + 1); }} />;
+  if (open) return <UnitView key={open.u.unit_id + (open.auto ? 'a' : '') + (open.report ? 'r' : '')} row={mk(open.u)} autoStart={open.auto} startReport={open.report} focusNo={open.focusNo} onBack={() => { setOpen(null); setNonce((n) => n + 1); }} />;
   return (
     <>
-      <Nav tab={tab} setTab={setTab} />
-      {tab === 'home' && <FridayReading uid={uid} onGo={(c) => { setReadCode(c); setTab('reading'); }} />}
       {tab === 'home' && <HomeView name={prof.name} books={books} bookId={bookId} onBook={pickBook} units={bUnits} rows={rows} unit={cur ?? null} onUnit={setViewId}
-        onStart={(u, a) => setOpen({ u, auto: a })} onOpenUnit={(u) => setOpen({ u })} onReport={(u) => setOpen({ u, report: true })} />}
-      {tab === 'lessons' && <LessonsView books={books} bookId={bookId} onBook={pickBook} units={bUnits} rows={rows} currentId={cur?.unit_id ?? null} onPick={(id) => { setViewId(id); setTab('home'); }} />}
-      {tab === 'reading' && <ReadingTab uid={uid} openCode={readCode} onOpened={() => setReadCode(null)} onExit={() => setTab('home')} />}
+        onOpenUnit={(u, n) => setOpen({ u, focusNo: n })} onReport={(u) => setOpen({ u, report: true })} />}
+      {tab === 'reading' && <ReadingTab uid={uid} openCode={null} onOpened={() => {}} onExit={() => setTab('home')} />}
       {tab === 'report' && <ReadingSummary uid={uid} />}
       {tab === 'report' && <ReportsView units={bUnits} rows={rows} onOpen={(u) => setOpen({ u, report: true })} />}
       {tab === 'my' && <MyView email={session.user.email ?? ''} name={prof.name} grade={prof.grade} books={books} bookId={bookId} rows={rows} units={bUnits} onSave={saveProfile} onBook={pickBook} onLogout={() => supabase.auth.signOut()} />}
@@ -150,7 +149,8 @@ interface Prog { stars: number; ok: number; total: number; detail?: { tags: TagS
 const pkey = (lv: string, no: number, i: number) => `${lv}:${no}:${i}`;
 const stars = (n: number) => '★'.repeat(n) + '☆'.repeat(3 - n);
 
-function UnitView({ row, onBack, autoStart, startReport }: { row: BundleRow; onBack: () => void; autoStart?: { no: number; idx: number }; startReport?: boolean }) {
+function UnitView({ row, onBack, autoStart, startReport, focusNo }: { row: BundleRow; onBack: () => void; autoStart?: { no: number; idx: number }; startReport?: boolean; focusNo?: number }) {
+  useEffect(() => { if (focusNo) setTimeout(() => document.getElementById('les-' + focusNo)?.scrollIntoView({ block: 'start' }), 300); }, [focusNo]);
   const lvKey = 'mg:level';
   const [level, setLevelState] = useState<Level>(() => { if (autoStart || startReport) return 'CORE'; try { const v = localStorage.getItem(lvKey) as Level; return LEVELS.includes(v) ? v : 'CORE'; } catch { return 'CORE'; } });
   const setLevel = (l: Level) => { setLevelState(l); try { localStorage.setItem(lvKey, l); } catch { /* 무시 */ } };
@@ -289,7 +289,7 @@ function UnitView({ row, onBack, autoStart, startReport }: { row: BundleRow; onB
         const acts = lessons[String(no)];
         const dc = doneCount(no);
         return (
-          <div className="mx-card" key={no}>
+          <div className="mx-card" key={no} id={'les-' + no}>
             <h3>{no}차시 · {m?.en ?? ''} <span className="mx-muted">{m?.ko}</span> <span className={dc === studyN(no) ? 'mx-chip mx-ok' : 'mx-chip'}>{dc}/{studyN(no)}</span>{no === reportNo && report0 && <button className="mx-link" style={{ marginLeft: 12 }} onClick={() => setRep(true)}>결과 보기</button>}</h3>
             {m && <p className="mx-muted">{m.goal}</p>}
             <div className="mx-acts">
