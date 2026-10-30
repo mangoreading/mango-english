@@ -136,7 +136,7 @@ function Main({ session }: { session: Session }) {
       {tab === 'home' && <HomeView name={prof.name} books={books} bookId={bookId} onBook={pickBook} units={bUnits} rows={rows} unit={cur ?? null} onUnit={setViewId}
         onStart={(u, a) => setOpen({ u, auto: a })} onOpenUnit={(u) => setOpen({ u })} onReport={(u) => setOpen({ u, report: true })} />}
       {tab === 'lessons' && <LessonsView books={books} bookId={bookId} onBook={pickBook} units={bUnits} rows={rows} currentId={cur?.unit_id ?? null} onPick={(id) => { setViewId(id); setTab('home'); }} />}
-      {tab === 'reading' && <ReadingTab uid={uid} openCode={readCode} onOpened={() => setReadCode(null)} />}
+      {tab === 'reading' && <ReadingTab uid={uid} openCode={readCode} onOpened={() => setReadCode(null)} onExit={() => setTab('home')} />}
       {tab === 'report' && <ReadingSummary uid={uid} />}
       {tab === 'report' && <ReportsView units={bUnits} rows={rows} onOpen={(u) => setOpen({ u, report: true })} />}
       {tab === 'my' && <MyView email={session.user.email ?? ''} name={prof.name} grade={prof.grade} books={books} bookId={bookId} rows={rows} units={bUnits} onSave={saveProfile} onBook={pickBook} onLogout={() => supabase.auth.signOut()} />}
