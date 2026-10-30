@@ -99,3 +99,5 @@
 .mr-root.mr-theme-lime .page-counter, .mr-root.mr-theme-lime .play-btn, .mr-root.mr-theme-lime .btn-status-link, .mr-root.mr-theme-lime .user-chip,
 .mr-root.mr-theme-lime .sub-chip, .mr-root.mr-theme-lime .btn-cam-start, .mr-root.mr-theme-lime .video-btn, .mr-root.mr-theme-lime .week-nav .week-label,
 .mr-root.mr-theme-lime .week-nav button { font-weight: 500; }
+
+.mr-root.mr-theme-lime .topbar #btnRestart { padding: 5px 15px; font-size: 13px; box-shadow: 0 2px 0 var(--forest); }
