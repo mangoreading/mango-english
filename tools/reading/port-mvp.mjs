@@ -109,6 +109,8 @@ rep('<span class="pic">${c.pic}</span>${c.word}', '<span class="pic">${wimg(c.wo
 // 5c) MVP 의 시험용 시드(THE_PIE 진도 0)는 THE_PIE 가 없으면 오류가 나므로 뺀다
 js = js.replace("  bookProgress['THE_PIE'].stepReached = 0;\n", '');
 must('THE_PIE 시드 제거', !js.includes("bookProgress['THE_PIE']"));
+js = js.replace("      renderPage();\n    }\n    if (n === 4) renderQuiz();", "      renderPage();\n      autoPlay();\n    }\n    if (n === 4) renderQuiz();");
+must('showStep 자동 재생', js.includes('autoPlay();\n    }\n    if (n === 4)'));
 // 5d) Read Aloud: 1페이지 보기 / 2페이지 보기(펼침면) 전환
 js = js.replace("      if (!abort.cancelled) {\n          clearHighlights();\n          const h = modeHints[readMode];\n          showPrompt(h.msg, h.cls);\n        }\n      };", "      if (!abort.cancelled) {\n          clearHighlights();\n          const h = modeHints[readMode];\n          showPrompt(h.msg, h.cls);\n          if (twoNext()) { activeSide = 1; playActive(); }\n        }\n      };");
 must('listen 이어 읽기', js.includes('playActive(); }\n        }\n      };'));
@@ -140,6 +142,12 @@ cut(/  function renderPage\(\) \{/, /\n  function speakWord\(w, i\) \{/, `  // -
     if (cleaned) speak(cleaned, 0.9);
     const el = document.querySelector((side === 1 ? '#pageText2' : '#pageText') + ' .word[data-i="' + i + '"]');
     if (el) { el.classList.add('speaking'); setTimeout(() => el.classList.remove('speaking'), 500); }
+  }
+  // 첫 페이지 진입/페이지 넘김 시 바로 읽어 준다(렌더가 끝난 뒤 시작, 그 사이 또 넘기면 앞의 예약은 취소)
+  let autoTok = 0;
+  function autoPlay() {
+    const tok = ++autoTok;
+    setTimeout(() => { if (tok === autoTok && currentView === 'book' && currentStep === 3) playPage(); }, 400);
   }
   function setPageView(n) {
     pageView = n === 2 ? 2 : 1;
@@ -196,12 +204,12 @@ cut(/  function renderPage\(\) \{/, /\n  function speakWord\(w, i\) \{/, `  // -
 `, 'renderPage');
 cut(/  function nextPage\(\) \{/, /\n  \/\/ ---------- STEP 4: COMPREHENSION QUIZ ----------/, `  function nextPage() {
     const step = pageView === 2 ? 2 : 1;
-    if (pageIdx + step < pages.length) { pageIdx += step; renderPage(); }
+    if (pageIdx + step < pages.length) { pageIdx += step; renderPage(); autoPlay(); }
     else nextStep();
   }
   function prevPage() {
     const step = pageView === 2 ? 2 : 1;
-    if (pageIdx > 0) { pageIdx = Math.max(0, pageIdx - step); renderPage(); }
+    if (pageIdx > 0) { pageIdx = Math.max(0, pageIdx - step); renderPage(); autoPlay(); }
   }
 `, 'nextPage');
 must('selector 정리', !js.includes("'#pageText .word") && !js.includes("`#pageText .word"));

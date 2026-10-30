@@ -285,6 +285,7 @@ export function startMr(ctx: MrCtx): () => void {
         else b.classList.remove('active');
       });
       renderPage();
+      autoPlay();
     }
     if (n === 4) renderQuiz();
     if (n === 5) renderTrace();
@@ -1235,6 +1236,12 @@ export function startMr(ctx: MrCtx): () => void {
     const el = document.querySelector((side === 1 ? '#pageText2' : '#pageText') + ' .word[data-i="' + i + '"]');
     if (el) { el.classList.add('speaking'); setTimeout(() => el.classList.remove('speaking'), 500); }
   }
+  // 첫 페이지 진입/페이지 넘김 시 바로 읽어 준다(렌더가 끝난 뒤 시작, 그 사이 또 넘기면 앞의 예약은 취소)
+  let autoTok = 0;
+  function autoPlay() {
+    const tok = ++autoTok;
+    setTimeout(() => { if (tok === autoTok && currentView === 'book' && currentStep === 3) playPage(); }, 400);
+  }
   function setPageView(n) {
     pageView = n === 2 ? 2 : 1;
     try { localStorage.setItem('mr_pageview', String(pageView)); } catch (e) {}
@@ -1511,12 +1518,12 @@ export function startMr(ctx: MrCtx): () => void {
 
   function nextPage() {
     const step = pageView === 2 ? 2 : 1;
-    if (pageIdx + step < pages.length) { pageIdx += step; renderPage(); }
+    if (pageIdx + step < pages.length) { pageIdx += step; renderPage(); autoPlay(); }
     else nextStep();
   }
   function prevPage() {
     const step = pageView === 2 ? 2 : 1;
-    if (pageIdx > 0) { pageIdx = Math.max(0, pageIdx - step); renderPage(); }
+    if (pageIdx > 0) { pageIdx = Math.max(0, pageIdx - step); renderPage(); autoPlay(); }
   }
 
 
@@ -2289,6 +2296,6 @@ export function startMr(ctx: MrCtx): () => void {
   enterApp();
 
 
-  Object.assign(window, { updateProgress, showView, changeWeek, renderHome, loadBook, wimg, applyBookData, speakBookTitle, openBook, renderStatus, showStep, nextStep, prevStep, goTo, getFemaleVoice, getAudioCtx, playShhSound, playZzzSound, playMmmSound, playBrrrSound, playBuzzSound, normalizeForTTS, findSfx, parseStutterToken, tokenizeForSpeech, ttsUtter, speak, cancelSpeak, switchPhonics, renderPhonicsTabs, _rhymeEnding, renderPhonics, renderKey, tapKeyCard, nextKeyWord, prevKeyWord, showPrompt, cancelPlay, setMode, getWords, getChunks, isChunkMode, getWordChunkIdx, onWordTapSide, setPageView, renderOne, renderPage, speakWord, onWordTap, echoNext, playPage, playActive, nextPage, prevPage, renderQuiz, answerQuiz, renderTrace, placeWord, resetTrace, nextTrace, prevTrace, getRecognizer, normalizeWord, tokenize, evaluatePronunciation, renderSpeak, speakListen, speakRecord, showSpeakScore, speakRetry, nextSpeak, prevSpeak, renderVideoScript, videoStartCamera, videoReRecord, pickRecorderMime, videoStartRecord, videoStopRecord, videoStopCamera, videoSubmit, launchConfetti, probeStorage, warnIfStorageDisabled, progressKey, loadProgress, saveProgress, persistProgress, openIDB, idbTx, idbPutRecording, idbDeleteRecording, idbGetByAccount, idbGetById, buildTakeFilename, openVideoModal, closeVideoModal, closeVideoModalIfBackdrop, refreshVideoTakes, getCurrentUser, setCurrentUser, clearCurrentUser, showLoginScreen, enterApp, computeNextWeek, doLogin, doLogout, applyStageBackground });
+  Object.assign(window, { updateProgress, showView, changeWeek, renderHome, loadBook, wimg, applyBookData, speakBookTitle, openBook, renderStatus, showStep, nextStep, prevStep, goTo, getFemaleVoice, getAudioCtx, playShhSound, playZzzSound, playMmmSound, playBrrrSound, playBuzzSound, normalizeForTTS, findSfx, parseStutterToken, tokenizeForSpeech, ttsUtter, speak, cancelSpeak, switchPhonics, renderPhonicsTabs, _rhymeEnding, renderPhonics, renderKey, tapKeyCard, nextKeyWord, prevKeyWord, showPrompt, cancelPlay, setMode, getWords, getChunks, isChunkMode, getWordChunkIdx, onWordTapSide, autoPlay, setPageView, renderOne, renderPage, speakWord, onWordTap, echoNext, playPage, playActive, nextPage, prevPage, renderQuiz, answerQuiz, renderTrace, placeWord, resetTrace, nextTrace, prevTrace, getRecognizer, normalizeWord, tokenize, evaluatePronunciation, renderSpeak, speakListen, speakRecord, showSpeakScore, speakRetry, nextSpeak, prevSpeak, renderVideoScript, videoStartCamera, videoReRecord, pickRecorderMime, videoStartRecord, videoStopRecord, videoStopCamera, videoSubmit, launchConfetti, probeStorage, warnIfStorageDisabled, progressKey, loadProgress, saveProgress, persistProgress, openIDB, idbTx, idbPutRecording, idbDeleteRecording, idbGetByAccount, idbGetById, buildTakeFilename, openVideoModal, closeVideoModal, closeVideoModalIfBackdrop, refreshVideoTakes, getCurrentUser, setCurrentUser, clearCurrentUser, showLoginScreen, enterApp, computeNextWeek, doLogin, doLogout, applyStageBackground });
   return () => { try { cancelPlay(); } catch (e) {} try { videoStopCamera(); } catch (e) {} try { window.speechSynthesis.cancel(); } catch (e) {} videoTakes.forEach(t => { try { URL.revokeObjectURL(t.url); } catch (_) {} }); };
 }
