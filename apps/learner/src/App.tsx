@@ -32,9 +32,14 @@ export function App() {
   return <Shell session={session} tab={tab} setTab={setTab} onLogo={() => { setTab('home'); setHomeNonce((n) => n + 1); }}>{session ? <Main session={session} tab={tab} setTab={setTab} homeNonce={homeNonce} /> : <Login />}</Shell>;
 }
 
+/** 화면 기준 1280×800. 창이 작으면 비율만 줄인다(교과서 홈은 높이까지 맞춰 한 화면에 들어가게). 모바일 폭(820 이하)은 그대로. */
+function stageZoom(tab?: Tab) { const w = window.innerWidth, h = window.innerHeight; if (w <= 820) return 1; return Math.min(1, w / 1280, !tab || tab === 'home' ? h / 800 : 1); }
+function useStageZoom(tab?: Tab) { const [z, setZ] = useState(() => stageZoom(tab)); useEffect(() => { const f = () => setZ(stageZoom(tab)); f(); window.addEventListener('resize', f); return () => window.removeEventListener('resize', f); }, [tab]); return z; }
+
 function Shell({ children, session, tab, setTab, onLogo }: { children: React.ReactNode; session?: Session | null; tab?: Tab; setTab?: (t: Tab) => void; onLogo?: () => void }) {
+  const z = useStageZoom(tab);
   return (
-    <div className="mx-shell">
+    <div className="mx-shell" style={{ zoom: z }}>
       <header className="mx-top">
         <button className="mx-logo" onClick={onLogo} aria-label="Mango English 처음으로"><img src="/img/logo.png" alt="Mango English" /></button>
         {session && tab && setTab && <Nav tab={tab} setTab={setTab} />}
@@ -95,8 +100,8 @@ function Main({ session, tab, setTab, homeNonce }: { session: Session; tab: Tab;
   const [viewId, setViewId] = useState<string | null>(null);
   const [open, setOpen] = useState<{ u: UnitInfo; auto?: { no: number; idx: number }; report?: boolean; focusNo?: number } | null>(null);
   const [nonce, setNonce] = useState(0);
-  const [popScale, setPopScale] = useState(1);   // 팝업은 1280×800 기준, 창이 작으면 비율만 줄인다
-  useEffect(() => { const f = () => setPopScale(Math.min(1, window.innerWidth / 1280, window.innerHeight / 800)); f(); window.addEventListener('resize', f); return () => window.removeEventListener('resize', f); }, []);
+  const [popScale, setPopScale] = useState(1);   // 팝업은 1280×800 기준(화면 전체 배율 stageZoom 을 뺀 나머지만 보정)
+  useEffect(() => { const f = () => { const w = window.innerWidth, h = window.innerHeight; setPopScale(Math.min(1, w / 1280, h / 800) / stageZoom(tab)); }; f(); window.addEventListener('resize', f); return () => window.removeEventListener('resize', f); }, [tab]);
   useEffect(() => { setOpen(null); }, [homeNonce]);
 
   useEffect(() => {
