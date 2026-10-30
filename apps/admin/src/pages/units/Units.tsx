@@ -7,6 +7,7 @@ import { Review } from './Review';
 import { Source } from './Source';
 import { openReviewPopup } from './ReviewPopup';
 import { UnitVocab } from './Vocab';
+import { UnitGoals } from './Goals';
 
 type Status = 'draft' | 'review' | 'approved' | 'rejected';
 const STATUS_KO: Record<Status, string> = { draft: '초안', review: '검수중', approved: '승인', rejected: '반려' };
@@ -80,18 +81,20 @@ export function Units({ uid }: { uid: string }) {
 }
 
 function UnitEditor({ unit, uid, onBack }: { unit: UnitRow; uid: string; onBack: () => void }) {
-  const [tab, setTab] = useState<'flow' | 'vocab' | 'items' | 'review' | 'source'>('flow');
+  const [tab, setTab] = useState<'flow' | 'goals' | 'vocab' | 'items' | 'review' | 'source'>('flow');
   return (
     <>
       <PageHead title={`Lesson ${unit.no} · ${unit.title}`} sub={<button className="mx-link" onClick={onBack}>← 단원 목록</button>} />
       <div className="mx-seg">
         <button className={tab === 'flow' ? 'on' : ''} onClick={() => setTab('flow')}>학습 흐름</button>
+        <button className={tab === 'goals' ? 'on' : ''} onClick={() => setTab('goals')}>학습목표</button>
         <button className={tab === 'vocab' ? 'on' : ''} onClick={() => setTab('vocab')}>단어</button>
         <button className={tab === 'items' ? 'on' : ''} onClick={() => setTab('items')}>문항</button>
         <button className={tab === 'source' ? 'on' : ''} onClick={() => setTab('source')}>교과서 자료</button>
         <button title="새 창으로 열려요. 이 화면은 그대로 있어요" onClick={() => { const err = openReviewPopup(unit.id); if (err) window.alert(err); }}>학생 화면 검수 ↗</button>
       </div>
       {tab === 'flow' && <UnitFlow unitId={unit.id} />}
+      {tab === 'goals' && <UnitGoals unitId={unit.id} />}
       {tab === 'vocab' && <UnitVocab unitId={unit.id} />}
       {tab === 'items' && <Items unitId={unit.id} uid={uid} />}
       {tab === 'review' && <Review unitId={unit.id} uid={uid} />}
