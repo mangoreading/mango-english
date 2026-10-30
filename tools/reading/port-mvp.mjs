@@ -269,7 +269,7 @@ js = js.replace("  function speakRecord() {\n    if (isRecording) {", `  // ----
     const v = acc * 0.6 + comp * 0.4;
     return v >= 85 ? 4 : v >= 70 ? 3 : v >= 50 ? 2 : v >= 30 ? 1 : 0;
   }
-  // 단어별 정확도를 목표 문장의 단어에 붙인다(70% 이상 초록, 40~69% 주황, 40% 미만 빨강)
+  // 단어별 정확도를 단어 색으로만 보여 준다(70% 이상 초록, 40~69% 주황, 40% 미만 빨강, 숫자는 표시하지 않음)
   function azMarkWords(info, target) {
     const spans = [...document.querySelectorAll('#speakTarget .word')]; if (!spans.length) return;
     const ws = (info.words || []).filter(x => x.err !== 'Insertion').map(x => ({ w: normalizeWord(x.w), acc: (typeof x.acc === 'number') ? x.acc : (x.err === 'Omission' ? 0 : undefined) }));
@@ -281,7 +281,6 @@ js = js.replace("  function speakRecord() {\n    if (isRecording) {", `  // ----
       sp.classList.remove('w-ok', 'w-mid', 'w-bad'); const old = sp.querySelector('small'); if (old) old.remove();
       if (typeof acc !== 'number') return;
       sp.classList.add(acc >= 70 ? 'w-ok' : acc >= 40 ? 'w-mid' : 'w-bad');
-      if (acc < 70) { const sm = document.createElement('small'); sm.textContent = Math.round(acc) + '%'; sp.appendChild(sm); }
     });
   }
   function speakRecordAzure() {
