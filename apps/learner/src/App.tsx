@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { configProblem, configured, supabase } from './supabase';
 import type { BundleRow, Level } from './types';
 import { NativePlayer, isNative, type NativeResult, type VWord } from '@mango/play';
 import '@mango/play/styles.css';
 import { ReportView } from './Report';
+import { HomeView, LessonsView, MyView, Nav, ReportsView, type BookOpt, type Tab } from './Home';
+import { currentUnit, type ProgRow, type UnitInfo } from './home';
 import { areaOf, buildReport, practiceFor, type StepRef } from './reportCalc';
 import { books, lesson8, lessonMeta, playActivity, tallyTags, type BookMeta, type PlayResult, type TagStats } from './legacy';
 
@@ -24,7 +26,7 @@ export function App() {
 
   if (!configured) return <Shell><Notice title="설정이 필요해요">{configProblem}</Notice></Shell>;
   if (!ready) return <Shell><p className="mx-muted">불러오는 중…</p></Shell>;
-  return <Shell session={session}>{session ? <Units /> : <Login />}</Shell>;
+  return <Shell session={session}>{session ? <Main session={session} /> : <Login />}</Shell>;
 }
 
 function Shell({ children, session }: { children: React.ReactNode; session?: Session | null }) {
@@ -39,7 +41,7 @@ function Shell({ children, session }: { children: React.ReactNode; session?: Ses
           </span>
         )}
       </header>
-      <main>{children}</main>
+      <main className="mx-main-clean">{children}</main>
     </div>
   );
 }
@@ -79,34 +81,60 @@ function Login() {
   );
 }
 
-function Units() {
-  const [rows, setRows] = useState<BundleRow[] | null>(null);
+function Main({ session }: { session: Session }) {
+  const uid = session.user.id;
+  const [units, setUnits] = useState<UnitInfo[] | null>(null);
+  const [rows, setRows] = useState<ProgRow[]>([]);
+  const [prof, setProf] = useState<{ name: string; grade: number | null; book: string | null }>({ name: '', grade: null, book: null });
   const [err, setErr] = useState('');
-  const [open, setOpen] = useState<BundleRow | null>(null);
+  const [tab, setTab] = useState<Tab>('home');
+  const [bookSel, setBookSel] = useState<string | null>(null);
+  const [viewId, setViewId] = useState<string | null>(null);
+  const [open, setOpen] = useState<{ u: UnitInfo; auto?: { no: number; idx: number }; report?: boolean } | null>(null);
+  const [nonce, setNonce] = useState(0);
 
   useEffect(() => {
-    supabase.from('latest_bundles').select('unit_id, version, bundle, published_at').then(({ data, error }) => {
-      if (error) setErr(error.message); else setRows((data ?? []) as BundleRow[]);
+    supabase.from('learner_units').select('unit_id, version, bundle, unit_no, unit_title, book_id, book_title, grade, publisher').then(({ data, error }) => {
+      if (error) setErr(error.message); else setUnits(((data ?? []) as unknown as UnitInfo[]).sort((a, b) => a.unit_no - b.unit_no));
     });
-  }, []);
+    supabase.from('profiles').select('display_name, grade, current_book_id').eq('id', uid).maybeSingle().then(({ data }) => {
+      if (data) setProf({ name: (data.display_name as string) ?? '', grade: (data.grade as number | null) ?? null, book: (data.current_book_id as string | null) ?? null });
+    });
+  }, [uid]);
+  useEffect(() => {
+    supabase.from('activity_progress').select('unit_id, level, lesson, act_idx, stars, ok, total, updated_at').eq('user_id', uid).then(({ data }) => setRows((data ?? []) as ProgRow[]));
+  }, [uid, nonce]);
 
-  if (err) return <Notice title="단원을 불러오지 못했어요">{err}</Notice>;
-  if (!rows) return <p className="mx-muted">단원을 불러오는 중…</p>;
-  if (open) return <UnitView row={open} onBack={() => setOpen(null)} />;
-  if (!rows.length) return <Notice title="발행된 단원이 없어요">관리자가 단원을 발행하면 여기에 나타나요.</Notice>;
+  if (err) return <Notice title="Lesson을 불러오지 못했어요">{err}</Notice>;
+  if (!units) return <p className="mx-muted">불러오는 중…</p>;
 
+  const books: BookOpt[] = [...new Map(units.map((u) => [u.book_id, { id: u.book_id, label: `${u.publisher} ${u.book_title}`, grade: u.grade }])).values()].sort((a, b) => a.grade - b.grade || a.label.localeCompare(b.label));
+  // 학습 중인 교재: 직접 고른 것 → 저장된 것 → 가장 최근에 공부한 교재 → 내 학년 교재 → 첫 교재
+  const lastBook = (() => { const last = [...rows].sort((a, b) => b.updated_at.localeCompare(a.updated_at))[0]; return last ? units.find((u) => u.unit_id === last.unit_id)?.book_id : undefined; })();
+  const bookId = [bookSel, prof.book, lastBook, books.find((x) => x.grade === prof.grade)?.id, books[0]?.id].find((x) => x && books.some((b) => b.id === x)) ?? '';
+  const bUnits = units.filter((u) => u.book_id === bookId);
+  const cur = bUnits.find((u) => u.unit_id === viewId) ?? currentUnit(bUnits, rows);
+  const mk = (u: UnitInfo): BundleRow => ({ unit_id: u.unit_id, version: u.version, bundle: u.bundle, published_at: '' });
+
+  async function pickBook(id: string) {
+    setBookSel(id); setViewId(null);
+    await supabase.from('profiles').update({ current_book_id: id }).eq('id', uid);
+    setProf((p) => ({ ...p, book: id }));
+  }
+  async function saveProfile(name: string, grade: number | null): Promise<string> {
+    const { error } = await supabase.from('profiles').update({ display_name: name, grade }).eq('id', uid);
+    if (error) return '저장하지 못했어요: ' + error.message;
+    setProf((p) => ({ ...p, name, grade })); return '저장했어요.';
+  }
+  if (open) return <UnitView key={open.u.unit_id + (open.auto ? 'a' : '') + (open.report ? 'r' : '')} row={mk(open.u)} autoStart={open.auto} startReport={open.report} onBack={() => { setOpen(null); setNonce((n) => n + 1); }} />;
   return (
     <>
-      <h1>학습할 Lesson 선택</h1>
-      <div className="mx-grid">
-        {rows.map((r) => (
-          <button key={r.unit_id} className="mx-unit" onClick={() => setOpen(r)}>
-            <span className="mx-chip">LESSON {r.bundle.unit.no}</span>
-            <b>{r.bundle.unit.title}</b>
-            <span className="mx-muted">버전 {r.version} · 어휘 {r.bundle.vocab.length}개</span>
-          </button>
-        ))}
-      </div>
+      <Nav tab={tab} setTab={setTab} />
+      {tab === 'home' && <HomeView name={prof.name} books={books} bookId={bookId} onBook={pickBook} units={bUnits} rows={rows} unit={cur ?? null} onUnit={setViewId}
+        onStart={(u, a) => setOpen({ u, auto: a })} onOpenUnit={(u) => setOpen({ u })} onReport={(u) => setOpen({ u, report: true })} />}
+      {tab === 'lessons' && <LessonsView books={books} bookId={bookId} onBook={pickBook} units={bUnits} rows={rows} currentId={cur?.unit_id ?? null} onPick={(id) => { setViewId(id); setTab('home'); }} />}
+      {tab === 'report' && <ReportsView units={bUnits} rows={rows} onOpen={(u) => setOpen({ u, report: true })} />}
+      {tab === 'my' && <MyView email={session.user.email ?? ''} name={prof.name} grade={prof.grade} books={books} bookId={bookId} rows={rows} units={bUnits} onSave={saveProfile} onBook={pickBook} onLogout={() => supabase.auth.signOut()} />}
     </>
   );
 }
@@ -117,9 +145,9 @@ interface Prog { stars: number; ok: number; total: number; detail?: { tags: TagS
 const pkey = (lv: string, no: number, i: number) => `${lv}:${no}:${i}`;
 const stars = (n: number) => '★'.repeat(n) + '☆'.repeat(3 - n);
 
-function UnitView({ row, onBack }: { row: BundleRow; onBack: () => void }) {
+function UnitView({ row, onBack, autoStart, startReport }: { row: BundleRow; onBack: () => void; autoStart?: { no: number; idx: number }; startReport?: boolean }) {
   const lvKey = 'mg:level';
-  const [level, setLevelState] = useState<Level>(() => { try { const v = localStorage.getItem(lvKey) as Level; return LEVELS.includes(v) ? v : 'CORE'; } catch { return 'CORE'; } });
+  const [level, setLevelState] = useState<Level>(() => { if (autoStart || startReport) return 'CORE'; try { const v = localStorage.getItem(lvKey) as Level; return LEVELS.includes(v) ? v : 'CORE'; } catch { return 'CORE'; } });
   const setLevel = (l: Level) => { setLevelState(l); try { localStorage.setItem(lvKey, l); } catch { /* 무시 */ } };
   const [meta, setMeta] = useState<LMeta[]>([]);
   const [err, setErr] = useState('');
@@ -212,7 +240,7 @@ function UnitView({ row, onBack }: { row: BundleRow; onBack: () => void }) {
   }
 
   // 결과 리포트(마지막 core 차시 = 6차시 결과를 영역별로)
-  const [rep, setRep] = useState(false);
+  const [rep, setRep] = useState(!!startReport);
   const progAt = (no: number, idx: number) => { const p = prog[pkey(level, no, idx)]; return p ? { ok: p.ok, total: p.total } : undefined; };
   const report0 = b.flow ? buildReport(b.flow, progAt) : null;
   const hasItems = (no: number, idx: number) => ((lessons[String(no)] ?? [])[idx] ?? []).length > 0;
@@ -224,6 +252,9 @@ function UnitView({ row, onBack }: { row: BundleRow; onBack: () => void }) {
   }
   function retryStep(r: StepRef) { const acts = lessons[String(r.no)] ?? []; run(r.no, r.idx, `${r.no}차시 · ${r.name}`, acts[r.idx], undefined, () => setRep(true), '결과 보기'); }
 
+  const started = useRef(false);
+  useEffect(() => { if (autoStart && meta.length && !started.current) { started.current = true; start(autoStart.no, autoStart.idx); } /* eslint-disable-next-line */ }, [meta]);
+
   // 이어하기: 가장 먼저 끝내지 못한 활동
   const nos = Object.keys(lessons).map(Number).sort((a, c) => a - c);
   let resume: { no: number; idx: number } | null = null;
@@ -233,7 +264,7 @@ function UnitView({ row, onBack }: { row: BundleRow; onBack: () => void }) {
 
   if (rep && report0) return (<>
     <ReportView title={`Lesson ${b.unit.no} · ${b.unit.title}`} report={report0} practice={(a) => practiceFor(a.area, b.flow, hasItems, report0.reportLesson)}
-      onPractice={(_a, list) => { setRep(false); practiceSeq(list); }} onRetry={(r) => { setRep(false); retryStep(r); }} onBack={() => setRep(false)} />
+      onPractice={(_a, list) => { setRep(false); practiceSeq(list); }} onRetry={(r) => { setRep(false); retryStep(r); }} onBack={() => (startReport ? onBack() : setRep(false))} />
   </>);
   return (
     <>
