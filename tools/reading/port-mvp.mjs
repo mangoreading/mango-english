@@ -247,7 +247,7 @@ cut(/  function renderPage\(\) \{/, /\n  function speakWord\(w, i\) \{/, `  // -
   }
   // 첫 페이지 진입/페이지 넘김 시 바로 읽어 준다(렌더가 끝난 뒤 시작, 그 사이 또 넘기면 앞의 예약은 취소)
   let autoTok = 0;
-  function autoPlay(delay = 400) {
+  function autoPlay(delay = 1000) {
     const tok = ++autoTok;
     setTimeout(() => { if (tok === autoTok && currentView === 'book' && currentStep === 3) playPage(); }, delay);
   }
