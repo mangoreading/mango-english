@@ -844,14 +844,14 @@ export function startMr(ctx: MrCtx): () => void {
       speak(k.word);
     } else {
       card.innerHTML = `
-        <div class="kw-row">
-          <div class="kw-emoji sm">${wimg(k.word, k.emoji)}</div>
+        <div class="kw-split">
+          <div class="kw-emoji lg">${wimg(k.word, k.emoji)}</div>
           <div class="kw-text">
-            <div class="kw-word" style="font-size:64px">${k.word}</div>
+            <div class="kw-word">${k.word}</div>
             <div class="kw-kor">${k.kor}</div>
+            <div class="kw-scene">${k.scene}</div>
           </div>
         </div>
-        <div class="kw-scene">📖 ${k.scene}</div>
       `;
     }
     // Tap indicator dots — done (past) / active (current) / (future = default)

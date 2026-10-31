@@ -1980,3 +1980,13 @@
 .mr-root .kw-emoji.sm .word-img { height: 110px; max-width: 160px; }
 .mr-root .cvc-card:has(.word-img) { flex-direction: column; padding: 12px 22px 14px; gap: 4px; }
 .mr-root .cvc-card .pic .word-img { height: 92px; max-width: 120px; }
+
+/* STEP2 3번째(뜻과 이야기): 왼쪽 큰 그림 + 오른쪽 단어·뜻·이야기 */
+.mr-root .keyword-card:has(.kw-split) { width: min(100%, 920px); min-height: 340px; padding: 28px 44px; }
+.mr-root .kw-split { display: flex; align-items: center; gap: 48px; width: 100%; }
+.mr-root .kw-split .kw-emoji { flex: 0 0 44%; display: flex; justify-content: center; align-items: center; font-size: 200px; }
+.mr-root .kw-split .kw-emoji .word-img { height: 280px; max-width: 100%; margin: 0; }
+.mr-root .kw-split .kw-text { flex: 1; min-width: 0; text-align: left; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.mr-root .kw-split .kw-word { font-size: 84px; letter-spacing: 2px; }
+.mr-root .kw-split .kw-kor { font-size: 40px; margin: 0 0 14px; }
+.mr-root .kw-split .kw-scene { font-size: 20px; margin: 0; width: 100%; box-sizing: border-box; text-align: left; }
