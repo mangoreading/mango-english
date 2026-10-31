@@ -847,7 +847,7 @@ export function startMr(ctx: MrCtx): () => void {
         <div class="kw-split">
           <div class="kw-emoji lg">${wimg(k.word, k.emoji)}</div>
           <div class="kw-text">
-            <div class="kw-word">${k.word}</div>
+            <div class="kw-word" style="font-size:${Math.max(40, Math.min(76, Math.floor(360 / (String(k.word).length * 0.62))))}px">${k.word}</div>
             <div class="kw-kor">${k.kor}</div>
             <div class="kw-scene">${k.scene}</div>
           </div>
