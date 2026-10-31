@@ -502,7 +502,7 @@
     color: var(--mango-dark);
   }
   .mr-root .rhyme-box span { display: inline-block; margin: 0 8px; }
-  .mr-root .highlight-ie { color: var(--red); text-decoration: underline; text-decoration-thickness: 3px; }
+  .mr-root .highlight-ie { color: var(--red); text-decoration: none; }
 
   /* ---------- Screen 2: Key Words (Content Words) ---------- */
   .mr-root .keyword-wrap {
