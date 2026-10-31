@@ -11,3 +11,30 @@
 .mr-root.mr-inbook .app.mr-pop { display:flex; flex-direction:column; }
 .mr-pop .topbar { padding-right:64px; }
 .mr-pop-x { position:absolute; top:10px; right:12px; z-index:5; width:38px; height:38px; border-radius:50%; border:0; background:#fff; box-shadow:0 1px 6px rgba(0,0,0,.25); font-size:16px; cursor:pointer; color:#333; }
+
+/* 영어원서: 교과서 쪽과 같은 색감(흰 카드·연한 하늘색 바탕·파란 포인트)으로. 라임 테마의 색 변수를 학습앱 색으로 바꿔 끼운다 */
+.mr-root.mr-embed.mr-theme-lime {
+  --lime:#fff; --lime-hi:#DDE7FB; --lime-soft:#EAF0FB; --forest:#4F7DF0; --forest-2:#3A64D0; --leaf:#2FB26B;
+  --mango:#4F7DF0; --mango-dark:#3A64D0; --pink:#4F7DF0; --blue:#4F7DF0; --blue-dark:#3A64D0; --purple:#4F7DF0; --green:#2FB26B;
+  --cream:#F3F7FC; --ink:#1F2A44; --muted:#7a869c;
+  --shadow:0 2px 10px rgba(40,70,120,.08); --shadow-lg:0 8px 24px rgba(40,70,120,.16);
+}
+.mr-root.mr-embed.mr-theme-lime > .app#appRoot { background:#fff; border:1px solid #E1E8F4; box-shadow:0 2px 10px rgba(40,70,120,.06); }
+.mr-root.mr-embed.mr-theme-lime .app.mr-pop { background:#F3F7FC; }
+.mr-root.mr-embed.mr-theme-lime .topbar { background:#fff; border-bottom:2px solid #BBD7F2; }
+.mr-root.mr-embed.mr-theme-lime .btn-primary, .mr-root.mr-embed.mr-theme-lime .btn-next, .mr-root.mr-embed.mr-theme-lime .btn-status-link, .mr-root.mr-embed.mr-theme-lime .user-chip { box-shadow:0 3px 0 #2E4FA8; border-color:#4F7DF0; }
+.mr-root.mr-embed.mr-theme-lime .btn-primary:hover, .mr-root.mr-embed.mr-theme-lime .btn-next:hover, .mr-root.mr-embed.mr-theme-lime .btn-status-link:hover { box-shadow:0 4px 0 #2E4FA8; }
+.mr-root.mr-embed.mr-theme-lime .btn-primary:active, .mr-root.mr-embed.mr-theme-lime .btn-next:active { box-shadow:0 0 0 #2E4FA8; }
+.mr-root.mr-embed.mr-theme-lime .book-card { border:1px solid #E1E8F4; }
+.mr-root.mr-embed.mr-theme-lime .book-card .cover { background:#F3F7FC; }
+.mr-root.mr-embed.mr-theme-lime .book-card .book-ar { border-color:#D5E1F7; }
+.mr-root.mr-embed.mr-theme-lime .option.correct, .mr-root.mr-embed.mr-theme-lime .drop-zone.complete { background:#E7F6EC; }
+.mr-root.mr-embed.mr-theme-lime .welcome-copy { background:#fff; }
+.mr-root.mr-embed.mr-theme-lime .badge { background:radial-gradient(circle at 30% 30%, #fff, #DDE7FB 70%, #B8CCF6); box-shadow:0 14px 34px rgba(40,70,120,.28); }
+.mr-root.mr-embed.mr-theme-lime .video-stage { background:#1F2A44; }
+.mr-root.mr-embed.mr-theme-lime .video-stage .video-placeholder { background:linear-gradient(135deg,#2B3A5E,#1F2A44); color:#DDE7FB; }
+.mr-root.mr-embed.mr-theme-lime .nav-arrow:disabled { border-color:rgba(79,125,240,.25); color:rgba(79,125,240,.35); }
+/* 책 표지는 작게 */
+.mr-root.mr-embed .book-card .cover { aspect-ratio:auto; width:190px; height:140px; margin:0 auto; font-size:60px; }
+.mr-root.mr-embed .book-card { padding:18px; }
+.mr-root.mr-embed .book-grid { align-items:start; }

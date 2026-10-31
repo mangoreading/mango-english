@@ -3,8 +3,8 @@ import { buildReport } from './reportCalc';
 import { unitProgress, type ProgRow, type UnitInfo } from './home';
 
 export type Tab = 'home' | 'reading' | 'report' | 'my';
-/** 영어원서 탭(원서 앱 메인 화면) 표시 여부. 지금은 숨김 — 다시 쓰려면 true 로 바꾸면 된다(화면 코드는 그대로 있음). */
-export const SHOW_READING_TAB = false;
+/** 영어원서 탭 표시 여부. 기본은 숨김. 검토용: 주소 뒤에 ?reading=1 을 붙이면 이 브라우저에서만 보임(?reading=0 으로 다시 숨김). 모두에게 켜려면 true 로 바꾸면 된다. */
+export const SHOW_READING_TAB = (() => { try { if (new URLSearchParams(location.search).get('reading') === '1') localStorage.setItem('mx_show_reading', '1'); if (new URLSearchParams(location.search).get('reading') === '0') localStorage.removeItem('mx_show_reading'); return localStorage.getItem('mx_show_reading') === '1'; } catch { return false; } })();
 export const TAB_KO: [Tab, string][] = ([['home', '교과서'], ['reading', '영어원서'], ['report', 'Report'], ['my', 'MyPage']] as [Tab, string][]).filter(([k]) => k !== 'reading' || SHOW_READING_TAB);
 const stars = (n: number) => '★'.repeat(n) + '☆'.repeat(3 - n);
 export interface BookOpt { id: string; label: string; grade: number }
