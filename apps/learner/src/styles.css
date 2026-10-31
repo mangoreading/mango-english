@@ -199,3 +199,11 @@ input { font:inherit; padding:12px 14px; border:2px solid #CBD6E6; border-radius
 .mx-hw-l { list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:6px; }
 .mx-hw-l button { font:inherit; font-size:.85rem; display:flex; gap:6px; align-items:center; background:#F4F8FF; border:1px solid #E1E8F4; border-radius:999px; padding:4px 12px; cursor:pointer; color:var(--ink); }
 .mx-hw-l li.on button { background:#E7F6EC; border-color:#BFE6CD; } .mx-hw-l span { color:var(--blue); font-weight:800; } .mx-hw-l li.on span { color:#2FB26B; } .mx-hw-l em { font-style:normal; color:#FF9F1C; font-size:.75rem; }
+
+/* 교과서 홈: 높이를 정확히 800으로 고정(내용이 넘치면 안쪽에서 스크롤). 브라우저(특히 아이패드 사파리)마다 flex·% 높이 계산이 달라 늘어나는 것을 막는다 */
+.mx-shell.mx-h800 { height:800px; min-height:0; overflow:hidden; }
+.mx-shell.mx-h800 > main { min-height:0; }
+.mx-shell.mx-h800 > main > .mx-now { min-height:0; }
+.mx-shell.mx-h800 .mx-nowbody { min-height:0; grid-template-rows:minmax(0,1fr); }
+.mx-shell.mx-h800 .mx-lside { min-height:0; overflow-y:auto; grid-auto-rows:minmax(50px,1fr); }
+.mx-shell.mx-h800 .mx-detail { min-height:0; overflow-y:auto; }

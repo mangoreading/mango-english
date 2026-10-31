@@ -38,7 +38,7 @@ function useStageZoom(tab?: Tab) { const [z, setZ] = useState(() => stageZoom(ta
 function Shell({ children, session, tab, setTab, onLogo }: { children: React.ReactNode; session?: Session | null; tab?: Tab; setTab?: (t: Tab) => void; onLogo?: () => void }) {
   const z = useStageZoom(tab);
   return (
-    <div className="mx-shell" style={{ zoom: z }}>
+    <div className={'mx-shell' + (tab === 'home' && session && z < 1.0001 && window.innerWidth > 820 ? ' mx-h800' : '')} style={{ zoom: z }}>
       <header className="mx-top">
         <button className="mx-logo" onClick={onLogo} aria-label="Mango English 처음으로"><img src="/img/logo.png" alt="Mango English" /></button>
         {session && tab && setTab && <Nav tab={tab} setTab={setTab} />}
