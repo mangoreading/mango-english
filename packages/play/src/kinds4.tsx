@@ -27,26 +27,40 @@ const Ko = ({ t }: { t?: string }) => <div className="nv-koslot">{t ? <div class
 const Msg = ({ ok, bad }: { ok: boolean; bad: boolean }) => <Fb className={'nv-fbmsg' + (ok || bad ? ' on' : '') + (bad ? ' nv-fbbad' : '')}>{ok ? '정답이에요! 👏' : bad ? '다시 한번 써 보세요' : ''}</Fb>;
 
 /** 우리말을 보고 영어 문장 쓰기. mode=cap: 캡슐 안에 쓰기(M29) / box: 문장 틀(빈칸) + 아래 입력칸(M31). 확인 버튼 없이 맞으면 바로, 틀리면 Enter·칸 이탈 때 알려 준다 */
+/** 문장 틀({} 한 칸)에서 정답 문장의 빈칸 부분만 뽑는다: tpl 'How much {} this hat?' + 'How much is this hat?' → 'is'. 틀과 안 맞으면 null */
+const blankOf = (tpl: string, a: string): string | null => {
+  const [pre, suf] = tpl.split('{}'); if (suf === undefined) return null;
+  const A = a.trim(), p = pre.trim(), q = suf.trim(), L = A.toLowerCase();
+  if (!L.startsWith(p.toLowerCase()) || !L.endsWith(q.toLowerCase()) || A.length < p.length + q.length) return null;
+  return A.slice(p.length, A.length - q.length).trim() || null;
+};
+const letterHint = (b: string) => b.split(' ').map((w) => w.replace(/^(.)(.*)$/, (_m, a: string, r: string) => a + r.replace(/[A-Za-z]/g, '_'))).join(' ');
+
 function SB({ item, onDone, mode }: KindProps & { mode: 'cap' | 'box' }) {
   const [v, setV] = useState(''); const [ok, setOk] = useState(false); const [bad, setBad] = useState(false); const wrong = useRef(false);
   const ans: string = item.ans ?? '';
   const all = [ans, ...(item.alts ?? [])].join('|');
+  // 문장 틀이 있으면 빈칸에 들어갈 말만 써도 정답(전체 문장을 써도 인정)
+  const tplS: string = mode === 'box' ? (item.tpl ?? '') : '';
+  const blanks = tplS ? [ans, ...(item.alts ?? [])].map((a: string) => blankOf(tplS, a)).filter((x): x is string => !!x) : [];
+  const accAll = blanks.length ? all + '|' + blanks.join('|') : all;
+  const shown = ok && blanks.length ? blanks[0] : '';
   function judge(val: string, final: boolean) {
     setV(val);
     if (ok || !val.trim()) return;
-    if (accepts(val, all)) { setOk(true); setBad(false); say(ans); onDone([{ tag: 'write', ok: !wrong.current }]); }
+    if (accepts(val, accAll)) { setOk(true); setBad(false); say(ans); onDone([{ tag: 'write', ok: !wrong.current }]); }
     else if (final) { wrong.current = true; setBad(true); setTimeout(() => setBad(false), 700); }
   }
-  const input = <input className={'nv-winput' + (mode === 'cap' ? ' nv-winput-cap' : '') + (ok ? ' nv-wok' : '') + (bad ? ' nv-wbad' : '')} value={ok ? ans : v} disabled={ok} placeholder={mode === 'cap' ? '' : '정답을 써 보세요'} autoCapitalize="off" autoCorrect="off" spellCheck={false}
+  const input = <input className={'nv-winput' + (mode === 'cap' ? ' nv-winput-cap' : '') + (ok ? ' nv-wok' : '') + (bad ? ' nv-wbad' : '')} value={ok ? (blanks.length ? (shown || ans) : ans) : v} disabled={ok} placeholder={mode === 'cap' ? '' : blanks.length ? '빈칸에 들어갈 말을 써 보세요' : '정답을 써 보세요'} autoCapitalize="off" autoCorrect="off" spellCheck={false}
     onChange={(e) => judge(e.target.value, false)} onBlur={(e) => judge(e.target.value, true)} onKeyDown={(e) => { if (e.key === 'Enter') judge(v, true); }} />;
   const tpl: string = item.tpl ?? '';
   return (
     <div className="nv-body nv-wbody nv-wtop">
       <Ko t={item.ko} />
-      {mode === 'box' && tpl && <div className="nv-capsule nv-capsule-tpl nv-main">{tpl.replace('{}', '__________')}</div>}
+      {mode === 'box' && tpl && <div className="nv-capsule nv-capsule-tpl nv-main">{tpl.replace('{}', ok && blanks.length ? shown : '__________')}</div>}
       {mode === 'cap' ? <div className={'nv-capsule nv-capsule-in nv-main' + (ok ? ' nv-okc' : '') + (bad ? ' nv-shake nv-badc' : '')}>{input}</div> : null}
       <div className="nv-subslot">{mode === 'box' && <div className={'nv-pillin' + (bad ? ' nv-shake' : '')}>{input}</div>}
-        <HintBox lines={item.hint?.length ? item.hint : [initials(ans), item.starter ? `${item.starter} 로 시작해 보세요` : ''].filter(Boolean)} item={item} ctx={() => ({ input: v, wrong: wrong.current ? 1 : 0 })} /></div>
+        <HintBox lines={item.hint?.length ? item.hint : blanks.length ? [letterHint(blanks[0])] : [initials(ans), item.starter ? `${item.starter} 로 시작해 보세요` : ''].filter(Boolean)} item={item} ctx={() => ({ input: v, wrong: wrong.current ? 1 : 0 })} /></div>
     </div>
   );
 }
