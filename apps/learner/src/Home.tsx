@@ -52,22 +52,22 @@ export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUni
           <div className="mx-lside">
             {Array.from({ length: 6 }, (_, i) => core[i]).map((l, i) => {
               const info = l ? up.lessons.find((x) => x.no === l.no) : undefined;
-              if (!l || !info) return <div key={i} className="mx-lrow mx-lrow-off"><span className="mx-lrow-no">{i + 1}</span><span className="mx-lrow-t"><b>{l ? (l.ko || l.en) : '준비 중'}</b><small>준비 중</small></span></div>;
+              if (!l || !info) return <div key={i} className="mx-lrow mx-lrow-off"><span className="mx-lrow-no">{i + 1}차시</span><span className="mx-lrow-t"><b>{l ? (l.ko || l.en) : '준비 중'}</b><small>준비 중</small></span></div>;
               const full = info.doneN >= info.studyN, on = !up.complete && info.no === curNo;
               return (
                 <button key={i} className={'mx-lrow' + (full ? ' mx-lrow-done' : '') + (on ? ' mx-lrow-cur' : '') + (shown === info.no ? ' mx-lrow-sel' : '')} onClick={() => setSel(info.no)}>
-                  <span className="mx-lrow-no">{full ? '✓' : info.no}</span>
+                  <span className="mx-lrow-no">{info.no}차시</span>
                   <span className="mx-lrow-t"><b>{info.ko || info.en}</b><small>{on ? '지금 할 차시 · ' : ''}{info.doneN}/{info.studyN} 활동</small></span>
                   <span className="mx-lrow-bar"><i style={{ width: pct(info.doneN, info.studyN) + '%' }} /></span>
                 </button>);
             })}
             <button className={'mx-lrow mx-lrow-x' + (up.extra.total && up.extra.done >= up.extra.total ? ' mx-lrow-done' : '') + (shown === 'x' ? ' mx-lrow-sel' : '')} disabled={!up.extra.total} onClick={() => setSel('x')}>
-              <span className="mx-lrow-no">＋</span>
+              <span className="mx-lrow-no">보충</span>
               <span className="mx-lrow-t"><b>보충/확장 학습</b><small>{up.extra.total ? `${up.extra.done}/${up.extra.total} 활동` : '준비 중'}</small></span>
               <span className="mx-lrow-bar"><i style={{ width: pct(up.extra.done, up.extra.total) + '%' }} /></span>
             </button>
             <button className={'mx-lrow mx-lrow-rep' + (up.complete ? ' mx-lrow-done' : '')} disabled={!up.complete} onClick={() => onReport(unit)}>
-              <span className="mx-lrow-no">★</span>
+              <span className="mx-lrow-no">결과</span>
               <span className="mx-lrow-t"><b>Lesson Report</b><small>{up.complete ? '결과 리포트 보기' : '차시를 모두 마치면 열려요'}</small></span>
               <span className="mx-lrow-bar"><i style={{ width: up.pct + '%' }} /></span>
             </button>
