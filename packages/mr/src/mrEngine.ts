@@ -849,7 +849,7 @@ export function startMr(ctx: MrCtx): () => void {
           <div class="kw-text">
             <div class="kw-word" style="font-size:${Math.max(40, Math.min(76, Math.floor(360 / (String(k.word).length * 0.62))))}px">${k.word}</div>
             <div class="kw-kor">${k.kor}</div>
-            <div class="kw-scene">${k.scene}</div>
+            <div class="kw-scene" style="font-size:${Math.max(13, Math.min(21, Math.floor(400 / (String(k.scene || "").length * 0.92 || 1))))}px">${k.scene}</div>
           </div>
         </div>
       `;
