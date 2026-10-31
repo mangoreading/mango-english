@@ -51,7 +51,7 @@ function Shell({ children, session, tab, setTab, onLogo }: { children: React.Rea
         )}
       </header>
       <main className="mx-main-clean">{children}</main>
-      <footer className="mx-foot">© {new Date().getFullYear()} Mango Reading. All rights reserved.</footer>
+      <footer className="mx-foot">Copyright ⓒ {new Date().getFullYear()} Schole Education All rights reserved.</footer>
     </div>
   );
 }

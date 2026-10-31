@@ -179,3 +179,9 @@ input { font:inherit; padding:12px 14px; border:2px solid #CBD6E6; border-radius
 .mx-main-clean .mx-hello h1 { margin:6px 0; }
 .mx-nowbody { margin-top:12px; }
 .mx-lrow { padding:5px 12px; }
+/* 홈: 카드가 남는 높이를 채워 푸터와의 빈 공간을 없앰 */
+.mx-shell > main { display:flex; flex-direction:column; }
+.mx-shell > main > .mx-now { flex:1; display:flex; flex-direction:column; margin-bottom:6px; }
+.mx-now .mx-nowbody { flex:1; align-items:stretch; }
+.mx-now .mx-lside { grid-auto-rows:1fr; }
+.mx-now .mx-detail { align-content:start; }
