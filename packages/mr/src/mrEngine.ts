@@ -1690,8 +1690,7 @@ export function startMr(ctx: MrCtx): () => void {
     if (w !== expected) {
       el.style.background = '#FFCDD2';
       setTimeout(() => el.style.background = '', 500);
-      speak('Try again');
-      return;
+      return;   // 단어 상자를 누를 때는 소리를 내지 않는다(문장을 다 맞췄을 때만 읽어 줌)
     }
     placeSeq.push(i);
     el.classList.add('used');
@@ -1701,7 +1700,6 @@ export function startMr(ctx: MrCtx): () => void {
     placed.textContent = w;
     placed.onclick = () => speak(w);
     dz.appendChild(placed);
-    speak(w);
     if (placeSeq.length === traceSentences[traceIdx].split(' ').length) {
       dz.classList.add('complete');
       setTimeout(() => speak(traceSentences[traceIdx]), 400);
