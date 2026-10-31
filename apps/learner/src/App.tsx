@@ -6,7 +6,7 @@ import { NativePlayer, isNative, type NativeResult, type VWord } from '@mango/pl
 import '@mango/play/styles.css';
 import { ReportView } from './Report';
 import { ReadingSummary, ReadingTab } from './reading/ReadingTab';
-import { HomeView, MyView, Nav, ReportsView, type BookOpt, type Tab } from './Home';
+import { HomeView, MyView, Nav, SHOW_READING_TAB, ReportsView, type BookOpt, type Tab } from './Home';
 import { stageZoom } from './stage';
 import { currentUnit, type ProgRow, type UnitInfo } from './home';
 import { areaOf, buildReport, practiceFor, type StepRef } from './reportCalc';
@@ -141,7 +141,7 @@ function Main({ session, tab, setTab, homeNonce }: { session: Session; tab: Tab;
     <>
       {tab === 'home' && <HomeView key={cur?.unit_id} name={prof.name} books={books} bookId={bookId} onBook={pickBook} units={bUnits} rows={rows} unit={cur ?? null} onUnit={setViewId}
         onOpenUnit={(u, n) => setOpen({ u, focusNo: n })} onStart={(u, a) => setOpen({ u, auto: a })} onReport={(u) => setOpen({ u, report: true })} />}
-      {tab === 'reading' && <ReadingTab uid={uid} openCode={null} onOpened={() => {}} onExit={() => setTab('home')} />}
+      {SHOW_READING_TAB && tab === 'reading' && <ReadingTab uid={uid} openCode={null} onOpened={() => {}} onExit={() => setTab('home')} />}
       {tab === 'report' && <ReadingSummary uid={uid} />}
       {tab === 'report' && <ReportsView units={bUnits} rows={rows} onOpen={(u) => setOpen({ u, report: true })} />}
       {open && (

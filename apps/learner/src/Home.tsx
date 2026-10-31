@@ -3,7 +3,9 @@ import { buildReport } from './reportCalc';
 import { unitProgress, type ProgRow, type UnitInfo } from './home';
 
 export type Tab = 'home' | 'reading' | 'report' | 'my';
-export const TAB_KO: [Tab, string][] = [['home', '교과서'], ['reading', '영어원서'], ['report', 'Report'], ['my', 'MyPage']];
+/** 영어원서 탭(원서 앱 메인 화면) 표시 여부. 지금은 숨김 — 다시 쓰려면 true 로 바꾸면 된다(화면 코드는 그대로 있음). */
+export const SHOW_READING_TAB = false;
+export const TAB_KO: [Tab, string][] = ([['home', '교과서'], ['reading', '영어원서'], ['report', 'Report'], ['my', 'MyPage']] as [Tab, string][]).filter(([k]) => k !== 'reading' || SHOW_READING_TAB);
 const stars = (n: number) => '★'.repeat(n) + '☆'.repeat(3 - n);
 export interface BookOpt { id: string; label: string; grade: number }
 
