@@ -4,6 +4,7 @@ import { MR_MARKUP, mrThemeClass, startMr, type MrCtx } from '@mango/mr';
 import { canRecord, startRecording } from '@mango/play';
 import type { RBook } from './types';
 import '@mango/mr/mr.css';
+import { stageZoom } from '../stage';
 
 const COLS = 'id,code,level,title,emoji,week,ord,ar,cover_path,content';
 type Take = { id: string; bookId: string; createdAt: string; filename: string; url: string };
@@ -103,14 +104,37 @@ export function MrHost({ uid, startCode, onExit }: { uid: string; startCode?: st
   }, [uid]);
 
   useEffect(() => {
-    if (!ctx || !root.current) return;
+    const r = root.current;
+    if (!ctx || !r) return;
+    // 책 학습 화면(상단 바 + STEP 화면)은 팝업(1280×800)으로 옮기고, 홈(책 목록)·학습현황은 페이지에 둔다.
+    // 엔진은 id 로 요소를 찾으므로 요소를 옮겨도 그대로 동작한다.
+    const app = r.querySelector('#appRoot'), top = app?.querySelector('.topbar'), book = app?.querySelector('#viewBook');
+    if (!app || !top || !book) return;
+    const back = document.createElement('div'); back.className = 'mr-backdrop';
+    const pop = document.createElement('div'); pop.className = 'app mr-pop';
+    const x = document.createElement('button'); x.className = 'mr-pop-x'; x.type = 'button'; x.setAttribute('aria-label', '닫기'); x.textContent = '✕';
+    x.onclick = () => (window as unknown as { showView?: (v: string) => void }).showView?.('home');
+    pop.append(top, book, x); r.append(back, pop);
+    const views = [...app.querySelectorAll(':scope > .view')] as HTMLElement[];
+    let last: HTMLElement | null = null;
+    // classList.add/remove 는 값이 같아도 변경 알림을 일으키므로, 실제로 바뀔 때만 건드린다(무한 반복 방지)
+    const toggle = (el: Element | null | undefined, cls: string, on: boolean) => { if (el && el.classList.contains(cls) !== on) el.classList.toggle(cls, on); };
+    const sync = () => {
+      const inBook = (book as HTMLElement).classList.contains('active');
+      if (!inBook) { last = views.find((v) => v.classList.contains('active')) ?? last; toggle(last, 'mr-show', false); toggle(r, 'mr-inbook', false); }
+      else { toggle(last, 'mr-show', true); toggle(r, 'mr-inbook', true); }
+    };
+    const mo = new MutationObserver(sync);
+    [...views, book as HTMLElement].forEach((v) => mo.observe(v, { attributes: true, attributeFilter: ['class'] }));
+    const fit = () => r.style.setProperty('--mr-s', String(Math.min(1, window.innerWidth / 1280, window.innerHeight / 800) / stageZoom('reading')));
+    fit(); window.addEventListener('resize', fit);
     const stop = startMr(ctx);
     if (startCode) setTimeout(() => (window as unknown as { openBook?: (c: string) => void }).openBook?.(startCode), 150);
-    return stop;
+    return () => { stop(); mo.disconnect(); window.removeEventListener('resize', fit); back.remove(); pop.remove(); };
   }, [ctx, startCode]);
 
   if (err) return <div className="mx-card"><h2>원서를 불러오지 못했어요</h2><p className="mx-muted">{err}</p><button className="mx-btn" onClick={onExit}>돌아가기</button></div>;
   if (!ctx) return <p className="mx-muted">불러오는 중…</p>;
   if (!ctx.books.length) return <div className="mx-card"><h2>읽을 원서가 아직 없어요</h2><p className="mx-muted">선생님이 원서를 열어 주면 여기에 나타나요.</p><button className="mx-btn" onClick={onExit}>돌아가기</button></div>;
-  return <div className={'mr-root ' + mrThemeClass()} style={{ position: 'fixed', inset: 0, zIndex: 1000, overflow: 'auto' }} ref={root} dangerouslySetInnerHTML={{ __html: MR_MARKUP }} />;
+  return <div className={'mr-root mr-embed ' + mrThemeClass()} ref={root} dangerouslySetInnerHTML={{ __html: MR_MARKUP }} />;
 }

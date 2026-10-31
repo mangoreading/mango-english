@@ -7,6 +7,7 @@ import '@mango/play/styles.css';
 import { ReportView } from './Report';
 import { ReadingSummary, ReadingTab } from './reading/ReadingTab';
 import { HomeView, MyView, Nav, ReportsView, type BookOpt, type Tab } from './Home';
+import { stageZoom } from './stage';
 import { currentUnit, type ProgRow, type UnitInfo } from './home';
 import { areaOf, buildReport, practiceFor, type StepRef } from './reportCalc';
 import { books, lesson8, lessonMeta, playActivity, tallyTags, type BookMeta, type PlayResult, type TagStats } from './legacy';
@@ -32,8 +33,6 @@ export function App() {
   return <Shell session={session} tab={tab} setTab={setTab} onLogo={() => { setTab('home'); setHomeNonce((n) => n + 1); }}>{session ? <Main session={session} tab={tab} setTab={setTab} homeNonce={homeNonce} /> : <Login />}</Shell>;
 }
 
-/** 화면 기준 1280×800. 창이 작으면 비율만 줄인다(교과서 홈은 높이까지 맞춰 한 화면에 들어가게). 모바일 폭(820 이하)은 그대로. */
-function stageZoom(tab?: Tab) { const w = window.innerWidth, h = window.innerHeight; if (w <= 820) return 1; return Math.min(1, w / 1280, !tab || tab === 'home' ? h / 800 : 1); }
 function useStageZoom(tab?: Tab) { const [z, setZ] = useState(() => stageZoom(tab)); useEffect(() => { const f = () => setZ(stageZoom(tab)); f(); window.addEventListener('resize', f); return () => window.removeEventListener('resize', f); }, [tab]); return z; }
 
 function Shell({ children, session, tab, setTab, onLogo }: { children: React.ReactNode; session?: Session | null; tab?: Tab; setTab?: (t: Tab) => void; onLogo?: () => void }) {
