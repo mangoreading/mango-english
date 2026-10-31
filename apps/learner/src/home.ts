@@ -2,7 +2,7 @@ import type { BundleRow } from './types';
 
 export interface UnitInfo { unit_id: string; unit_no: number; unit_title: string; book_id: string; book_title: string; grade: number; publisher: string; version: number; bundle: BundleRow['bundle'] }
 export interface ProgRow { unit_id: string; level: string; lesson: number; act_idx: number; stars: number; ok: number; total: number; updated_at: string }
-export interface ActInfo { idx: number; t: string; ko: string; min: number; n: number; study: boolean; done: boolean; stars: number }
+export interface ActInfo { idx: number; t: string; ko: string; min: number; n: number; study: boolean; hw: boolean; done: boolean; stars: number }
 export interface LessonInfo { no: number; en: string; ko: string; goal: string; acts: ActInfo[]; studyN: number; doneN: number }
 export interface ExtraProg { lessons: LessonInfo[]; total: number; done: number; firstNo: number | null }
 export interface UnitProg { extra: ExtraProg; lessons: LessonInfo[]; total: number; done: number; pct: number; started: boolean; complete: boolean; current: { no: number; idx: number } | null; last: string | null }
@@ -15,7 +15,7 @@ export function unitProgress(u: UnitInfo, rows: ProgRow[]): UnitProg {
   const mkLessons = (pred: (track: string) => boolean): LessonInfo[] => (u.bundle.flow ?? []).filter((l) => pred(l.track ?? 'core')).map((l) => {
     const acts: ActInfo[] = l.steps.map((s, idx) => {
       const p = doneAt.get(l.no * 1000 + idx);
-      return { idx, t: s.name_ko || s.name_en, ko: s.name_en, min: s.min ?? 0, n: (items[String(l.no)]?.[idx] ?? []).length, study: s.study !== false, done: !!p, stars: p?.stars ?? 0 };
+      return { idx, t: s.name_ko || s.name_en, ko: s.name_en, min: s.min ?? 0, n: (items[String(l.no)]?.[idx] ?? []).length, study: s.study !== false, hw: s.homework === true || s.study === false, done: !!p, stars: p?.stars ?? 0 };
     });
     const st = acts.filter((a) => a.study && a.n > 0);
     return { no: l.no, en: l.en, ko: l.ko, goal: l.goal, acts, studyN: st.length, doneN: st.filter((a) => a.done).length };

@@ -190,3 +190,12 @@ input { font:inherit; padding:12px 14px; border:2px solid #CBD6E6; border-radius
 /* 차시 상세 오른쪽 위: 시작/이어하기 주황 버튼 */
 .mx-startbtn { margin-left:auto; font:inherit; font-weight:800; font-size:1rem; background:#FF9F1C; color:#3b2600; border:0; border-radius:999px; padding:10px 22px; cursor:pointer; box-shadow:0 3px 0 #D9830A; align-self:center; }
 .mx-startbtn:hover { background:#FFAE3D; } .mx-startbtn:active { transform:translateY(2px); box-shadow:0 1px 0 #D9830A; }
+
+/* 차시 숙제 */
+.mx-hw { background:#fff; border:1.5px dashed #9CB6F5; border-radius:14px; padding:10px 14px; margin-top:10px; display:grid; gap:8px; }
+.mx-hw-h { display:flex; align-items:center; gap:10px; flex-wrap:wrap; } .mx-hw-h b { font-size:1rem; }
+.mx-hwbtn { margin-left:auto; font:inherit; font-weight:800; font-size:.92rem; background:#fff; color:var(--blue); border:2px solid var(--blue); border-radius:999px; padding:6px 16px; cursor:pointer; }
+.mx-hwbtn:hover { background:var(--blue); color:#fff; }
+.mx-hw-l { list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:6px; }
+.mx-hw-l button { font:inherit; font-size:.85rem; display:flex; gap:6px; align-items:center; background:#F4F8FF; border:1px solid #E1E8F4; border-radius:999px; padding:4px 12px; cursor:pointer; color:var(--ink); }
+.mx-hw-l li.on button { background:#E7F6EC; border-color:#BFE6CD; } .mx-hw-l span { color:var(--blue); font-weight:800; } .mx-hw-l li.on span { color:#2FB26B; } .mx-hw-l em { font-style:normal; color:#FF9F1C; font-size:.75rem; }
