@@ -73,9 +73,13 @@ export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUni
             </button>
           </div>
           <section className="mx-detail" aria-label="차시 상세">
-            {detailLessons.map((l) => (
+            {detailLessons.map((l) => {
+              const todo = l.acts.find((x) => x.study && x.n > 0 && !x.done), first = l.acts.find((x) => x.study && x.n > 0);
+              const go = todo ?? first, label = !go ? '' : !todo ? '다시 학습하기' : l.doneN > 0 ? '이어서 학습하기' : '학습 시작하기';
+              return (
               <div key={l.no} className="mx-dl">
-                <div className="mx-dl-h"><span className="mx-lchip">{shown === 'x' ? '보충·확장' : `${l.no}차시`}</span><h3>{l.ko || l.en}</h3><span className="mx-muted">{l.en}</span></div>
+                <div className="mx-dl-h"><span className="mx-lchip">{shown === 'x' ? '보충·확장' : `${l.no}차시`}</span><h3>{l.ko || l.en}</h3><span className="mx-muted">{l.en}</span>
+                  {go && <button className="mx-startbtn" onClick={() => onStart(unit, { no: l.no, idx: go.idx })}>{label} <span aria-hidden>→</span></button>}</div>
                 {l.goal && <p className="mx-dl-goal">{l.goal}</p>}
                 <ul className="mx-dl-acts">
                   {l.acts.filter((a) => a.n > 0).map((a) => (
@@ -87,7 +91,8 @@ export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUni
                       </button>
                     </li>))}
                 </ul>
-              </div>))}
+              </div>);
+            })}
             {goals.length > 0 && (
               <aside className="mx-goals" aria-label="학습목표">
                 <h4>이번 Lesson 학습목표</h4>

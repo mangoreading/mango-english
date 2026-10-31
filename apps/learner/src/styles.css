@@ -186,3 +186,7 @@ input { font:inherit; padding:12px 14px; border:2px solid #CBD6E6; border-radius
 .mx-now .mx-lside { grid-auto-rows:1fr; }
 .mx-now .mx-detail { align-content:start; }
 .mx-lrow-done .mx-lrow-no::before { content:'✓ '; }
+
+/* 차시 상세 오른쪽 위: 시작/이어하기 주황 버튼 */
+.mx-startbtn { margin-left:auto; font:inherit; font-weight:800; font-size:1rem; background:#FF9F1C; color:#3b2600; border:0; border-radius:999px; padding:10px 22px; cursor:pointer; box-shadow:0 3px 0 #D9830A; align-self:center; }
+.mx-startbtn:hover { background:#FFAE3D; } .mx-startbtn:active { transform:translateY(2px); box-shadow:0 1px 0 #D9830A; }
