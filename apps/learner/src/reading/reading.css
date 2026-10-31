@@ -36,3 +36,5 @@
 .mr-root.mr-embed .book-card .cover { aspect-ratio:auto; width:190px; height:140px; margin:0 auto; font-size:60px; }
 .mr-root.mr-embed .book-card { padding:18px; }
 .mr-root.mr-embed .book-grid { align-items:start; }
+/* 책 표지 테두리 */
+.mr-root.mr-embed .book-card .cover { border:2px solid #C9D6EC; box-shadow:0 2px 8px rgba(40,70,120,.10); }
