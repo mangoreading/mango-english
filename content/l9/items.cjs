@@ -127,9 +127,9 @@ add('4-5', 'sqtf', 'read', [{ title: "Dad's Sunglasses", text: ['Dad goes to a s
 /* ===== 5차시: 쓰기 ===== */
 const sw = (ko, ans, o = {}) => ({ ko, ans, ...o });
 add('5-0', 'swrite', 'write', [
-  sw('이 모자는 얼마예요?', 'How much is this hat?', { starter: 'How much' }), sw('이 신발은 얼마예요?', 'How much are these shoes?', { starter: 'How much' }),
-  sw('2,000원이에요. (양말)', "They're two thousand won.", { alts: ['They are two thousand won.'], starter: "They're" }), sw('10,000원이에요. (모자)', "It's ten thousand won.", { alts: ['It is ten thousand won.'], starter: "It's" }),
-  sw('이 반바지는 얼마예요?', 'How much are these shorts?', { tpl: 'How much {} these shorts?' }), sw('13,000원이에요. (선글라스)', "They're thirteen thousand won.", { alts: ['They are thirteen thousand won.'], starter: "They're" })]);
+  sw('이 모자는 얼마예요?', 'How much is this hat?', { tpl: 'How much {} this hat?', starter: 'How much' }), sw('이 신발은 얼마예요?', 'How much are these shoes?', { tpl: 'How much {} these shoes?', starter: 'How much' }),
+  sw('2,000원이에요. (양말)', "They're two thousand won.", { alts: ['They are two thousand won.'], tpl: '{} two thousand won.', starter: "They're" }), sw('10,000원이에요. (모자)', "It's ten thousand won.", { alts: ['It is ten thousand won.'], tpl: '{} ten thousand won.', starter: "It's" }),
+  sw('이 반바지는 얼마예요?', 'How much are these shorts?', { tpl: 'How much {} these shorts?' }), sw('13,000원이에요. (선글라스)', "They're thirteen thousand won.", { alts: ['They are thirteen thousand won.'], tpl: '{} thirteen thousand won.', starter: "They're" })]);
 const sc = (ko, ans, extra) => ({ ko, ans, extra });
 add('5-1', 'sscram', 'write', [
   sc('이 양말은 얼마예요?', 'How much are these socks?', ['is']), sc('이 재킷은 얼마예요?', 'How much is this jacket?', ['are']), sc('15,000원이에요.', "They're fifteen thousand won.", ['fifty']),
