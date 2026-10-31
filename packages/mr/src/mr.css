@@ -1990,3 +1990,4 @@
 .mr-root .kw-split .kw-word { letter-spacing: 1px; white-space: nowrap; max-width: 100%; }
 .mr-root .kw-split .kw-kor { font-size: 40px; margin: 0 0 14px; }
 .mr-root .kw-split .kw-scene { padding: 14px 18px; white-space: nowrap; margin: 0; width: 100%; box-sizing: border-box; text-align: left; }
+.mr-root .kw-split .kw-kor { color: #E8730C; }
