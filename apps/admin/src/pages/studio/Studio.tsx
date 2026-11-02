@@ -30,19 +30,24 @@ async function fileToB64(f: Blob): Promise<string> {
 }
 
 /** 작은 크기 선택지: OpenAI 가 지원하는 큰 크기로 만든 뒤 이 크기로 줄인다 (투명 배경 유지, 비율 유지하며 가운데 맞춤) */
-const SMALL: Record<string, { api: string; w: number; h: number }> = {
+const SMALL: Record<string, { api: string; w: number; h: number; crop?: boolean }> = {
   '300x300': { api: '1024x1024', w: 300, h: 300 },
   '768x512': { api: '1536x1024', w: 768, h: 512 },
   '512x768': { api: '1024x1536', w: 512, h: 768 },
+  /** 16:9: 1536×1024 로 만든 뒤 위·아래를 잘라 맞춘다(장면 영상 화면 비율) */
+  '1280x720': { api: '1536x1024', w: 1280, h: 720, crop: true },
 };
-async function shrinkTo(b64: string, w0: number, h0: number): Promise<string> {
+async function shrinkTo(b64: string, w0: number, h0: number, crop = false): Promise<string> {
   const bmp = await createImageBitmap(toBlob(b64)); const c = document.createElement('canvas'); c.width = w0; c.height = h0;
-  const k = Math.min(w0 / bmp.width, h0 / bmp.height); const w = Math.round(bmp.width * k), h = Math.round(bmp.height * k);
+  const k = (crop ? Math.max : Math.min)(w0 / bmp.width, h0 / bmp.height); const w = Math.round(bmp.width * k), h = Math.round(bmp.height * k);
   c.getContext('2d')!.drawImage(bmp, Math.round((w0 - w) / 2), Math.round((h0 - h) / 2), w, h);
   const u = c.toDataURL('image/png'); return u.slice(u.indexOf(',') + 1);
 }
 const apiSize = (s: string) => SMALL[s]?.api ?? s;
-const shrinkIf = (size: string, xs: string[]) => (SMALL[size] ? Promise.all(xs.map((x) => shrinkTo(x, SMALL[size].w, SMALL[size].h))) : Promise.resolve(xs));
+/** 16:9 로 자르는 크기는 위·아래가 잘리므로, 중요한 인물·물건이 가운데에 오도록 프롬프트에 덧붙인다 */
+const WIDE_HINT = ' Wide 16:9 cinematic composition: keep faces, hands and key objects well inside the frame, away from the top and bottom edges.';
+const withHint = (p: string, size: string) => (SMALL[size]?.crop ? p + WIDE_HINT : p);
+const shrinkIf = (size: string, xs: string[]) => (SMALL[size] ? Promise.all(xs.map((x) => shrinkTo(x, SMALL[size].w, SMALL[size].h, SMALL[size].crop))) : Promise.resolve(xs));
 
 export function Studio() {
   const [preset, setPreset] = useState<Preset>('word');
@@ -100,7 +105,7 @@ export function Studio() {
     let made = 0; let fail = 0;
     for (let j = 0; j < jobs.length; j++) {
       setProg(jobs.length > 1 ? `${j + 1}/${jobs.length} 만드는 중… (${jobs[j].base})` : '');
-      let out = await call({ prompt: jobs[j].p, size: apiSize(size), quality, background: bg, n, refs: refs.map((r) => r.b64) });
+      let out = await call({ prompt: withHint(jobs[j].p, size), size: apiSize(size), quality, background: bg, n, refs: refs.map((r) => r.b64) });
       if (!out) { fail++; continue; }   // 오류 메시지는 call 이 이미 보여 줌. 남은 단어는 계속 만든다
       out = await shrinkIf(size, out);
       const add = out.map((b64, i) => ({ id: ++uid, b64, name: out!.length > 1 ? `${jobs[j].base}_${i + 1}` : jobs[j].base }));
@@ -114,7 +119,7 @@ export function Studio() {
     if (!newT.trim()) { setMsg({ t: 'err', s: '바꿀 글자를 입력해 주세요.' }); return; }
     const p = `Edit this image: ${oldT.trim() ? `replace the text "${oldT.trim()}" with "${newT.trim()}"` : `add the text "${newT.trim()}" where it fits`}. Spell the text exactly as given, same font style and position. Keep everything else in the image exactly the same.${editExtra.trim() ? ' ' + editExtra.trim() : ''}`;
     setBusy(true); setMsg(null);
-    let out = await call({ prompt: p, size: apiSize(size), quality, background: 'auto', n: 1, refs: [im.b64] });
+    let out = await call({ prompt: withHint(p, size), size: apiSize(size), quality, background: 'auto', n: 1, refs: [im.b64] });
     if (out) out = await shrinkIf(size, out);
     setBusy(false); if (!out) return;
     const made = { id: ++uid, b64: out[0], name: im.name + '_edit' };
@@ -153,7 +158,7 @@ export function Studio() {
               <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => void addRefs(e.target.files)} />
             </div></div>
           <div className="mx-row">
-            <label className="mx-f">크기<select value={size} onChange={(e) => setSize(e.target.value)}><option value="300x300">작게 300×300 (단어 그림용)</option><option value="1024x1024">정사각 1024×1024</option><option value="768x512">가로 작게 768×512 (장면)</option><option value="1536x1024">가로 1536×1024 (장면)</option><option value="512x768">세로 작게 512×768 (장면)</option><option value="1024x1536">세로 1024×1536</option></select></label>
+            <label className="mx-f">크기<select value={size} onChange={(e) => setSize(e.target.value)}><option value="300x300">작게 300×300 (단어 그림용)</option><option value="1024x1024">정사각 1024×1024</option><option value="1280x720">16:9 가로 1280×720 (장면 영상 화면, 위·아래가 잘려요)</option><option value="768x512">가로 작게 768×512 (장면)</option><option value="1536x1024">가로 1536×1024 (장면)</option><option value="512x768">세로 작게 512×768 (장면)</option><option value="1024x1536">세로 1024×1536</option></select></label>
             <label className="mx-f">배경<select value={bg} onChange={(e) => setBg(e.target.value)}><option value="transparent">투명</option><option value="opaque">불투명</option><option value="auto">자동</option></select></label>
             <label className="mx-f">품질<select value={quality} onChange={(e) => setQuality(e.target.value)}><option value="low">낮음(저렴)</option><option value="medium">보통</option><option value="high">높음(비쌈)</option></select></label>
             <label className="mx-f">개수<select value={n} onChange={(e) => setN(Number(e.target.value))}>{[1, 2, 3, 4].map((v) => <option key={v}>{v}</option>)}</select></label>
