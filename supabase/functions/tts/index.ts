@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
       if (!alt) try { await admin.storage.from('tts-cache').upload(path, audio, { contentType: 'audio/mpeg', upsert: false }); } catch { /* 저장 실패해도 소리는 돌려준다 */ }
     }
     if (prefetch) return json({ cached: hit });
-    return new Response(audio, { headers: { ...CORS, 'Content-Type': 'audio/mpeg', 'Cache-Control': 'private, max-age=86400', 'X-Cache': hit ? 'HIT' : 'MISS' } });
+    return new Response(audio, { headers: { ...CORS, 'Content-Type': 'application/octet-stream', 'Cache-Control': 'private, max-age=86400', 'X-Cache': hit ? 'HIT' : 'MISS' } });
   } catch (e) {
     return json({ error: String((e as Error).message ?? e) }, 500);
   }

@@ -29,8 +29,8 @@ registerTts(async (lines) => {
     try { const j = await (error as unknown as { context: Response }).context.json(); msg = j.error ?? j.message ?? msg; } catch { /* 그대로 */ }
     console.error('[tts] 서버 오류(브라우저 음성으로 대신 읽어요):', msg); throw new Error(msg);
   }
-  if (!(data instanceof Blob)) throw new Error('tts');
-  return data;
+  if (!(data instanceof Blob)) { console.error('[tts] 소리 파일이 아니에요(브라우저 음성으로 대신 읽어요):', typeof data); throw new Error('tts'); }
+  return new Blob([data], { type: 'audio/mpeg' }); // 서버는 octet-stream 으로 보낸다(supabase-js 가 audio/mpeg 를 글자로 읽는 문제 때문)
 });
 
 /** 말하기 평가 연결: Supabase 서버 함수(stt)가 녹음을 Azure 로 보내 글자와 발음 점수를 받아 온다. 실패하면 브라우저 음성 인식으로 대신한다. */
