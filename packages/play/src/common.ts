@@ -138,7 +138,7 @@ export function sayScript(text: string, done?: () => void) {
     try { speechSynthesis.cancel(); } catch { /* 무시 */ }
     const id = beginSpeech(60000);
     const a = new Audio(src); curAudio = a;
-    a.play().catch(() => { endSpeech(id); if (gen === scriptGen) browser(); });
+    a.play().catch((e) => { endSpeech(id); console.warn('[tts] 재생이 막힘 → 브라우저 음성으로 대신', e?.name, e?.message); if (gen === scriptGen) browser(); });
   };
   const hit = ttsCache.get(k);
   if (hit) { play(hit); return; }
