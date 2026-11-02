@@ -759,5 +759,5 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-lec-nav { flex:none; width:100%; display:flex; align-items:center; justify-content:space-between; }
 .nv-lec-nav .nv-btn { font-size:.9em; padding:.5em 1.4em; } .nv-lec-nav .nv-btn:disabled { opacity:.35; cursor:default; }
 .nv-lec-dots { display:flex; gap:.5em; } .nv-lec-dots i { width:.7em; height:.7em; border-radius:50%; background:#D9DEE8; } .nv-lec-dots i.d { background:#9DB8F0; } .nv-lec-dots i.on { background:var(--nv-blue); }
-/* 강의 슬라이드: 내용과 이동 버튼을 화면 가로의 80%로 */
-.nv-lec-stage, .nv-lec-nav { width:80%; margin-left:auto; margin-right:auto; }
+/* 강의 슬라이드: 내용은 화면 가로의 80%, 이동 버튼은 양 끝 */
+.nv-lec-stage { width:80%; margin-left:auto; margin-right:auto; }
