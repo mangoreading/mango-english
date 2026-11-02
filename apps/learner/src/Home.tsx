@@ -18,12 +18,12 @@ function BookPick({ books, bookId, onBook }: { books: BookOpt[]; bookId: string;
   return <select className="mx-bookpick" value={bookId} onChange={(e) => onBook(e.target.value)} aria-label="교재">{books.map((b) => <option key={b.id} value={b.id}>{b.label}</option>)}</select>;
 }
 
-/** 교과서: 지금 학습 중인 Lesson 의 8개 박스(1~6차시 · 보충/확장 학습 · Lesson Report) */
+/** 교과서: 지금 학습 중인 Lesson 의 8개 박스(1~6차시 · Lesson Report). 숙제는 주 단위로 2·4·6차시 상세에 모아 보여 준다 */
 export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUnit, onOpenUnit, onStart, onReport }: {
   name: string; books: BookOpt[]; bookId: string; onBook: (id: string) => void; units: UnitInfo[]; rows: ProgRow[]; unit: UnitInfo | null;
   onUnit: (id: string) => void; onOpenUnit: (u: UnitInfo, focusNo?: number) => void; onStart: (u: UnitInfo, a: { no: number; idx: number }) => void; onReport: (u: UnitInfo) => void;
 }) {
-  const [sel, setSel] = useState<number | 'x' | null>(null);
+  const [sel, setSel] = useState<number | null>(null);
   if (!unit) return <div className="mx-card"><h2>학습할 Lesson이 아직 없어요</h2><p className="mx-muted">관리자가 Lesson을 발행하면 여기에 나타나요.</p></div>;
   const up = unitProgress(unit, rows);
   const idx = units.findIndex((u) => u.unit_id === unit.unit_id);
@@ -31,8 +31,8 @@ export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUni
   const curNo = up.current?.no;
   const core = (unit.bundle.flow ?? []).filter((l) => (l.track ?? 'core') === 'core').slice(0, 6);
   const goals = Object.entries((unit.bundle.unit.goals ?? {}) as Record<string, { ko?: string }>).sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true })).map(([, v]) => v?.ko ?? '').filter(Boolean);
-  const shown: number | 'x' = sel === 'x' && up.extra.total ? 'x' : typeof sel === 'number' && up.lessons.some((l) => l.no === sel) ? sel : (curNo ?? up.lessons[0]?.no ?? 1);
-  const detailLessons = shown === 'x' ? up.extra.lessons : up.lessons.filter((l) => l.no === shown);
+  const shown: number = typeof sel === 'number' && up.lessons.some((l) => l.no === sel) ? sel : (curNo ?? up.lessons[0]?.no ?? 1);
+  const detailLessons = up.lessons.filter((l) => l.no === shown);
   const pct = (d: number, t: number) => (t ? Math.round((d / t) * 100) : 0);
   return (
     <>
@@ -63,11 +63,6 @@ export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUni
                   <span className="mx-lrow-bar"><i style={{ width: pct(info.doneN, info.studyN) + '%' }} /></span>
                 </button>);
             })}
-            <button className={'mx-lrow mx-lrow-x' + (up.extra.total && up.extra.done >= up.extra.total ? ' mx-lrow-done' : '') + (shown === 'x' ? ' mx-lrow-sel' : '')} disabled={!up.extra.total} onClick={() => setSel('x')}>
-              <span className="mx-lrow-no">보충</span>
-              <span className="mx-lrow-t"><b>보충/확장 학습</b><small>{up.extra.total ? `${up.extra.done}/${up.extra.total} 활동` : '준비 중'}</small></span>
-              <span className="mx-lrow-bar"><i style={{ width: pct(up.extra.done, up.extra.total) + '%' }} /></span>
-            </button>
             <button className={'mx-lrow mx-lrow-rep' + (up.complete ? ' mx-lrow-done' : '')} disabled={!up.complete} onClick={() => onReport(unit)}>
               <span className="mx-lrow-no">결과</span>
               <span className="mx-lrow-t"><b>Lesson Report</b><small>{up.complete ? '결과 리포트 보기' : '차시를 모두 마치면 열려요'}</small></span>
@@ -77,11 +72,12 @@ export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUni
           <section className="mx-detail" aria-label="차시 상세">
             {detailLessons.map((l) => {
               const todo = l.acts.find((x) => x.study && x.n > 0 && !x.done), first = l.acts.find((x) => x.study && x.n > 0);
-              const hw = l.acts.filter((x) => x.n > 0 && x.hw), hwTodo = hw.find((x) => !x.done), hwDone = hw.length > 0 && !hwTodo, hwGo = hwTodo ?? hw[0], hwMin = hw.reduce((m, x) => m + (x.min || 0), 0) || 10;
+              const isWk = l.no % 2 === 0 || l.no === up.lessons[up.lessons.length - 1]?.no, wkNos = l.no % 2 === 0 ? [l.no - 1, l.no] : [l.no];
+              const hw = isWk ? up.lessons.filter((x) => wkNos.includes(x.no)).flatMap((x) => x.acts.filter((a) => a.n > 0 && a.hw).map((a) => ({ ...a, no: x.no }))) : [], hwTodo = hw.find((x) => !x.done), hwDone = hw.length > 0 && !hwTodo, hwGo = hwTodo ?? hw[0], hwMin = hw.reduce((m, x) => m + (x.min || 0), 0) || 10;
               const go = todo ?? first, label = !go ? '' : !todo ? '다시 학습하기' : l.doneN > 0 ? '이어서 학습하기' : '학습 시작하기';
               return (
               <div key={l.no} className="mx-dl">
-                <div className="mx-dl-h"><span className="mx-lchip">{shown === 'x' ? '보충·확장' : `${l.no}차시`}</span><h3>{l.ko || l.en}</h3><span className="mx-muted">{l.en}</span>
+                <div className="mx-dl-h"><span className="mx-lchip">{`${l.no}차시`}</span><h3>{l.ko || l.en}</h3><span className="mx-muted">{l.en}</span>
                   {go && <button className="mx-startbtn" onClick={() => onStart(unit, { no: l.no, idx: go.idx })}>{label} <span aria-hidden>→</span></button>}</div>
                 {l.goal && <p className="mx-dl-goal">{l.goal}</p>}
                 <ul className="mx-dl-acts">
@@ -96,9 +92,9 @@ export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUni
                 </ul>
                 {hw.length > 0 && (
                   <div className={'mx-hw' + (hwDone ? ' mx-hw-done' : '')}>
-                    <div className="mx-hw-h"><b>📒 숙제</b><span className="mx-muted">집에서 해요 · 약 {hwMin}분 · {hw.filter((x) => x.done).length}/{hw.length} 완료</span>
-                      {hwGo && <button className="mx-hwbtn" onClick={() => onStart(unit, { no: l.no, idx: hwGo.idx })}>{hwDone ? '숙제 다시 하기' : hw.some((x) => x.done) ? '숙제 이어서 하기' : '숙제 시작하기'} <span aria-hidden>→</span></button>}</div>
-                    <ul className="mx-hw-l">{hw.map((x) => <li key={x.idx} className={x.done ? 'on' : ''}><button onClick={() => onStart(unit, { no: l.no, idx: x.idx })}><span>{x.done ? '✓' : '○'}</span>{x.t}{x.done ? <em>{stars(x.stars)}</em> : null}</button></li>)}</ul>
+                    <div className="mx-hw-h"><b>📒 {l.no % 2 === 0 ? `이번 주 숙제 (${l.no - 1}~${l.no}차시)` : '숙제'}</b><span className="mx-muted">집에서 해요 · 약 {hwMin}분 · {hw.filter((x) => x.done).length}/{hw.length} 완료</span>
+                      {hwGo && <button className="mx-hwbtn" onClick={() => onStart(unit, { no: hwGo.no, idx: hwGo.idx })}>{hwDone ? '숙제 다시 하기' : hw.some((x) => x.done) ? '숙제 이어서 하기' : '숙제 시작하기'} <span aria-hidden>→</span></button>}</div>
+                    <ul className="mx-hw-l">{hw.map((x) => <li key={x.no * 100 + x.idx} className={x.done ? 'on' : ''}><button onClick={() => onStart(unit, { no: x.no, idx: x.idx })}><span>{x.done ? '✓' : '○'}</span>{x.t}{x.done ? <em>{stars(x.stars)}</em> : null}</button></li>)}</ul>
                   </div>
                 )}
               </div>);
