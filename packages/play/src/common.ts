@@ -127,6 +127,7 @@ export function sayScript(text: string, done?: () => void) {
     if (gen !== scriptGen) return;
     if (i >= rows.length) { done?.(); return; }
     const r = rows[i++];
+    console.info('[tts] 브라우저 음성 재생', r.who ?? '', r.t.slice(0, 20));
     sayThen(r.t, () => { if (gen === scriptGen) setTimeout(next, 350); }, voicePitch(r.who));
   };
   next();
@@ -138,6 +139,7 @@ export function sayScript(text: string, done?: () => void) {
     try { speechSynthesis.cancel(); } catch { /* 무시 */ }
     const id = beginSpeech(60000);
     const a = new Audio(src); curAudio = a; a.onended = () => { endSpeech(id); done?.(); }; a.onerror = () => { endSpeech(id); console.warn('[tts] 소리 재생 오류 → 브라우저 음성으로 대신', a.error?.message ?? a.error?.code); if (gen === scriptGen) browser(); };
+    console.info('[tts] Azure 음성 재생', rows[0]?.who ?? '', rows[0]?.t?.slice(0, 20));
     a.play().catch((e) => { endSpeech(id); console.warn('[tts] 재생이 막힘 → 브라우저 음성으로 대신', e?.name, e?.message); if (gen === scriptGen) browser(); });
   };
   const hit = ttsCache.get(k);
