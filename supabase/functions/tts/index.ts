@@ -12,7 +12,7 @@ const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { sta
 const FEMALE = ['en-US-JennyNeural', 'en-US-AriaNeural'];
 const MALE = ['en-US-GuyNeural', 'en-US-DavisNeural'];
 const CHILD_ALT = 'en-US-AnaNeural';
-const CHILD = Deno.env.get('TTS_CHILD') ?? 'en-GB-MaisieNeural'; // 영국식 아이 목소리. 이 지역에서 안 되면 Ana 로 대신한다
+const CHILD = Deno.env.get('TTS_CHILD') ?? 'en-US-AvaNeural'; // 젊은 여성 목소리를 높여 아이처럼 만든다. 이 지역에서 안 되면 Ana 로 대신한다
 const hash = (s: string) => { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; };
 /** 화자 이름으로 목소리를 고른다. 이름 뒤 괄호로 지정하면 그대로 따른다: Jina(girl) · Joon(boy) · Mom(woman) · Dad(man).
  *  괄호가 없으면 Clerk·Mom 같은 어른 이름만 성인 목소리, 나머지는 아이(여자) 목소리. 남자아이는 남성 목소리의 높낮이를 올려 만든다. */
@@ -20,7 +20,7 @@ function voiceFor(who?: string): { voice: string; pitch?: string; rate?: string 
   if (!who) return { voice: FEMALE[0] };
   const m = who.trim().match(/^(.*?)\s*\(\s*([a-z]+)\s*\)\s*$/i);
   const name = (m ? m[1] : who).toLowerCase().trim(); const tag = m ? m[2].toLowerCase() : '';
-  if (tag === 'girl' || tag === 'child') return { voice: CHILD, rate: '-4%' };
+  if (tag === 'girl' || tag === 'child') return { voice: CHILD, pitch: '+35%', rate: '-4%' };
   if (tag === 'boy') return { voice: MALE[0], pitch: '+22%' };
   if (/^(mom|mother|mum)/.test(name)) return { voice: FEMALE[0] }; // 엄마와 점원 등 어른 여성이 같은 목소리가 되지 않게 고정
   if (/^(clerk|seller|shopkeeper|teacher)/.test(name)) return { voice: FEMALE[1] };
@@ -29,7 +29,7 @@ function voiceFor(who?: string): { voice: string; pitch?: string; rate?: string 
   if (/^(woman|lady)/.test(name)) return { voice: FEMALE[hash(name) % FEMALE.length] };
   if (/^(dad|father|grandpa|man|mr)/.test(name)) return { voice: MALE[hash(name) % MALE.length] };
   if (/^(boy)/.test(name)) return { voice: MALE[0], pitch: '+22%' };
-  return { voice: CHILD, rate: '-4%' };
+  return { voice: CHILD, pitch: '+35%', rate: '-4%' };
 }
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
