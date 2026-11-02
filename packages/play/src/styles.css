@@ -732,3 +732,30 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-ind-n { font-size:.8em; padding:.05em .7em; border-radius:1em; background:#ffbf00; color:#3a2c00; }
 /* 문장 쓰기(swrite): 힌트 버튼을 입력칸의 왼쪽 끝에 맞춘다(입력칸보다 넓은 줄의 왼쪽 끝에 떨어져 보이던 것) */
 .nv-subslot:has(.nv-pillin) .nv-hintwrap { max-width:min(21em,100%); padding-left:.4em; }
+
+/* ===== 강의 슬라이드(lecture): 왼쪽 그림 + 오른쪽 설명(표현 카드·식·표·알아 두기), 아래에 슬라이드 이동 ===== */
+.nv-lec { justify-content:flex-start; gap:.8em; }
+.nv-lec::before, .nv-lec::after { content:none; }
+.nv-lec-stage { flex:1; min-height:0; width:100%; display:flex; align-items:center; gap:2.2em; }
+.nv-lec-pic { flex:0 0 34%; display:flex; align-items:center; justify-content:center; } .nv-lec-pic img { max-width:100%; max-height:19em; object-fit:contain; border-radius:1em; }
+.nv-lec-main { flex:1; min-width:0; display:flex; flex-direction:column; align-items:flex-start; gap:.8em; text-align:left; }
+.nv-lec-no { margin:0; font-size:.8em; font-weight:800; color:var(--nv-blue); letter-spacing:.04em; }
+.nv-lec-h { margin:0; font-size:1.9em; font-weight:800; line-height:1.25; }
+.nv-lec-txt p { margin:.15em 0; font-size:1.1em; line-height:1.55; color:#33415C; }
+.nv-lec-cards { display:flex; flex-direction:column; gap:.55em; width:100%; }
+.nv-lec-card { font:inherit; display:flex; align-items:center; gap:.9em; text-align:left; width:100%; background:#F6FAFF; border:.12em solid var(--nv-line); border-radius:1.2em; padding:.6em 1.1em; cursor:pointer; }
+.nv-lec-card small { flex:none; font-size:.75em; font-weight:700; color:#7A5A00; background:#FFF1CC; border-radius:999px; padding:.15em .7em; }
+.nv-lec-card b { font-size:1.25em; font-weight:700; } .nv-lec-card i { font-style:normal; color:var(--nv-sub); font-size:.95em; margin-left:auto; }
+.nv-lec-card .nv-sp { flex:none; } .nv-lec-card.nv-cur { background:#FFE9A6; }
+.nv-lec-fm { display:flex; flex-direction:column; gap:.55em; width:100%; }
+.nv-lec-fmrow { display:flex; flex-wrap:wrap; align-items:center; gap:.4em; }
+.nv-lec-fmp { display:inline-flex; align-items:center; gap:.4em; } .nv-lec-fmp em { font-style:normal; font-weight:800; color:var(--nv-sub); }
+.nv-lec-chip { display:inline-block; background:#EAF1FF; border:.1em solid #BBD0F5; border-radius:.7em; padding:.3em .8em; font-size:1.15em; font-weight:700; }
+.nv-lec-tb { border-collapse:collapse; width:100%; font-size:1.05em; }
+.nv-lec-tb th, .nv-lec-tb td { border:.1em solid var(--nv-line); padding:.45em .8em; text-align:center; }
+.nv-lec-tb th { background:#EAF1FF; font-weight:800; } .nv-lec-tb td:first-child { background:#FAFBFD; font-weight:700; }
+.nv-lec-tip { margin:0; display:flex; gap:.8em; align-items:baseline; background:#FFF8E5; border-radius:1em; padding:.7em 1.1em; font-size:1em; line-height:1.5; width:100%; }
+.nv-lec-tip b { flex:none; color:#B7791F; }
+.nv-lec-nav { flex:none; width:100%; display:flex; align-items:center; justify-content:space-between; }
+.nv-lec-nav .nv-btn { font-size:.9em; padding:.5em 1.4em; } .nv-lec-nav .nv-btn:disabled { opacity:.35; cursor:default; }
+.nv-lec-dots { display:flex; gap:.5em; } .nv-lec-dots i { width:.7em; height:.7em; border-radius:50%; background:#D9DEE8; } .nv-lec-dots i.d { background:#9DB8F0; } .nv-lec-dots i.on { background:var(--nv-blue); }

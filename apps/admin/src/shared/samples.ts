@@ -1,7 +1,7 @@
 import type { VWord } from '@mango/play';
 import type { VocabOpt } from '../pages/units/ItemForm';
 
-const NATIVE = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti', 'goal', 'scene', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext', 'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'mfree', 'swrt', 'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'aitalk'];
+const NATIVE = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti', 'goal', 'scene', 'lecture', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext', 'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'mfree', 'swrt', 'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'aitalk'];
 export const isNativeKind = (k: string) => NATIVE.includes(k);
 
 /** 샘플 미리보기용 단어 (앱에 들어 있는 그림 사용) */
@@ -48,6 +48,13 @@ export const NATIVE_SAMPLES: Record<string, Record<string, unknown>> = {
   lcardt: { k: 'lcardt', tag: 'listen', items: [{ en: 'How much is it?', ko: '이것은 얼마예요?' }, { en: "It's five thousand won.", ko: '5,000원이에요.' }, { en: 'May I help you?', ko: '도와 드릴까요?' }, { en: 'Yes, please.', ko: '네, 부탁해요.' }, { en: "I'll take it.", ko: '그걸로 할게요.' }, { en: 'Here you are.', ko: '여기 있어요.' }] },
   wrepeat: { k: 'wrepeat', tag: 'vocab', words: W },
   sdrill: { k: 'sdrill', pic: 'shoes', tag: 'speak', tpl: 'How much are these {}?', words: ['shorts', 'sunglasses', 'pants', 'shoes', 'socks', 'jeans'] },
+  lecture: { k: 'lecture', tag: 'expr', title: 'Lesson 9', slides: [
+    { head: '가게에서는 이렇게 말해요', pic: 'hat', text: ['가게에 가면 점원이 먼저 말을 걸어요.', '이번 Lesson에서는 물건의 [[가격]]을 묻고 대답하는 말을 배워요.'], cards: ['May I help you? | 도와드릴까요? | 점원', 'Yes, please. | 네, 부탁해요. | 손님', 'How much is this hat? | 이 모자는 얼마예요? | 손님'] },
+    { head: '도움을 주고받는 표현', text: ['[[May I help you?]]는 \'도와드릴까요?\'라는 뜻이에요.', '도움이 필요하면 [[Yes, please.]]라고 대답해요. please가 붙으면 부탁하는 말이라 더 공손해요.'], cards: ['May I help you? | 도와드릴까요? | 묻는 말', 'Yes, please. | 네, 부탁해요. | 대답', 'No, thank you. | 아니요, 괜찮아요. | 필요 없을 때'] },
+    { head: '가격 묻기 ① 하나일 때', pic: 'hat', text: ['얼마인지 물을 때는 [[How much]]로 시작해요.', '가까이 있는 물건 하나는 [[this]], 동사는 [[is]]를 써요.'], formula: ['How much + {{is}} + this + 물건?', "It's + 가격 + won."], cards: ['How much is this hat? | 이 모자는 얼마예요?', "It's ten thousand won. | 10,000원이에요."] },
+    { head: '가격 묻기 ② 여러 개일 때', pic: 'socks', text: ['물건이 여러 개이면 this는 these로, is는 are로, It\'s는 They\'re로 바뀌어요.'], table: ['| 하나 | 여러 개', '가리킬 때 | this | these', '동사 | is | are', '대답 | It\'s | They\'re'], tip: 'sunglasses, shorts, socks, shoes는 두 개가 한 짝이라서 [[these]]를 써요.' },
+    { head: '가격 읽는 법', text: ['숫자를 영어로 읽고, 뒤에 [[won]]을 붙여요. 천 단위로 끊어서 읽으면 쉬워요.'], cards: ['two thousand won | 2,000원', 'ten thousand won | 10,000원', 'thirteen thousand won | 13,000원', 'fifty thousand won | 50,000원'] },
+    { head: '정리해요', text: ['이번 Lesson에서 배울 단어는 hat, sunglasses, jacket, shorts, socks, shoes예요.', '이제 단어와 표현을 직접 듣고 말해 볼까요?'], cards: ['How much are these socks? | 이 양말은 얼마예요?', "They're two thousand won. | 2,000원이에요."] }] },
   scene: { k: 'scene', tag: 'listen', title: 'At the Sports Shop', sub: 'en', replay: 2, scenes: [
     { who: 'Mom', en: "Minho, let's get your new soccer things today.", ko: '민호야, 오늘 축구용품을 새로 사자.', pic: 'hat' },
     { who: 'Clerk', en: 'Hello! May I help you?', ko: '안녕하세요! 도와드릴까요?', pic: 'shoes' },
