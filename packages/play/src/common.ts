@@ -91,8 +91,6 @@ export function sayThen(text: string, done: () => void, pitch = 1) {
 
 /** 여러 줄 지문 재생: 한 줄씩 차례로 읽는다. "이름: 문장" 이면 이름별로 목소리 높낮이를 달리한다. 새로 재생하면 앞 재생은 멈춘다. */
 let scriptGen = 0;
-/** 서버(tts)의 목소리 규칙과 같다: 어른 이름이 아니면 아이 */
-const isKidWho = (w?: string) => { if (!w) return false; const m = w.match(/^(.*?)\s*\(\s*([a-z]+)\s*\)\s*$/i); const n = (m ? m[1] : w).toLowerCase().trim(); const t = m ? m[2].toLowerCase() : ''; if (t) return t === 'girl' || t === 'child'; return !/^(clerk|seller|shopkeeper|teacher|woman|lady|mom|mother|mum|dad|father|grandpa|man|mr|boy)/.test(n); };
 export const isScript = (t?: string) => /\n/.test((t ?? '').trim());
 const rowsOf = (text: string) => text.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => {
   const m = l.match(/^([A-Za-z][A-Za-z .'-]{0,14}(?:\(\s*[A-Za-z]{3,6}\s*\))?|[가-힣]{1,6}):\s*(.+)$/);
@@ -140,7 +138,6 @@ export function sayScript(text: string, done?: () => void) {
     try { speechSynthesis.cancel(); } catch { /* 무시 */ }
     const id = beginSpeech(60000);
     const a = new Audio(src); curAudio = a;
-    if (rows.length === 1 && isKidWho(rows[0].who)) { try { a.preservesPitch = false; a.playbackRate = 1.12; } catch { /* 지원 안 하면 그대로 */ } } // 아이 목소리: 소리 높이를 함께 올려 확실히 어리게 a.onended = () => { endSpeech(id); done?.(); }; a.onerror = () => { endSpeech(id); if (gen === scriptGen) browser(); };
     a.play().catch(() => { endSpeech(id); if (gen === scriptGen) browser(); });
   };
   const hit = ttsCache.get(k);

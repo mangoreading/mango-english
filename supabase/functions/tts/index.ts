@@ -11,7 +11,8 @@ const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { sta
 
 const FEMALE = ['en-US-JennyNeural', 'en-US-AriaNeural'];
 const MALE = ['en-US-GuyNeural', 'en-US-DavisNeural'];
-const CHILD = 'en-US-AnaNeural';
+const CHILD_ALT = 'en-US-AnaNeural';
+const CHILD = Deno.env.get('TTS_CHILD') ?? 'en-GB-MaisieNeural'; // 영국식 아이 목소리. 이 지역에서 안 되면 Ana 로 대신한다
 const hash = (s: string) => { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; };
 /** 화자 이름으로 목소리를 고른다. 이름 뒤 괄호로 지정하면 그대로 따른다: Jina(girl) · Joon(boy) · Mom(woman) · Dad(man).
  *  괄호가 없으면 Clerk·Mom 같은 어른 이름만 성인 목소리, 나머지는 아이(여자) 목소리. 남자아이는 남성 목소리의 높낮이를 올려 만든다. */
@@ -19,7 +20,7 @@ function voiceFor(who?: string): { voice: string; pitch?: string; rate?: string 
   if (!who) return { voice: FEMALE[0] };
   const m = who.trim().match(/^(.*?)\s*\(\s*([a-z]+)\s*\)\s*$/i);
   const name = (m ? m[1] : who).toLowerCase().trim(); const tag = m ? m[2].toLowerCase() : '';
-  if (tag === 'girl' || tag === 'child') return { voice: CHILD, pitch: '+30%', rate: '-4%' };
+  if (tag === 'girl' || tag === 'child') return { voice: CHILD, rate: '-4%' };
   if (tag === 'boy') return { voice: MALE[0], pitch: '+22%' };
   if (/^(mom|mother|mum)/.test(name)) return { voice: FEMALE[0] }; // 엄마와 점원 등 어른 여성이 같은 목소리가 되지 않게 고정
   if (/^(clerk|seller|shopkeeper|teacher)/.test(name)) return { voice: FEMALE[1] };
@@ -28,7 +29,7 @@ function voiceFor(who?: string): { voice: string; pitch?: string; rate?: string 
   if (/^(woman|lady)/.test(name)) return { voice: FEMALE[hash(name) % FEMALE.length] };
   if (/^(dad|father|grandpa|man|mr)/.test(name)) return { voice: MALE[hash(name) % MALE.length] };
   if (/^(boy)/.test(name)) return { voice: MALE[0], pitch: '+22%' };
-  return { voice: CHILD, pitch: '+30%', rate: '-4%' };
+  return { voice: CHILD, rate: '-4%' };
 }
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -69,14 +70,16 @@ Deno.serve(async (req) => {
     try { const { data } = await admin.storage.from('tts-cache').download(path); if (data) audio = await data.arrayBuffer(); } catch { /* 없으면 새로 만든다 */ }
     const hit = !!audio;
     if (!audio) {
-      const r = await fetch(`https://${REGION}.tts.speech.microsoft.com/cognitiveservices/v1`, {
+      const call = (body: string) => fetch(`https://${REGION}.tts.speech.microsoft.com/cognitiveservices/v1`, {
         method: 'POST',
         headers: { 'Ocp-Apim-Subscription-Key': key, 'Content-Type': 'application/ssml+xml', 'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3', 'User-Agent': 'mango-english' },
-        body: ssml,
+        body,
       });
+      let r = await call(ssml); let alt = false;
+      if (!r.ok && ssml.includes(CHILD) && CHILD !== CHILD_ALT) { r = await call(ssml.split(CHILD).join(CHILD_ALT).replace(/(<voice name="en-US-AnaNeural"><prosody rate="[^"]*")>/g, '$1 pitch="+30%">')); alt = true; } // 아이 음성이 안 되면 Ana 로 대신(저장은 안 함)
       if (!r.ok) throw new Error('Azure 오류 ' + r.status + ' ' + (await r.text()).slice(0, 200));
       audio = await r.arrayBuffer();
-      try { await admin.storage.from('tts-cache').upload(path, audio, { contentType: 'audio/mpeg', upsert: false }); } catch { /* 저장 실패해도 소리는 돌려준다 */ }
+      if (!alt) try { await admin.storage.from('tts-cache').upload(path, audio, { contentType: 'audio/mpeg', upsert: false }); } catch { /* 저장 실패해도 소리는 돌려준다 */ }
     }
     if (prefetch) return json({ cached: hit });
     return new Response(audio, { headers: { ...CORS, 'Content-Type': 'audio/mpeg', 'Cache-Control': 'private, max-age=86400', 'X-Cache': hit ? 'HIT' : 'MISS' } });
