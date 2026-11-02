@@ -137,7 +137,7 @@ export function sayScript(text: string, done?: () => void) {
     if (gen !== scriptGen) return;
     try { speechSynthesis.cancel(); } catch { /* 무시 */ }
     const id = beginSpeech(60000);
-    const a = new Audio(src); curAudio = a;
+    const a = new Audio(src); curAudio = a; a.onended = () => { endSpeech(id); done?.(); }; a.onerror = () => { endSpeech(id); console.warn('[tts] 소리 재생 오류 → 브라우저 음성으로 대신', a.error?.message ?? a.error?.code); if (gen === scriptGen) browser(); };
     a.play().catch((e) => { endSpeech(id); console.warn('[tts] 재생이 막힘 → 브라우저 음성으로 대신', e?.name, e?.message); if (gen === scriptGen) browser(); });
   };
   const hit = ttsCache.get(k);
