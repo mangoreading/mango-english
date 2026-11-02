@@ -17,7 +17,7 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
   const opts = useMemo(() => (qs[qi] ? shuffle([{ t: qs[qi].ans, c: true }, ...qs[qi].wrong.map((t) => ({ t, c: false }))]) : []), [qi]); // eslint-disable-line
   useEffect(() => () => { run.current++; try { speechSynthesis.cancel(); } catch { /* 소리가 안 되는 환경 */ } }, []);
   useEffect(() => { if (phase === 'after' && !qs.length) { if (hasReview) setPhase('review'); else if (!fired.current) { fired.current = true; onDone([]); } } if (phase === 'review' && !qs.length && !fired.current) { fired.current = true; onDone([]); } /* eslint-disable-next-line */ }, [phase]);
-  const src = (k?: string) => (k ? (/^https?:|^word\//.test(k) ? imgSrc(k) : imgSrc(pic(k))) : '');
+  const src = (k?: string) => (k ? (/^https?:|^word\/|^scene\//.test(k) ? imgSrc(k) : imgSrc(pic(k))) : '');
   function step(i: number, id: number) {
     if (id !== run.current) return;
     if (i >= scenes.length) { setPhase('after'); return; }

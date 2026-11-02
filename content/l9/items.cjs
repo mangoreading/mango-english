@@ -22,17 +22,17 @@ add('1-4', 'sdrill', 'speak', [
   { pic: 'socks', tpl: "They're {} won.", words: ['two thousand', 'thirteen thousand', 'fifteen thousand', 'fifty thousand'] }]);
 add('1-5', 'scene', 'listen', [{ title: '미나와 엄마의 가게 나들이', sub: 'en', replay: 2, review: true, pic: 'hat',
   scenes: [
-    { who: 'Mina', en: 'Mom, I need a hat for the trip.', ko: '엄마, 저 여행에 쓸 모자가 필요해요.' },
-    { who: 'Clerk', en: 'Hello! May I help you?', ko: '안녕하세요! 도와드릴까요?' },
-    { who: 'Mom', en: 'Yes, please. How much is this hat?', ko: '네. 이 모자는 얼마예요?' },
-    { who: 'Clerk', en: "It's ten thousand won.", ko: '10,000원이에요.' },
-    { who: 'Mina', en: 'And how much are these shorts?', ko: '그리고 이 반바지는 얼마예요?' },
-    { who: 'Clerk', en: "They're fifteen thousand won.", ko: '15,000원이에요.' },
-    { who: 'Mina', en: 'How much are these shoes?', ko: '이 신발은 얼마예요?' },
-    { who: 'Clerk', en: "They're fifty thousand won.", ko: '50,000원이에요.' },
-    { who: 'Mom', en: "Oh, that's too much. We'll take the hat and the shorts.", ko: '아, 너무 비싸네요. 모자와 반바지로 할게요.' },
-    { who: 'Mina', en: 'Thank you, Mom!', ko: '고마워요, 엄마!' },
-    { who: 'Clerk', en: 'Thank you! Have a nice day!', ko: '감사합니다! 좋은 하루 보내세요!' }],
+    { pic: 'scene/l9-1-1.jpg', who: 'Mina', en: 'Mom, I need a hat for the trip.', ko: '엄마, 저 여행에 쓸 모자가 필요해요.' },
+    { pic: 'scene/l9-1-2.jpg', who: 'Clerk', en: 'Hello! May I help you?', ko: '안녕하세요! 도와드릴까요?' },
+    { pic: 'scene/l9-1-2.jpg', who: 'Mom', en: 'Yes, please. How much is this hat?', ko: '네. 이 모자는 얼마예요?' },
+    { pic: 'scene/l9-1-3.jpg', who: 'Clerk', en: "It's ten thousand won.", ko: '10,000원이에요.' },
+    { pic: 'scene/l9-1-4.jpg', who: 'Mina', en: 'And how much are these shorts?', ko: '그리고 이 반바지는 얼마예요?' },
+    { pic: 'scene/l9-1-4.jpg', who: 'Clerk', en: "They're fifteen thousand won.", ko: '15,000원이에요.' },
+    { pic: 'scene/l9-1-5.jpg', who: 'Mina', en: 'How much are these shoes?', ko: '이 신발은 얼마예요?' },
+    { pic: 'scene/l9-1-5.jpg', who: 'Clerk', en: "They're fifty thousand won.", ko: '50,000원이에요.' },
+    { pic: 'scene/l9-1-6.jpg', who: 'Mom', en: "Oh, that's too much. We'll take the hat and the shorts.", ko: '아, 너무 비싸네요. 모자와 반바지로 할게요.' },
+    { pic: 'scene/l9-1-7.jpg', who: 'Mina', en: 'Thank you, Mom!', ko: '고마워요, 엄마!' },
+    { pic: 'scene/l9-1-7.jpg', who: 'Clerk', en: 'Thank you! Have a nice day!', ko: '감사합니다! 좋은 하루 보내세요!' }],
   explain: ['물건이 하나일 때는 How much is this …?, 여러 개일 때는 How much are these …? 라고 물어요.', '대답은 하나면 It\'s …, 여러 개면 They\'re … 로 시작해요.', '가격은 숫자 뒤에 won 을 붙여요. (ten thousand won = 10,000원)'],
   qs: [{ q: '미나네 가족이 산 물건이 아닌 것은?', ans: '신발', wrong: ['모자', '반바지'] }, { q: '모자는 얼마였나요?', ans: '10,000원', wrong: ['15,000원', '50,000원'] }] }]);
 add('1-6', 'vmatch', 'vocab', [{ words: W }]); // 6단어를 한 화면에 (0052 에서 3문항 → 1문항으로 조정)
