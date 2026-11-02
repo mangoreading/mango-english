@@ -19,7 +19,7 @@ function voiceFor(who?: string): { voice: string; pitch?: string } {
   if (!who) return { voice: FEMALE[0] };
   const m = who.trim().match(/^(.*?)\s*\(\s*([a-z]+)\s*\)\s*$/i);
   const name = (m ? m[1] : who).toLowerCase().trim(); const tag = m ? m[2].toLowerCase() : '';
-  if (tag === 'girl' || tag === 'child') return { voice: CHILD };
+  if (tag === 'girl' || tag === 'child') return { voice: CHILD, pitch: '+18%' };
   if (tag === 'boy') return { voice: MALE[0], pitch: '+22%' };
   if (/^(mom|mother|mum)/.test(name)) return { voice: FEMALE[0] }; // 엄마와 점원 등 어른 여성이 같은 목소리가 되지 않게 고정
   if (/^(clerk|seller|shopkeeper|teacher)/.test(name)) return { voice: FEMALE[1] };
@@ -28,7 +28,7 @@ function voiceFor(who?: string): { voice: string; pitch?: string } {
   if (/^(woman|lady)/.test(name)) return { voice: FEMALE[hash(name) % FEMALE.length] };
   if (/^(dad|father|grandpa|man|mr)/.test(name)) return { voice: MALE[hash(name) % MALE.length] };
   if (/^(boy)/.test(name)) return { voice: MALE[0], pitch: '+22%' };
-  return { voice: CHILD };
+  return { voice: CHILD, pitch: '+18%' };
 }
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
