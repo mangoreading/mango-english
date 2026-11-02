@@ -13,6 +13,7 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
   const hasReview = item.review !== false && (!!item.explain?.length || scenes.some((s) => s.ko));
   const [idx, setIdx] = useState(0); const [paused, setPaused] = useState(false); const [plays, setPlays] = useState(0); const [cc, setCc] = useState(item.sub !== 'none');
   const run = useRef(0); const fired = useRef(false);
+  const [back, setBack] = useState<'video' | 'quiz' | 'review' | null>(null); const [maxPg, setMaxPg] = useState(0); // 이전 버튼으로 돌아가 보는 화면 / 지금까지 도달한 가장 먼 화면
   const [qi, setQi] = useState(0); const [res, setRes] = useState<boolean[]>([]); const wrong = useRef(false); const [bad, setBad] = useState<number | null>(null); const [okq, setOkq] = useState(false);
   const opts = useMemo(() => (qs[qi] ? shuffle([{ t: qs[qi].ans, c: true }, ...qs[qi].wrong.map((t) => ({ t, c: false }))]) : []), [qi]); // eslint-disable-line
   useEffect(() => () => { run.current++; stopSeq(); }, []);
@@ -26,7 +27,7 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
     if (i + 1 < scenes.length) prefetchSay(line(i + 1));
     sayScript(line(i), () => { if (id === run.current) setTimeout(() => step(i + 1, id), 450); }); // 화자별 Azure 음성, 안 되면 브라우저 음성
   }
-  function start() { const id = ++run.current; setPlays((n) => n + 1); setIdx(0); setPaused(false); setPhase('play'); step(0, id); }
+  function start() { setBack(null); const id = ++run.current; setPlays((n) => n + 1); setIdx(0); setPaused(false); setPhase('play'); step(0, id); }
   /** 멈춤: 읽던 소리를 끊고 지금 대사에서 멈춘다. 계속 보기는 그 대사를 처음부터 다시 읽으며 이어 간다. */
   function pause() { run.current++; setPaused(true); stopSeq(); }
   function resume() { const id = ++run.current; setPaused(false); step(idx, id); }
@@ -48,37 +49,55 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
     } else { wrong.current = true; setBad(i); setTimeout(() => setBad(null), 500); }
   }
   const sc = scenes[Math.min(idx, scenes.length - 1)]; const img = src(sc?.pic) || src(scenes.find((s) => s.pic)?.pic);
-  const left = Math.max(0, max + 1 - plays); const quiz = phase === 'after' && qs.length > 0; const review = phase === 'review';
+  const left = Math.max(0, max + 1 - plays);
+  const natural: 'video' | 'quiz' | 'review' = phase === 'review' ? 'review' : phase === 'after' && qs.length > 0 ? 'quiz' : 'video';
+  const view = back ?? natural; const quiz = view === 'quiz' && qs.length > 0; const review = view === 'review';
+  const pages: ('video' | 'quiz' | 'review')[] = ['video', ...(qs.length ? ['quiz' as const] : []), ...(hasReview ? ['review' as const] : [])];
+  const cur = Math.max(0, pages.indexOf(view));
+  const reach = Math.max(maxPg, pages.indexOf(natural));
+  useEffect(() => { setMaxPg((m) => Math.max(m, pages.indexOf(natural))); }, [phase]); // eslint-disable-line
+  /** 화면 이동: 이전은 언제나, 다음은 이미 거친 화면까지만(영상을 끝까지 보기 전에 문제로 건너뛰지 못하게) */
+  function goPage(n: number) {
+    if (n < 0 || n >= pages.length || n > reach) return;
+    if (phase === 'play') return;
+    const t = pages[n]; setBack(t === natural ? null : t);
+  }
   return (
     <div className="nv-body nv-scene">
-      {!quiz && !review && (
-        <div className="nv-stage" onClick={phase === 'play' ? () => (paused ? resume() : pause()) : undefined} style={phase === 'play' ? { cursor: 'pointer' } : undefined}>
-          {img ? <img className="nv-stage-img" src={img} alt="" draggable={false} /> : <div className="nv-stage-img nv-stage-ph" />}
-          {phase === 'play' && sc.who && <span className="nv-who">{sc.who}</span>}
-          {phase === 'play' && paused && <button type="button" className="nv-stage-go" onClick={(e) => { e.stopPropagation(); resume(); }} aria-label="계속 보기"><i>▶</i></button>}
-          {phase === 'ready' && <button type="button" className="nv-stage-go" onClick={start} aria-label="영상 보기"><i>▶</i><b>장면 보기</b></button>}
-          {phase !== 'ready' && cc && item.sub !== 'none' && (
-            <div className="nv-subs">{phase === 'play' ? <><p>{sc.en}</p>{item.sub === 'enko' && sc.ko && <small>{sc.ko}</small>}</> : <p className="nv-subs-end">끝났어요</p>}</div>
+      <div className="nv-row nv-lec-row">
+        <button className="nv-arrow" disabled={cur === 0 || phase === 'play'} onClick={() => goPage(cur - 1)} aria-label="이전">‹</button>
+        <div className="nv-scene-main">
+          {!quiz && !review && (
+            <div className="nv-stage" onClick={phase === 'play' ? () => (paused ? resume() : pause()) : undefined} style={phase === 'play' ? { cursor: 'pointer' } : undefined}>
+              {img ? <img className="nv-stage-img" src={img} alt="" draggable={false} /> : <div className="nv-stage-img nv-stage-ph" />}
+              {phase === 'play' && sc.who && <span className="nv-who">{sc.who}</span>}
+              {phase === 'play' && paused && <button type="button" className="nv-stage-go" onClick={(e) => { e.stopPropagation(); resume(); }} aria-label="계속 보기"><i>▶</i></button>}
+              {phase === 'ready' && <button type="button" className="nv-stage-go" onClick={start} aria-label="영상 보기"><i>▶</i><b>장면 보기</b></button>}
+              {phase !== 'ready' && cc && item.sub !== 'none' && (
+                <div className="nv-subs">{phase === 'play' ? <><p>{sc.en}</p>{item.sub === 'enko' && sc.ko && <small>{sc.ko}</small>}</> : <p className="nv-subs-end">끝났어요</p>}</div>
+              )}
+              {phase !== 'ready' && <div className={'nv-bar' + (phase === 'play' ? ' seek' : '')} onClick={phase === 'play' ? seek : undefined} role={phase === 'play' ? 'slider' : undefined} aria-label="장면 이동"><i style={{ width: `${phase === 'after' ? 100 : ((idx + 1) / scenes.length) * 100}%` }} /></div>}
+            </div>
           )}
-          {phase !== 'ready' && <div className={'nv-bar' + (phase === 'play' ? ' seek' : '')} onClick={phase === 'play' ? seek : undefined} role={phase === 'play' ? 'slider' : undefined} aria-label="장면 이동"><i style={{ width: `${phase === 'after' ? 100 : ((idx + 1) / scenes.length) * 100}%` }} /></div>}
+          {review && (
+            <div className="nv-rv">
+              <p className="nv-rv-t">해석과 해설</p>
+              <div className="nv-rv-list">{scenes.map((x, i) => (
+                <div key={i} className="nv-rv-row"><span className="nv-rv-who">{x.who}</span><div><b>{x.en}</b>{x.ko && <small>{x.ko}</small>}</div></div>
+              ))}</div>
+              {!!item.explain?.length && <div className="nv-rv-ex">{item.explain.map((l: string, i: number) => <p key={i}><Rich text={l} /></p>)}</div>}
+            </div>
+          )}
+          {quiz && qs[qi] && (
+            <div className="nv-sq">
+              <p className="nv-qt">Q{qs.length > 1 ? qi + 1 : ''}. {qs[qi].q}</p>
+              <div className="nv-list nv-list-s">{opts.map((o, i) => <button key={i} className={'nv-opt' + (okq && o.c ? ' nv-right' : bad === i ? ' nv-wrong nv-shake' : '')} onClick={() => choose(i)}>{o.t}</button>)}</div>
+              <Fb className={'nv-fbmsg' + (okq ? ' on' : '')}>{okq ? '정답이에요! 👏' : ''}</Fb>
+            </div>
+          )}
         </div>
-      )}
-      {review && (
-        <div className="nv-rv">
-          <p className="nv-rv-t">해석과 해설</p>
-          <div className="nv-rv-list">{scenes.map((x, i) => (
-            <div key={i} className="nv-rv-row"><span className="nv-rv-who">{x.who}</span><div><b>{x.en}</b>{x.ko && <small>{x.ko}</small>}</div></div>
-          ))}</div>
-          {!!item.explain?.length && <div className="nv-rv-ex">{item.explain.map((l: string, i: number) => <p key={i}><Rich text={l} /></p>)}</div>}
-        </div>
-      )}
-      {quiz && qs[qi] && (
-        <div className="nv-sq">
-          <p className="nv-qt">Q{qs.length > 1 ? qi + 1 : ''}. {qs[qi].q}</p>
-          <div className="nv-list nv-list-s">{opts.map((o, i) => <button key={i} className={'nv-opt' + (okq && o.c ? ' nv-right' : bad === i ? ' nv-wrong nv-shake' : '')} onClick={() => choose(i)}>{o.t}</button>)}</div>
-          <Fb className={'nv-fbmsg' + (okq ? ' on' : '')}>{okq ? '정답이에요! 👏' : ''}</Fb>
-        </div>
-      )}
+        <button className="nv-arrow" disabled={cur >= pages.length - 1 || cur + 1 > reach || phase === 'play'} onClick={() => goPage(cur + 1)} aria-label="다음">›</button>
+      </div>
       {phase !== 'ready' && (
         <div className="nv-ptools">
           {item.sub !== 'none' && !quiz && !review && <button className="nv-hintbtn" onClick={() => setCc(!cc)}>{cc ? '자막 끄기' : '자막 켜기'}</button>}
