@@ -22,7 +22,7 @@ function voiceFor(who?: string): { voice: string; pitch?: string; rate?: string 
   if (tag === 'girl' || tag === 'child') return { voice: CHILD };
   if (tag === 'boy') return { voice: MALE[0], pitch: '+22%' };
   if (/^(mom|mother|mum)/.test(name)) return { voice: FEMALE[0] }; // 엄마와 점원 등 어른 여성이 같은 목소리가 되지 않게 고정
-  if (/^(clerk|seller|shopkeeper|teacher)/.test(name)) return { voice: FEMALE[1], pitch: '+8%', rate: '-4%' }; // 점원은 밝고 발랄하게
+  if (/^(clerk|seller|shopkeeper|teacher)/.test(name)) return { voice: FEMALE[1], pitch: '+8%' }; // 점원은 밝고 발랄하게
   if (tag === 'woman' || tag === 'female') return { voice: FEMALE[hash(name) % FEMALE.length] };
   if (tag === 'man' || tag === 'male') return { voice: MALE[hash(name) % MALE.length] };
   if (/^(woman|lady)/.test(name)) return { voice: FEMALE[hash(name) % FEMALE.length] };
