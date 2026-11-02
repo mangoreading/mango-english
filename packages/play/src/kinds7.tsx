@@ -20,6 +20,8 @@ export function Lecture({ item, pic, onDone }: KindProps) {
   const hear = (t: string) => { setCur(t); say(plain(t)); };
   return (
     <div className="nv-body nv-lec">
+      <div className="nv-row nv-lec-row">
+        <button type="button" className="nv-arrow" disabled={i === 0} onClick={() => { setI(i - 1); setCur(null); }} aria-label="이전">‹</button>
       <div className="nv-lec-stage">
         {img && <div className="nv-lec-pic"><img src={img} alt="" draggable={false} /></div>}
         <div className="nv-lec-main">
@@ -47,10 +49,7 @@ export function Lecture({ item, pic, onDone }: KindProps) {
           {s.tip && <p className="nv-lec-tip"><b>알아 두기</b><span><Rich text={s.tip} /></span></p>}
         </div>
       </div>
-      <div className="nv-lec-nav">
-        <button type="button" className="nv-btn nv-ghost" disabled={i === 0} onClick={() => { setI(i - 1); setCur(null); }}>◀ 이전</button>
-        <span className="nv-lec-dots">{slides.map((_, k) => <i key={k} className={k === i ? 'on' : k < i ? 'd' : ''} />)}</span>
-        <button type="button" className="nv-btn" disabled={i >= slides.length - 1} onClick={() => { setI(i + 1); setCur(null); }}>다음 ▶</button>
+        <button type="button" className="nv-arrow" disabled={i >= slides.length - 1} onClick={() => { setI(i + 1); setCur(null); }} aria-label="다음">›</button>
       </div>
     </div>
   );
