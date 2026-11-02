@@ -666,7 +666,7 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-subs p { display:inline-block; margin:0; background:rgba(20,28,50,.78); color:#fff; font-size:1.25em; line-height:1.35; padding:.25em .8em; border-radius:.5em; }
 .nv-subs small { display:block; margin-top:.25em; font-size:.95em; color:#fff; text-shadow:0 0 .3em #000; }
 .nv-subs-end { opacity:.75; }
-.nv-bar { position:absolute; left:0; right:0; bottom:0; height:.3em; background:rgba(255,255,255,.55); } .nv-bar i { display:block; height:100%; background:#3B6FD8; transition:width .35s; }
+.nv-bar { position:absolute; left:0; right:0; bottom:0; height:.3em; background:rgba(255,255,255,.55); } .nv-bar.seek { cursor:pointer; height:.6em; } .nv-bar.seek::before { content:''; position:absolute; left:0; right:0; bottom:0; height:1.6em; } .nv-bar.seek:hover { height:.8em; } .nv-bar i { display:block; height:100%; background:#3B6FD8; transition:width .35s; }
 .nv-sq { width:42em; max-width:100%; display:flex; flex-direction:column; gap:.8em; }
 .nv-scene .nv-ptools { margin-top:1.4em; }
 

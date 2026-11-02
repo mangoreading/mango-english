@@ -30,6 +30,15 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
   /** 멈춤: 읽던 소리를 끊고 지금 대사에서 멈춘다. 계속 보기는 그 대사를 처음부터 다시 읽으며 이어 간다. */
   function pause() { run.current++; setPaused(true); stopSeq(); }
   function resume() { const id = ++run.current; setPaused(false); step(idx, id); }
+  /** 진행 막대의 한 지점을 눌러 그 장면으로 이동한다. 재생 중이면 그 장면부터 이어서 읽고, 멈춤 상태면 장면만 바꿔 멈춰 둔다. */
+  function seek(e: React.MouseEvent<HTMLDivElement>) {
+    e.stopPropagation();
+    if (phase !== 'play') return;
+    const r = e.currentTarget.getBoundingClientRect();
+    const i = Math.max(0, Math.min(scenes.length - 1, Math.floor(((e.clientX - r.left) / r.width) * scenes.length)));
+    const id = ++run.current; stopSeq(); setIdx(i);
+    if (!paused) step(i, id);
+  }
   function choose(i: number) {
     if (okq) return;
     if (opts[i].c) {
@@ -51,7 +60,7 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
           {phase !== 'ready' && cc && item.sub !== 'none' && (
             <div className="nv-subs">{phase === 'play' ? <><p>{sc.en}</p>{item.sub === 'enko' && sc.ko && <small>{sc.ko}</small>}</> : <p className="nv-subs-end">끝났어요</p>}</div>
           )}
-          {phase !== 'ready' && <div className="nv-bar"><i style={{ width: `${phase === 'after' ? 100 : ((idx + 1) / scenes.length) * 100}%` }} /></div>}
+          {phase !== 'ready' && <div className={'nv-bar' + (phase === 'play' ? ' seek' : '')} onClick={phase === 'play' ? seek : undefined} role={phase === 'play' ? 'slider' : undefined} aria-label="장면 이동"><i style={{ width: `${phase === 'after' ? 100 : ((idx + 1) / scenes.length) * 100}%` }} /></div>}
         </div>
       )}
       {review && (
