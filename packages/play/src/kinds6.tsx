@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Fb } from './fb';
 import { Rich } from './kinds3';
-import { imgSrc, sayThen, shuffle, voicePitch, type KindProps } from './common';
+import { imgSrc, prefetchSay, sayScript, shuffle, stopSeq, type KindProps } from './common';
 
 interface Sc { who?: string; en: string; ko?: string; pic?: string }
 interface Q { q: string; ans: string; wrong: string[] }
@@ -15,18 +15,20 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
   const run = useRef(0); const fired = useRef(false);
   const [qi, setQi] = useState(0); const [res, setRes] = useState<boolean[]>([]); const wrong = useRef(false); const [bad, setBad] = useState<number | null>(null); const [okq, setOkq] = useState(false);
   const opts = useMemo(() => (qs[qi] ? shuffle([{ t: qs[qi].ans, c: true }, ...qs[qi].wrong.map((t) => ({ t, c: false }))]) : []), [qi]); // eslint-disable-line
-  useEffect(() => () => { run.current++; try { speechSynthesis.cancel(); } catch { /* 소리가 안 되는 환경 */ } }, []);
+  useEffect(() => () => { run.current++; stopSeq(); }, []);
   useEffect(() => { if (phase === 'after' && !qs.length) { if (hasReview) setPhase('review'); else if (!fired.current) { fired.current = true; onDone([]); } } if (phase === 'review' && !qs.length && !fired.current) { fired.current = true; onDone([]); } /* eslint-disable-next-line */ }, [phase]);
   const src = (k?: string) => (k ? (/^https?:|^word\/|^scene\//.test(k) ? imgSrc(k) : imgSrc(pic(k))) : '');
   function step(i: number, id: number) {
     if (id !== run.current) return;
     if (i >= scenes.length) { setPhase('after'); return; }
     setIdx(i);
-    sayThen(scenes[i].en, () => setTimeout(() => step(i + 1, id), 450), voicePitch(scenes[i].who));
+    const line = (k: number) => (scenes[k].who ? `${scenes[k].who}: ${scenes[k].en}` : scenes[k].en);
+    if (i + 1 < scenes.length) prefetchSay(line(i + 1));
+    sayScript(line(i), () => { if (id === run.current) setTimeout(() => step(i + 1, id), 450); }); // 화자별 Azure 음성, 안 되면 브라우저 음성
   }
   function start() { const id = ++run.current; setPlays((n) => n + 1); setIdx(0); setPaused(false); setPhase('play'); step(0, id); }
   /** 멈춤: 읽던 소리를 끊고 지금 대사에서 멈춘다. 계속 보기는 그 대사를 처음부터 다시 읽으며 이어 간다. */
-  function pause() { run.current++; setPaused(true); try { speechSynthesis.cancel(); } catch { /* 소리가 안 되는 환경 */ } }
+  function pause() { run.current++; setPaused(true); stopSeq(); }
   function resume() { const id = ++run.current; setPaused(false); step(idx, id); }
   function choose(i: number) {
     if (okq) return;

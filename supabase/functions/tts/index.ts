@@ -21,9 +21,11 @@ function voiceFor(who?: string): { voice: string; pitch?: string } {
   const name = (m ? m[1] : who).toLowerCase().trim(); const tag = m ? m[2].toLowerCase() : '';
   if (tag === 'girl' || tag === 'child') return { voice: CHILD };
   if (tag === 'boy') return { voice: MALE[0], pitch: '+22%' };
+  if (/^(mom|mother|mum)/.test(name)) return { voice: FEMALE[0] }; // 엄마와 점원 등 어른 여성이 같은 목소리가 되지 않게 고정
+  if (/^(clerk|seller|shopkeeper|teacher)/.test(name)) return { voice: FEMALE[1] };
   if (tag === 'woman' || tag === 'female') return { voice: FEMALE[hash(name) % FEMALE.length] };
   if (tag === 'man' || tag === 'male') return { voice: MALE[hash(name) % MALE.length] };
-  if (/^(clerk|seller|shopkeeper|teacher|woman|lady|mom|mother|mum)/.test(name)) return { voice: FEMALE[hash(name) % FEMALE.length] };
+  if (/^(woman|lady)/.test(name)) return { voice: FEMALE[hash(name) % FEMALE.length] };
   if (/^(dad|father|grandpa|man|mr)/.test(name)) return { voice: MALE[hash(name) % MALE.length] };
   if (/^(boy)/.test(name)) return { voice: MALE[0], pitch: '+22%' };
   return { voice: CHILD };
