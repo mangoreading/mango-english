@@ -44,7 +44,7 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
         <div className="nv-stage" onClick={phase === 'play' ? () => (paused ? resume() : pause()) : undefined} style={phase === 'play' ? { cursor: 'pointer' } : undefined}>
           {img ? <img className="nv-stage-img" src={img} alt="" draggable={false} /> : <div className="nv-stage-img nv-stage-ph" />}
           {phase === 'play' && sc.who && <span className="nv-who">{sc.who}</span>}
-          {phase === 'play' && paused && <button type="button" className="nv-stage-go" onClick={(e) => { e.stopPropagation(); resume(); }} aria-label="계속 보기"><i>▶</i><b>계속 보기</b></button>}
+          {phase === 'play' && paused && <button type="button" className="nv-stage-go" onClick={(e) => { e.stopPropagation(); resume(); }} aria-label="계속 보기"><i>▶</i></button>}
           {phase === 'ready' && <button type="button" className="nv-stage-go" onClick={start} aria-label="영상 보기"><i>▶</i><b>장면 보기</b></button>}
           {phase !== 'ready' && cc && item.sub !== 'none' && (
             <div className="nv-subs">{phase === 'play' ? <><p>{sc.en}</p>{item.sub === 'enko' && sc.ko && <small>{sc.ko}</small>}</> : <p className="nv-subs-end">끝났어요</p>}</div>
@@ -70,7 +70,6 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
       )}
       {phase !== 'ready' && (
         <div className="nv-ptools">
-          {phase === 'play' && <button className="nv-hintbtn" onClick={() => (paused ? resume() : pause())}>{paused ? '▶ 계속 보기' : '⏸ 멈춤'}</button>}
           {item.sub !== 'none' && !quiz && !review && <button className="nv-hintbtn" onClick={() => setCc(!cc)}>{cc ? '자막 끄기' : '자막 켜기'}</button>}
           <button className="nv-hintbtn" disabled={phase === 'play' || !left} onClick={start}>다시 보기{phase === 'play' ? '' : ` (${left}회 남음)`}</button>
         </div>
