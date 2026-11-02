@@ -11,7 +11,7 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
   const scenes: Sc[] = item.scenes ?? []; const qs: Q[] = item.qs ?? []; const max: number = item.replay ?? 2;
   const [phase, setPhase] = useState<'ready' | 'play' | 'after' | 'review'>('ready');
   const hasReview = item.review !== false && (!!item.explain?.length || scenes.some((s) => s.ko));
-  const [idx, setIdx] = useState(0); const [plays, setPlays] = useState(0); const [cc, setCc] = useState(item.sub !== 'none');
+  const [idx, setIdx] = useState(0); const [paused, setPaused] = useState(false); const [plays, setPlays] = useState(0); const [cc, setCc] = useState(item.sub !== 'none');
   const run = useRef(0); const fired = useRef(false);
   const [qi, setQi] = useState(0); const [res, setRes] = useState<boolean[]>([]); const wrong = useRef(false); const [bad, setBad] = useState<number | null>(null); const [okq, setOkq] = useState(false);
   const opts = useMemo(() => (qs[qi] ? shuffle([{ t: qs[qi].ans, c: true }, ...qs[qi].wrong.map((t) => ({ t, c: false }))]) : []), [qi]); // eslint-disable-line
@@ -24,7 +24,10 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
     setIdx(i);
     sayThen(scenes[i].en, () => setTimeout(() => step(i + 1, id), 450), voicePitch(scenes[i].who));
   }
-  function start() { const id = ++run.current; setPlays((n) => n + 1); setIdx(0); setPhase('play'); step(0, id); }
+  function start() { const id = ++run.current; setPlays((n) => n + 1); setIdx(0); setPaused(false); setPhase('play'); step(0, id); }
+  /** 멈춤: 읽던 소리를 끊고 지금 대사에서 멈춘다. 계속 보기는 그 대사를 처음부터 다시 읽으며 이어 간다. */
+  function pause() { run.current++; setPaused(true); try { speechSynthesis.cancel(); } catch { /* 소리가 안 되는 환경 */ } }
+  function resume() { const id = ++run.current; setPaused(false); step(idx, id); }
   function choose(i: number) {
     if (okq) return;
     if (opts[i].c) {
@@ -38,9 +41,10 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
   return (
     <div className="nv-body nv-scene">
       {!quiz && !review && (
-        <div className="nv-stage">
+        <div className="nv-stage" onClick={phase === 'play' ? () => (paused ? resume() : pause()) : undefined} style={phase === 'play' ? { cursor: 'pointer' } : undefined}>
           {img ? <img className="nv-stage-img" src={img} alt="" draggable={false} /> : <div className="nv-stage-img nv-stage-ph" />}
           {phase === 'play' && sc.who && <span className="nv-who">{sc.who}</span>}
+          {phase === 'play' && paused && <button type="button" className="nv-stage-go" onClick={(e) => { e.stopPropagation(); resume(); }} aria-label="계속 보기"><i>▶</i><b>계속 보기</b></button>}
           {phase === 'ready' && <button type="button" className="nv-stage-go" onClick={start} aria-label="영상 보기"><i>▶</i><b>장면 보기</b></button>}
           {phase !== 'ready' && cc && item.sub !== 'none' && (
             <div className="nv-subs">{phase === 'play' ? <><p>{sc.en}</p>{item.sub === 'enko' && sc.ko && <small>{sc.ko}</small>}</> : <p className="nv-subs-end">끝났어요</p>}</div>
@@ -66,6 +70,7 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
       )}
       {phase !== 'ready' && (
         <div className="nv-ptools">
+          {phase === 'play' && <button className="nv-hintbtn" onClick={() => (paused ? resume() : pause())}>{paused ? '▶ 계속 보기' : '⏸ 멈춤'}</button>}
           {item.sub !== 'none' && !quiz && !review && <button className="nv-hintbtn" onClick={() => setCc(!cc)}>{cc ? '자막 끄기' : '자막 켜기'}</button>}
           <button className="nv-hintbtn" disabled={phase === 'play' || !left} onClick={start}>다시 보기{phase === 'play' ? '' : ` (${left}회 남음)`}</button>
         </div>
