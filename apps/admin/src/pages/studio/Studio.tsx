@@ -7,7 +7,7 @@ const SCENE_STYLE = 'A bright, friendly children\'s picture-book illustration fo
 type Preset = 'word' | 'scene' | 'free';
 const PRESETS: Record<Preset, { name: string; style: string; size: string; bg: string }> = {
   word: { name: '단어 그림 (3D 아이콘)', style: WORD_STYLE, size: '300x300', bg: 'transparent' },
-  scene: { name: '장면 이미지 (영상용)', style: SCENE_STYLE, size: '768x512', bg: 'opaque' },
+  scene: { name: '장면 이미지 (영상용 16:9)', style: SCENE_STYLE, size: '1280x720', bg: 'opaque' },
   free: { name: '자유', style: '', size: '1024x1024', bg: 'auto' },
 };
 interface Img { id: number; b64: string; name: string; saved?: string }
