@@ -52,8 +52,8 @@ const SPEC2: Record<string, Field[]> = {
     { k: 'sub', label: '자막 (en: 영어 · enko: 영어+한글 · none: 없음, 비우면 영어)', t: 'text' }, { k: 'replay', label: '다시 보기 횟수 (비우면 2)', t: 'num' }, { k: 'explain', label: '해설 (한 줄에 하나, 강조 [[파랑]] · 문항을 푼 뒤 "해석과 해설" 화면에 보여요)', t: 'lines' },
     { k: 'qs', label: '확인 문항 (선택, 영상을 다 본 뒤 풀어요)', t: 'rows', blank: () => ({ q: '', ans: '', wrong: [] }), cols: [{ k: 'q', label: '질문', t: 'text' }, { k: 'ans', label: '정답', t: 'text', w: 170 }, { k: 'wrong', label: '오답 (한 줄에 하나, 1~3개)', t: 'lines', w: 220 }] }, VINST],
   lnum: [{ k: 'q', label: '질문 (소리로 먼저 읽어 줘요)', t: 'text', req: true }, { k: 'opts', label: '선택지 (한 줄에 하나, 2~4개 · 화면에는 번호만 보이고 소리로 "One, Two…" 하며 읽어 줘요)', t: 'lines', req: true }, { k: 'ans', label: '정답 번호 (1~4)', t: 'num', req: true }, { k: 'plays', label: '들을 수 있는 횟수 (비우면 2)', t: 'num' }, { k: 'pic', label: '그림 (선택: 단원 단어 key 또는 이미지 주소 · 넣으면 "그림에 알맞은 답" 문구로 바뀌어요)', t: 'text' }, VINST],
-  wsent: [{ k: 'cards', label: '카드 (위에서 아래로 한 장씩 · 단어는 2번, 문장은 1번 읽어 줘요 · 문장 안의 단어는 빨강으로 표시)', t: 'rows', req: true, blank: () => ({ word: '', sent: '', ko: '', pic: '' }), cols: [
-    { k: 'word', label: '단어', t: 'text', w: 130 }, { k: 'sent', label: '단어가 들어간 문장', t: 'text' }, { k: 'ko', label: '한글 (선택)', t: 'text', w: 160 }, { k: 'pic', label: '그림(단원 단어 key 또는 이미지 주소)', t: 'text', w: 150 }] }, VINST],
+  wsent: [{ k: 'cards', label: '카드 (위에서 아래로 한 장씩 · 단어를 보여 주며 2번 읽고, 3번째에 문장을 보여 주며 읽어 줘요 · 문장 안의 단어는 빨강)', t: 'rows', req: true, blank: () => ({ word: '', wko: '', sent: '', ko: '', pic: '' }), cols: [
+    { k: 'word', label: '단어', t: 'text', w: 120 }, { k: 'wko', label: '단어 뜻 (한글)', t: 'text', w: 100 }, { k: 'sent', label: '단어가 들어간 문장', t: 'text' }, { k: 'ko', label: '문장 뜻 (한글, 선택)', t: 'text', w: 150 }, { k: 'pic', label: '그림(단원 단어 key 또는 이미지 주소)', t: 'text', w: 150 }] }, VINST],
   lecture: [{ k: 'title', label: '강의 제목 (선택, 예: Lesson 9 미리 보기)', t: 'text' },
     { k: 'slides', label: '슬라이드 (위에서 아래로 한 장씩 · 강조 [[파랑]] {{빨강}})', t: 'rows', req: true, blank: () => ({ head: '', text: [], pic: '', cards: [], formula: [], table: [], tip: '' }), cols: [
       { k: 'head', label: '제목', t: 'text' }, { k: 'text', label: '설명 (한 줄에 한 문단)', t: 'lines' },
@@ -196,7 +196,7 @@ export function defaultItem(kind: string): Obj {
     case 'role': return { k: 'role', tag: 'speak', lines: [] };
     case 'present': return { k: 'present', tag: 'speak', text: [] };
     case 'lnum': return { k: 'lnum', tag: 'listen', q: '', opts: [], ans: 1 };
-    case 'wsent': return { k: 'wsent', tag: 'vocab', cards: [{ word: '', sent: '', ko: '', pic: '' }] };
+    case 'wsent': return { k: 'wsent', tag: 'vocab', cards: [{ word: '', wko: '', sent: '', ko: '', pic: '' }] };
     case 'lecture': return { k: 'lecture', tag: 'expr', slides: [{ head: '', text: [], cards: [], formula: [], table: [], tip: '', pic: '' }] };
     case 'scene': return { k: 'scene', tag: 'listen', scenes: [{ who: '', en: '', ko: '', pic: '' }, { who: '', en: '', ko: '', pic: '' }] };
     case 'aitalk': return { k: 'aitalk', tag: 'speak', situation: '', script: [{ ai: '' }] };

@@ -55,7 +55,7 @@ export function Lecture({ item, pic, onDone }: KindProps) {
   );
 }
 
-interface WCard { word: string; sent: string; ko?: string; pic?: string }
+interface WCard { word: string; wko?: string; sent: string; ko?: string; pic?: string }
 const esc = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 /** 문장 안의 단어를 빨강으로 표시한다(대소문자 무시, 복수형 등은 단어 앞부분이 같으면 함께) */
 function Marked({ sent, word }: { sent: string; word: string }) {
@@ -93,7 +93,7 @@ export function WordSent({ item, pic, onDone }: KindProps) {
         <button type="button" className="nv-ws-card" onClick={play} aria-label="다시 듣기">
           {img ? <img className="nv-ws-img" src={img} alt="" draggable={false} /> : <span className="nv-ws-img" />}
           {step < 2
-            ? <span className="nv-ws-sent nv-ws-wordbox"><b key={step} className="nv-ws-word">{c.word}</b></span>
+            ? <span className="nv-ws-plain"><b key={step} className="nv-ws-word">{c.word}</b>{c.wko && <i className="nv-ws-wko">{c.wko}</i>}</span>
             : <span className="nv-ws-sent nv-ws-in"><span><Marked sent={c.sent} word={c.word} /></span>{c.ko && <small>{c.ko}</small>}</span>}
         </button>
         <button type="button" className="nv-arrow" disabled={i === cards.length - 1} onClick={() => go(i + 1)} aria-label="다음">›</button>

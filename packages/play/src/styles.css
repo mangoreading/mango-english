@@ -790,3 +790,7 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-ws-word { display:inline-block; font-size:1.25em; animation:nv-ws-pulse .9s ease-in-out; }
 @keyframes nv-ws-pulse { 0% { transform:scale(1); } 40% { transform:scale(1.35); } 100% { transform:scale(1); } }
 .nv-ws-in { animation:nv-ws-fade .35s ease-out; } @keyframes nv-ws-fade { from { opacity:0; transform:translateY(.4em); } to { opacity:1; transform:none; } }
+
+.nv-ws-plain { position:absolute; left:0; right:0; bottom:2.2em; display:flex; flex-direction:column; align-items:center; gap:.15em; pointer-events:none; }
+.nv-ws-plain .nv-ws-word { font-size:2.6em; font-weight:800; color:#111; line-height:1.1; animation:nv-ws-pulse .9s ease-in-out; }
+.nv-ws-wko { font-style:normal; font-size:1.4em; font-weight:700; color:#E8730C; }

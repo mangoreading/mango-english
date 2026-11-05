@@ -169,7 +169,7 @@ export const Lecture = z.object({ ...T1, k: z.literal('lecture'), title: z.strin
   slides: z.array(z.object({ head: z.string().min(1), text: z.array(z.string()).optional(), pic: z.string().optional(), cards: z.array(z.string()).optional(),
     formula: z.array(z.string()).optional(), table: z.array(z.string()).optional(), tip: z.string().optional() })).min(1).max(10) });
 /** 단어·문장 듣고 따라 말하기: 카드마다 그림 + 단어(2번 읽기) + 그 단어가 들어간 문장(읽어 주기). 문장 안의 단어는 빨강으로 표시 */
-export const WSent = z.object({ ...T1, k: z.literal('wsent'), cards: z.array(z.object({ word: z.string().min(1), sent: z.string().min(1), ko: z.string().optional(), pic: z.string().optional() })).min(1).max(9) });
+export const WSent = z.object({ ...T1, k: z.literal('wsent'), cards: z.array(z.object({ word: z.string().min(1), wko: z.string().optional(), sent: z.string().min(1), ko: z.string().optional(), pic: z.string().optional() })).min(1).max(9) });
 export const MText = z.object({ ...T1, k: z.literal('mtext'), title: z.string().optional(), text: z.array(z.string().min(1)).min(1), explain: z.array(z.string()).optional(), ko: z.string().optional() });
 
 /* ===== 3단계: 쓰기류 =====  빈칸은 {} (정답은 ans 에 순서대로, "|" 로 여러 정답) */

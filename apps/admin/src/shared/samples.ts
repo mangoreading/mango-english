@@ -50,10 +50,10 @@ export const NATIVE_SAMPLES: Record<string, Record<string, unknown>> = {
   sdrill: { k: 'sdrill', pic: 'shoes', tag: 'speak', tpl: 'How much are these {}?', words: ['shorts', 'sunglasses', 'pants', 'shoes', 'socks', 'jeans'] },
   lnum: { k: 'lnum', tag: 'listen', q: 'How much are these jackets?', opts: ['It\'s ten thousand won.', 'They\'re ten thousand won.', 'It\'s twenty thousand won.', 'They\'re twenty thousand won.'], ans: 2 },
   wsent: { k: 'wsent', tag: 'vocab', cards: [
-    { word: 'cap', sent: 'How much is this cap?', ko: '이 모자는 얼마예요?', pic: 'cap' },
-    { word: 'jacket', sent: 'How much is this jacket?', ko: '이 재킷은 얼마예요?', pic: 'jacket' },
-    { word: 'socks', sent: 'How much are these socks?', ko: '이 양말은 얼마예요?', pic: 'socks' },
-    { word: 'shoes', sent: 'How much are these shoes?', ko: '이 신발은 얼마예요?', pic: 'shoes' }] },
+    { word: 'cap', wko: '모자', sent: 'How much is this cap?', ko: '이 모자는 얼마예요?', pic: 'cap' },
+    { word: 'jacket', wko: '재킷', sent: 'How much is this jacket?', ko: '이 재킷은 얼마예요?', pic: 'jacket' },
+    { word: 'socks', wko: '양말', sent: 'How much are these socks?', ko: '이 양말은 얼마예요?', pic: 'socks' },
+    { word: 'shoes', wko: '신발', sent: 'How much are these shoes?', ko: '이 신발은 얼마예요?', pic: 'shoes' }] },
   lecture: { k: 'lecture', tag: 'expr', title: 'Lesson 9', slides: [
     { head: '가게에서는 이렇게 말해요', pic: 'hat', text: ['가게에 가면 점원이 먼저 말을 걸어요.', '이번 Lesson에서는 물건의 [[가격]]을 묻고 대답하는 말을 배워요.'], cards: ['May I help you? | 도와드릴까요? | 점원', 'Yes, please. | 네, 부탁해요. | 손님', 'How much is this hat? | 이 모자는 얼마예요? | 손님'] },
     { head: '도움을 주고받는 표현', text: ['[[May I help you?]]는 \'도와드릴까요?\'라는 뜻이에요.', '도움이 필요하면 [[Yes, please.]]라고 대답해요. please가 붙으면 부탁하는 말이라 더 공손해요.'], cards: ['May I help you? | 도와드릴까요? | 묻는 말', 'Yes, please. | 네, 부탁해요. | 대답', 'Thank you. | 고맙습니다. | 마무리 인사'] },
