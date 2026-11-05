@@ -125,7 +125,7 @@ export function SScram({ item, onDone }: KindProps) {
   const chips = useMemo(() => shuffle([...wordsA, ...(item.extra ?? [])].map((t, id) => ({ id, t }))), [item]); // eslint-disable-line
   const [seq, setSeq] = useState<number[]>([]); const [ok, setOk] = useState(false); const [bad, setBad] = useState(false); const wrong = useRef(false); const wcnt = useRef(0);
   const text = (ids: number[]) => ids.map((i) => chips.find((c) => c.id === i)!.t).join(' ');
-  const audio: string = item.listen || (item.dictate ? ans : ''); // 음원(소리로 들려줄 말): 있으면 듣기 버튼이 생긴다
+  const audio: string = item.k === 'sscraml' ? (item.listen || ans) : ''; // 음원(소리로 들려줄 말): 있으면 듣기 버튼이 생긴다
   useEffect(() => { if (audio) sayAuto(audio); /* 열리면 한 번 자동으로 들려준다 */ }, []); // eslint-disable-line
   function tap(id: number) {
     if (ok || bad || seq.includes(id)) return;

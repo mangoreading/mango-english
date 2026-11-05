@@ -4,15 +4,10 @@ import { PageHead, openPreview } from '../../shared/ui';
 import { CATEGORIES, catLabel } from '../kinds/Kinds';
 import { isNativeKind, NATIVE_SAMPLES, SAMPLE_VOCAB } from '../../shared/samples';
 
-interface Step { id: string; lesson_id: string; pos: number; name_en: string; name_ko: string; minutes: number | null; special: string | null; src_id: string | null; kind: string | null; qty: number | null; homework?: boolean; study?: boolean; ref_step_id?: string | null; opts?: Record<string, boolean> | null }
+interface Step { id: string; lesson_id: string; pos: number; name_en: string; name_ko: string; minutes: number | null; special: string | null; src_id: string | null; kind: string | null; qty: number | null; homework?: boolean; study?: boolean; ref_step_id?: string | null }
 interface Lesson { id: string; no: number; track?: string; en: string; ko: string; goal: string; color: string; src_id: string | null; flow_steps: Step[] }
 export type Owner = { kind: 'template'; id: string } | { kind: 'unit'; id: string };
 
-/** 활동의 선택 기능(옵션): 흐름에서 정해 두면 그 단계에 새로 만드는 문항이 옵션이 켜진 채로 시작한다 */
-const STEP_OPTS: Record<string, [string, string][]> = {
-  scene: [['shadow', '따라 말해보기 포함']],
-  sscram: [['dictate', '소리 듣고 만들기'], ['follow', '이어질 말']],
-};
 interface KindOpt { key: string; name_ko: string; name_en?: string; category?: string; importance?: string | null }
 const SPECIAL_KO: Record<string, string> = { diagnostic: '체크', adaptive: '맞춤' };
 
@@ -67,7 +62,7 @@ export function FlowEditor({ owner }: { owner: Owner }) {
     const nk = kinds.find((k) => k.key === key); const ok = kinds.find((k) => k.key === s.kind);
     const same = (a: string, b?: string) => !!b && a.trim() === b.trim();
     const untouched = (s.name_en === 'New Activity' && s.name_ko === '새 활동') || (!!ok && same(s.name_ko, ok.name_ko) && (same(s.name_en, ok.name_en) || same(s.name_en, ok.name_ko)));
-    const patch: Partial<Step> = { kind: key || null, opts: {} };
+    const patch: Partial<Step> = { kind: key || null };
     if (nk && untouched) { patch.name_ko = nk.name_ko; patch.name_en = nk.name_en || nk.name_ko; }
     void updStep(s.id, patch);
   }
@@ -75,11 +70,11 @@ export function FlowEditor({ owner }: { owner: Owner }) {
     const err = await openPreview(() => ({ kind: 'native', items: [NATIVE_SAMPLES[key]], vocab: SAMPLE_VOCAB, title }));
     if (err) setMsg({ t: 'err', s: err });
   }
-  async function addStep(l: Lesson, k?: KindOpt, opts?: Record<string, boolean>) {
+  async function addStep(l: Lesson, k?: KindOpt) {
     const pos = l.flow_steps.length ? Math.max(...l.flow_steps.map((s) => s.pos)) + 1 : 0;
     setPick(null);
     await run(supabase.from('flow_steps').insert(k
-      ? { lesson_id: l.id, pos, name_en: k.name_en || k.name_ko, name_ko: k.name_ko, minutes: 5, kind: k.key, qty: 3, opts: opts ?? {} }
+      ? { lesson_id: l.id, pos, name_en: k.name_en || k.name_ko, name_ko: k.name_ko, minutes: 5, kind: k.key, qty: 3 }
       : { lesson_id: l.id, pos, name_en: 'New Activity', name_ko: '새 활동', minutes: 5 }));
   }
   async function delStep(s: Step) {
@@ -127,7 +122,7 @@ export function FlowEditor({ owner }: { owner: Owner }) {
                   <td>{s.kind && isNativeKind(s.kind) && <button type="button" style={{ padding: 0, border: 0, background: 'none', cursor: 'pointer' }} title="눌러서 샘플 보기" onClick={() => void sample(s.kind!, s.name_ko || s.name_en)}><img className="mx-lthumb" src={`/thumbs/${s.kind}.jpg`} alt="샘플 미리보기" loading="lazy" /></button>}</td>
                   <td><Txt value={s.name_en} onSave={(v) => updStep(s.id, { name_en: v })} /></td>
                   <td><Txt value={s.name_ko} onSave={(v) => updStep(s.id, { name_ko: v })} /></td>
-                  <td><select className="mx-cell" value={s.kind ?? ''} onChange={(e) => changeKind(s, e.target.value)}><option value="">(지정 안 함)</option>{kinds.map((k) => <option key={k.key} value={k.key}>{k.name_ko}</option>)}</select>{s.kind && STEP_OPTS[s.kind] && <div style={{ marginTop: 3, display: 'flex', flexWrap: 'wrap', gap: '2px 10px' }}>{STEP_OPTS[s.kind].map(([ok, lab]) => <label key={ok} className="mx-muted" style={{ fontSize: 12, whiteSpace: 'nowrap' }} title="켜 두면 이 단계에 새로 만드는 문항이 이 옵션이 켜진 채로 시작해요"><input type="checkbox" checked={!!s.opts?.[ok]} onChange={(e) => updStep(s.id, { opts: { ...(s.opts ?? {}), [ok]: e.target.checked } })} /> {lab}</label>)}</div>}</td>
+                  <td><select className="mx-cell" value={s.kind ?? ''} onChange={(e) => changeKind(s, e.target.value)}><option value="">(지정 안 함)</option>{kinds.map((k) => <option key={k.key} value={k.key}>{k.name_ko}</option>)}</select></td>
                   <td><Txt value={s.qty == null ? '' : String(s.qty)} w={44} onSave={(v) => updStep(s.id, { qty: v === '' ? null : Math.max(0, parseInt(v, 10) || 0) })} /></td>
                   <td><Txt value={s.minutes == null ? '' : String(s.minutes)} w={44} onSave={(v) => updStep(s.id, { minutes: v === '' ? null : Math.max(0, parseInt(v, 10) || 0) })} /></td>
                   <td style={{ textAlign: 'center' }}><input type="checkbox" checked={s.study !== false} title="수업(학습)에서 하는 활동" onChange={(e) => updStep(s.id, { study: e.target.checked })} /></td>
@@ -210,7 +205,7 @@ export function Templates() {
     for (const l of (src.data ?? []) as unknown as Lesson[]) {
       const nl = await supabase.from('flow_lessons').insert({ template_id: n.data.id, no: l.no, en: l.en, ko: l.ko, goal: l.goal, color: l.color, track: l.track ?? 'core' }).select('id').single();
       if (nl.error) { setErr(nl.error.message); return; }
-      const steps = l.flow_steps.map((s) => ({ lesson_id: nl.data.id, pos: s.pos, name_en: s.name_en, name_ko: s.name_ko, minutes: s.minutes, special: s.special, kind: s.kind, qty: s.qty, opts: s.opts ?? {} }));
+      const steps = l.flow_steps.map((s) => ({ lesson_id: nl.data.id, pos: s.pos, name_en: s.name_en, name_ko: s.name_ko, minutes: s.minutes, special: s.special, kind: s.kind, qty: s.qty }));
       if (steps.length) await supabase.from('flow_steps').insert(steps);
     }
     setSel(n.data.id); await load();

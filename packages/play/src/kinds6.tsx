@@ -52,7 +52,7 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
   const left = Math.max(0, max + 1 - plays);
   const natural: 'video' | 'quiz' | 'review' = phase === 'review' ? 'review' : phase === 'after' && qs.length > 0 ? 'quiz' : 'video';
   const view = back ?? natural; const quiz = view === 'quiz' && qs.length > 0; const review = view === 'review';
-  const hasShadow = item.shadow === true && scenes.length > 0;
+  const hasShadow = item.k === 'scenerep' && scenes.length > 0;
   const pages: ('video' | 'quiz' | 'review' | 'shadow')[] = ['video', ...(qs.length ? ['quiz' as const] : []), ...(hasReview ? ['review' as const] : []), ...(hasShadow ? ['shadow' as const] : [])];
   const shadow = view === 'shadow';
   const cur = Math.max(0, pages.indexOf(view));

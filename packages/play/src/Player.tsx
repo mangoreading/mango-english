@@ -51,6 +51,8 @@ const INST: Record<string, string> = {
   sdrill: '핵심 표현을 듣고 반복적으로 따라 말해 보세요.',
   pread: '듣고 소리 내어 읽어 보세요.',
   scene: '장면을 잘 보고 들어 보세요.',
+  scenerep: '장면을 잘 보고 들어 보세요.',
+  sscraml: '음원을 듣고, 단어 카드를 선택하여 문장을 완성해 보세요.',
   lecture: '이번 Lesson의 표현을 먼저 살펴봐요.',
   mtext: '모범 글을 읽어 보세요.',
   wrepeat: '단어를 듣고 따라 말해 보세요.',
@@ -70,19 +72,19 @@ const INST: Record<string, string> = {
 };
 /** 그림을 문항 화면 안에서 직접 그리는 템플릿 (그 밖의 템플릿은 오른쪽 위에 보조 그림으로 보인다) */
 /** 기획안에 보조 그림이 없는 템플릿(쓰기류): 문항에 pic 이 있어도 우상단 그림을 그리지 않는다 */
-const NO_SIDE = ['sdrill', 'sbuild', 'swrite', 'sfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'mfree', 'swrt', 'mtext', 'lwrite', 'saykor', 'lspeak', 'raloud', 'present', 'aitalk', 'pread', 'scene', 'lecture', 'wsent', 'lnum', 'tf', 'sqchoice', 'sqtf', 'sqmulti'];
+const NO_SIDE = ['sdrill', 'sbuild', 'swrite', 'sfill', 'sscram', 'sscraml', 'sorder', 'mwbank', 'scloze', 'mfree', 'swrt', 'mtext', 'lwrite', 'saykor', 'lspeak', 'raloud', 'present', 'aitalk', 'pread', 'scene', 'lecture', 'wsent', 'lnum', 'tf', 'sqchoice', 'sqtf', 'sqmulti'];
 const VOCAB_BG = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat', 'pchoice'];
 const VOCAB_SKIN: string[] = [];
 /** 말하기 지시문의 '영어로 말해 보세요' 부분을 파랗게 강조 (mango 스킨) */
 function hl(t: string, on: boolean) { const m = on ? t.match(/^(.*?)((?:영어로 |따라 )?말해 보세요.*)$/) : null; return m ? <>{m[1]}<span className="nv-hl">{m[2]}</span></> : t; }
 const BG_SKIN = ['sdrill', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat', 'pchoice'];
 const MIC_KINDS = ['lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'aitalk']; // 마이크를 쓰는 활동(지시문 오른쪽에 '마이크 테스트' 버튼)
-const SPEAK_SKIN = ['goal', 'scene', 'lecture', 'wsent', 'lnum', 'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'tapl', 'aitalk', 'lwrite', 'kexp', 'lsent', 'lcardp', 'lcardt', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'mfree', 'swrt', 'mtext', 'pread', 'dchoice', 'tf', 'sqchoice', 'sqtf', 'sqmulti'];
+const SPEAK_SKIN = ['goal', 'scene', 'scenerep', 'lecture', 'wsent', 'lnum', 'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'tapl', 'aitalk', 'lwrite', 'kexp', 'lsent', 'lcardp', 'lcardt', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'mfree', 'swrt', 'mtext', 'pread', 'dchoice', 'tf', 'sqchoice', 'sqtf', 'sqmulti'];
 const OWN_PIC = ['lookspeak', 'role', 'pchoice', 'dchoice', 'dfill', 'goal', 'lcardp', 'lchpic', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat'];
 /** 듣고 고르기: 질문을 맨 위 안내 자리에 보여 준다 */
 const LCH = ['lchtext', 'lchpic', 'lchlist', 'lwrite'];
 const INST_SUB: Record<string, string> = { kexp: '(3번 반복해서 들어주세요)', present: '(동영상 촬영해 보기)' };
-const KIND = { scene: SceneStory, lecture: Lecture, wsent: WordSent, lnum: LNum, lookspeak: LookSpeak, saykor: SayKor, lspeak: LSpeak, raloud: RAloud, role: Role, present: Present, aitalk: AiTalk, sbuild: SBuild, swrite: SWrite, sfill: SFill, dfill: DFill, sscram: SScram, sorder: SOrder, mwbank: MWBank, scloze: SCloze, lwrite: LWrite, mfree: MFree, swrt: SWrt, goal: Goal, kexp: KExp, tapl: TapL, lsent: LSent, lcardp: LCardP, lcardt: LCardT, sdrill: SDrill, pread: PRead, mtext: MText, wrepeat: WRepeat, vcards: VCards, vtype1: VType1, vspell: VSpell, vmatch: VMatch, vsound: VSound, vwrite: VWrite,
+const KIND = { scene: SceneStory, scenerep: SceneStory, sscraml: SScram, lecture: Lecture, wsent: WordSent, lnum: LNum, lookspeak: LookSpeak, saykor: SayKor, lspeak: LSpeak, raloud: RAloud, role: Role, present: Present, aitalk: AiTalk, sbuild: SBuild, swrite: SWrite, sfill: SFill, dfill: DFill, sscram: SScram, sorder: SOrder, mwbank: MWBank, scloze: SCloze, lwrite: LWrite, mfree: MFree, swrt: SWrt, goal: Goal, kexp: KExp, tapl: TapL, lsent: LSent, lcardp: LCardP, lcardt: LCardT, sdrill: SDrill, pread: PRead, mtext: MText, wrepeat: WRepeat, vcards: VCards, vtype1: VType1, vspell: VSpell, vmatch: VMatch, vsound: VSound, vwrite: VWrite,
   wchoice: WChoice, pchoice: PChoice, dchoice: DChoice, tf: TrueFalse, lchtext: LChText, lchpic: LChPic, lchlist: LChList, lmatch: LMatch,
   sqchoice: SqChoice, sqtf: SqTF, sqmulti: SqMulti } as const;
 
@@ -145,7 +147,7 @@ export function NativePlayer({ title, items, vocab, nextLabel, step, quiet, scop
         <span className="nv-pts"><i className="nv-star">★</i> 포인트 : +{pts}</span>
       </div>
       <div className="nv-instrow">
-      <p className="nv-inst"><span>{hl(LCH.includes(it.k) && it.q ? it.q : it.inst || (it.k === 'lnum' && it.pic ? '잘 듣고, 그림에 알맞은 답을 선택해 주세요.' : it.k === 'sscram' && (it.listen || it.dictate) ? (it.follow ? '음원을 듣고, 단어 카드를 선택하여 이어질 말을 완성해 보세요.' : '음원을 듣고, 단어 카드를 선택하여 문장을 완성해 보세요.') : INST[it.k]) || '', SPEAK_SKIN.includes(it.k) || BG_SKIN.includes(it.k))}{INST_SUB[it.k] && <small>{INST_SUB[it.k]}</small>}</span></p>
+      <p className="nv-inst"><span>{hl(LCH.includes(it.k) && it.q ? it.q : it.inst || (it.k === 'lnum' && it.pic ? '잘 듣고, 그림에 알맞은 답을 선택해 주세요.' : it.k === 'sscraml' && it.follow ? '음원을 듣고, 단어 카드를 선택하여 이어질 말을 완성해 보세요.' : INST[it.k]) || '', SPEAK_SKIN.includes(it.k) || BG_SKIN.includes(it.k))}{INST_SUB[it.k] && <small>{INST_SUB[it.k]}</small>}</span></p>
         {MIC_KINDS.includes(it.k) && <button type="button" className="nv-mtbtn" onClick={() => setMt(true)}><i aria-hidden="true">🎤</i> 마이크 테스트</button>}
       </div>
       <ProgCtx.Provider value={setProg}>
