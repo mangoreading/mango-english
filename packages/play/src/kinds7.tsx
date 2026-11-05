@@ -65,7 +65,7 @@ function Marked({ sent, word }: { sent: string; word: string }) {
 }
 
 /** 단어·문장 듣고 따라 말하기: 카드가 열리면 ① 단어를 보여 주며 읽기(커졌다 작아짐) ② 한 번 더 ③ 그 단어가 들어간 문장을 보여 주며 읽어 준다. 카드를 누르면 처음부터 다시 들려준다. */
-export function WordSent({ item, pic, onDone }: KindProps) {
+export function WordSent({ item, pic, vocab, onDone }: KindProps) {
   const cards: WCard[] = item.cards ?? [];
   const [i, setI] = useState(0); const [seen, setSeen] = useState<Set<number>>(new Set([0])); const fired = useRef(false);
   const [step, setStep] = useState(0); const run = useRef(0);
@@ -85,6 +85,8 @@ export function WordSent({ item, pic, onDone }: KindProps) {
   useEffect(() => { if (!fired.current && cards.length && seen.size === cards.length) { fired.current = true; onDone([]); } /* eslint-disable-next-line */ }, [seen]);
   const go = (n: number) => { if (n >= 0 && n < cards.length) { setI(n); setSeen(new Set(seen).add(n)); } };
   if (!c) return null;
+  // 단어 뜻을 안 적었으면, 단원 단어(영어 단어 또는 그림 key가 같은 것)의 한글 뜻을 대신 보여 준다
+  const wko = c.wko || (vocab ?? []).find((v) => v.key === c.pic || v.en.toLowerCase() === c.word.trim().toLowerCase())?.ko;
   const k = c.pic; const img = k ? (/^https?:|^word\//.test(k) ? imgSrc(k) : imgSrc(pic(k))) : '';
   return (
     <div className="nv-body nv-ws">
@@ -93,7 +95,7 @@ export function WordSent({ item, pic, onDone }: KindProps) {
         <button type="button" className="nv-ws-card" onClick={play} aria-label="다시 듣기">
           {img ? <img className="nv-ws-img" src={img} alt="" draggable={false} /> : <span className="nv-ws-img" />}
           {step < 2
-            ? <span className="nv-ws-plain"><b key={step} className="nv-ws-word">{c.word}</b>{c.wko && <i className="nv-ws-wko">{c.wko}</i>}</span>
+            ? <span className="nv-ws-plain"><b key={step} className="nv-ws-word">{c.word}</b>{wko && <i className="nv-ws-wko">{wko}</i>}</span>
             : <span className="nv-ws-sent nv-ws-in"><span><Marked sent={c.sent} word={c.word} /></span>{c.ko && <small>{c.ko}</small>}</span>}
         </button>
         <button type="button" className="nv-arrow" disabled={i === cards.length - 1} onClick={() => go(i + 1)} aria-label="다음">›</button>
