@@ -93,11 +93,12 @@ export function WordSent({ item, pic, onDone }: KindProps) {
 
 const NUMW = ['One', 'Two', 'Three', 'Four'];
 /** 듣고 번호 고르기: 질문과 선택지를 모두 소리로만 들려주고 번호 버튼으로 고른다. 정답을 맞히면 들은 내용을 스크립트로 보여 준다. */
-export function LNum({ item, onDone }: KindProps) {
+export function LNum({ item, pic, onDone }: KindProps) {
   const opts: string[] = item.opts ?? []; const ans: number = Math.min(Math.max(1, item.ans ?? 1), Math.max(1, opts.length)) - 1; const total: number = item.plays ?? 2;
   const q: string = item.q ?? '';
   const [used, setUsed] = useState(0); const [playing, setPlaying] = useState(false); const [prog, setProg] = useState(0);
   const [bad, setBad] = useState<number | null>(null); const [ok, setOk] = useState(false); const wrong = useRef(false); const fired = useRef(false);
+  const pk: string | undefined = item.pic; const img = pk ? (/^https?:|^word\/|^scene\//.test(pk) ? imgSrc(pk) : imgSrc(pic(pk))) : '';
   const script = [q, ...opts.map((o, i) => `${NUMW[i]}. ${o}`)].join('\n');
   const est = Math.max(4, Math.round(script.split(/\s+/).length * 0.55 + opts.length * 0.9));
   function play() {
@@ -120,6 +121,7 @@ export function LNum({ item, onDone }: KindProps) {
         <span className="nv-ln-bar"><i key={used + (playing ? 'p' : 'd')} style={{ width: prog ? '100%' : '0%', transitionDuration: playing ? `${est}s` : '0s' }} /></span>
         <span className="nv-ln-left">{ok ? '' : `남은 횟수 ${left}`}</span>
       </div>
+      {img && <img className="nv-ln-img" src={img} alt="" draggable={false} />}
       <div className="nv-ln-nums">
         {opts.map((_, i) => <button key={i} type="button" className={'nv-ln-num' + (ok && i === ans ? ' nv-right' : bad === i ? ' nv-wrong nv-shake' : '')} disabled={playing && !ok} onClick={() => pick(i)}>{i + 1}</button>)}
       </div>
