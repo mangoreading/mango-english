@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
 
     // 속도: 호출한 쪽이 '-30%' 처럼 지정할 수 있다(원서 읽기). 범위 밖이면 기본값.
     const rateIn = typeof b.rate === 'string' && /^[+-]?\d{1,3}%$/.test(b.rate) && Math.abs(parseInt(b.rate)) <= 50 ? b.rate : RATE;
-    const body = lines.map((l) => { const v = voiceFor(l.who); return `<voice name="${v.voice}"><prosody rate="${b.rate === undefined && v.rate ? v.rate : rateIn}"${v.pitch ? ` pitch="${v.pitch}"` : ''}>${esc(l.t)}</prosody><break time="450ms"/></voice>`; }).join('');
+    const body = lines.map((l, n) => { const v = voiceFor(l.who); return `<voice name="${v.voice}"><prosody rate="${b.rate === undefined && v.rate ? v.rate : rateIn}"${v.pitch ? ` pitch="${v.pitch}"` : ''}>${esc(l.t)}</prosody>${n < lines.length - 1 ? '<break time="450ms"/>' : ''}</voice>`; }).join(''); // 줄 사이에만 쉼(마지막 줄 뒤 무음은 없앤다)
     const ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US">${body}</speak>`;
 
     // 같은 글·목소리·속도는 한 번만 만들고 저장해 둔다(비용·지연 절약). 저장소: 비공개 버킷 tts-cache (서버만 접근)

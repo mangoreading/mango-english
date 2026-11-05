@@ -74,11 +74,11 @@ export function WordSent({ item, pic, vocab, onDone }: KindProps) {
   function play() {
     if (!c) return;
     const id = ++run.current; const alive = () => id === run.current;
-    setStep(0); prefetchSay(c.sent);
+    setStep(0); prefetchSay(c.sent); if (cards[i + 1]) prefetchSay(cards[i + 1].word);
     sayScript(c.word, () => { if (!alive()) return; setTimeout(() => {
       if (!alive()) return; setStep(1);
-      sayScript(c.word, () => { if (!alive()) return; setTimeout(() => { if (!alive()) return; setStep(2); sayScript(c.sent); }, 400); });
-    }, 400); });
+      sayScript(c.word, () => { if (!alive()) return; setTimeout(() => { if (!alive()) return; setStep(2); sayScript(c.sent); }, 150); });
+    }, 120); });
   }
   useEffect(() => { play(); return () => { run.current++; }; /* 카드가 열리면 자동으로 들려준다 */ }, [i]); // eslint-disable-line
   useEffect(() => () => { stopSeq(); }, []);
