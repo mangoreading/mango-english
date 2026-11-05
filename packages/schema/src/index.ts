@@ -162,7 +162,7 @@ export const PRead = z.object({ ...T1, k: z.literal('pread'), text: z.array(z.st
 /** 장면 영상: 그림·대사가 이어지는 30초 안팎의 짧은 장면 + (선택) 확인 문항 */
 export const Scene = z.object({ ...T1, k: z.literal('scene'), title: z.string().optional(),
   scenes: z.array(z.object({ who: z.string().optional(), en: z.string().min(1), ko: z.string().optional(), pic: z.string().optional() })).min(2).max(14),
-  sub: z.enum(['en', 'enko', 'none']).optional(), explain: z.array(z.string()).optional(), review: z.boolean().optional(), replay: z.number().int().min(0).max(5).optional(),
+  sub: z.enum(['en', 'enko', 'none']).optional(), explain: z.array(z.string()).optional(), review: z.boolean().optional(), shadow: z.boolean().optional(), replay: z.number().int().min(0).max(5).optional(),
   qs: z.array(z.object({ q: z.string().min(1), ans: z.string().min(1), wrong: z.array(z.string().min(1)).min(1).max(3) })).max(4).optional() });
 /** 강의 슬라이드: 이번 Lesson 의 표현·문법을 강의처럼 짧은 슬라이드로 설명 (cards: "영어 | 한글 | 설명", formula: 한 줄에 한 식(+로 연결), table: 첫 줄이 머리글(| 로 칸 구분)) */
 export const Lecture = z.object({ ...T1, k: z.literal('lecture'), title: z.string().optional(),

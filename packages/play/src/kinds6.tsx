@@ -13,7 +13,7 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
   const hasReview = item.review !== false && (!!item.explain?.length || scenes.some((s) => s.ko));
   const [idx, setIdx] = useState(0); const [paused, setPaused] = useState(false); const [plays, setPlays] = useState(0); const [cc, setCc] = useState(item.sub !== 'none');
   const run = useRef(0); const fired = useRef(false);
-  const [back, setBack] = useState<'video' | 'quiz' | 'review' | null>(null); const [maxPg, setMaxPg] = useState(0); // 이전 버튼으로 돌아가 보는 화면 / 지금까지 도달한 가장 먼 화면
+  const [back, setBack] = useState<'video' | 'quiz' | 'review' | 'shadow' | null>(null); const [maxPg, setMaxPg] = useState(0); // 이전 버튼으로 돌아가 보는 화면 / 지금까지 도달한 가장 먼 화면
   const [qi, setQi] = useState(0); const [res, setRes] = useState<boolean[]>([]); const wrong = useRef(false); const [bad, setBad] = useState<number | null>(null); const [okq, setOkq] = useState(false);
   const opts = useMemo(() => (qs[qi] ? shuffle([{ t: qs[qi].ans, c: true }, ...qs[qi].wrong.map((t) => ({ t, c: false }))]) : []), [qi]); // eslint-disable-line
   useEffect(() => () => { run.current++; stopSeq(); }, []);
@@ -52,10 +52,14 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
   const left = Math.max(0, max + 1 - plays);
   const natural: 'video' | 'quiz' | 'review' = phase === 'review' ? 'review' : phase === 'after' && qs.length > 0 ? 'quiz' : 'video';
   const view = back ?? natural; const quiz = view === 'quiz' && qs.length > 0; const review = view === 'review';
-  const pages: ('video' | 'quiz' | 'review')[] = ['video', ...(qs.length ? ['quiz' as const] : []), ...(hasReview ? ['review' as const] : [])];
+  const hasShadow = item.shadow === true && scenes.length > 0;
+  const pages: ('video' | 'quiz' | 'review' | 'shadow')[] = ['video', ...(qs.length ? ['quiz' as const] : []), ...(hasReview ? ['review' as const] : []), ...(hasShadow ? ['shadow' as const] : [])];
+  const shadow = view === 'shadow';
   const cur = Math.max(0, pages.indexOf(view));
-  const reach = Math.max(maxPg, pages.indexOf(natural));
-  useEffect(() => { setMaxPg((m) => Math.max(m, pages.indexOf(natural))); }, [phase]); // eslint-disable-line
+  // 문제와 해설까지 끝낸 뒤(또는 영상만 보고 끝난 뒤)에는 마지막의 '문장 따라 말해보기'로 갈 수 있다
+  const finished = phase === 'review' || (phase === 'after' && (!qs.length || okq));
+  const reach = Math.max(maxPg, pages.indexOf(natural), hasShadow && finished ? pages.length - 1 : 0);
+  useEffect(() => { setMaxPg((m) => Math.max(m, pages.indexOf(natural), hasShadow && finished ? pages.length - 1 : 0)); }, [phase, okq]); // eslint-disable-line
   /** 화면 이동: 이전은 언제나, 다음은 이미 거친 화면까지만(영상을 끝까지 보기 전에 문제로 건너뛰지 못하게) */
   function goPage(n: number) {
     if (n < 0 || n >= pages.length || n > reach) return;
@@ -67,7 +71,7 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
       <div className="nv-row nv-lec-row">
         <button className="nv-arrow" disabled={cur === 0 || phase === 'play'} onClick={() => goPage(cur - 1)} aria-label="이전">‹</button>
         <div className="nv-scene-main">
-          {!quiz && !review && (
+          {!quiz && !review && !shadow && (
             <div className="nv-stage" onClick={phase === 'play' ? () => (paused ? resume() : pause()) : undefined} style={phase === 'play' ? { cursor: 'pointer' } : undefined}>
               {img ? <img className="nv-stage-img" src={img} alt="" draggable={false} /> : <div className="nv-stage-img nv-stage-ph" />}
               {phase === 'play' && sc.who && <span className="nv-who">{sc.who}</span>}
@@ -88,6 +92,7 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
               {!!item.explain?.length && <div className="nv-rv-ex">{item.explain.map((l: string, i: number) => <p key={i}><Rich text={l} /></p>)}</div>}
             </div>
           )}
+          {shadow && <ShadowSay scenes={scenes} src={src} />}
           {quiz && qs[qi] && (
             <div className="nv-sq">
               <p className="nv-qt">Q{qs.length > 1 ? qi + 1 : ''}. {qs[qi].q}</p>
@@ -98,12 +103,35 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
         </div>
         <button className="nv-arrow" disabled={cur >= pages.length - 1 || cur + 1 > reach || phase === 'play'} onClick={() => goPage(cur + 1)} aria-label="다음">›</button>
       </div>
-      {phase !== 'ready' && (
+      {phase !== 'ready' && !shadow && (
         <div className="nv-ptools">
           {item.sub !== 'none' && !quiz && !review && <button className="nv-hintbtn" onClick={() => setCc(!cc)}>{cc ? '자막 끄기' : '자막 켜기'}</button>}
           <button className="nv-hintbtn" disabled={phase === 'play' || !left} onClick={start}>다시 보기{phase === 'play' ? '' : ` (${left}회 남음)`}</button>
         </div>
       )}
+    </div>
+  );
+}
+
+/** 문장 따라 말해보기: 장면 대사를 한 문장씩 들려주고, 소리 내어 따라 말해 보게 한다(선택 단계). 들려주기 → 따라 말하기 → 다음 문장 */
+function ShadowSay({ scenes, src }: { scenes: Sc[]; src: (k?: string) => string }) {
+  const [i, setI] = useState(0); const sc = scenes[Math.min(i, scenes.length - 1)];
+  const hear = () => sayScript(sc.who ? `${sc.who}: ${sc.en}` : sc.en);
+  useEffect(() => { hear(); return () => { stopSeq(); }; }, [i]); // eslint-disable-line
+  const img = src(sc.pic) || src(scenes.find((s) => s.pic)?.pic);
+  return (
+    <div className="nv-shadow">
+      <p className="nv-shadow-t">문장을 듣고 소리 내어 따라 말해 보세요.</p>
+      <div className="nv-shadow-pic">{img ? <img src={img} alt="" draggable={false} /> : <i />}</div>
+      <button type="button" className="nv-shadow-line" onClick={hear} aria-label="다시 듣기">
+        {sc.who && <span className="nv-shadow-who">{sc.who}</span>}
+        <b>{sc.en}</b>{sc.ko && <small>{sc.ko}</small>}
+      </button>
+      <div className="nv-shadow-nav">
+        <button type="button" className="nv-hintbtn" disabled={i === 0} onClick={() => setI(i - 1)}>이전 문장</button>
+        <span>{i + 1} / {scenes.length}</span>
+        <button type="button" className="nv-hintbtn" disabled={i >= scenes.length - 1} onClick={() => setI(i + 1)}>다음 문장</button>
+      </div>
     </div>
   );
 }

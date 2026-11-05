@@ -61,7 +61,7 @@ export const NATIVE_SAMPLES: Record<string, Record<string, unknown>> = {
     { head: '가격 묻기 ② 여러 개일 때', pic: 'socks', text: ['물건이 여러 개이면 this는 these로, is는 are로, It\'s는 They\'re로 바뀌어요.'], table: ['| 하나 | 여러 개', '가리킬 때 | this | these', '동사 | is | are', '대답 | It\'s | They\'re'], tip: 'sunglasses, shorts, socks, shoes는 두 개가 한 짝이라서 [[these]]를 써요.' },
     { head: '가격 읽는 법', text: ['숫자를 영어로 읽고, 뒤에 [[won]]을 붙여요. 천 단위로 끊어서 읽으면 쉬워요.'], cards: ['two thousand won | 2,000원', 'ten thousand won | 10,000원', 'thirteen thousand won | 13,000원', 'fifty thousand won | 50,000원'] },
     { head: '정리해요', text: ['이번 Lesson에서 배울 단어는 hat, sunglasses, jacket, shorts, socks, shoes예요.', '이제 단어와 표현을 직접 듣고 말해 볼까요?'], cards: ['How much are these socks? | 이 양말은 얼마예요?', "They're two thousand won. | 2,000원이에요."] }] },
-  scene: { k: 'scene', tag: 'listen', title: '미나와 엄마의 가게 나들이', sub: 'en', replay: 2, review: true, pic: 'hat',
+  scene: { k: 'scene', tag: 'listen', title: '미나와 엄마의 가게 나들이', sub: 'en', replay: 2, review: true, shadow: true, pic: 'hat',
   scenes: [
     { pic: 'scene/l9-1-1.jpg', who: 'Mina', en: 'Mom, I need a hat for the trip.', ko: '엄마, 저 여행에 쓸 모자가 필요해요.' },
     { pic: 'scene/l9-1-2.jpg', who: 'Clerk', en: 'Hello! May I help you?', ko: '안녕하세요! 도와드릴까요?' },

@@ -794,3 +794,12 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-ws-plain { position:absolute; left:0; right:0; bottom:2.6em; display:flex; flex-direction:column; align-items:center; gap:.15em; pointer-events:none; }
 .nv-ws-plain .nv-ws-word { font-size:2.6em; font-weight:800; color:#111; line-height:1.1; animation:nv-ws-pulse .9s ease-in-out; }
 .nv-ws-wko { font-style:normal; font-size:1.4em; font-weight:700; color:#E8730C; }
+
+/* 장면 영상: 문장 따라 말해보기 */
+.nv-shadow { display:flex; flex-direction:column; align-items:center; gap:.9em; width:100%; }
+.nv-shadow-t { margin:0; font-weight:700; color:#3B6FD8; }
+.nv-shadow-pic { width:min(20em,70%); aspect-ratio:16/9; border-radius:.8em; overflow:hidden; background:linear-gradient(180deg,#EAF2FD,#F7FAFF); border:.1em solid var(--nv-line); } .nv-shadow-pic img { width:100%; height:100%; object-fit:contain; display:block; }
+.nv-shadow-line { font:inherit; cursor:pointer; width:min(34em,94%); background:#fff; border:.1em solid #B9CCE6; border-radius:.9em; padding:.9em 1.2em; display:flex; flex-direction:column; align-items:center; gap:.25em; box-shadow:0 .2em .5em rgba(0,0,0,.08); }
+.nv-shadow-line b { font-size:1.6em; color:#111; line-height:1.25; } .nv-shadow-line small { font-size:.95em; color:#6B7790; }
+.nv-shadow-who { font-size:.8em; font-weight:700; color:#fff; background:#3B6FD8; border-radius:1em; padding:.1em .8em; }
+.nv-shadow-nav { display:flex; align-items:center; gap:1em; color:#6B7790; }
