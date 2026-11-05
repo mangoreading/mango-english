@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useCardProgress } from './fb';
 import { Rich } from './kinds3';
-import { imgSrc, say, sayScript, stopSeq, type KindProps } from './common';
+import { imgSrc, prefetchSay, say, sayScript, stopSeq, type KindProps } from './common';
 
 interface Slide { head: string; text?: string[]; pic?: string; cards?: string[]; formula?: string[]; table?: string[]; tip?: string }
 const plain = (t: string) => t.replace(/\[\[|\]\]|\{\{|\}\}/g, '');
@@ -64,14 +64,23 @@ function Marked({ sent, word }: { sent: string; word: string }) {
   return <>{sent.slice(0, m.index)}<span className="nv-ws-hl">{m[0]}</span>{sent.slice(m.index + m[0].length)}</>;
 }
 
-/** 단어·문장 듣고 따라 말하기: 카드가 열리면 단어를 두 번, 이어서 그 단어가 들어간 문장을 읽어 준다. 카드를 누르면 다시 들려준다. */
+/** 단어·문장 듣고 따라 말하기: 카드가 열리면 ① 단어를 보여 주며 읽기(커졌다 작아짐) ② 한 번 더 ③ 그 단어가 들어간 문장을 보여 주며 읽어 준다. 카드를 누르면 처음부터 다시 들려준다. */
 export function WordSent({ item, pic, onDone }: KindProps) {
   const cards: WCard[] = item.cards ?? [];
   const [i, setI] = useState(0); const [seen, setSeen] = useState<Set<number>>(new Set([0])); const fired = useRef(false);
+  const [step, setStep] = useState(0); const run = useRef(0);
   useCardProgress(cards.length, i);
   const c = cards[Math.min(i, cards.length - 1)];
-  const play = () => { if (c) sayScript(`${c.word}\n${c.word}\n${c.sent}`); };
-  useEffect(() => { play(); /* 카드가 열리면 자동으로 들려준다 */ }, [i]); // eslint-disable-line
+  function play() {
+    if (!c) return;
+    const id = ++run.current; const alive = () => id === run.current;
+    setStep(0); prefetchSay(c.sent);
+    sayScript(c.word, () => { if (!alive()) return; setTimeout(() => {
+      if (!alive()) return; setStep(1);
+      sayScript(c.word, () => { if (!alive()) return; setTimeout(() => { if (!alive()) return; setStep(2); sayScript(c.sent); }, 400); });
+    }, 400); });
+  }
+  useEffect(() => { play(); return () => { run.current++; }; /* 카드가 열리면 자동으로 들려준다 */ }, [i]); // eslint-disable-line
   useEffect(() => () => { stopSeq(); }, []);
   useEffect(() => { if (!fired.current && cards.length && seen.size === cards.length) { fired.current = true; onDone([]); } /* eslint-disable-next-line */ }, [seen]);
   const go = (n: number) => { if (n >= 0 && n < cards.length) { setI(n); setSeen(new Set(seen).add(n)); } };
@@ -83,7 +92,9 @@ export function WordSent({ item, pic, onDone }: KindProps) {
         <button type="button" className="nv-arrow" disabled={i === 0} onClick={() => go(i - 1)} aria-label="이전">‹</button>
         <button type="button" className="nv-ws-card" onClick={play} aria-label="다시 듣기">
           {img ? <img className="nv-ws-img" src={img} alt="" draggable={false} /> : <span className="nv-ws-img" />}
-          <span className="nv-ws-sent"><span><Marked sent={c.sent} word={c.word} /></span>{c.ko && <small>{c.ko}</small>}</span>
+          {step < 2
+            ? <span className="nv-ws-sent nv-ws-wordbox"><b key={step} className="nv-ws-word">{c.word}</b></span>
+            : <span className="nv-ws-sent nv-ws-in"><span><Marked sent={c.sent} word={c.word} /></span>{c.ko && <small>{c.ko}</small>}</span>}
         </button>
         <button type="button" className="nv-arrow" disabled={i === cards.length - 1} onClick={() => go(i + 1)} aria-label="다음">›</button>
       </div>
