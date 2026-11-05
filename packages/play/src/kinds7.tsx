@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useCardProgress } from './fb';
 import { Rich } from './kinds3';
-import { imgSrc, say, type KindProps } from './common';
+import { imgSrc, say, sayScript, stopSeq, type KindProps } from './common';
 
 interface Slide { head: string; text?: string[]; pic?: string; cards?: string[]; formula?: string[]; table?: string[]; tip?: string }
 const plain = (t: string) => t.replace(/\[\[|\]\]|\{\{|\}\}/g, '');
@@ -50,6 +50,42 @@ export function Lecture({ item, pic, onDone }: KindProps) {
         </div>
       </div>
         <button type="button" className="nv-arrow" disabled={i >= slides.length - 1} onClick={() => { setI(i + 1); setCur(null); }} aria-label="다음">›</button>
+      </div>
+    </div>
+  );
+}
+
+interface WCard { word: string; sent: string; ko?: string; pic?: string }
+const esc = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+/** 문장 안의 단어를 빨강으로 표시한다(대소문자 무시, 복수형 등은 단어 앞부분이 같으면 함께) */
+function Marked({ sent, word }: { sent: string; word: string }) {
+  const m = word.trim() ? sent.match(new RegExp('\\b' + esc(word.trim()) + '\\w*', 'i')) : null;
+  if (!m || m.index == null) return <>{sent}</>;
+  return <>{sent.slice(0, m.index)}<span className="nv-ws-hl">{m[0]}</span>{sent.slice(m.index + m[0].length)}</>;
+}
+
+/** 단어·문장 듣고 따라 말하기: 카드가 열리면 단어를 두 번, 이어서 그 단어가 들어간 문장을 읽어 준다. 카드를 누르면 다시 들려준다. */
+export function WordSent({ item, pic, onDone }: KindProps) {
+  const cards: WCard[] = item.cards ?? [];
+  const [i, setI] = useState(0); const [seen, setSeen] = useState<Set<number>>(new Set([0])); const fired = useRef(false);
+  useCardProgress(cards.length, i);
+  const c = cards[Math.min(i, cards.length - 1)];
+  const play = () => { if (c) sayScript(`${c.word}\n${c.word}\n${c.sent}`); };
+  useEffect(() => { play(); /* 카드가 열리면 자동으로 들려준다 */ }, [i]); // eslint-disable-line
+  useEffect(() => () => { stopSeq(); }, []);
+  useEffect(() => { if (!fired.current && cards.length && seen.size === cards.length) { fired.current = true; onDone([]); } /* eslint-disable-next-line */ }, [seen]);
+  const go = (n: number) => { if (n >= 0 && n < cards.length) { setI(n); setSeen(new Set(seen).add(n)); } };
+  if (!c) return null;
+  const k = c.pic; const img = k ? (/^https?:|^word\//.test(k) ? imgSrc(k) : imgSrc(pic(k))) : '';
+  return (
+    <div className="nv-body nv-ws">
+      <div className="nv-row nv-lec-row">
+        <button type="button" className="nv-arrow" disabled={i === 0} onClick={() => go(i - 1)} aria-label="이전">‹</button>
+        <button type="button" className="nv-ws-card" onClick={play} aria-label="다시 듣기">
+          {img ? <img className="nv-ws-img" src={img} alt="" draggable={false} /> : <span className="nv-ws-img" />}
+          <span className="nv-ws-sent"><span><Marked sent={c.sent} word={c.word} /></span>{c.ko && <small>{c.ko}</small>}</span>
+        </button>
+        <button type="button" className="nv-arrow" disabled={i === cards.length - 1} onClick={() => go(i + 1)} aria-label="다음">›</button>
       </div>
     </div>
   );

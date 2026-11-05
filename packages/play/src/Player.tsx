@@ -6,7 +6,7 @@ import { AiTalk, LookSpeak, LSpeak, Present, RAloud, Role, SayKor } from './kind
 import { setOutputScope } from './outputs';
 import { DFill, LWrite, MFree, MWBank, SBuild, SCloze, SFill, SOrder, SScram, SWrite, SWrt } from './kinds4';
 import { SceneStory } from './kinds6';
-import { Lecture } from './kinds7';
+import { Lecture, WordSent } from './kinds7';
 import { MicTest } from './mictest';
 import { Goal, KExp, LCardP, LCardT, LSent, MText, PRead, SDrill, TapL, WRepeat } from './kinds3';
 import { DChoice, LChList, LChPic, LChText, LMatch, PChoice, SqChoice, SqMulti, SqTF, TrueFalse, WChoice } from './kinds2';
@@ -54,6 +54,7 @@ const INST: Record<string, string> = {
   lecture: '이번 Lesson의 표현을 먼저 살펴봐요.',
   mtext: '모범 글을 읽어 보세요.',
   wrepeat: '단어를 듣고 따라 말해 보세요.',
+  wsent: '단어의 소리를 듣고 따라해 보세요.',
   wchoice: '알맞은 것을 골라 보세요.',
   pchoice: '그림에 알맞은 말을 고르세요.',
   dchoice: '대화를 읽고 알맞은 것을 고르세요.',
@@ -68,19 +69,19 @@ const INST: Record<string, string> = {
 };
 /** 그림을 문항 화면 안에서 직접 그리는 템플릿 (그 밖의 템플릿은 오른쪽 위에 보조 그림으로 보인다) */
 /** 기획안에 보조 그림이 없는 템플릿(쓰기류): 문항에 pic 이 있어도 우상단 그림을 그리지 않는다 */
-const NO_SIDE = ['sdrill', 'sbuild', 'swrite', 'sfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'mfree', 'swrt', 'mtext', 'lwrite', 'saykor', 'lspeak', 'raloud', 'present', 'aitalk', 'pread', 'scene', 'lecture', 'tf', 'sqchoice', 'sqtf', 'sqmulti'];
+const NO_SIDE = ['sdrill', 'sbuild', 'swrite', 'sfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'mfree', 'swrt', 'mtext', 'lwrite', 'saykor', 'lspeak', 'raloud', 'present', 'aitalk', 'pread', 'scene', 'lecture', 'wsent', 'tf', 'sqchoice', 'sqtf', 'sqmulti'];
 const VOCAB_BG = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat', 'pchoice'];
 const VOCAB_SKIN: string[] = [];
 /** 말하기 지시문의 '영어로 말해 보세요' 부분을 파랗게 강조 (mango 스킨) */
 function hl(t: string, on: boolean) { const m = on ? t.match(/^(.*?)((?:영어로 |따라 )?말해 보세요.*)$/) : null; return m ? <>{m[1]}<span className="nv-hl">{m[2]}</span></> : t; }
 const BG_SKIN = ['sdrill', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat', 'pchoice'];
 const MIC_KINDS = ['lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'aitalk']; // 마이크를 쓰는 활동(지시문 오른쪽에 '마이크 테스트' 버튼)
-const SPEAK_SKIN = ['goal', 'scene', 'lecture', 'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'tapl', 'aitalk', 'lwrite', 'kexp', 'lsent', 'lcardp', 'lcardt', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'mfree', 'swrt', 'mtext', 'pread', 'dchoice', 'tf', 'sqchoice', 'sqtf', 'sqmulti'];
+const SPEAK_SKIN = ['goal', 'scene', 'lecture', 'wsent', 'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'tapl', 'aitalk', 'lwrite', 'kexp', 'lsent', 'lcardp', 'lcardt', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'mfree', 'swrt', 'mtext', 'pread', 'dchoice', 'tf', 'sqchoice', 'sqtf', 'sqmulti'];
 const OWN_PIC = ['lookspeak', 'role', 'pchoice', 'dchoice', 'dfill', 'goal', 'lcardp', 'lchpic', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat'];
 /** 듣고 고르기: 질문을 맨 위 안내 자리에 보여 준다 */
 const LCH = ['lchtext', 'lchpic', 'lchlist', 'lwrite'];
 const INST_SUB: Record<string, string> = { kexp: '(3번 반복해서 들어주세요)', present: '(동영상 촬영해 보기)' };
-const KIND = { scene: SceneStory, lecture: Lecture, lookspeak: LookSpeak, saykor: SayKor, lspeak: LSpeak, raloud: RAloud, role: Role, present: Present, aitalk: AiTalk, sbuild: SBuild, swrite: SWrite, sfill: SFill, dfill: DFill, sscram: SScram, sorder: SOrder, mwbank: MWBank, scloze: SCloze, lwrite: LWrite, mfree: MFree, swrt: SWrt, goal: Goal, kexp: KExp, tapl: TapL, lsent: LSent, lcardp: LCardP, lcardt: LCardT, sdrill: SDrill, pread: PRead, mtext: MText, wrepeat: WRepeat, vcards: VCards, vtype1: VType1, vspell: VSpell, vmatch: VMatch, vsound: VSound, vwrite: VWrite,
+const KIND = { scene: SceneStory, lecture: Lecture, wsent: WordSent, lookspeak: LookSpeak, saykor: SayKor, lspeak: LSpeak, raloud: RAloud, role: Role, present: Present, aitalk: AiTalk, sbuild: SBuild, swrite: SWrite, sfill: SFill, dfill: DFill, sscram: SScram, sorder: SOrder, mwbank: MWBank, scloze: SCloze, lwrite: LWrite, mfree: MFree, swrt: SWrt, goal: Goal, kexp: KExp, tapl: TapL, lsent: LSent, lcardp: LCardP, lcardt: LCardT, sdrill: SDrill, pread: PRead, mtext: MText, wrepeat: WRepeat, vcards: VCards, vtype1: VType1, vspell: VSpell, vmatch: VMatch, vsound: VSound, vwrite: VWrite,
   wchoice: WChoice, pchoice: PChoice, dchoice: DChoice, tf: TrueFalse, lchtext: LChText, lchpic: LChPic, lchlist: LChList, lmatch: LMatch,
   sqchoice: SqChoice, sqtf: SqTF, sqmulti: SqMulti } as const;
 

@@ -762,3 +762,11 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-lec-dots { display:flex; gap:.5em; } .nv-lec-dots i { width:.7em; height:.7em; border-radius:50%; background:#D9DEE8; } .nv-lec-dots i.d { background:#9DB8F0; } .nv-lec-dots i.on { background:var(--nv-blue); }
 /* 강의 슬라이드: 내용은 화면 가로의 80%, 이동 버튼은 양 끝 */
 .nv-lec-row { width:100%; flex:1; min-height:0; gap:1.6em; justify-content:space-between; } .nv-lec-row .nv-arrow { flex:none; } .nv-lec-stage { flex:1; width:auto; min-width:0; max-width:62em; margin:0 auto; }
+
+/* 단어·문장 듣고 따라 말하기 */
+.nv-ws { align-items:center; justify-content:center; }
+.nv-ws-card { position:relative; flex:1; max-width:34em; min-width:0; height:27em; margin:0 auto; padding:1.2em 1.2em 0; background:#fff; border:.1em solid #C9D3E3; border-radius:.4em; cursor:pointer; font:inherit; display:flex; justify-content:center; align-items:flex-start; }
+.nv-ws-img { display:block; max-width:100%; height:18em; object-fit:contain; }
+.nv-ws-sent { position:absolute; left:-4em; right:-4em; bottom:1.8em; background:#fff; box-shadow:.25em .35em .6em rgba(0,0,0,.28); padding:.9em .6em; text-align:center; font-size:1.9em; font-weight:800; color:#111; line-height:1.25; display:flex; flex-direction:column; align-items:center; gap:.2em; white-space:nowrap; }
+.nv-ws-sent small { font-size:.5em; font-weight:500; color:#666; }
+.nv-ws-hl { color:#E5191B; }
