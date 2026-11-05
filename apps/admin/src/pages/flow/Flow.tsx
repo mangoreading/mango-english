@@ -13,12 +13,6 @@ const STEP_OPTS: Record<string, [string, string][]> = {
   scene: [['shadow', '따라 말해보기 포함']],
   sscram: [['dictate', '소리 듣고 만들기'], ['follow', '이어질 말']],
 };
-/** 템플릿 선택 목록에 옵션이 켜진 채로 따로 보여 줄 항목 (고르면 해당 활동 + 옵션으로 단계가 만들어진다) */
-const VARIANTS: { base: string; opts: Record<string, boolean>; ko: string; en: string }[] = [
-  { base: 'scene', opts: { shadow: true }, ko: '장면 영상 보기 + 따라 말하기', en: 'Scene Story + Repeat' },
-  { base: 'sscram', opts: { dictate: true }, ko: '문장 만들기 (듣고 만들기)', en: 'Sentence Build-up (Listen)' },
-  { base: 'sscram', opts: { dictate: true, follow: true }, ko: '문장 만들기 (듣고 이어질 말)', en: 'Sentence Build-up (Listen & Continue)' },
-];
 interface KindOpt { key: string; name_ko: string; name_en?: string; category?: string; importance?: string | null }
 const SPECIAL_KO: Record<string, string> = { diagnostic: '체크', adaptive: '맞춤' };
 
@@ -175,16 +169,6 @@ export function FlowEditor({ owner }: { owner: Owner }) {
                 </div>
               </div>
             ))}
-            <div style={{ marginTop: 12 }}>
-              <div className="mx-muted" style={{ fontWeight: 700, marginBottom: 6 }}>옵션이 켜진 템플릿</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(210px,1fr))', gap: 8 }}>
-                {VARIANTS.map((v) => { const b = kinds.find((k) => k.key === v.base); if (!b) return null; return (
-                  <button key={v.ko} type="button" className="mx-btn sec" style={{ display: 'flex', gap: 10, alignItems: 'center', textAlign: 'left', padding: 6, fontWeight: 400 }} onClick={() => addStep(pick, { ...b, name_ko: v.ko, name_en: v.en }, v.opts)}>
-                    {isNativeKind(b.key) ? <img className="mx-lthumb" style={{ flex: 'none', width: 72, height: 45 }} src={`/thumbs/${b.key}.jpg`} alt="" loading="lazy" /> : <span style={{ width: 72, height: 45, flex: 'none' }} />}
-                    <span><b>{v.ko}</b><br /><span className="mx-muted" style={{ fontSize: 12 }}>{v.en}</span></span>
-                  </button>); })}
-              </div>
-            </div>
             <div style={{ marginTop: 14 }}><button className="mx-btn sec" onClick={() => void addStep(pick)}>템플릿 없이 빈 활동 추가</button></div>
           </div>
         </div>
