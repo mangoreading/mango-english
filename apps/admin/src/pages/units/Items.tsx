@@ -11,7 +11,7 @@ const STATUS_KO: Record<Status, string> = { draft: '초안', review: '검수중'
 const LEVELS = ['CORE', 'SUPPORT', 'ADVANCED'];
 
 interface ItemRow { id: string; unit_id: string; lesson: number; act_idx: number; level: string; template: string; tag: string | null; status: Status; version: number; step_id: string | null; tpl_ver?: number; payload: Record<string, any> }
-interface StepInfo { id: string; lessonNo: number; pos: number; name: string; ref?: string | null }
+interface StepInfo { id: string; lessonNo: number; pos: number; name: string; ref?: string | null; opts?: Record<string, boolean> | null }
 type Msg = { t: 'ok' | 'err'; s: string } | null;
 
 function summary(p: Record<string, any>): string {
@@ -39,9 +39,9 @@ export function Items({ unitId, uid }: { unitId: string; uid: string }) {
     setLoading(true);
     const it = await supabase.from('items').select('id,unit_id,lesson,act_idx,level,template,tag,status,version,step_id,tpl_ver,payload').eq('unit_id', unitId).order('lesson').order('act_idx').limit(5000);
     if (it.error) setMsg({ t: 'err', s: it.error.message }); else setItems((it.data ?? []) as unknown as ItemRow[]);
-    const fl = await supabase.from('flow_lessons').select('no, flow_steps(id,pos,name_en,name_ko,ref_step_id)').eq('unit_id', unitId).order('no');
+    const fl = await supabase.from('flow_lessons').select('no, flow_steps(id,pos,name_en,name_ko,ref_step_id,opts)').eq('unit_id', unitId).order('no');
     const st: StepInfo[] = [];
-    ((fl.data ?? []) as any[]).forEach((l) => (l.flow_steps ?? []).forEach((s: any) => st.push({ id: s.id, lessonNo: l.no, pos: s.pos, name: s.name_ko || s.name_en })));
+    ((fl.data ?? []) as any[]).forEach((l) => (l.flow_steps ?? []).forEach((s: any) => st.push({ id: s.id, lessonNo: l.no, pos: s.pos, name: s.name_ko || s.name_en, opts: s.opts })));
     st.sort((a, b) => a.lessonNo - b.lessonNo || a.pos - b.pos);
     setSteps(st);
     const at = await supabase.from('activity_types').select('key,name_ko,version,description,category,sort,active').eq('active', true).order('category').order('sort');
@@ -83,7 +83,8 @@ export function Items({ unitId, uid }: { unitId: string; uid: string }) {
     const st = stepOf[stepId]; if (!st) return;
     const inStep = items.filter((i) => i.step_id === stepId && i.level === lv);
     const act_idx = inStep.length ? Math.max(...inStep.map((i) => i.act_idx)) + 1 : st.pos * 100;
-    const payload = defaultItem(kind);
+    const on = Object.fromEntries(Object.entries(st.opts ?? {}).filter(([, v]) => v === true)); // 흐름 단계에서 켜 둔 옵션
+    const payload = { ...defaultItem(kind), ...on };
     const r = await supabase.from('items').insert({ unit_id: unitId, lesson: st.lessonNo, act_idx, level: lv, template: kind, payload, status: 'draft', step_id: stepId, created_by: uid }).select('id').single();
     if (r.error) { setMsg({ t: 'err', s: '추가 실패: ' + r.error.message }); return; }
     setAdding(false); setLevel(lv); setStepF(stepId); setStatus('all'); setQ('');
