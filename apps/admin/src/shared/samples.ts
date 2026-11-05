@@ -1,7 +1,7 @@
 import type { VWord } from '@mango/play';
 import type { VocabOpt } from '../pages/units/ItemForm';
 
-const NATIVE = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti', 'goal', 'scene', 'lecture', 'wsent', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext', 'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'mfree', 'swrt', 'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'aitalk'];
+const NATIVE = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti', 'goal', 'scene', 'lecture', 'wsent', 'lnum', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext', 'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'mfree', 'swrt', 'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'aitalk'];
 export const isNativeKind = (k: string) => NATIVE.includes(k);
 
 /** 샘플 미리보기용 단어 (앱에 들어 있는 그림 사용) */
@@ -48,6 +48,7 @@ export const NATIVE_SAMPLES: Record<string, Record<string, unknown>> = {
   lcardt: { k: 'lcardt', tag: 'listen', items: [{ en: 'How much is it?', ko: '이것은 얼마예요?' }, { en: "It's five thousand won.", ko: '5,000원이에요.' }, { en: 'May I help you?', ko: '도와 드릴까요?' }, { en: 'Yes, please.', ko: '네, 부탁해요.' }, { en: "I'll take it.", ko: '그걸로 할게요.' }, { en: 'Here you are.', ko: '여기 있어요.' }] },
   wrepeat: { k: 'wrepeat', tag: 'vocab', words: W },
   sdrill: { k: 'sdrill', pic: 'shoes', tag: 'speak', tpl: 'How much are these {}?', words: ['shorts', 'sunglasses', 'pants', 'shoes', 'socks', 'jeans'] },
+  lnum: { k: 'lnum', tag: 'listen', q: 'How much are these jackets?', opts: ['It\'s ten thousand won.', 'They\'re ten thousand won.', 'It\'s twenty thousand won.', 'They\'re twenty thousand won.'], ans: 2 },
   wsent: { k: 'wsent', tag: 'vocab', cards: [
     { word: 'cap', sent: 'How much is this cap?', ko: '이 모자는 얼마예요?', pic: 'cap' },
     { word: 'jacket', sent: 'How much is this jacket?', ko: '이 재킷은 얼마예요?', pic: 'jacket' },

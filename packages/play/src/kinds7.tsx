@@ -90,3 +90,46 @@ export function WordSent({ item, pic, onDone }: KindProps) {
     </div>
   );
 }
+
+const NUMW = ['One', 'Two', 'Three', 'Four'];
+/** 듣고 번호 고르기: 질문과 선택지를 모두 소리로만 들려주고 번호 버튼으로 고른다. 정답을 맞히면 들은 내용을 스크립트로 보여 준다. */
+export function LNum({ item, onDone }: KindProps) {
+  const opts: string[] = item.opts ?? []; const ans: number = Math.min(Math.max(1, item.ans ?? 1), Math.max(1, opts.length)) - 1; const total: number = item.plays ?? 2;
+  const q: string = item.q ?? '';
+  const [used, setUsed] = useState(0); const [playing, setPlaying] = useState(false); const [prog, setProg] = useState(0);
+  const [bad, setBad] = useState<number | null>(null); const [ok, setOk] = useState(false); const wrong = useRef(false); const fired = useRef(false);
+  const script = [q, ...opts.map((o, i) => `${NUMW[i]}. ${o}`)].join('\n');
+  const est = Math.max(4, Math.round(script.split(/\s+/).length * 0.55 + opts.length * 0.9));
+  function play() {
+    if (playing || used >= total || ok) return;
+    setUsed(used + 1); setPlaying(true); setProg(0); requestAnimationFrame(() => requestAnimationFrame(() => setProg(1)));
+    sayScript(script, () => { setPlaying(false); setProg(1); });
+  }
+  useEffect(() => { play(); /* 열리면 한 번 자동으로 들려준다 */ }, []); // eslint-disable-line
+  useEffect(() => () => { stopSeq(); }, []);
+  function pick(i: number) {
+    if (ok || playing) return;
+    if (i === ans) { setOk(true); if (!fired.current) { fired.current = true; onDone([{ tag: 'listen', ok: !wrong.current }]); } }
+    else { wrong.current = true; setBad(i); setTimeout(() => setBad(null), 500); }
+  }
+  const left = Math.max(0, total - used);
+  return (
+    <div className="nv-body nv-ln">
+      <div className="nv-ln-player">
+        <button type="button" className="nv-ln-play" disabled={playing || left === 0 || ok} onClick={play} aria-label="듣기">{playing ? '❚❚' : '▶'}</button>
+        <span className="nv-ln-bar"><i key={used + (playing ? 'p' : 'd')} style={{ width: prog ? '100%' : '0%', transitionDuration: playing ? `${est}s` : '0s' }} /></span>
+        <span className="nv-ln-left">{ok ? '' : `남은 횟수 ${left}`}</span>
+      </div>
+      <div className="nv-ln-nums">
+        {opts.map((_, i) => <button key={i} type="button" className={'nv-ln-num' + (ok && i === ans ? ' nv-right' : bad === i ? ' nv-wrong nv-shake' : '')} disabled={playing && !ok} onClick={() => pick(i)}>{i + 1}</button>)}
+      </div>
+      {ok && (
+        <div className="nv-ln-script"><b>스크립트</b>
+          <p>{q}</p>
+          {opts.map((o, i) => <p key={i} className={i === ans ? 'ans' : ''}>{i + 1}. {o}</p>)}
+        </div>
+      )}
+      {!ok && <p className="nv-hint">잘 듣고 알맞은 번호를 눌러 보세요{left === 0 ? ' · 더 들을 수 없어요' : ''}</p>}
+    </div>
+  );
+}

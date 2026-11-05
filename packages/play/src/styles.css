@@ -770,3 +770,18 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-ws-sent { position:absolute; left:-4em; right:-4em; bottom:1.8em; background:#fff; box-shadow:.25em .35em .6em rgba(0,0,0,.28); padding:.9em .6em; text-align:center; font-size:1.9em; font-weight:800; color:#111; line-height:1.25; display:flex; flex-direction:column; align-items:center; gap:.2em; white-space:nowrap; }
 .nv-ws-sent small { font-size:.5em; font-weight:500; color:#666; }
 .nv-ws-hl { color:#E5191B; }
+
+/* 듣고 번호 고르기 */
+.nv-ln { align-items:center; gap:1.6em; }
+.nv-ln-player { display:flex; align-items:center; gap:.8em; background:#fff; border:.1em solid var(--nv-line); border-radius:2em; padding:.4em 1em .4em .5em; width:min(26em,92%); margin-bottom:1.2em; }
+.nv-ln-play { font:inherit; width:2em; height:2em; border-radius:50%; border:0; background:var(--nv-blue); color:#fff; cursor:pointer; padding:0; font-size:1.1em; line-height:1; }
+.nv-ln-play:disabled { opacity:.45; cursor:default; }
+.nv-ln-bar { flex:1; height:.5em; border-radius:.3em; background:#E3E9F3; overflow:hidden; } .nv-ln-bar i { display:block; height:100%; background:var(--nv-yellow); transition-property:width; transition-timing-function:linear; }
+.nv-ln-left { font-size:.85em; color:#6B7790; min-width:5em; text-align:right; }
+.nv-ln-nums { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:.8em; width:min(44em,96%); }
+.nv-ln-num { font:inherit; font-size:1.8em; font-weight:800; color:#1F2A44; background:#EDEDED; border:.07em solid #DADADA; border-radius:.3em; height:2.8em; cursor:pointer; }
+.nv-ln-num:hover:not(:disabled) { background:#F6F6F6; } .nv-ln-num:disabled { cursor:default; opacity:.7; }
+.nv-ln .nv-ln-num.nv-right { background:var(--nv-yellow); border-color:#E0A100; opacity:1; } .nv-ln .nv-ln-num.nv-wrong { background:#FDE7E7; border-color:#E57373; }
+.nv-ln-script { width:min(30em,92%); border:.1em dashed #7A8499; background:#fff; padding:.8em 1.2em; color:#3A4C73; position:relative; font-size:1.05em; }
+.nv-ln-script b { position:absolute; left:-.6em; top:-.9em; font-size:.7em; background:#FFF6D6; border:.1em solid #E0A100; border-radius:1em; padding:.15em .7em; color:#8A5A00; }
+.nv-ln-script p { margin:.15em 0; } .nv-ln-script p.ans { font-weight:700; color:#1F2A44; }

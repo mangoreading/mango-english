@@ -136,6 +136,8 @@ const lch = { ...T1, q: z.string().optional(), say: z.string().min(1), replay: z
 export const LChText = z.object({ ...lch, k: z.literal('lchtext') });
 export const LChPic = z.object({ ...lch, k: z.literal('lchpic') });
 export const LChList = z.object({ ...lch, k: z.literal('lchlist') });
+/** 듣고 번호 고르기: 질문과 선택지를 모두 음성으로만 들려주고, 화면에는 번호 버튼만 있다(기존 듣고 고르기보다 어려움). 정답을 맞히면 들은 내용(스크립트)을 보여 줌 */
+export const LNum = z.object({ ...T1, k: z.literal('lnum'), q: z.string().min(1), opts: z.array(z.string().min(1)).min(2).max(4), ans: z.number().int().min(1).max(4), plays: z.number().int().min(1).max(9).optional() });
 /** 듣고 짝짓기 */
 export const LMatch = z.object({ ...T1, k: z.literal('lmatch'), pairs: z.array(z.object({ left: z.string().min(1), say: z.string().optional(), right: z.string().min(1) })).min(2).max(6) });
 /** 글 읽고 답하기 3종 */
@@ -199,7 +201,7 @@ export const ActivityItem = z.discriminatedUnion('k', [
   VCards, VType1, VSpell, VMatch, VSound, VWrite,
   LookSpeak, SayKor, LSpeak, RAloud, Role, Present, AiTalk,
   SBuild, SWrite, SFill, DFill, SScram, SOrder, MWBank, SCloze, LWrite, MFree, SWrt,
-  Goal, KExp, TapL, LSent, LCardP, LCardT, Scene, Lecture, WSent, WRepeat, SDrill, PRead, MText,
+  Goal, KExp, TapL, LSent, LCardP, LCardT, Scene, Lecture, WSent, LNum, WRepeat, SDrill, PRead, MText,
   WChoice, PChoice, DChoice, TrueFalse, LChText, LChPic, LChList, LMatch, SqChoice, SqTF, SqMulti,
 ]).superRefine((v, ctx) => {
   if (v.k === 'choose' && v.a >= v.opts.length) ctx.addIssue({ code: 'custom', path: ['a'], message: 'a(정답 index)가 opts 범위를 벗어났어요' });
@@ -216,7 +218,7 @@ export type Kind = ActivityItem['k'];
 export const KINDS = ['learn', 'text', 'brief', 'choose', 'match', 'build', 'fill', 'write', 'compose', 'speak', 'fade', 'dialog', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite',
   'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'aitalk',
   'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'mfree', 'swrt',
-  'goal', 'scene', 'lecture', 'wsent', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext',
+  'goal', 'scene', 'lecture', 'wsent', 'lnum', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext',
   'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti'] as const;
 
 /** 아이템 상태 (검수 워크플로) */
