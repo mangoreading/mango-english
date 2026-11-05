@@ -145,7 +145,7 @@ export function NativePlayer({ title, items, vocab, nextLabel, step, quiet, scop
         <span className="nv-pts"><i className="nv-star">★</i> 포인트 : +{pts}</span>
       </div>
       <div className="nv-instrow">
-      <p className="nv-inst"><span>{hl(LCH.includes(it.k) && it.q ? it.q : it.inst || (it.k === 'lnum' && it.pic ? '잘 듣고, 그림에 알맞은 답을 선택해 주세요.' : INST[it.k]) || '', SPEAK_SKIN.includes(it.k) || BG_SKIN.includes(it.k))}{INST_SUB[it.k] && <small>{INST_SUB[it.k]}</small>}</span></p>
+      <p className="nv-inst"><span>{hl(LCH.includes(it.k) && it.q ? it.q : it.inst || (it.k === 'lnum' && it.pic ? '잘 듣고, 그림에 알맞은 답을 선택해 주세요.' : it.k === 'sscram' && (it.listen || it.dictate) ? (it.follow ? '음원을 듣고, 단어 카드를 선택하여 이어질 말을 완성해 보세요.' : '음원을 듣고, 단어 카드를 선택하여 문장을 완성해 보세요.') : INST[it.k]) || '', SPEAK_SKIN.includes(it.k) || BG_SKIN.includes(it.k))}{INST_SUB[it.k] && <small>{INST_SUB[it.k]}</small>}</span></p>
         {MIC_KINDS.includes(it.k) && <button type="button" className="nv-mtbtn" onClick={() => setMt(true)}><i aria-hidden="true">🎤</i> 마이크 테스트</button>}
       </div>
       <ProgCtx.Provider value={setProg}>

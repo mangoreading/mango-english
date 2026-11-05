@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { aiHandlers, imgSrc, say, shuffle, type KindProps } from './common';
+import { aiHandlers, imgSrc, say, sayAuto, shuffle, type KindProps } from './common';
 import { Rich } from './kinds3';
 import { Hint } from './hint';
 import { Fb } from './fb';
@@ -125,6 +125,8 @@ export function SScram({ item, onDone }: KindProps) {
   const chips = useMemo(() => shuffle([...wordsA, ...(item.extra ?? [])].map((t, id) => ({ id, t }))), [item]); // eslint-disable-line
   const [seq, setSeq] = useState<number[]>([]); const [ok, setOk] = useState(false); const [bad, setBad] = useState(false); const wrong = useRef(false); const wcnt = useRef(0);
   const text = (ids: number[]) => ids.map((i) => chips.find((c) => c.id === i)!.t).join(' ');
+  const audio: string = item.listen || (item.dictate ? ans : ''); // 음원(소리로 들려줄 말): 있으면 듣기 버튼이 생긴다
+  useEffect(() => { if (audio) sayAuto(audio); /* 열리면 한 번 자동으로 들려준다 */ }, []); // eslint-disable-line
   function tap(id: number) {
     if (ok || bad || seq.includes(id)) return;
     const n = [...seq, id]; setSeq(n);
@@ -135,6 +137,7 @@ export function SScram({ item, onDone }: KindProps) {
   }
   return (
     <div className="nv-body nv-wbody nv-wtop">
+      {audio && <button type="button" className="nv-listen nv-listen-s" onClick={() => say(audio)}><i className="nv-sico" aria-hidden="true" /> <b>듣기</b></button>}
       <Ko t={item.ko} />
       <div className={'nv-capsule nv-capsule-chips nv-main' + (ok ? ' nv-okc' : '') + (bad ? ' nv-shake nv-badc' : '')}>
         {seq.map((id) => <button key={id} className="nv-chipb nv-placed" onClick={() => !ok && !bad && setSeq(seq.filter((x) => x !== id))}>{chips.find((c) => c.id === id)!.t}</button>)}
