@@ -7,7 +7,7 @@ const HOME_LESSON: Record<Area, number> = { listening: 2, speaking: 3, reading: 
 
 const KIND_AREA: Record<string, Area> = {
   lchpic: 'listening', lchtext: 'listening', lchlist: 'listening', lmatch: 'listening', lcardt: 'listening', lcardp: 'listening', lsent: 'listening',
-  lookspeak: 'speaking', saykor: 'speaking', lspeak: 'speaking', raloud: 'speaking', role: 'speaking', aitalk: 'speaking', sdrill: 'speaking', present: 'speaking',
+  lookspeak: 'speaking', saykor: 'speaking', lspeak: 'speaking', raloud: 'speaking', role: 'speaking', dreadp: 'speaking', dreadt: 'speaking', aitalk: 'speaking', sdrill: 'speaking', present: 'speaking',
   pread: 'reading', sqchoice: 'reading', sqtf: 'reading', sqmulti: 'reading', scloze: 'reading', dchoice: 'reading', tf: 'reading',
   sbuild: 'writing', swrite: 'writing', sfill: 'writing', dfill: 'writing', dfillt: 'writing', sscram: 'writing', sscraml: 'writing', sscramlr: 'writing', sscramr: 'writing', sorder: 'writing', mwbank: 'writing', mfree: 'writing', swrt: 'writing', lwrite: 'writing', vwrite: 'writing',
 };

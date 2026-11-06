@@ -201,6 +201,29 @@ export function Role({ item, pic, onDone }: KindProps) {
     </div>
   );
 }
+/** 대화(문장) 따라 읽기: 한 줄씩 순서대로 — 먼저 들려주고, 학생이 마이크로 따라 읽는다 (dreadp: 그림 + 대화 / dreadt: 글만) */
+export function ReadAlong({ item, pic, onDone }: KindProps) {
+  const speaking = useSpeaking();
+  const lines: { who: string; text: string }[] = (item.lines ?? []).map((l: string) => { const m = l.match(/^\s*([A-Za-z]+)\s*[:：]\s*(.*)$/); return m ? { who: m[1].toUpperCase(), text: m[2] } : { who: '', text: l }; });
+  const plain = (t: string) => t.replace(/\[\[|\]\]|\{\{|\}\}/g, '');
+  const [pos, setPos] = useState(0); const [g, setG] = useState<GW[] | null>(null); const fired = useRef(false); const [heard, setHeard] = useState(false);
+  const mic = useMic((t) => { const best = t.split(' | ').map((o) => grade(plain(lines[pos].text), o)).sort((a, b) => pct(b) - pct(a))[0]; setG(best); if (pct(best) >= 0.5) setTimeout(() => adv(), 700); }, () => plain(lines[pos]?.text ?? ''));
+  function adv() { setG(null); setHeard(false); const n = pos + 1; setPos(n); if (n >= lines.length && !fired.current) { fired.current = true; onDone([{ tag: 'speak', ok: true }]); } }
+  useEffect(() => { if (pos < lines.length) sayThen(plain(lines[pos].text), () => setHeard(true)); }, [pos]); // eslint-disable-line
+  const done = pos >= lines.length; const src = item.k === 'dreadp' ? pic(item.pic) : '';
+  return (
+    <div className="nv-body nv-wbody nv-spz nv-sprole">
+      {item.k === 'dreadp' && <div className="nv-sptop">{src && <div className="nv-picwrap"><img className="nv-img nv-img-md" src={imgSrc(src)} alt="" draggable={false} />{item.label && <span className="nv-pill">{item.label}</span>}{item.price && <span className="nv-price">{item.price}</span>}</div>}</div>}
+      <div className="nv-dlgbig">
+        {lines.map((l, i) => (
+          <p key={i} className={(i === pos ? 'cur me ' : '') + (i > pos ? 'later' : '')}><b>{l.who ? l.who + ' :' : ''}</b> {i === pos && g ? <Words g={g} /> : <Rich2 t={l.text} />}</p>))}
+      </div>
+      <MicBtn dim={done || !heard} on={mic.on} busy={mic.busy} level={mic.level} starting={mic.starting} locked={speaking} onClick={done || !heard ? () => undefined : (mic.on ? mic.stop : mic.start)} label={done ? '\u00a0' : heard ? '마이크를 누르고 따라 읽어 보세요' : '잘 들어 보세요'} />
+      {done ? <Fb className="nv-fbmsg on">끝까지 잘 읽었어요! 👏</Fb> : heard && mic.err ? <Fb className="nv-fbmsg on nv-fbbad">{ERRMSG[mic.err]}</Fb> : null}
+      <div className="nv-spstat"><button className="nv-btn nv-ghost nv-selfbtn" style={{ visibility: !done && heard && (mic.err === 'nosupport' || mic.err === 'denied' || mic.fails >= 2) ? 'visible' : 'hidden' }} onClick={adv}>읽었어요</button></div>
+    </div>
+  );
+}
 const Rich2 = ({ t }: { t: string }) => <>{t.split(/(\[\[.*?\]\]|\{\{.*?\}\})/g).map((p, i) => (p.startsWith('[[') ? <span key={i} className="nv-cb">{p.slice(2, -2)}</span> : p.startsWith('{{') ? <span key={i} className="nv-cr">{p.slice(2, -2)}</span> : p))}</>;
 
 /** 발표 영상 찍기: 대본을 보며 카메라로 녹화한다. 영상은 이 기기 안에서만 다시 볼 수 있다 */

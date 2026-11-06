@@ -14,7 +14,7 @@ export const KIND_NAME: Record<string, string> = {
   fill: '빈칸 채우기', write: '쓰기', compose: '작문', speak: '말하기', fade: '점점 지우기', dialog: '대화',
   vcards: '단어 카드 보기', vtype1: '단어 따라 쓰기', vspell: '철자 완성', vmatch: '단어-뜻 매칭', vsound: '소리-단어 매칭', vwrite: '그림 보고 쓰기',
   wchoice: '뜻 고르기', pchoice: '그림 보고 고르기', dchoice: '대화 고르기', tf: 'True or False', lchtext: '듣고 고르기 (글 4칸)', lchpic: '듣고 고르기 (그림 4칸)', lchlist: '듣고 고르기 (세로형)',
-  lookspeak: '그림 보고 말하기', saykor: '우리말 보고 영어로 말하기', lspeak: '듣고 대답하기', raloud: '따라 읽기 평가', role: '역할 나눠 말하기', present: '발표 영상 찍기', aitalk: 'AI 자유대화',
+  lookspeak: '그림 보고 말하기', saykor: '우리말 보고 영어로 말하기', lspeak: '듣고 대답하기', raloud: '따라 읽기 평가', role: '역할 나눠 말하기', dreadp: '대화 따라 읽기 (그림)', dreadt: '대화 따라 읽기 (글)', present: '발표 영상 찍기', aitalk: 'AI 자유대화',
   sbuild: '문장 쓰기 (우리말→영어)', swrite: '정답 써 보기', sfill: '빈칸 단어 쓰기', dfill: '대화 완성하기 (그림)', dfillt: '대화 완성하기 (글 단서)', sscram: '문장 만들기', sorder: '문장 순서 맞추기',
   mwbank: '모범 글 완성 (보기)', scloze: '글 빈칸 채우기', lwrite: '듣고 쓰기', mfree: '나만의 글 쓰기', swrt: '글 요약·쓰기',
   goal: '학습목표', kexp: '핵심표현 듣고 따라 읽기', tapl: '문장 눌러 듣기', lsent: '문장 듣고 고르기(카드)', lcardp: '듣고 익히기 (그림)', lcardt: '듣고 익히기 (글)',
@@ -101,6 +101,10 @@ const SPEC4: Record<string, Field[]> = {
   lspeak: [{ k: 'ask', label: '들려줄 질문 (비우면 말할 문장)', t: 'text' }, { k: 'ko', label: '상황 설명 (예: Ken의 가게 / 선글라스 13,000원)', t: 'text' }, { k: 'target', label: '말할 대답 문장', t: 'text', req: true }, { k: 'pass', label: '통과 기준 0.3~1 (비우면 0.5)', t: 'num' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
   raloud: [{ k: 'target', label: '따라 읽을 문장', t: 'text', req: true }, { k: 'stars', label: '정확도 별점 보이기 (옵션)', t: 'bool' }, { k: 'fluency', label: '유창성 별점 보이기 (옵션)', t: 'bool' }, VINST],
   role: [{ k: 'pic', label: '그림(단원 단어, 선택)', t: 'vword' }, { k: 'price', label: '가격표 글자 (선택)', t: 'text' }, { k: 'lines', label: '대화 (한 줄에 한 문장, "A: May I help you?" 형식, 강조 [[파랑]] {{빨강}})', t: 'lines', req: true }, VINST],
+
+  dreadp: [{ k: 'pic', label: '그림(단원 단어, 선택)', t: 'vword' }, { k: 'price', label: '가격표 글자 (선택)', t: 'text' }, { k: 'lines', label: '대화 (한 줄에 한 줄씩 읽어요. "A: May I help you?" 형식이거나 그냥 문장, 강조 [[파랑]] {{빨강}})', t: 'lines', req: true }, VINST],
+
+  dreadt: [{ k: 'lines', label: '대화 (한 줄에 한 줄씩 읽어요. "A: May I help you?" 형식이거나 그냥 문장, 강조 [[파랑]] {{빨강}})', t: 'lines', req: true }, VINST],
   present: [{ k: 'text', label: '발표 글 (한 줄에 한 문장, 강조 [[파랑]])', t: 'lines', req: true }, VINST],
   aitalk: [{ k: 'situation', label: '상황 (학생에게 보이는 글)', t: 'text', req: true }, { k: 'role', label: 'AI 역할 (예: 시계 가게 점원)', t: 'text' }, { k: 'open', label: 'AI 첫 말 (선택)', t: 'text' }, { k: 'turns', label: '대화 횟수 (비우면 대본 수)', t: 'num' },
     { k: 'script', label: 'AI 대본 (AI 연결이 없을 때 쓰는 답, 차례대로)', t: 'rows', blank: () => ({ ai: '' }), cols: [{ k: 'ai', label: 'AI 말', t: 'text' }, { k: 'hint', label: '학생에게 줄 힌트', t: 'text', w: 240 }] }, VINST],
@@ -206,6 +210,7 @@ export function defaultItem(kind: string): Obj {
     case 'vspell': return { k: 'vspell', tag: 'vocab', word: '' };
     case 'lookspeak': case 'lspeak': case 'raloud': return { k: kind, tag: 'speak', target: '' };
     case 'saykor': return { k: 'saykor', tag: 'speak', ko: '', target: '' };
+    case 'dreadp': case 'dreadt': return { k: kind, tag: 'speak', lines: [] };
     case 'role': return { k: 'role', tag: 'speak', lines: [] };
     case 'present': return { k: 'present', tag: 'speak', text: [] };
     case 'lnum': return { k: 'lnum', tag: 'listen', q: '', opts: [], ans: 1 };
