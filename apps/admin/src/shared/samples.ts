@@ -1,7 +1,7 @@
 import type { VWord } from '@mango/play';
 import type { VocabOpt } from '../pages/units/ItemForm';
 
-const NATIVE = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti', 'goal', 'scene', 'scenerep', 'sscraml', 'lecture', 'wsent', 'lnum', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext', 'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'mfree', 'swrt', 'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'aitalk'];
+const NATIVE = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti', 'goal', 'scene', 'scenerep', 'sscraml', 'sscramlr', 'sscramr', 'lecture', 'wsent', 'lnum', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext', 'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'mfree', 'swrt', 'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'aitalk'];
 export const isNativeKind = (k: string) => NATIVE.includes(k);
 
 /** 샘플 미리보기용 단어 (앱에 들어 있는 그림 사용) */
@@ -94,6 +94,9 @@ export const NATIVE_SAMPLES: Record<string, Record<string, unknown>> = {
 /** 문항이 쓰는 단어를 단원 단어 목록에서 찾아 그림까지 붙여 돌려준다 */
 NATIVE_SAMPLES.scenerep = { ...NATIVE_SAMPLES.scene, k: 'scenerep' };
 NATIVE_SAMPLES.sscraml = { k: 'sscraml', tag: 'write', ko: '신발은 얼마인가요?', ans: 'How much are these shoes?' };
+
+NATIVE_SAMPLES.sscramlr = { k: 'sscramlr', tag: 'write', q: 'How much are these shoes?', ans: "They're fifty thousand won.", extra: ['It\'s'] };
+NATIVE_SAMPLES.sscramr = { k: 'sscramr', tag: 'write', q: 'How much are these socks?', ans: "They're fifteen thousand won." };
 
 export function nativeVocab(item: Record<string, any>, vocab: VocabOpt[]): VWord[] { // eslint-disable-line @typescript-eslint/no-explicit-any
   if (!['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat'].includes(item.k)) return vocab.map((v) => ({ key: v.key, en: v.en, ko: v.ko, image: v.image_path ?? null })); // 문장형은 그림 찾기용으로 전체 전달

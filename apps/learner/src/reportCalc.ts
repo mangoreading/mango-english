@@ -9,7 +9,7 @@ const KIND_AREA: Record<string, Area> = {
   lchpic: 'listening', lchtext: 'listening', lchlist: 'listening', lmatch: 'listening', lcardt: 'listening', lcardp: 'listening', lsent: 'listening',
   lookspeak: 'speaking', saykor: 'speaking', lspeak: 'speaking', raloud: 'speaking', role: 'speaking', aitalk: 'speaking', sdrill: 'speaking', present: 'speaking',
   pread: 'reading', sqchoice: 'reading', sqtf: 'reading', sqmulti: 'reading', scloze: 'reading', dchoice: 'reading', tf: 'reading',
-  sbuild: 'writing', swrite: 'writing', sfill: 'writing', dfill: 'writing', sscram: 'writing', sscraml: 'writing', sorder: 'writing', mwbank: 'writing', mfree: 'writing', swrt: 'writing', lwrite: 'writing', vwrite: 'writing',
+  sbuild: 'writing', swrite: 'writing', sfill: 'writing', dfill: 'writing', sscram: 'writing', sscraml: 'writing', sscramlr: 'writing', sscramr: 'writing', sorder: 'writing', mwbank: 'writing', mfree: 'writing', swrt: 'writing', lwrite: 'writing', vwrite: 'writing',
 };
 export const areaOf = (kind?: string | null): Area | null => (kind ? KIND_AREA[kind] ?? null : null);
 

@@ -18,7 +18,7 @@ export const KIND_NAME: Record<string, string> = {
   sbuild: '문장 쓰기 (우리말→영어)', swrite: '정답 써 보기', sfill: '빈칸 단어 쓰기', dfill: '대화 완성하기', sscram: '문장 만들기', sorder: '문장 순서 맞추기',
   mwbank: '모범 글 완성 (보기)', scloze: '글 빈칸 채우기', lwrite: '듣고 쓰기', mfree: '나만의 글 쓰기', swrt: '글 요약·쓰기',
   goal: '학습목표', kexp: '핵심표현 듣고 따라 읽기', tapl: '문장 눌러 듣기', lsent: '문장 듣고 고르기(카드)', lcardp: '듣고 익히기 (그림)', lcardt: '듣고 익히기 (글)',
-  scene: '장면 영상 보기', scenerep: '장면 영상 보기 + 따라 말하기', sscraml: '문장 만들기 (듣고 만들기)', lecture: '강의 슬라이드', wsent: '단어·문장 듣고 따라 말하기', lnum: '듣고 번호 고르기', wrepeat: '단어 듣고 따라 말하기', sdrill: '문장 바꿔 말하기', pread: '글 듣고 읽기', mtext: '모범 글 읽기',
+  scene: '장면 영상 보기', scenerep: '장면 영상 보기 + 따라 말하기', sscraml: '문장 만들기 (듣고 만들기)', sscramlr: '문장 만들기 (듣고 이어질 말)', sscramr: '문장 만들기 (보고 이어질 말)', lecture: '강의 슬라이드', wsent: '단어·문장 듣고 따라 말하기', lnum: '듣고 번호 고르기', wrepeat: '단어 듣고 따라 말하기', sdrill: '문장 바꿔 말하기', pread: '글 듣고 읽기', mtext: '모범 글 읽기',
   lmatch: '듣고 짝짓기', sqchoice: '글 읽고 답하기 (선택)', sqtf: '글 읽고 답하기 (T/F)', sqmulti: '글 읽고 답하기 (복수선택)',
 };
 export interface VocabOpt { key: string; en: string; ko: string; image_path?: string | null }
@@ -79,7 +79,11 @@ const SPEC3: Record<string, Field[]> = {
   dfill: [{ k: 'pic', label: '그림(단원 단어, 선택)', t: 'vword' }, { k: 'tag2', label: '가격표 글자 (선택, 예: $60)', t: 'text' }, { k: 'lines', label: '대화 (한 줄에 한 문장, {} 가 빈칸)', t: 'lines', req: true }, { k: 'ans', label: '빈칸 정답 (빈칸 순서대로 한 줄에 하나, 여러 정답은 |)', t: 'lines', req: true }, { k: 'blankHints', label: '빈칸별 힌트 (빈칸 순서대로 한 줄에 하나. 학생이 그 빈칸을 할 차례에 보여요)', t: 'lines' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
   sscram: [{ k: 'ko', label: '우리말 문장 (듣고 만들기일 때는 비워도 돼요)', t: 'text' }, ANSW('정답 문장'), { k: 'listen', label: '들려줄 말 (선택 · 위와 다른 말을 들려주고 싶을 때, 예: 질문)', t: 'text' }, { k: 'follow', label: '들려준 말에 이어질 말 만들기 (안내 문구가 "이어질 말"로 바뀌어요)', t: 'bool' }, { k: 'extra', label: '헷갈리게 섞을 단어 (한 줄에 하나, 선택)', t: 'lines' }, { k: 'alts', label: '다른 정답 (한 줄에 하나)', t: 'lines' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
 
-  sscraml: [{ k: 'ko', label: '우리말 문장 (선택)', t: 'text' }, ANSW('정답 문장 (소리로 들려줘요)'), { k: 'listen', label: '들려줄 말 (선택 · 위와 다른 말을 들려주고 싶을 때, 예: 질문)', t: 'text' }, { k: 'follow', label: '들려준 말에 이어질 말 만들기 (안내 문구가 "이어질 말"로 바뀌어요)', t: 'bool' }, { k: 'extra', label: '헷갈리게 섞을 단어 (한 줄에 하나, 선택)', t: 'lines' }, { k: 'alts', label: '다른 정답 (한 줄에 하나)', t: 'lines' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
+  sscraml: [{ k: 'ko', label: '우리말 문장 (선택)', t: 'text' }, ANSW('정답 문장 (소리로 들려줘요)'), { k: 'extra', label: '헷갈리게 섞을 단어 (한 줄에 하나, 선택)', t: 'lines' }, { k: 'alts', label: '다른 정답 (한 줄에 하나)', t: 'lines' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
+
+  sscramlr: [{ k: 'q', label: '들려줄 앞 문장 (예: 질문)', t: 'text', req: true }, { k: 'ko', label: '우리말 문장 (선택)', t: 'text' }, ANSW('이어질 말 (정답)'), { k: 'extra', label: '헷갈리게 섞을 단어 (한 줄에 하나, 선택)', t: 'lines' }, { k: 'alts', label: '다른 정답 (한 줄에 하나)', t: 'lines' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
+
+  sscramr: [{ k: 'q', label: '보여줄 앞 문장 (예: 질문)', t: 'text', req: true }, { k: 'ko', label: '우리말 문장 (선택)', t: 'text' }, ANSW('이어질 말 (정답)'), { k: 'extra', label: '헷갈리게 섞을 단어 (한 줄에 하나, 선택)', t: 'lines' }, { k: 'alts', label: '다른 정답 (한 줄에 하나)', t: 'lines' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
   sorder: [EXROWS('올바른 순서대로 입력 (화면에서는 섞여요)'), VINST],
   mwbank: [{ k: 'lines', label: '글 (한 줄에 한 문장, {} 가 빈칸)', t: 'lines', req: true }, { k: 'ans', label: '빈칸 정답 (빈칸 순서대로 한 줄에 하나)', t: 'lines', req: true }, { k: 'extra', label: '오답 보기 (한 줄에 하나, 선택)', t: 'lines' }, { k: 'blankHints', label: '빈칸별 힌트 (빈칸 순서대로 한 줄에 하나. 학생이 그 빈칸을 할 차례에 보여요)', t: 'lines' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
   scloze: [{ k: 'lines', label: '글 (한 줄에 한 문장, {} 가 빈칸)', t: 'lines', req: true }, { k: 'ans', label: '빈칸 정답 (빈칸 순서대로 한 줄에 하나)', t: 'lines', req: true }, { k: 'extra', label: '오답 보기 (한 줄에 하나, 선택)', t: 'lines' }, { k: 'blankHints', label: '빈칸별 힌트 (빈칸 순서대로 한 줄에 하나. 학생이 그 빈칸을 할 차례에 보여요)', t: 'lines' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
@@ -173,7 +177,7 @@ const SPEC: Record<string, Field[]> = {
   ],
 };
 /** 오른쪽 위 보조 그림(선택)을 쓸 수 있는 템플릿 */
-for (const k of ['tf', 'lchtext', 'lchlist', 'sqchoice', 'sqtf', 'sqmulti', 'pread', 'mtext', 'aitalk', 'mfree', 'saykor', 'lspeak', 'raloud', 'sbuild', 'swrite', 'sscram', 'sscraml', 'sfill', 'mwbank', 'scloze', 'swrt', 'sdrill', 'present', 'lwrite', 'sorder'])
+for (const k of ['tf', 'lchtext', 'lchlist', 'sqchoice', 'sqtf', 'sqmulti', 'pread', 'mtext', 'aitalk', 'mfree', 'saykor', 'lspeak', 'raloud', 'sbuild', 'swrite', 'sscram', 'sscraml', 'sscramlr', 'sscramr', 'sfill', 'mwbank', 'scloze', 'swrt', 'sdrill', 'present', 'lwrite', 'sorder'])
   if (SPEC[k] && !SPEC[k].some((f) => f.k === 'pic')) SPEC[k] = [...SPEC[k], { k: 'pic', label: '보조 그림 (단원 단어, 선택)', t: 'vword' }];
 const COMMON: Field[] = [
   { k: 'tag', label: '영역', t: 'tag' }, { k: 'lo', label: '학습목표 코드', t: 'text' }, { k: 'flag', label: '상황 그림 코드', t: 'text' },
@@ -211,6 +215,8 @@ export function defaultItem(kind: string): Obj {
     case 'sfill': return { k: 'sfill', tag: 'write', tpl: '{}', ans: '' };
     case 'dfill': return { k: 'dfill', tag: 'write', lines: [], ans: [] };
     case 'scenerep': return { k: 'scenerep', tag: 'listen', scenes: [{ who: '', en: '', ko: '', pic: '' }, { who: '', en: '', ko: '', pic: '' }] };
+    case 'sscramlr': return { k: 'sscramlr', tag: 'write', q: '', ans: '' };
+    case 'sscramr': return { k: 'sscramr', tag: 'write', q: '', ans: '' };
     case 'sscraml': return { k: 'sscraml', tag: 'write', ans: '' };
     case 'sscram': return { k: 'sscram', tag: 'write', ans: '' };
     case 'sorder': return { k: 'sorder', tag: 'write', items: [{ en: '', ko: '' }, { en: '', ko: '' }] };

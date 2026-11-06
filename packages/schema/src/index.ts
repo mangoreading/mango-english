@@ -182,7 +182,9 @@ export const SFill = z.object({ ...T1, k: z.literal('sfill'), ko: z.string().opt
 export const DFill = z.object({ ...T1, k: z.literal('dfill'), pic: z.string().optional(), tag2: z.string().optional(), lines: z.array(z.string().min(1)).min(1), ans: z.array(z.string().min(1)).min(1), blankHints: z.array(z.string()).optional(), hint });
 export const SScram = z.object({ ...T1, k: z.literal('sscram'), ko: z.string().optional(), ans: z.string().min(1), extra: z.array(z.string()).optional(), alts, hint });
 /** 문장 만들기(듣고 만들기): 문장을 소리로 들려주고(또는 listen 의 말), 단어 카드로 문장을 완성 */
-export const SScramL = z.object({ ...T1, k: z.literal('sscraml'), ko: z.string().optional(), ans: z.string().min(1), listen: z.string().optional(), follow: z.boolean().optional(), extra: z.array(z.string()).optional(), alts, hint });
+export const SScramL = z.object({ ...T1, k: z.literal('sscraml'), ko: z.string().optional(), ans: z.string().min(1), extra: z.array(z.string()).optional(), alts, hint });
+/** 이어질 말 만들기: q 는 들려주는(sscramlr) 또는 보여 주는(sscramr) 앞 문장 */
+export const SScramR = z.object({ ...T1, k: z.enum(['sscramlr', 'sscramr']), q: z.string().min(1), ko: z.string().optional(), ans: z.string().min(1), extra: z.array(z.string()).optional(), alts, hint });
 export const SOrder = z.object({ ...T1, k: z.literal('sorder'), items: z.array(z.object({ en: z.string().min(1), ko: z.string().optional() })).min(2).max(8) });
 export const MWBank = z.object({ ...T1, k: z.literal('mwbank'), lines: z.array(z.string().min(1)).min(1), ans: z.array(z.string().min(1)).min(1), extra: z.array(z.string()).optional(), blankHints: z.array(z.string()).optional(), hint });
 export const SCloze = z.object({ ...T1, k: z.literal('scloze'), lines: z.array(z.string().min(1)).min(1), ans: z.array(z.string().min(1)).min(1), extra: z.array(z.string()).optional(), blankHints: z.array(z.string()).optional(), hint });
@@ -205,7 +207,7 @@ export const ActivityItem = z.discriminatedUnion('k', [
   VCards, VType1, VSpell, VMatch, VSound, VWrite,
   LookSpeak, SayKor, LSpeak, RAloud, Role, Present, AiTalk,
   SBuild, SWrite, SFill, DFill, SScram, SOrder, MWBank, SCloze, LWrite, MFree, SWrt,
-  Goal, KExp, TapL, LSent, LCardP, LCardT, Scene, SceneRep, SScramL, Lecture, WSent, LNum, WRepeat, SDrill, PRead, MText,
+  Goal, KExp, TapL, LSent, LCardP, LCardT, Scene, SceneRep, SScramL, SScramR, Lecture, WSent, LNum, WRepeat, SDrill, PRead, MText,
   WChoice, PChoice, DChoice, TrueFalse, LChText, LChPic, LChList, LMatch, SqChoice, SqTF, SqMulti,
 ]).superRefine((v, ctx) => {
   if (v.k === 'choose' && v.a >= v.opts.length) ctx.addIssue({ code: 'custom', path: ['a'], message: 'a(정답 index)가 opts 범위를 벗어났어요' });
@@ -222,7 +224,7 @@ export type Kind = ActivityItem['k'];
 export const KINDS = ['learn', 'text', 'brief', 'choose', 'match', 'build', 'fill', 'write', 'compose', 'speak', 'fade', 'dialog', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite',
   'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'aitalk',
   'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'mfree', 'swrt',
-  'goal', 'scene', 'scenerep', 'sscraml', 'lecture', 'wsent', 'lnum', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext',
+  'goal', 'scene', 'scenerep', 'sscraml', 'sscramlr', 'sscramr', 'lecture', 'wsent', 'lnum', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext',
   'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti'] as const;
 
 /** 아이템 상태 (검수 워크플로) */

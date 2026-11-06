@@ -803,3 +803,5 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-shadow-line b { font-size:1.6em; color:#111; line-height:1.25; } .nv-shadow-line small { font-size:.95em; color:#6B7790; }
 .nv-shadow-who { font-size:.8em; font-weight:700; color:#fff; background:#3B6FD8; border-radius:1em; padding:.1em .8em; }
 .nv-shadow-nav { display:flex; align-items:center; gap:1em; color:#6B7790; }
+
+.nv-sc-q { font-size:1.5em; font-weight:700; color:#222; text-align:center; margin:0 0 .8em; }
