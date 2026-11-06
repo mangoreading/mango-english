@@ -179,7 +179,7 @@ const alts = z.array(z.string()).optional();
 export const SBuild = z.object({ ...T1, k: z.literal('sbuild'), ko: z.string().optional(), ans: z.string().min(1), alts, hint, starter: z.string().optional(), tpl: z.string().optional() });
 export const SWrite = z.object({ ...T1, k: z.literal('swrite'), ko: z.string().optional(), ans: z.string().min(1), alts, hint, starter: z.string().optional(), tpl: z.string().optional() });
 export const SFill = z.object({ ...T1, k: z.literal('sfill'), ko: z.string().optional(), tpl: z.string().refine((v) => v.includes('{}'), '문장에 {} (빈칸)가 있어야 해요'), ans: z.string().min(1), hint });
-export const DFill = z.object({ ...T1, k: z.literal('dfill'), pic: z.string().optional(), tag2: z.string().optional(), lines: z.array(z.string().min(1)).min(1), ans: z.array(z.string().min(1)).min(1), blankHints: z.array(z.string()).optional(), hint });
+export const DFill = z.object({ ...T1, k: z.enum(['dfill', 'dfillt']), pic: z.string().optional(), cue: z.string().optional(), tag2: z.string().optional(), lines: z.array(z.string().min(1)).min(1), ans: z.array(z.string().min(1)).min(1), blankHints: z.array(z.string()).optional(), hint });
 export const SScram = z.object({ ...T1, k: z.literal('sscram'), ko: z.string().optional(), ans: z.string().min(1), extra: z.array(z.string()).optional(), alts, hint });
 /** 문장 만들기(듣고 만들기): 문장을 소리로 들려주고(또는 listen 의 말), 단어 카드로 문장을 완성 */
 export const SScramL = z.object({ ...T1, k: z.literal('sscraml'), ko: z.string().optional(), ans: z.string().min(1), extra: z.array(z.string()).optional(), alts, hint });
@@ -213,7 +213,7 @@ export const ActivityItem = z.discriminatedUnion('k', [
   if (v.k === 'choose' && v.a >= v.opts.length) ctx.addIssue({ code: 'custom', path: ['a'], message: 'a(정답 index)가 opts 범위를 벗어났어요' });
   if ((v.k === 'pchoice' || v.k === 'dchoice' || v.k === 'lchtext' || v.k === 'lchpic' || v.k === 'lchlist' || v.k === 'sqchoice') && v.a >= v.opts.length) ctx.addIssue({ code: 'custom', path: ['a'], message: '정답 번호가 보기 범위를 벗어났어요' });
   const blanks = (ls: string[]) => ls.join('\n').split('{}').length - 1;
-  if ((v.k === 'dfill' || v.k === 'mwbank' || v.k === 'scloze') && blanks(v.lines) !== v.ans.length) ctx.addIssue({ code: 'custom', path: ['ans'], message: `빈칸({}) ${blanks(v.lines)}개와 정답 ${v.ans.length}개가 달라요` });
+  if ((v.k === 'dfill' || v.k === 'dfillt' || v.k === 'mwbank' || v.k === 'scloze') && blanks(v.lines) !== v.ans.length) ctx.addIssue({ code: 'custom', path: ['ans'], message: `빈칸({}) ${blanks(v.lines)}개와 정답 ${v.ans.length}개가 달라요` });
   if (v.k === 'mfree' && blanks(v.lines) < 1) ctx.addIssue({ code: 'custom', path: ['lines'], message: '빈칸 {} 이 하나 이상 있어야 해요' });
   if (v.k === 'sqmulti' && !v.items.some((x) => x.ok)) ctx.addIssue({ code: 'custom', path: ['items'], message: '정답이 하나 이상 있어야 해요' });
   if (v.k === 'vspell' && v.shown !== undefined && v.shown >= v.word.length) ctx.addIssue({ code: 'custom', path: ['shown'], message: '보이는 글자 수는 단어 길이보다 작아야 해요' });
@@ -223,7 +223,7 @@ export type ActivityItem = z.infer<typeof ActivityItem>;
 export type Kind = ActivityItem['k'];
 export const KINDS = ['learn', 'text', 'brief', 'choose', 'match', 'build', 'fill', 'write', 'compose', 'speak', 'fade', 'dialog', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite',
   'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'aitalk',
-  'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'mfree', 'swrt',
+  'sbuild', 'swrite', 'sfill', 'dfill', 'dfillt', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'mfree', 'swrt',
   'goal', 'scene', 'scenerep', 'sscraml', 'sscramlr', 'sscramr', 'lecture', 'wsent', 'lnum', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext',
   'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti'] as const;
 

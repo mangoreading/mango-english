@@ -112,7 +112,8 @@ export function DFill({ item, pic, onDone }: KindProps) {
   const bh: string[] = item.blankHints ?? [];
   return (
     <div className="nv-body nv-wbody">
-      <div className="nv-picwrap nv-dfpic">{src && <img className="nv-img nv-img-md" src={imgSrc(src)} alt="" draggable={false} />}{src && item.tag2 && <span className="nv-price">{item.tag2}</span>}</div>
+      {item.k === 'dfillt' && <div className="nv-cue">{item.cue}</div>}
+      {item.k !== 'dfillt' && <div className="nv-picwrap nv-dfpic">{src && <img className="nv-img nv-img-md" src={imgSrc(src)} alt="" draggable={false} />}{src && item.tag2 && <span className="nv-price">{item.tag2}</span>}</div>}
       <Blanks lines={item.lines ?? []} ans={item.ans ?? []} big box onDone={onDone} tag="write" info={info} onFoc={setFoc} />
       <HintBox lines={foc != null && bh[foc] ? [bh[foc]] : item.hint?.length ? item.hint : bh.filter(Boolean)} item={item} ctx={() => ({ input: 'Dialogue completion with a picture' + (item.tag2 ? ` (price tag ${item.tag2})` : '') + '.\n' + blanksDesc(item.lines ?? [], info.current, foc) + (foc != null && bh[foc] ? `\nTeacher hint for this blank: ${bh[foc]}` : ''), wrong: info.current?.wrong.filter(Boolean).length ?? 0 })} />
     </div>
