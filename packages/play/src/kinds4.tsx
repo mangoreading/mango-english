@@ -139,9 +139,11 @@ export function SScram({ item, onDone }: KindProps) {
   return (
     <div className="nv-body nv-wbody nv-wtop">
       {audio && <button type="button" className="nv-listen nv-listen-s" onClick={() => say(audio)}><i className="nv-sico" aria-hidden="true" /> <b>듣기</b></button>}
-      <Ko t={item.k === 'sscramr' ? item.q : item.ko} />
+      {item.k !== 'sscramr' && <Ko t={item.ko} />}
       <div className={'nv-capsule nv-capsule-chips nv-main' + (ok ? ' nv-okc' : '') + (bad ? ' nv-shake nv-badc' : '')}>
-        {seq.map((id) => <button key={id} className="nv-chipb nv-placed" onClick={() => !ok && !bad && setSeq(seq.filter((x) => x !== id))}>{chips.find((c) => c.id === id)!.t}</button>)}
+        {item.k === 'sscramr'
+          ? <div className="nv-rq-in"><p className="nv-rq-q">{item.q}</p><div className="nv-rq-chips">{seq.map((id) => <button key={id} className="nv-chipb nv-placed" onClick={() => !ok && !bad && setSeq(seq.filter((x) => x !== id))}>{chips.find((c) => c.id === id)!.t}</button>)}</div></div>
+          : seq.map((id) => <button key={id} className="nv-chipb nv-placed" onClick={() => !ok && !bad && setSeq(seq.filter((x) => x !== id))}>{chips.find((c) => c.id === id)!.t}</button>)}
       </div>
       <div className="nv-subslot"><div className="nv-chips nv-chips-bank">{chips.map((c) => <button key={c.id} className="nv-chipb" disabled={seq.includes(c.id)} onClick={() => tap(c.id)}>{c.t}</button>)}</div>
         <HintBox lines={item.hint ?? []} item={item} ctx={() => ({ input: `Korean: ${item.ko ?? ''}\nWord chips placed so far (in order): ${seq.length ? text(seq) : '(none)'}\nChips not used yet: ${chips.filter((c) => !seq.includes(c.id)).map((c) => c.t).join(', ') || '(none)'}\nSentence length: ${wordsA.length} words`, wrong: wcnt.current })} /></div>

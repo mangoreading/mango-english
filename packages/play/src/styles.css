@@ -815,3 +815,9 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-rd .nv-rd-row .nv-dlgbig { width:auto; flex:1 1 auto; min-width:0; }
 .nv-rd .nv-gw .ok { color:#2F6FE0; font-weight:700; }
 .nv-rd .nv-gw .bad { background:none; text-decoration:none; color:#D64545; font-weight:700; padding:0; }
+
+/* 문장 만들기 (보고 이어질 말): 앞 문장을 큰 테두리 안 위쪽에, 고른 카드는 그 아래에 */
+.nv-capsule-chips.nv-main:has(.nv-rq-in) { min-height:9.2em; border-radius:2.4em; justify-content:center; padding:1em 1.6em; }
+.nv-rq-in { display:flex; flex-direction:column; gap:.9em; width:fit-content; max-width:100%; }
+.nv-rq-q { margin:0; font-size:1.5em; font-weight:700; color:#1F2A44; text-align:left; }
+.nv-rq-chips { display:flex; flex-wrap:wrap; gap:.6em; min-height:2.6em; align-items:center; }
