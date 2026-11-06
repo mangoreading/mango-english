@@ -212,11 +212,13 @@ export function ReadAlong({ item, pic, onDone }: KindProps) {
   useEffect(() => { if (pos < lines.length) sayThen(plain(lines[pos].text), () => setHeard(true)); }, [pos]); // eslint-disable-line
   const done = pos >= lines.length; const src = item.k === 'dreadp' ? pic(item.pic) : '';
   return (
-    <div className="nv-body nv-wbody nv-spz nv-sprole">
+    <div className="nv-body nv-wbody nv-spz nv-sprole nv-rd">
+      <div className={item.k === 'dreadp' ? 'nv-rd-row' : 'nv-rd-one'}>
       {item.k === 'dreadp' && <div className="nv-sptop">{src && <div className="nv-picwrap"><img className="nv-img nv-img-md" src={imgSrc(src)} alt="" draggable={false} />{item.label && <span className="nv-pill">{item.label}</span>}{item.price && <span className="nv-price">{item.price}</span>}</div>}</div>}
       <div className="nv-dlgbig">
         {lines.map((l, i) => (
           <p key={i} className={(i === pos ? 'cur me ' : '') + (i > pos ? 'later' : '')}><b>{l.who ? l.who + ' :' : ''}</b> {i === pos && g ? <Words g={g} /> : <Rich2 t={l.text} />}</p>))}
+      </div>
       </div>
       <MicBtn dim={done || !heard} on={mic.on} busy={mic.busy} level={mic.level} starting={mic.starting} locked={speaking} onClick={done || !heard ? () => undefined : (mic.on ? mic.stop : mic.start)} label={done ? '\u00a0' : heard ? '마이크를 누르고 따라 읽어 보세요' : '잘 들어 보세요'} />
       {done ? <Fb className="nv-fbmsg on">끝까지 잘 읽었어요! 👏</Fb> : heard && mic.err ? <Fb className="nv-fbmsg on nv-fbbad">{ERRMSG[mic.err]}</Fb> : null}

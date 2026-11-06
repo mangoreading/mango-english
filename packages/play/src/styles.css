@@ -807,3 +807,11 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-sc-q { font-size:1.5em; font-weight:700; color:#222; text-align:center; margin:0 0 .8em; }
 
 .nv-cue { min-width:19em; margin:2.2em auto 1.6em; padding:.55em 1em; border-top:.08em solid #CBD3E1; border-bottom:.08em solid #CBD3E1; text-align:center; font-weight:700; color:#D62B2B; font-size:1.15em; }
+
+/* 대화 따라 읽기: 그림은 왼쪽, 글은 오른쪽 / 틀린 단어는 밑줄 대신 글자색으로 */
+.nv-rd .nv-rd-row { display:flex; align-items:center; justify-content:center; gap:2.2em; width:100%; }
+.nv-rd .nv-rd-row .nv-sptop, [data-skin=mango] .nv-rd .nv-rd-row .nv-sptop { width:auto; height:auto; min-height:0; flex:none; gap:0; }
+[data-skin=mango] .nv-rd .nv-sptop::before, [data-skin=mango] .nv-rd .nv-sptop::after { display:none; }
+.nv-rd .nv-rd-row .nv-dlgbig { width:auto; flex:1 1 auto; min-width:0; }
+.nv-rd .nv-gw .ok { color:#2F6FE0; font-weight:700; }
+.nv-rd .nv-gw .bad { background:none; text-decoration:none; color:#D64545; font-weight:700; padding:0; }
