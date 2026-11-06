@@ -139,8 +139,7 @@ export function SScram({ item, onDone }: KindProps) {
   return (
     <div className="nv-body nv-wbody nv-wtop">
       {audio && <button type="button" className="nv-listen nv-listen-s" onClick={() => say(audio)}><i className="nv-sico" aria-hidden="true" /> <b>듣기</b></button>}
-      {item.k === 'sscramr' && <p className="nv-sc-q">{item.q}</p>}
-      <Ko t={item.ko} />
+      <Ko t={item.k === 'sscramr' ? item.q : item.ko} />
       <div className={'nv-capsule nv-capsule-chips nv-main' + (ok ? ' nv-okc' : '') + (bad ? ' nv-shake nv-badc' : '')}>
         {seq.map((id) => <button key={id} className="nv-chipb nv-placed" onClick={() => !ok && !bad && setSeq(seq.filter((x) => x !== id))}>{chips.find((c) => c.id === id)!.t}</button>)}
       </div>

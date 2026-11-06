@@ -84,7 +84,7 @@ const VOCAB_SKIN: string[] = [];
 function hl(t: string, on: boolean) { const m = on ? t.match(/^(.*?)((?:영어로 |따라 )?말해 보세요.*)$/) : null; return m ? <>{m[1]}<span className="nv-hl">{m[2]}</span></> : t; }
 const BG_SKIN = ['sdrill', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat', 'pchoice'];
 const MIC_KINDS = ['lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'dreadp', 'dreadt', 'aitalk']; // 마이크를 쓰는 활동(지시문 오른쪽에 '마이크 테스트' 버튼)
-const SPEAK_SKIN = ['goal', 'dreadp', 'dreadt', 'scene', 'scenerep', 'lecture', 'wsent', 'lnum', 'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'tapl', 'aitalk', 'lwrite', 'kexp', 'lsent', 'lcardp', 'lcardt', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sbuild', 'swrite', 'sfill', 'dfill', 'dfillt', 'sscram', 'sorder', 'mwbank', 'scloze', 'mfree', 'swrt', 'mtext', 'pread', 'dchoice', 'tf', 'sqchoice', 'sqtf', 'sqmulti'];
+const SPEAK_SKIN = ['goal', 'sscraml', 'sscramlr', 'sscramr', 'dreadp', 'dreadt', 'scene', 'scenerep', 'lecture', 'wsent', 'lnum', 'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'tapl', 'aitalk', 'lwrite', 'kexp', 'lsent', 'lcardp', 'lcardt', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sbuild', 'swrite', 'sfill', 'dfill', 'dfillt', 'sscram', 'sorder', 'mwbank', 'scloze', 'mfree', 'swrt', 'mtext', 'pread', 'dchoice', 'tf', 'sqchoice', 'sqtf', 'sqmulti'];
 const OWN_PIC = ['lookspeak', 'role', 'dreadp', 'pchoice', 'dchoice', 'dfill', 'goal', 'lcardp', 'lchpic', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat'];
 /** 듣고 고르기: 질문을 맨 위 안내 자리에 보여 준다 */
 const LCH = ['lchtext', 'lchpic', 'lchlist', 'lwrite'];
