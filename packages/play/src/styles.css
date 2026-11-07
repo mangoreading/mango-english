@@ -839,3 +839,5 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-lmw-in { display:flex; align-items:center; gap:.3em; height:3.2em; padding:0 .9em; border:.08em solid #C5CEDC; border-radius:.5em; background:#fff; font-size:1.2em; }
 .nv-lmw-in em { font-style:normal; color:#1F2A44; font-size:1.1em; } .nv-lmw-in input { flex:1; min-width:0; border:0; outline:0; font:inherit; background:transparent; }
 .nv-lmw-in:focus-within { border-color:var(--nv-blue); box-shadow:0 0 0 .18em rgba(79,125,240,.18); } .nv-lmw-in.ok { background:#F2FBF5; border-color:#7BC89A; } .nv-lmw-in.ok input { color:#1E8E4E; font-weight:700; } .nv-lmw-in.bad { border-color:#D64545; background:#FFF1F0; }
+.nv-lmw-in { flex-direction:row; flex-wrap:nowrap; align-items:center; gap:.3em; color:#1F2A44; font-weight:400; }
+.nv-lmw-in input { padding:0; border:0; border-radius:0; background:transparent; font-size:inherit; width:100%; }
