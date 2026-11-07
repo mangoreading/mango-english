@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { aiHandlers, imgSrc, say, sayAuto, shuffle, type KindProps } from './common';
+import { aiHandlers, imgSrc, say, sayAuto, sayScript, shuffle, type KindProps } from './common';
 import { Rich } from './kinds3';
 import { Hint } from './hint';
 import { Fb } from './fb';
@@ -147,6 +147,36 @@ export function SScram({ item, onDone }: KindProps) {
       </div>
       <div className="nv-subslot"><div className="nv-chips nv-chips-bank">{chips.map((c) => <button key={c.id} className="nv-chipb" disabled={seq.includes(c.id)} onClick={() => tap(c.id)}>{c.t}</button>)}</div>
         <HintBox lines={item.hint ?? []} item={item} ctx={() => ({ input: `Korean: ${item.ko ?? ''}\nWord chips placed so far (in order): ${seq.length ? text(seq) : '(none)'}\nChips not used yet: ${chips.filter((c) => !seq.includes(c.id)).map((c) => c.t).join(', ') || '(none)'}\nSentence length: ${wordsA.length} words`, wrong: wcnt.current })} /></div>
+    </div>
+  );
+}
+
+/** 듣고 짝지어 쓰기: 왼쪽 카드의 소리 버튼으로 대화를 듣고, 오른쪽 칸에 정답을 직접 쓴다 (맞으면 카드 색이 채워지고, 틀리면 칸을 벗어나거나 Enter 때 알려 준다) */
+export function LMWrite({ item, onDone }: KindProps) {
+  const pairs: { left: string; say: string; ans: string }[] = item.pairs ?? []; const pre: string = item.pre ?? '';
+  const [v, setV] = useState<string[]>(pairs.map(() => '')); const [okS, setOkS] = useState<boolean[]>(pairs.map(() => false)); const [bad, setBad] = useState<boolean[]>(pairs.map(() => false));
+  const wrong = useRef<boolean[]>(pairs.map(() => false)); const fired = useRef(false); const [foc, setFoc] = useState<number | null>(null);
+  const norm = (s: string) => s.replace(/[\s,]/g, '').replace(/원$/, '').replace(pre ? new RegExp('^' + pre.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) : /^$/, '').toLowerCase();
+  const hue = [['#4472C4', '#fff'], ['#FFE699', '#1F2A44'], ['#9DC3E6', '#1F2A44'], ['#EDEDED', '#1F2A44'], ['#C5E0B4', '#1F2A44'], ['#F4B183', '#1F2A44']];
+  function judge(i: number, val: string, final: boolean) {
+    setV((x) => x.map((y, k) => (k === i ? val : y)));
+    if (norm(val) === norm(pairs[i].ans)) {
+      setBad((b) => b.map((y, k) => (k === i ? false : y)));
+      setOkS((o) => { const n = o.map((y, k) => (k === i ? true : y)); if (!fired.current && n.every(Boolean)) { fired.current = true; setTimeout(() => onDone(pairs.map((_, k) => ({ tag: 'listen', ok: !wrong.current[k] }))), 0); } return n; });
+    } else if (final && val.trim()) { wrong.current[i] = true; setBad((b) => b.map((y, k) => (k === i ? true : y))); setTimeout(() => setBad((b) => b.map((y, k) => (k === i ? false : y))), 700); }
+  }
+  const done = okS.every(Boolean);
+  return (
+    <div className="nv-body nv-wbody nv-lmw">
+      <div className="nv-lmw-rows">{pairs.map((p, i) => (
+        <div key={i} className="nv-lmw-row">
+          <button type="button" className="nv-lmw-card" style={{ background: hue[i % hue.length][0], color: hue[i % hue.length][1] }} onClick={() => sayScript(p.say)}><b>{p.left}</b><span className="nv-lmw-sp"><i className="nv-sico" aria-hidden="true" /></span></button>
+          <span className="nv-lmw-line" aria-hidden="true" />
+          <label className={'nv-lmw-in' + (okS[i] ? ' ok' : '') + (bad[i] ? ' bad nv-shake' : '')}>{pre && <em>{pre}</em>}
+            <input value={okS[i] ? p.ans : v[i]} disabled={okS[i]} inputMode="text" onFocus={() => setFoc(i)} onChange={(e) => judge(i, e.target.value, false)} onBlur={(e) => judge(i, e.target.value, true)} onKeyDown={(e) => { if (e.key === 'Enter') judge(i, v[i], true); }} /></label>
+        </div>))}</div>
+      <Msg ok={done} bad={bad.some(Boolean)} />
+      <HintBox lines={item.hint ?? []} item={item} ctx={() => ({ input: `The student listens to short dialogues and writes the answer for each person.\n${pairs.map((p, i) => `- ${p.left}: ${okS[i] ? v[i] + ' ✓' : v[i]?.trim() ? v[i] + ' (not correct yet)' : '(empty)'}${foc === i ? '  ← student is here' : ''}`).join('\n')}\nScripts:\n${pairs.map((p) => p.say).join('\n')}`, wrong: wrong.current.filter(Boolean).length })} />
     </div>
   );
 }

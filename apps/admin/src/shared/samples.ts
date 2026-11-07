@@ -1,7 +1,7 @@
 import type { VWord } from '@mango/play';
 import type { VocabOpt } from '../pages/units/ItemForm';
 
-const NATIVE = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti', 'goal', 'scene', 'scenerep', 'dreadp', 'dreadt', 'dfillt', 'sscraml', 'sscramlr', 'sscramr', 'lecture', 'wsent', 'lnum', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext', 'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'mfree', 'swrt', 'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'aitalk'];
+const NATIVE = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'lmwrite', 'sqchoice', 'sqtf', 'sqmulti', 'goal', 'scene', 'scenerep', 'dreadp', 'dreadt', 'dfillt', 'sscraml', 'sscramlr', 'sscramr', 'lecture', 'wsent', 'lnum', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext', 'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'mfree', 'swrt', 'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'aitalk'];
 export const isNativeKind = (k: string) => NATIVE.includes(k);
 
 /** 샘플 미리보기용 단어 (앱에 들어 있는 그림 사용) */
@@ -102,6 +102,8 @@ NATIVE_SAMPLES.dfillt = { k: 'dfillt', tag: 'write', cue: '선글라스 • 13,0
 
 NATIVE_SAMPLES.dreadp = { k: 'dreadp', tag: 'speak', pic: 'jackettag', lines: ['A: May I help you?', 'B: Yes, please.', 'How much {{are these jacket}}?', 'A: [[They are two thousand]] dollars.', "B: I'll pick them"] };
 NATIVE_SAMPLES.dreadt = { k: 'dreadt', tag: 'speak', lines: ['A: How much are these shorts?', 'B: They are two thousand dollars.', "A: They're expensive"] };
+
+NATIVE_SAMPLES.lmwrite = { k: 'lmwrite', tag: 'listen', pre: '₩', pairs: [{ left: 'Lily', say: 'Lily: How much is this hat?\nClerk: It\'s ten thousand won.', ans: '10,000' }, { left: 'Ken', say: 'Ken: How much are these socks?\nClerk: They\'re two thousand won.', ans: '2,000' }, { left: 'Mia', say: 'Mia: How much are these shorts?\nClerk: They\'re fifteen thousand won.', ans: '15,000' }, { left: 'Tom', say: 'Tom: How much are these shoes?\nClerk: They\'re fifty thousand won.', ans: '50,000' }], hint: ['숫자를 듣고 가격을 적어요. 예: ten thousand → 10,000'] };
 
 export function nativeVocab(item: Record<string, any>, vocab: VocabOpt[]): VWord[] { // eslint-disable-line @typescript-eslint/no-explicit-any
   if (!['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat'].includes(item.k)) return vocab.map((v) => ({ key: v.key, en: v.en, ko: v.ko, image: v.image_path ?? null })); // 문장형은 그림 찾기용으로 전체 전달

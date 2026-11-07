@@ -16,7 +16,7 @@ export const KIND_NAME: Record<string, string> = {
   wchoice: '뜻 고르기', pchoice: '그림 보고 고르기', dchoice: '대화 고르기', tf: 'True or False', lchtext: '듣고 고르기 (글 4칸)', lchpic: '듣고 고르기 (그림 4칸)', lchlist: '듣고 고르기 (세로형)',
   lookspeak: '그림 보고 말하기', saykor: '우리말 보고 영어로 말하기', lspeak: '듣고 대답하기', raloud: '따라 읽기 평가', role: '역할 나눠 말하기', dreadp: '대화 따라 읽기 (그림)', dreadt: '대화 따라 읽기 (글)', present: '발표 영상 찍기', aitalk: 'AI 자유대화',
   sbuild: '문장 쓰기 (우리말→영어)', swrite: '정답 써 보기', sfill: '빈칸 단어 쓰기', dfill: '대화 완성하기 (그림)', dfillt: '대화 완성하기 (글 단서)', sscram: '문장 만들기', sorder: '문장 순서 맞추기',
-  mwbank: '모범 글 완성 (보기)', scloze: '글 빈칸 채우기', lwrite: '듣고 쓰기', mfree: '나만의 글 쓰기', swrt: '글 요약·쓰기',
+  mwbank: '모범 글 완성 (보기)', scloze: '글 빈칸 채우기', lwrite: '듣고 쓰기', lmwrite: '듣고 짝지어 쓰기', mfree: '나만의 글 쓰기', swrt: '글 요약·쓰기',
   goal: '학습목표', kexp: '핵심표현 듣고 따라 읽기', tapl: '문장 눌러 듣기', lsent: '문장 듣고 고르기(카드)', lcardp: '듣고 익히기 (그림)', lcardt: '듣고 익히기 (글)',
   scene: '장면 영상 보기', scenerep: '장면 영상 보기 + 따라 말하기', sscraml: '문장 만들기 (듣고 만들기)', sscramlr: '문장 만들기 (듣고 이어질 말)', sscramr: '문장 만들기 (보고 이어질 말)', lecture: '강의 슬라이드', wsent: '단어·문장 듣고 따라 말하기', lnum: '듣고 번호 고르기', wrepeat: '단어 듣고 따라 말하기', sdrill: '문장 바꿔 말하기', pread: '글 듣고 읽기', mtext: '모범 글 읽기',
   lmatch: '듣고 짝짓기', sqchoice: '글 읽고 답하기 (선택)', sqtf: '글 읽고 답하기 (T/F)', sqmulti: '글 읽고 답하기 (복수선택)',
@@ -89,6 +89,7 @@ const SPEC3: Record<string, Field[]> = {
   sorder: [EXROWS('올바른 순서대로 입력 (화면에서는 섞여요)'), VINST],
   mwbank: [{ k: 'lines', label: '글 (한 줄에 한 문장, {} 가 빈칸)', t: 'lines', req: true }, { k: 'ans', label: '빈칸 정답 (빈칸 순서대로 한 줄에 하나)', t: 'lines', req: true }, { k: 'extra', label: '오답 보기 (한 줄에 하나, 선택)', t: 'lines' }, { k: 'blankHints', label: '빈칸별 힌트 (빈칸 순서대로 한 줄에 하나. 학생이 그 빈칸을 할 차례에 보여요)', t: 'lines' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
   scloze: [{ k: 'lines', label: '글 (한 줄에 한 문장, {} 가 빈칸)', t: 'lines', req: true }, { k: 'ans', label: '빈칸 정답 (빈칸 순서대로 한 줄에 하나)', t: 'lines', req: true }, { k: 'extra', label: '오답 보기 (한 줄에 하나, 선택)', t: 'lines' }, { k: 'blankHints', label: '빈칸별 힌트 (빈칸 순서대로 한 줄에 하나. 학생이 그 빈칸을 할 차례에 보여요)', t: 'lines' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
+  lmwrite: [{ k: 'pre', label: '정답 칸 앞 기호 (선택, 예: ₩)', t: 'text' }, { k: 'pairs', label: '카드 (왼쪽 이름 · 들려줄 대화 · 정답)', t: 'rows', req: true, blank: () => ({ left: '', say: '', ans: '' }), cols: [{ k: 'left', label: '왼쪽(이름)', t: 'text', w: 120 }, { k: 'say', label: '들려줄 대화 (한 줄에 한 사람: "Name: 문장")', t: 'area' }, { k: 'ans', label: '정답', t: 'text', w: 130 }] }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
   lwrite: [{ k: 'q', label: '질문', t: 'text' }, { k: 'say', label: '들려줄 글 (전체)', t: 'area', req: true }, { k: 'h1', label: '왼쪽 열 제목 (비우면 시간)', t: 'text' }, { k: 'h2', label: '오른쪽 열 제목 (비우면 일과)', t: 'text' },
     { k: 'rows', label: '표 (오른쪽 글 · 왼쪽 정답)', t: 'rows', req: true, blank: () => ({ label: '', ans: '' }), cols: [{ k: 'label', label: '오른쪽 글', t: 'text' }, { k: 'ans', label: '정답 (예: 7:30)', t: 'text', w: 140 }] }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
   mfree: [{ k: 'topicLabel', label: '주제 칸 이름표 (비우면 상품, 학생이 직접 씀)', t: 'text' }, { k: 'lines', label: '글의 틀 (한 줄에 한 문장, {} 가 쓸 자리)', t: 'lines', req: true }, { k: 'lineHints', label: '줄별 힌트 (글의 틀과 같은 순서로 한 줄에 하나. 학생이 그 줄을 쓸 때 보여요)', t: 'lines' }, { k: 'hint', label: '전체 힌트 (줄별 힌트가 없을 때 보여요)', t: 'lines' }, VINST],
@@ -243,6 +244,7 @@ export function defaultItem(kind: string): Obj {
     case 'dchoice': return { k: 'dchoice', tag: 'read', lines: [], opts: [{ t: '' }, { t: '' }, { t: '' }, { t: '' }], a: 0 };
     case 'tf': return { k: 'tf', tag: 'read', stmt: '' };
     case 'lchtext': case 'lchpic': case 'lchlist': return { k: kind, tag: 'listen', say: '', opts: [{ t: '' }, { t: '' }, { t: '' }, { t: '' }], a: 0 };
+    case 'lmwrite': return { k: 'lmwrite', tag: 'listen', pairs: [{ left: '', say: '', ans: '' }] };
     case 'lmatch': return { k: 'lmatch', tag: 'listen', pairs: [{ left: '', right: '' }, { left: '', right: '' }] };
     case 'sqchoice': return { k: 'sqchoice', tag: 'read', text: [], q: '', opts: [{ t: '' }, { t: '' }, { t: '' }, { t: '' }], a: 0 };
     case 'sqtf': return { k: 'sqtf', tag: 'read', text: [], items: [{ t: '' }, { t: '' }] };
