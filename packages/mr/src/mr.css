@@ -920,6 +920,7 @@
   .mr-root .option.wrong { background: #FDE7E6; border-color: var(--red); opacity: 0.7; }
   .mr-root .feedback {
     min-height: 24px;
+    margin-top: 18px;
     font-size: 18px;
     font-weight: 800;
     color: var(--green);
