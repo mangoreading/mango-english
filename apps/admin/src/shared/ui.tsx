@@ -16,10 +16,12 @@ export async function openPreview(prepare: () => Promise<PreviewData | string> |
   const w = window.open('', 'mgPreview', `popup=yes,width=1280,height=800,left=${Math.max(0, (screen.width - 1280) / 2)},top=${Math.max(0, (screen.height - 800) / 2)}`);
   if (!w) return '팝업이 막혀 있어요. 주소창 오른쪽의 팝업 차단을 풀고 다시 눌러 주세요.';
   w.document.title = '미리보기'; w.document.body.style.cssText = 'font-family:sans-serif;padding:40px;color:#555'; w.document.body.textContent = '불러오는 중…';
-  const d = await prepare();
+  let d: PreviewData | string;
+  try { d = await prepare(); } catch { w.close(); return '미리보기를 준비하지 못했어요. 잠시 뒤 다시 눌러 주세요.'; }
   if (typeof d === 'string') { w.close(); return d; }
   try { localStorage.setItem(KEY, JSON.stringify(d)); } catch { w.close(); return '미리보기 데이터를 저장하지 못했어요.'; }
-  w.location.href = '/#preview';
+  // 미리보기 창이 이미 열려 있으면 같은 이름의 창이 재사용되어 '#preview' 로만 이동해도 다시 불러오지 않는다 → 매번 주소를 달리해 새로 불러온다
+  w.location.replace(`/?pv=${Date.now()}#preview`);
   w.focus();
   return null;
 }
