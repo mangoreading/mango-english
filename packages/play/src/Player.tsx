@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { FbSlot, ProgCtx, type CardProg } from './fb';
-import { imgSrc, setQuiet, TEXT_KINDS, type Res, type VWord } from './common';
+import { imgSrc, setQuiet, TEXT_KINDS, type LessonCtx, type Res, type VWord } from './common';
 import { VCards, VMatch, VSound, VSpell, VType1, VWrite } from './kinds';
 import { AiTalk, LookSpeak, LSpeak, Present, RAloud, ReadAlong, Role, SayKor } from './kinds5';
 import { setOutputScope } from './outputs';
@@ -13,7 +13,7 @@ import { DChoice, LChList, LChPic, LChText, LMatch, PChoice, SqChoice, SqMulti, 
 
 export interface NativeResult { results: Res[]; total: number; scored: number }
 interface Props {
-  title: string; items: Record<string, any>[]; vocab: VWord[]; nextLabel?: string; /** 차시 안에서 지금 활동의 위치 (헤더 위쪽 막대 + '활동 n/N') */ step?: { cur: number; total: number }; quiet?: boolean; scope?: string; /* 같은 차시 안에서 산출물(내 글)을 나누는 구분값 */ // eslint-disable-line @typescript-eslint/no-explicit-any
+  title: string; items: Record<string, any>[]; vocab: VWord[]; nextLabel?: string; /** 차시 안에서 지금 활동의 위치 (헤더 위쪽 막대 + '활동 n/N') */ step?: { cur: number; total: number }; quiet?: boolean; ctx?: LessonCtx; scope?: string; /* 같은 차시 안에서 산출물(내 글)을 나누는 구분값 */ // eslint-disable-line @typescript-eslint/no-explicit-any
   onResult: (r: NativeResult) => void;
   onFinish: (a: 'next' | 'again' | 'exit') => void;
 }
@@ -95,7 +95,7 @@ const KIND = { scene: SceneStory, scenerep: SceneStory, sscraml: SScram, sscraml
   sqchoice: SqChoice, sqtf: SqTF, sqmulti: SqMulti } as const;
 
 /** 어휘 활동 6종 재생기: 문항(화면)을 차례로 보여 주고, 끝나면 결과 화면을 보여 준다. */
-export function NativePlayer({ title, items, vocab, nextLabel, step, quiet, scope, onResult, onFinish }: Props) {
+export function NativePlayer({ title, items, vocab, nextLabel, step, quiet, scope, ctx, onResult, onFinish }: Props) {
   setQuiet(!!quiet); setOutputScope(scope ?? 'preview');
   const [i, setI] = useState(0);
   const [done, setDone] = useState(false);
@@ -160,7 +160,7 @@ export function NativePlayer({ title, items, vocab, nextLabel, step, quiet, scop
       <FbSlot.Provider value={slot}>
       {!Comp || words.length !== keys.length
         ? <p className="nv-hint">이 문항에 쓰인 단어가 단원 어휘에 없어요. 관리자에서 단어를 확인해 주세요. ({keys.filter((k) => !byKey.has(k)).join(', ')})</p>
-        : <Comp key={i} item={it} words={words} vocab={vocab} pic={(k) => (k ? byKey.get(k)?.image ?? null : null)} onDone={onDone} />}
+        : <Comp key={i} item={it} words={words} vocab={vocab} ctx={ctx} pic={(k) => (k ? byKey.get(k)?.image ?? null : null)} onDone={onDone} />}
       </FbSlot.Provider>
       </ProgCtx.Provider>
       {it.pic && !OWN_PIC.includes(it.k) && !NO_SIDE.includes(it.k) && byKey.get(it.pic)?.image && <img className="nv-sidepic" src={imgSrc(byKey.get(it.pic)!.image)} alt="" draggable={false} />}

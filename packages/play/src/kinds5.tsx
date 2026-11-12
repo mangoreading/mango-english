@@ -286,7 +286,7 @@ export function Present({ item, onDone }: KindProps) {
 }
 
 /** AI 자유대화: 상황을 보고 영어로 대화한다. AI 연결이 있으면 AI가, 없으면 문항에 적힌 대본이 답한다 */
-export function AiTalk({ item, onDone }: KindProps) {
+export function AiTalk({ item, ctx, onDone }: KindProps) {
   const script: { ai: string; hint?: string }[] = item.script ?? []; const turns: number = item.turns ?? Math.max(2, script.length || 3);
   const [msgs, setMsgs] = useState<{ who: 'ai' | 'me'; text: string }[]>(item.open ? [{ who: 'ai', text: item.open }] : []); const [v, setV] = useState(''); const [busy, setBusy] = useState(false); const [n, setN] = useState(0); const [fin, setFin] = useState(false);
   const end = useRef<HTMLDivElement>(null); const fired = useRef(false);
@@ -296,12 +296,20 @@ export function AiTalk({ item, onDone }: KindProps) {
   async function send() {
     const text = v.trim(); if (!text || busy || fin) return; setV(''); const h = [...msgs, { who: 'me' as const, text }]; setMsgs(h); setBusy(true);
     let reply = script[n]?.ai ?? 'Good! Tell me more.';
-    try { if (aiHandlers.chat) reply = await aiHandlers.chat({ situation: item.situation ?? '', role: item.role, history: h }); } catch { /* 대본으로 대신 */ }
+    try { if (aiHandlers.chat) reply = await aiHandlers.chat({ situation: item.situation ?? '', role: item.role, expressions: (item.expr?.length ? item.expr : ctx?.exprs) ?? [], passage: ctx?.text ?? [], history: h }); } catch { /* 대본으로 대신 */ }
     const nn = n + 1; setN(nn); setMsgs([...h, { who: 'ai', text: reply }]); say(reply); setBusy(false);
     if (nn >= turns && !fired.current) { fired.current = true; setFin(true); onDone([{ tag: 'speak', ok: true }]); }
   }
-  const nextHint = item.hints?.[n] ?? script[n - 1]?.hint;
-  const [showH, setShowH] = useState(false); useEffect(() => setShowH(false), [n]);
+  const staticHint = item.hints?.[n] ?? script[n - 1]?.hint;
+  const [showH, setShowH] = useState(false); const [aiHint, setAiHint] = useState<string | null>(null); const [hintBusy, setHintBusy] = useState(false);
+  useEffect(() => { setShowH(false); setAiHint(null); }, [n]);
+  async function toggleHint() {
+    if (showH) { setShowH(false); return; } setShowH(true);
+    if (!aiHandlers.chat || aiHint || hintBusy || msgs.length === 0) return; setHintBusy(true);
+    try { const t = (await aiHandlers.chat({ situation: item.situation ?? '', role: item.role, expressions: (item.expr?.length ? item.expr : ctx?.exprs) ?? [], passage: ctx?.text ?? [], hint: true, history: msgs })).trim(); if (t) setAiHint(t); } catch { /* 고정 힌트 */ }
+    setHintBusy(false);
+  }
+  const nextHint = aiHint ?? (hintBusy ? '생각하는 중…' : staticHint);
   return (
     <div className="nv-body nv-wbody nv-wtop">
       {item.situation && <div className="nv-kobar nv-sit">{item.situation}</div>}
@@ -314,7 +322,7 @@ export function AiTalk({ item, onDone }: KindProps) {
         {micSupported() && <button type="button" className={'nv-mic nv-mic-s' + (mic.on ? ' on' : '') + (mic.busy ? ' busy' : '')} style={mic.on ? { boxShadow: `0 0 0 ${Math.min(.9, mic.level * 7)}em rgba(245,28,68,.28)` } : undefined} onClick={mic.busy ? undefined : mic.on ? mic.stop : mic.start} aria-label={mic.busy ? '확인하고 있어요' : '말하기'} title={mic.busy ? '확인하고 있어요…' : undefined}>🎤</button>}
         <button type="button" className="nv-send" disabled={!v.trim() || busy} onClick={() => void send()} aria-label="보내기">➤</button>
       </div> : <Fb className="nv-fbmsg on">대화를 잘 마쳤어요! 👏</Fb>}
-      <div className="nv-chathint">{!fin ? <><button type="button" className={'nv-hintbtn' + (showH ? ' on' : '')} onClick={() => setShowH(!showH)}><span className="nv-bulb">💡</span> Hint</button>{showH && <b>{nextHint ?? '자유롭게 말해 보세요'}</b>}</> : '\u00a0'}</div>
+      <div className="nv-chathint">{!fin ? <><button type="button" className={'nv-hintbtn' + (showH ? ' on' : '')} onClick={() => void toggleHint()}><span className="nv-bulb">💡</span> Hint</button>{showH && <b>{nextHint ?? '자유롭게 말해 보세요'}</b>}</> : '\u00a0'}</div>
     </div>
   );
 }

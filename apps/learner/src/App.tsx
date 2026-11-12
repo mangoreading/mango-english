@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { configProblem, configured, supabase } from './supabase';
 import type { BundleRow, Level } from './types';
@@ -179,6 +179,16 @@ function UnitView({ row, onBack, autoStart, startReport, focusNo }: { row: Bundl
   const hasAdaptive = !!b.flow?.some((l) => l.steps.some((s) => s.special === 'adaptive'));
   const [nat, setNat] = useState<{ nonce: number; title: string; items: Record<string, any>[]; nextLabel?: string; lesson: number; idx: number; next?: () => void } | null>(null);
   const lessons = (b.items[level] ?? {}) as Record<string, Acts>;
+  /** 이번 단원의 핵심 표현·본문 문장 — AI 자유대화가 교과서에 나온 표현으로만 말하게 서버에 넘긴다 */
+  const unitCtx = useMemo(() => {
+    const exprs: string[] = []; const text: string[] = []; const add = (arr: string[], t: unknown, max: number) => { const v = typeof t === 'string' ? t.replace(/\[\[|\]\]|\{\{|\}\}/g, '').trim() : ''; if (v && !arr.includes(v) && arr.length < max) arr.push(v); };
+    for (const acts of Object.values(lessons)) for (const items of acts as unknown[][]) for (const it of (items ?? []) as Record<string, any>[]) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      if (it.k === 'kexp' || it.k === 'goal') (it.items ?? []).forEach((e: { en?: string }) => add(exprs, e.en, 12));
+      else if (it.k === 'pread' || it.k === 'mtext') (it.text ?? []).forEach((l: string) => add(text, l, 14));
+      else if (it.k === 'scene' || it.k === 'scenerep') (it.scenes ?? []).forEach((s: { en?: string }) => add(text, s.en, 14));
+    }
+    return { exprs, text };
+  }, [lessons]);
 
   const loadProg = async () => {
     const { data, error } = await supabase.from('activity_progress').select('level, lesson, act_idx, stars, ok, total, detail').eq('unit_id', b.unit.id);
@@ -358,7 +368,7 @@ function UnitView({ row, onBack, autoStart, startReport, focusNo }: { row: Bundl
         </div>
       )}
       {nat && (
-        <NativePlayer key={nat.nonce} scope={b.unit.id + '|' + nat.lesson} title={nat.title} items={nat.items} vocab={b.vocab as VWord[]} nextLabel={nat.nextLabel} step={stepPos(nat.lesson, nat.idx)}
+        <NativePlayer key={nat.nonce} ctx={unitCtx} scope={b.unit.id + '|' + nat.lesson} title={nat.title} items={nat.items} vocab={b.vocab as VWord[]} nextLabel={nat.nextLabel} step={stepPos(nat.lesson, nat.idx)}
           onResult={(r: NativeResult) => { void save(nat.lesson, nat.idx, { results: r.results, total: r.total, scored: r.scored }); }}
           onFinish={(act) => { const n = nat; setNat(null); if (act === 'next' && n.next) n.next(); else if (act === 'again') run(n.lesson, n.idx, n.title, n.items, undefined, n.next, n.nextLabel); }} />
       )}

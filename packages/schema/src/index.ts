@@ -204,7 +204,7 @@ export const Role = z.object({ ...T1, k: z.literal('role'), pic: z.string().opti
 /** 대화(문장) 따라 읽기: 한 줄씩 듣고 마이크로 따라 읽음. dreadp = 그림 + 대화, dreadt = 글만. 줄은 "A: 문장" 또는 그냥 문장 */
 export const DRead = z.object({ ...T1, k: z.enum(['dreadp', 'dreadt']), pic: z.string().optional(), label: z.string().optional(), price: z.string().optional(), lines: z.array(z.string().min(1)).min(1).max(12) });
 export const Present = z.object({ ...T1, k: z.literal('present'), text: z.array(z.string().min(1)).min(1) });
-export const AiTalk = z.object({ ...T1, k: z.literal('aitalk'), situation: z.string().min(1), role: z.string().optional(), open: z.string().optional(), turns: z.number().int().min(1).max(10).optional(), script: z.array(z.object({ ai: z.string().min(1), hint: z.string().optional() })).optional(), hints: z.array(z.string()).optional() });
+export const AiTalk = z.object({ ...T1, k: z.literal('aitalk'), situation: z.string().min(1), role: z.string().optional(), open: z.string().optional(), turns: z.number().int().min(1).max(10).optional(), script: z.array(z.object({ ai: z.string().min(1), hint: z.string().optional() })).optional(), hints: z.array(z.string()).optional(), expr: z.array(z.string()).optional() });
 
 export const ActivityItem = z.discriminatedUnion('k', [
   Learn, Text, Brief, Choose, Match, Build, Fill, Write, Compose, Speak, Fade, Dialog,

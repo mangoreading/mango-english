@@ -107,7 +107,7 @@ const SPEC4: Record<string, Field[]> = {
 
   dreadt: [{ k: 'lines', label: '대화 (한 줄에 한 줄씩 읽어요. "A: May I help you?" 형식이거나 그냥 문장, 강조 [[파랑]] {{빨강}})', t: 'lines', req: true }, VINST],
   present: [{ k: 'text', label: '발표 글 (한 줄에 한 문장, 강조 [[파랑]])', t: 'lines', req: true }, VINST],
-  aitalk: [{ k: 'situation', label: '상황 (학생에게 보이는 글)', t: 'text', req: true }, { k: 'role', label: 'AI 역할 (예: 시계 가게 점원)', t: 'text' }, { k: 'open', label: 'AI 첫 말 (선택)', t: 'text' }, { k: 'turns', label: '대화 횟수 (비우면 대본 수)', t: 'num' },
+  aitalk: [{ k: 'expr', label: '대화에 쓸 표현 (한 줄에 하나, 비우면 이번 단원의 핵심 표현·본문을 자동으로 사용해요)', t: 'lines' }, { k: 'situation', label: '상황 (학생에게 보이는 글)', t: 'text', req: true }, { k: 'role', label: 'AI 역할 (예: 시계 가게 점원)', t: 'text' }, { k: 'open', label: 'AI 첫 말 (선택)', t: 'text' }, { k: 'turns', label: '대화 횟수 (비우면 대본 수)', t: 'num' },
     { k: 'script', label: 'AI 대본 (AI 연결이 없을 때 쓰는 답, 차례대로)', t: 'rows', blank: () => ({ ai: '' }), cols: [{ k: 'ai', label: 'AI 말', t: 'text' }, { k: 'hint', label: '학생에게 줄 힌트', t: 'text', w: 240 }] }, VINST],
 };
 const SPEC: Record<string, Field[]> = {

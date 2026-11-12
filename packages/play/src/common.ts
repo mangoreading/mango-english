@@ -154,17 +154,20 @@ export function shuffle<T>(a: T[]): T[] {
 }
 export const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ');
 
+/** 이번 단원 학습 내용: 핵심 표현(exprs)과 본문 문장(text). AI 자유대화가 이 범위 안에서만 말하도록 서버에 넘긴다 */
+export interface LessonCtx { exprs: string[]; text: string[] }
 export interface KindProps {
   item: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
   words: VWord[];            // item.words / item.word 에 해당하는 단어(순서 유지)
   vocab?: VWord[];           // 단원 어휘 전체 (보기·오답 후보로 쓴다)
+  ctx?: LessonCtx;           // 이번 단원의 핵심 표현·본문 (AI 대화가 교과서 표현만 쓰게 하려고)
   pic: (key?: string | null) => string | null; // 단원 단어 key → 그림 경로
   onDone: (res: Res[]) => void;
 }
 
 /** AI 연동 자리: 학습앱이 서버 함수를 연결해 두면 AI 대화·힌트가 동작하고, 없으면 문항에 적힌 내용으로 대신한다 */
 export interface AiHandlers {
-  chat?: (req: { situation: string; role?: string; history: { who: 'ai' | 'me'; text: string }[] }) => Promise<string>;
+  chat?: (req: { situation: string; role?: string; expressions?: string[]; passage?: string[]; hint?: boolean; history: { who: 'ai' | 'me'; text: string }[] }) => Promise<string>;
   check?: (req: { text: string; rules: string[] }) => Promise<boolean[]>;
   grammar?: (req: { text: string; goal?: string }) => Promise<{ q: string; tip: string }[]>;
   hint?: (req: { kind: string; item: unknown; input: string; wrong: number; given: number; prev?: string[] }) => Promise<string>;
