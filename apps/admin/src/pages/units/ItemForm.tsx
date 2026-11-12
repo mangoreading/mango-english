@@ -16,7 +16,7 @@ export const KIND_NAME: Record<string, string> = {
   wchoice: '뜻 고르기', pchoice: '그림 보고 고르기', dchoice: '대화 고르기', tf: 'True or False', lchtext: '듣고 고르기 (글 4칸)', lchpic: '듣고 고르기 (그림 4칸)', lchlist: '듣고 고르기 (세로형)',
   lookspeak: '그림 보고 말하기', saykor: '우리말 보고 영어로 말하기', lspeak: '듣고 대답하기', raloud: '따라 읽기 평가', role: '역할 나눠 말하기', dreadp: '대화 따라 읽기 (그림)', dreadt: '대화 따라 읽기 (글)', present: '발표 영상 찍기', aitalk: 'AI 자유대화',
   sbuild: '문장 쓰기 (우리말→영어)', swrite: '정답 써 보기', sfill: '빈칸 단어 쓰기', dfill: '대화 완성하기 (그림)', dfillt: '대화 완성하기 (글 단서)', sscram: '문장 만들기', sorder: '문장 순서 맞추기',
-  mwbank: '모범 글 완성 (보기)', scloze: '글 빈칸 채우기', lwrite: '듣고 쓰기', lmwrite: '듣고 짝지어 쓰기', mfree: '나만의 글 쓰기', swrt: '글 요약·쓰기',
+  mwbank: '모범 글 완성 (쓰기)', scloze: '글 빈칸 채우기 (읽기)', lwrite: '듣고 쓰기', lmwrite: '듣고 짝지어 쓰기', mfree: '나만의 글 쓰기', swrt: '글 요약·쓰기',
   goal: '학습목표', kexp: '핵심표현 듣고 따라 읽기', tapl: '문장 눌러 듣기', lsent: '문장 듣고 고르기(카드)', lcardp: '듣고 익히기 (그림)', lcardt: '듣고 익히기 (글)',
   scene: '장면 영상 보기', scenerep: '장면 영상 보기 + 따라 말하기', sscraml: '문장 만들기 (듣고 만들기)', sscramlr: '문장 만들기 (듣고 이어질 말)', sscramr: '문장 만들기 (보고 이어질 말)', lecture: '강의 슬라이드', wsent: '단어·문장 듣고 따라 말하기', lnum: '듣고 번호 고르기', wrepeat: '단어 듣고 따라 말하기', sdrill: '문장 바꿔 말하기', pread: '글 듣고 읽기', mtext: '모범 글 읽기',
   lmatch: '듣고 짝짓기', sqchoice: '글 읽고 답하기 (선택)', sqtf: '글 읽고 답하기 (T/F)', sqmulti: '글 읽고 답하기 (복수선택)',
