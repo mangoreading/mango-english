@@ -224,6 +224,17 @@ export function MText({ item, onDone }: KindProps) {
   const side = tab === 'ex' ? sideEx : sideKo;
   const tabs = useMemo(() => [item.explain?.length && ['ex', '💡 해설'], item.ko && ['ko', '해석']].filter(Boolean) as [string, string][], [item]);
   const n = Math.max(lines.length, sideEx.length, sideKo.length);
+  /** 따라 읽기: 한 문장씩 들려주고, 학생이 따라 읽을 시간을 준 뒤 다음 문장으로 넘어간다(마이크 없음) */
+  const [rep, setRep] = useState<number | null>(null); const repGen = useRef(0); const repT = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stopRep = () => { repGen.current++; if (repT.current) clearTimeout(repT.current); setRep(null); };
+  useEffect(() => () => { repGen.current++; if (repT.current) clearTimeout(repT.current); }, []);
+  function runRep(i: number, gen: number) {
+    if (gen !== repGen.current) return;
+    if (i >= lines.length) { setRep(null); return; }
+    setRep(i); const t = plain(lines[i]);
+    sayThen(t, () => { if (gen !== repGen.current) return; repT.current = setTimeout(() => runRep(i + 1, gen), Math.min(7000, 1600 + t.length * 110)); });
+  }
+  function toggleRep() { if (rep != null) { stopRep(); stopSeq(); return; } stopSeq(); const g = ++repGen.current; runRep(0, g); }
   return (
     <div className="nv-body nv-bodyw nv-mtbody">
       <div className="nv-mtwrap">
@@ -234,11 +245,11 @@ export function MText({ item, onDone }: KindProps) {
         </div>
         {Array.from({ length: n }).map((_, i) => (
           <div key={i} className="nv-mtrow">
-            <div className="nv-mtl"><p className="nv-p-lg">{lines[i] != null && <Rich text={lines[i]} />}</p></div>
+            <div className={'nv-mtl' + (rep === i ? ' nv-mtcur' : '')}><p className="nv-p-lg">{lines[i] != null && <Rich text={lines[i]} />}</p></div>
             <div className="nv-mtr nv-mtstack">{[['ex', sideEx], ['ko', sideKo]].map(([k, arr]) => <p key={k as string} className={'nv-p-md' + (tab === k ? '' : ' nv-mtoff')}>{(arr as string[])[i] != null && <Rich text={(arr as string[])[i]} />}</p>)}</div>
           </div>))}
       </div>
-      <div className="nv-ptools"><button className="nv-listen nv-listen-s" onClick={() => say(lines.map(plain).join(' '))}><i className="nv-sico" aria-hidden="true" /> <b>듣기</b></button></div>
+      <div className="nv-ptools"><button className="nv-listen nv-listen-s" onClick={() => { stopRep(); say(lines.map(plain).join(' ')); }}><i className="nv-sico" aria-hidden="true" /> <b>듣기</b></button><button className={'nv-listen nv-listen-s nv-repbtn' + (rep != null ? ' on' : '')} onClick={toggleRep}><b>{rep != null ? '■ 멈춤' : '🗣 따라 읽기'}</b></button></div>
       </div>
     </div>
   );

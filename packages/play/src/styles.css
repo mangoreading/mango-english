@@ -841,3 +841,8 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-lmw-in:focus-within { border-color:var(--nv-blue); box-shadow:0 0 0 .18em rgba(79,125,240,.18); } .nv-lmw-in.ok { background:#F2FBF5; border-color:#7BC89A; } .nv-lmw-in.ok input { color:#1E8E4E; font-weight:700; } .nv-lmw-in.bad { border-color:#D64545; background:#FFF1F0; }
 .nv-lmw-in { flex-direction:row; flex-wrap:nowrap; align-items:center; gap:.3em; color:#1F2A44; font-weight:400; }
 .nv-lmw-in input { padding:0; border:0; border-radius:0; background:transparent; font-size:inherit; width:100%; }
+
+/* 모범 글: 따라 읽기 버튼·현재 문장 표시 */
+.nv-mtbody .nv-ptools { display:flex; gap:.8em; justify-content:center; }
+.nv-repbtn { background:#fff !important; color:#3979f3 !important; border:.12em solid #3979f3 !important; box-shadow:none !important; } .nv-repbtn.on { background:#3979f3 !important; color:#fff !important; }
+.nv-mtl.nv-mtcur { background:#FFF3C4; border-radius:.5em; }
