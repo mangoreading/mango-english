@@ -4,8 +4,6 @@ import { PageHead, openPreview } from '../../shared/ui';
 import { CATEGORIES, catLabel } from '../kinds/Kinds';
 import { isNativeKind, NATIVE_SAMPLES, SAMPLE_VOCAB } from '../../shared/samples';
 
-/** 차시당 수업(학습) 활동 최대 개수 — 학습앱 화면이 이 수에 맞춰 설계됨 */
-const MAX_ACTS = 12;
 interface Step { id: string; lesson_id: string; pos: number; name_en: string; name_ko: string; minutes: number | null; special: string | null; src_id: string | null; kind: string | null; qty: number | null; homework?: boolean; study?: boolean; ref_step_id?: string | null }
 interface Lesson { id: string; no: number; track?: string; en: string; ko: string; goal: string; color: string; src_id: string | null; flow_steps: Step[] }
 export type Owner = { kind: 'template'; id: string } | { kind: 'unit'; id: string };
@@ -73,7 +71,6 @@ export function FlowEditor({ owner }: { owner: Owner }) {
     if (err) setMsg({ t: 'err', s: err });
   }
   async function addStep(l: Lesson, k?: KindOpt) {
-    if (l.flow_steps.filter((x) => x.study !== false).length >= MAX_ACTS) { setPick(null); setMsg({ t: 'err', s: `차시당 수업 활동은 최대 ${MAX_ACTS}개예요. 더 넣으려면 기존 활동을 숙제로 돌리거나 지워 주세요.` }); return; }
     const pos = l.flow_steps.length ? Math.max(...l.flow_steps.map((s) => s.pos)) + 1 : 0;
     setPick(null);
     await run(supabase.from('flow_steps').insert(k
@@ -128,7 +125,7 @@ export function FlowEditor({ owner }: { owner: Owner }) {
                   <td><select className="mx-cell" value={s.kind ?? ''} onChange={(e) => changeKind(s, e.target.value)}><option value="">(지정 안 함)</option>{kinds.map((k) => <option key={k.key} value={k.key}>{k.name_ko}</option>)}</select></td>
                   <td><Txt value={s.qty == null ? '' : String(s.qty)} w={44} onSave={(v) => updStep(s.id, { qty: v === '' ? null : Math.max(0, parseInt(v, 10) || 0) })} /></td>
                   <td><Txt value={s.minutes == null ? '' : String(s.minutes)} w={44} onSave={(v) => updStep(s.id, { minutes: v === '' ? null : Math.max(0, parseInt(v, 10) || 0) })} /></td>
-                  <td style={{ textAlign: 'center' }}><input type="checkbox" checked={s.study !== false} title="수업(학습)에서 하는 활동" onChange={(e) => { if (e.target.checked && l.flow_steps.filter((x) => x.study !== false).length >= MAX_ACTS) { setMsg({ t: 'err', s: `차시당 수업 활동은 최대 ${MAX_ACTS}개예요.` }); return; } void updStep(s.id, { study: e.target.checked }); }} /></td>
+                  <td style={{ textAlign: 'center' }}><input type="checkbox" checked={s.study !== false} title="수업(학습)에서 하는 활동" onChange={(e) => updStep(s.id, { study: e.target.checked })} /></td>
                   <td style={{ textAlign: 'center' }}><input type="checkbox" checked={!!s.homework} title="숙제로 낼 수 있는 활동" onChange={(e) => updStep(s.id, { homework: e.target.checked })} /></td>
                   <td><select className="mx-cell" value={s.ref_step_id ?? ''} title="다른 활동의 문항을 그대로 가져다 쓸 때 고르세요" onChange={(e) => updStep(s.id, { ref_step_id: e.target.value || null })}>
                     <option value="">(이 활동 문항)</option>
