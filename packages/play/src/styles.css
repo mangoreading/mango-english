@@ -880,3 +880,4 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 /* Passage Read Aloud(세트): 본문 상자를 가운데에 알맞은 폭으로 — 좌우 버튼은 상자 바깥에 둔다 */
 .nv-set-pread .nv-row-w { justify-content:center; }
 .nv-set-pread .nv-pbox { flex:none; width:68%; max-width:52em; min-height:9em; padding:.8em 1.4em; }
+.nv-setroot .nv-rv .nv-ptools { display:flex; justify-content:center; margin:.2em 0; }

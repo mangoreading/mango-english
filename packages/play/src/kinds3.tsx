@@ -208,7 +208,7 @@ export function PRead({ item, onDone, onNext }: KindProps & { onNext?: { ready: 
         {mode ? <button className="nv-listen nv-listen-s" onClick={stop}><b>■ 멈추기</b></button> : <>
           <button className="nv-listen nv-listen-s" onClick={() => play('listen')}><i className="nv-sico" aria-hidden="true" /> <b>전체 듣기</b></button>
           <button className="nv-listen nv-listen-s" onClick={() => play('follow')}><i className="nv-sico" aria-hidden="true" /> <b>따라 읽기</b></button></>}
-        {kos[p] && <button className="nv-hintbtn" onClick={() => setKo(!ko)}>{ko ? '해설 닫기' : '해설 보기'}</button>}
+        {kos[p] && !onNext && <button className="nv-hintbtn" onClick={() => setKo(!ko)}>{ko ? '해설 닫기' : '해설 보기'}</button>}
       </div>
       {ko && kos[p] && <div className="nv-hintbox on nv-kobox">{kos[p].split('\n').map((l, i) => <p key={i}>{l}</p>)}</div>}
       <p className="nv-hint">{p + 1} / {pages.length}</p>

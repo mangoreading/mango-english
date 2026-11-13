@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ComponentType } from 'react';
 import { Fb } from './fb';
 import { Rich } from './kinds3';
-import { shuffle, stopSeq, type KindProps } from './common';
+import { say, shuffle, stopSeq, type KindProps } from './common';
 
 /** 본문 세트의 확인 문항: t 가 'tf' 면 문장 1~3개에 T/F 를 고르는 한 문제, 아니면 3~4지 선다(정답 1 + 오답 1~3) */
 export interface SetQ { t?: 'mc' | 'tf'; q?: string; ans?: string; wrong?: string[]; fb?: string; lines?: string[] }
@@ -52,6 +52,7 @@ function ReviewPage({ item }: { item: Record<string, any> }) { // eslint-disable
     <div className="nv-rv">
       <p className="nv-rv-t">해석과 해설</p>
       <div className="nv-rv-list">{body}</div>
+      <div className="nv-ptools"><button type="button" className="nv-listen nv-listen-s" onClick={() => { stopSeq(); say(text.filter((l) => l.trim() !== '---').map((l) => l.replace(/\[\[|\]\]|\{\{|\}\}/g, '')).join(' ')); }}><i className="nv-sico" aria-hidden="true" /> <b>전체 듣기</b></button></div>
       {!!explain.length && <div className="nv-rv-ex">{explain.map((l, i) => <p key={i}><Rich text={l} /></p>)}</div>}
     </div>
   );
