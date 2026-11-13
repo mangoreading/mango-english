@@ -6,10 +6,10 @@ import { shuffle, stopSeq, type KindProps } from './common';
 export interface SetQ { t?: 'mc' | 'tf'; q?: string; ans?: string; wrong?: string[]; fb?: string; lines?: string[] }
 
 /** T/F 한 문제: 문장 최대 3개(ⓐⓑⓒ)를 보고 각각 T 또는 F 를 고른다. 모두 맞히면 onFinish(처음부터 맞혔는지) */
-export function TfBlock({ q, no, onFinish }: { q: SetQ; no: string; onFinish: (firstTry: boolean) => void }) {
+export function TfBlock({ q, no, onFinish, done }: { q: SetQ; no: string; onFinish: (firstTry: boolean) => void; done?: boolean }) {
   const rows = (q.lines ?? []).slice(0, 3).map((l) => { const m = l.match(/^(.*)\|\s*([TFtf])\s*$/); return { t: (m ? m[1] : l).trim(), a: m ? m[2].toUpperCase() === 'T' : true }; });
-  const [res, setRes] = useState<Record<number, boolean>>({}); const [bad, setBad] = useState<string | null>(null);
-  const wrongs = useRef<Set<number>>(new Set()); const fired = useRef(false);
+  const [res, setRes] = useState<Record<number, boolean>>(() => (done ? Object.fromEntries(rows.map((r, i) => [i, r.a])) : {})); const [bad, setBad] = useState<string | null>(null);
+  const wrongs = useRef<Set<number>>(new Set()); const fired = useRef(!!done);
   useEffect(() => {
     if (!fired.current && rows.length && rows.every((_, i) => res[i] != null)) { fired.current = true; onFinish(wrongs.current.size === 0); }
     // eslint-disable-next-line
@@ -32,49 +32,29 @@ export function TfBlock({ q, no, onFinish }: { q: SetQ; no: string; onFinish: (f
   );
 }
 
-function QuizPane({ qs, showText, onFinish }: { qs: SetQ[]; showText: () => void; onFinish: (r: boolean[]) => void }) {
-  const [qi, setQi] = useState(0); const [res, setRes] = useState<boolean[]>([]); const [bad, setBad] = useState<number | null>(null); const [ok, setOk] = useState(false);
-  const wrong = useRef(false); const fired = useRef(false); const first = useRef(true);
-  const q = qs[qi]; const last = qi + 1 >= qs.length;
-  const opts = useMemo(() => {
-    if (!q) return [];
-    if (q.t === 'tf') return [];
-    return shuffle([{ t: q.ans ?? '', c: true }, ...(q.wrong ?? []).map((t) => ({ t, c: false }))]);
-  }, [qi]); // eslint-disable-line
-  /** 문항을 맞힘: 마지막이면 바로 끝내고, 아니면 [>] 를 눌러야 다음 문항으로 간다 */
-  function solved(firstTry: boolean) {
-    first.current = firstTry; setOk(true);
-    if (last && !fired.current) { fired.current = true; const r = [...res, firstTry]; setRes(r); setTimeout(() => onFinish(r), 600); }
-  }
-  function advance() { setRes([...res, first.current]); setQi(qi + 1); setOk(false); wrong.current = false; first.current = true; }
+/** 확인 문항 한 쪽: 이미 푼 문항으로 돌아오면 정답이 채워진 상태로 보여 준다 */
+function QPage({ q, no, solved, onSolved, hasNext }: { q: SetQ; no: string; solved: boolean | undefined; onSolved: (firstTry: boolean) => void; hasNext: boolean }) {
+  const [ok, setOk] = useState(solved !== undefined); const [bad, setBad] = useState<number | null>(null); const wrong = useRef(false);
+  const opts = useMemo(() => (q.t === 'tf' ? [] : shuffle([{ t: q.ans ?? '', c: true }, ...(q.wrong ?? []).map((t) => ({ t, c: false }))])), []); // eslint-disable-line
   function choose(i: number) {
     if (ok) return;
-    if (opts[i].c) solved(!wrong.current);
+    if (opts[i].c) { setOk(true); onSolved(!wrong.current); }
     else { wrong.current = true; setBad(i); setTimeout(() => setBad(null), 500); }
   }
-  if (!q) return null;
-  const arrow = ok && !last ? <button type="button" className="nv-arrow nv-q-next" onClick={advance} title="다음 문제" aria-label="다음 문제">›</button> : null;
-  if (q.t === 'tf') return (
-    <div className="nv-setq">
-      <TfBlock key={qi} q={q} no={qs.length > 1 ? String(qi + 1) : ''} onFinish={solved} />
-      <div className="nv-ptools"><button type="button" className="nv-hintbtn" onClick={showText}>📖 본문 보기</button></div>
-      {arrow}
-    </div>
-  );
+  const msg = ok ? (hasNext ? '정답이에요! 오른쪽 ›를 눌러요 👏' : '정답이에요! 👏') : '';
+  if (q.t === 'tf') return <TfBlock q={q} no={no} done={solved !== undefined} onFinish={(ft) => { setOk(true); onSolved(ft); }} />;
   return (
     <div className="nv-sq">
-      <p className="nv-qt">Q{qs.length > 1 ? qi + 1 : ''}. {q.q}</p>
+      <p className="nv-qt">Q{no}. {q.q}</p>
       <div className="nv-list nv-list-s">{opts.map((o, i) => <button key={i} className={'nv-opt' + (ok && o.c ? ' nv-right' : bad === i ? ' nv-wrong nv-shake' : '')} onClick={() => choose(i)}>{o.t}</button>)}</div>
       {ok && q.fb && <p className="nv-setq-fb">{q.fb}</p>}
-      <Fb className={'nv-fbmsg' + (ok ? ' on' : '')}>{ok ? (last ? '정답이에요! 👏' : '정답이에요! 오른쪽 ›를 눌러요 👏') : ''}</Fb>
-      <div className="nv-ptools"><button type="button" className="nv-hintbtn" onClick={showText}>📖 본문 보기</button></div>
-      {arrow}
+      <Fb className={'nv-fbmsg' + (ok ? ' on' : '')}>{msg}</Fb>
     </div>
   );
 }
 
 /** 본문 템플릿(Model Text · Passage Read Aloud)에 확인 문항(최대 3개)을 붙인다. 문항이 없으면 원래 템플릿 그대로 동작한다.
- *  흐름: 본문 보기(원래 화면) → [문제 풀기] → 문항(언제든 "본문 보기") → 끝 */
+ *  쪽 구성: 본문 → 문항들 → 해설 보기(해설·해석이 있을 때). 모든 쪽에 [<] [>] 가 있고, 그 쪽을 마치면 [>] 가 열리며 [<] 는 언제나 누를 수 있다. */
 export function withQuiz(Inner: ComponentType<KindProps>): ComponentType<KindProps> {
   return function WithQuiz(p: KindProps) {
     const qs: SetQ[] = (p.item.qs ?? []).slice(0, 3);
@@ -84,19 +64,21 @@ export function withQuiz(Inner: ComponentType<KindProps>): ComponentType<KindPro
 }
 
 function QuizShell({ Inner, p, qs }: { Inner: ComponentType<KindProps>; p: KindProps; qs: SetQ[] }) {
-  const [phase, setPhase] = useState<'read' | 'quiz'>('read'); const [readDone, setReadDone] = useState(false); const [peek, setPeek] = useState(false);
-  useEffect(() => { stopSeq(); }, [phase, peek]);
+  const hasEx = !!(p.item.explain?.length || p.item.ko);
+  const [pg, setPg] = useState(0); const [readDone, setReadDone] = useState(false); const [sol, setSol] = useState<(boolean | undefined)[]>(() => qs.map(() => undefined)); const fired = useRef(false);
+  const total = 1 + qs.length + (hasEx ? 1 : 0); const qi = pg - 1; const isQ = qi >= 0 && qi < qs.length; const isEx = hasEx && pg === total - 1;
+  useEffect(() => { stopSeq(); }, [pg]);
+  useEffect(() => { if (!fired.current && sol.every((x) => x !== undefined)) { fired.current = true; p.onDone(sol.map((ok) => ({ tag: 'read', ok: !!ok }))); } /* eslint-disable-next-line */ }, [sol]);
+  const canNext = pg < total - 1 && (pg === 0 ? readDone : isQ ? sol[qi] !== undefined : false);
   const noop = () => undefined;
-  if (phase === 'read') { const I = Inner as ComponentType<KindProps & { onNext?: { ready: boolean; go: () => void } }>; return <I {...p} onDone={() => setReadDone(true)} onNext={{ ready: readDone, go: () => setPhase('quiz') }} />; }
+  const onSolved = (i: number) => (ft: boolean) => setSol((a) => { const b = [...a]; if (b[i] === undefined) b[i] = ft; return b; });
   return (
     <div className="nv-body nv-wbody nv-wtop nv-setroot">
-      <QuizPane qs={qs} showText={() => setPeek(true)} onFinish={(r) => p.onDone(r.map((ok) => ({ tag: 'read', ok })))} />
-      {peek && (
-        <div className="nv-setov" role="dialog" aria-label="본문">
-          <div className="nv-setov-in"><Inner {...p} onDone={noop} /></div>
-          <button type="button" className="nv-hintbtn on nv-setov-x" onClick={() => { stopSeq(); setPeek(false); }}>닫기 ✕</button>
-        </div>
-      )}
+      {pg === 0 && (() => { const I = Inner as ComponentType<KindProps & { onNext?: { ready: boolean; go: () => void } }>; return <I {...p} onDone={() => setReadDone(true)} onNext={{ ready: readDone, go: () => setPg(1) }} />; })()}
+      {isQ && <QPage key={qi} q={qs[qi]} no={qs.length > 1 ? String(qi + 1) : ''} solved={sol[qi]} onSolved={onSolved(qi)} hasNext={pg < total - 1} />}
+      {isEx && <div className="nv-setex"><p className="nv-setlabel">📖 본문과 해설</p><Inner {...p} onDone={noop} /></div>}
+      {pg > 0 && <button type="button" className="nv-arrow nv-q-prev" onClick={() => setPg(pg - 1)} title="이전" aria-label="이전">‹</button>}
+      {pg > 0 && pg < total - 1 && <button type="button" className="nv-arrow nv-q-next" disabled={!canNext} onClick={() => setPg(pg + 1)} title="다음" aria-label="다음">›</button>}
     </div>
   );
 }

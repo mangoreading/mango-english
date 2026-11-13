@@ -861,3 +861,6 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 
 /* 문항을 맞힌 뒤 오른쪽 [>] 로 다음 문항 */
 .nv-setroot { position:relative; } .nv-q-next { position:absolute; right:.8em; top:40%; font-size:1.8em; }
+
+.nv-q-prev { position:absolute; left:.8em; top:40%; font-size:1.8em; } .nv-q-next:disabled { opacity:.3; }
+.nv-setlabel { margin:0 0 .4em; text-align:center; color:var(--nv-blue); font-weight:800; }
