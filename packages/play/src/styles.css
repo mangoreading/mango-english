@@ -871,3 +871,9 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-setroot .nv-q-next, .nv-mtbody .nv-mt-next, .nv-setroot .nv-row-w > .nv-arrow:last-child { right:.5em; left:auto; }
 .nv-setroot .nv-mtbody { position:static; }
 .nv-setroot .nv-bodyw { position:static; }
+
+/* Passage Read Aloud: 좌우 버튼을 기존 본문 버튼 자리(글상자 양옆)로, 이후 쪽(문항·해석)도 같은 자리 */
+.nv-set-pread .nv-arrow, .nv-set-pread .nv-q-prev, .nv-set-pread .nv-q-next { top:44%; }
+.nv-set-pread .nv-q-prev, .nv-set-pread.nv-setroot .nv-row-w > .nv-arrow:first-child { left:1.44em; right:auto; }
+.nv-set-pread .nv-q-next, .nv-set-pread.nv-setroot .nv-row-w > .nv-arrow:last-child { right:1.44em; left:auto; }
+.nv-setroot .nv-rv-list { max-height:27em; } .nv-setroot .nv-rv-row b { margin:.12em 0; } .nv-setroot .nv-rv-row small { margin-top:.25em; }
