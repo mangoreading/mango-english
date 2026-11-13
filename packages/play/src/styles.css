@@ -873,7 +873,10 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-setroot .nv-bodyw { position:static; }
 
 /* Passage Read Aloud: 좌우 버튼을 기존 본문 버튼 자리(글상자 양옆)로, 이후 쪽(문항·해석)도 같은 자리 */
-.nv-set-pread .nv-arrow, .nv-set-pread .nv-q-prev, .nv-set-pread .nv-q-next { top:44%; }
+.nv-set-pread .nv-arrow, .nv-set-pread .nv-q-prev, .nv-set-pread .nv-q-next { top:24%; }
 .nv-set-pread .nv-q-prev, .nv-set-pread.nv-setroot .nv-row-w > .nv-arrow:first-child { left:1.44em; right:auto; }
 .nv-set-pread .nv-q-next, .nv-set-pread.nv-setroot .nv-row-w > .nv-arrow:last-child { right:1.44em; left:auto; }
 .nv-setroot .nv-rv-list { max-height:27em; } .nv-setroot .nv-rv-row b { margin:.12em 0; } .nv-setroot .nv-rv-row small { margin-top:.25em; }
+/* Passage Read Aloud(세트): 본문 상자를 가운데에 알맞은 폭으로 — 좌우 버튼은 상자 바깥에 둔다 */
+.nv-set-pread .nv-row-w { justify-content:center; }
+.nv-set-pread .nv-pbox { flex:none; width:68%; max-width:52em; min-height:9em; padding:.8em 1.4em; }
