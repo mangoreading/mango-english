@@ -864,3 +864,10 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 
 .nv-q-prev { position:absolute; left:.8em; top:40%; font-size:1.8em; } .nv-q-next:disabled { opacity:.3; }
 .nv-setlabel { margin:0 0 .4em; text-align:center; color:var(--nv-blue); font-weight:800; }
+
+/* 본문 세트: 모든 쪽에서 [<] [>] 가 같은 자리(좌우 가장자리, 같은 높이)에 오도록 통일 */
+.nv-setroot .nv-arrow, .nv-mtbody .nv-arrow { position:absolute; top:42%; width:1.6em; height:1.6em; font-size:2.2em; margin:0; }
+.nv-setroot .nv-q-prev, .nv-mtbody .nv-q-prev, .nv-setroot .nv-row-w > .nv-arrow:first-child { left:.5em; right:auto; }
+.nv-setroot .nv-q-next, .nv-mtbody .nv-mt-next, .nv-setroot .nv-row-w > .nv-arrow:last-child { right:.5em; left:auto; }
+.nv-setroot .nv-mtbody { position:static; }
+.nv-setroot .nv-bodyw { position:static; }

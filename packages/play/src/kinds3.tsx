@@ -251,6 +251,7 @@ export function MText({ item, onDone, onNext }: KindProps & { onNext?: { ready: 
       </div>
       <div className="nv-ptools"><button className="nv-listen nv-listen-s" onClick={() => { stopRep(); say(lines.map(plain).join(' ')); }}><i className="nv-sico" aria-hidden="true" /> <b>듣기</b></button><button className={'nv-listen nv-listen-s nv-repbtn' + (rep != null ? ' on' : '')} onClick={toggleRep}><b>{rep != null ? '■ 멈춤' : '🗣 따라 읽기'}</b></button></div>
       </div>
+      {onNext && <button className="nv-arrow nv-q-prev" disabled aria-label="이전">‹</button>}
       {onNext && <button className="nv-arrow nv-mt-next" disabled={!onNext.ready} onClick={onNext.go} title="문제 풀기" aria-label="문제 풀기">›</button>}
     </div>
   );
