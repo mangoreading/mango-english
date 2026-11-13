@@ -41,23 +41,23 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
     const id = ++run.current; stopSeq(); setIdx(i);
     if (!paused) step(i, id);
   }
-  function passQ(firstTry: boolean) {
-    const r = [...res, firstTry];
-    if (qi + 1 >= qs.length) { if (!fired.current) { fired.current = true; onDone(r.map((ok) => ({ tag: 'listen', ok }))); } setRes(r); setOkq(true); if (hasReview) setPhase('review'); }
-    else { setRes(r); setQi(qi + 1); setOkq(false); wrong.current = false; }
+  /** 문항을 맞힘: 마지막이면 바로 이어가고, 아니면 [>] 를 눌러야 다음 문항으로 간다 */
+  const firstTry = useRef(true);
+  function finishQ(ft: boolean) {
+    firstTry.current = ft; setOkq(true);
+    if (qi + 1 >= qs.length) { const r = [...res, ft]; setTimeout(() => { if (!fired.current) { fired.current = true; onDone(r.map((ok) => ({ tag: 'listen', ok }))); } setRes(r); if (hasReview) setPhase('review'); }, 700); }
   }
+  function nextQ() { setRes([...res, firstTry.current]); setQi(qi + 1); setOkq(false); wrong.current = false; firstTry.current = true; }
   function choose(i: number) {
     if (okq) return;
-    if (opts[i].c) {
-      setOkq(true);
-      const r = [...res, !wrong.current];
-      setTimeout(() => { if (qi + 1 >= qs.length) { if (!fired.current) { fired.current = true; onDone(r.map((ok) => ({ tag: 'listen', ok }))); } setRes(r); setOkq(true); if (hasReview) setPhase('review'); } else { setRes(r); setQi(qi + 1); setOkq(false); wrong.current = false; } }, 700);
-    } else { wrong.current = true; setBad(i); setTimeout(() => setBad(null), 500); }
+    if (opts[i].c) finishQ(!wrong.current);
+    else { wrong.current = true; setBad(i); setTimeout(() => setBad(null), 500); }
   }
   const sc = scenes[Math.min(idx, scenes.length - 1)]; const img = src(sc?.pic) || src(scenes.find((s) => s.pic)?.pic);
   const left = Math.max(0, max + 1 - plays);
   const natural: 'video' | 'quiz' | 'review' = phase === 'review' ? 'review' : phase === 'after' && qs.length > 0 ? 'quiz' : 'video';
   const view = back ?? natural; const quiz = view === 'quiz' && qs.length > 0; const review = view === 'review';
+  const qPend = quiz && okq && qi + 1 < qs.length; // 문항을 맞혔고 다음 문항이 남음 → 오른쪽 [>] 로 이동
   const hasShadow = item.k === 'scenerep' && scenes.length > 0;
   const pages: ('video' | 'quiz' | 'review' | 'shadow')[] = ['video', ...(qs.length ? ['quiz' as const] : []), ...(hasReview ? ['review' as const] : []), ...(hasShadow ? ['shadow' as const] : [])];
   const shadow = view === 'shadow';
@@ -100,14 +100,14 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
           )}
           {shadow && <ShadowSay scenes={scenes} src={src} />}
           {quiz && qs[qi] && (
-            qs[qi].t === 'tf' ? <TfBlock key={qi} q={qs[qi]} no={qs.length > 1 ? String(qi + 1) : ''} onFinish={passQ} /> : <div className="nv-sq">
+            qs[qi].t === 'tf' ? <TfBlock key={qi} q={qs[qi]} no={qs.length > 1 ? String(qi + 1) : ''} onFinish={finishQ} /> : <div className="nv-sq">
               <p className="nv-qt">Q{qs.length > 1 ? qi + 1 : ''}. {qs[qi].q}</p>
               <div className="nv-list nv-list-s">{opts.map((o, i) => <button key={i} className={'nv-opt' + (okq && o.c ? ' nv-right' : bad === i ? ' nv-wrong nv-shake' : '')} onClick={() => choose(i)}>{o.t}</button>)}</div>
               <Fb className={'nv-fbmsg' + (okq ? ' on' : '')}>{okq ? '정답이에요! 👏' : ''}</Fb>
             </div>
           )}
         </div>
-        <button className="nv-arrow" disabled={cur >= pages.length - 1 || cur + 1 > reach || phase === 'play'} onClick={() => goPage(cur + 1)} aria-label="다음">›</button>
+        <button className="nv-arrow" disabled={qPend ? false : cur >= pages.length - 1 || cur + 1 > reach || phase === 'play'} onClick={() => (qPend ? nextQ() : goPage(cur + 1))} title={qPend ? '다음 문제' : undefined} aria-label={qPend ? '다음 문제' : '다음'}>›</button>
       </div>
       {phase !== 'ready' && !shadow && (
         <div className="nv-ptools">

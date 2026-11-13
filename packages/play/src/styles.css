@@ -858,3 +858,6 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 
 /* 본문 오른쪽 [>] 로 문제 풀기로 이동 (Model Text) */
 .nv-mtbody { position:relative; } .nv-mt-next { position:absolute; right:.8em; top:42%; font-size:1.8em; }
+
+/* 문항을 맞힌 뒤 오른쪽 [>] 로 다음 문항 */
+.nv-setroot { position:relative; } .nv-q-next { position:absolute; right:.8em; top:40%; font-size:1.8em; }
