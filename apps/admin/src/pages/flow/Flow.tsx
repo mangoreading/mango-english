@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../shared/supabase';
 import { PageHead, openPreview } from '../../shared/ui';
 import { CATEGORIES, catLabel } from '../kinds/Kinds';
-import { isNativeKind, NATIVE_SAMPLES, SAMPLE_VOCAB } from '../../shared/samples';
+import { isNativeKind, isSetKind, NATIVE_SAMPLES, SAMPLE_VOCAB } from '../../shared/samples';
 
 interface Step { id: string; lesson_id: string; pos: number; name_en: string; name_ko: string; minutes: number | null; special: string | null; src_id: string | null; kind: string | null; qty: number | null; homework?: boolean; study?: boolean; ref_step_id?: string | null }
 interface Lesson { id: string; no: number; track?: string; en: string; ko: string; goal: string; color: string; src_id: string | null; flow_steps: Step[] }
@@ -121,8 +121,8 @@ export function FlowEditor({ owner }: { owner: Owner }) {
                   <td>{i + 1}</td>
                   <td>{s.kind && isNativeKind(s.kind) && <button type="button" style={{ padding: 0, border: 0, background: 'none', cursor: 'pointer' }} title="눌러서 샘플 보기" onClick={() => void sample(s.kind!, s.name_ko || s.name_en)}><img className="mx-lthumb" src={`/thumbs/${s.kind}.jpg`} alt="샘플 미리보기" loading="lazy" /></button>}</td>
                   <td><Txt value={s.name_en} onSave={(v) => updStep(s.id, { name_en: v })} /></td>
-                  <td><Txt value={s.name_ko} onSave={(v) => updStep(s.id, { name_ko: v })} /></td>
-                  <td><select className="mx-cell" value={s.kind ?? ''} onChange={(e) => changeKind(s, e.target.value)}><option value="">(지정 안 함)</option>{kinds.map((k) => <option key={k.key} value={k.key}>{k.name_ko}</option>)}</select></td>
+                  <td><Txt value={s.name_ko} onSave={(v) => updStep(s.id, { name_ko: v })} />{isSetKind(s.kind) && <span className="mx-setbadge">세트</span>}</td>
+                  <td><select className="mx-cell" value={s.kind ?? ''} onChange={(e) => changeKind(s, e.target.value)}><option value="">(지정 안 함)</option>{kinds.map((k) => <option key={k.key} value={k.key}>{k.name_ko}{isSetKind(k.key) ? ' (세트)' : ''}</option>)}</select></td>
                   <td><Txt value={s.qty == null ? '' : String(s.qty)} w={44} onSave={(v) => updStep(s.id, { qty: v === '' ? null : Math.max(0, parseInt(v, 10) || 0) })} /></td>
                   <td><Txt value={s.minutes == null ? '' : String(s.minutes)} w={44} onSave={(v) => updStep(s.id, { minutes: v === '' ? null : Math.max(0, parseInt(v, 10) || 0) })} /></td>
                   <td style={{ textAlign: 'center' }}><input type="checkbox" checked={s.study !== false} title="수업(학습)에서 하는 활동" onChange={(e) => updStep(s.id, { study: e.target.checked })} /></td>
@@ -158,7 +158,7 @@ export function FlowEditor({ owner }: { owner: Owner }) {
                   {kinds.filter((k) => k.category === c).map((k) => (
                     <button key={k.key} type="button" className="mx-btn sec" style={{ display: 'flex', gap: 10, alignItems: 'center', textAlign: 'left', padding: 6, fontWeight: 400 }} onClick={() => addStep(pick, k)}>
                       {isNativeKind(k.key) ? <img className="mx-lthumb" style={{ flex: 'none', width: 72, height: 45 }} src={`/thumbs/${k.key}.jpg`} alt="" loading="lazy" /> : <span style={{ width: 72, height: 45, flex: 'none' }} />}
-                      <span><b>{k.name_ko}</b>{k.importance ? <span className="mx-muted"> · {k.importance}</span> : null}<br /><span className="mx-muted" style={{ fontSize: 12 }}>{k.name_en}</span></span>
+                      <span><b>{k.name_ko}</b>{isSetKind(k.key) && <span className="mx-setbadge">세트</span>}{k.importance ? <span className="mx-muted"> · {k.importance}</span> : null}<br /><span className="mx-muted" style={{ fontSize: 12 }}>{k.name_en}</span></span>
                     </button>
                   ))}
                 </div>

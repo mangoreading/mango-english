@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Fb } from './fb';
+import { Fb, useCardProgress } from './fb';
 import { Rich } from './kinds3';
 import { TfBlock, type SetQ } from './kinds8';
 import { imgSrc, prefetchSay, sayScript, shuffle, stopSeq, type KindProps } from './common';
@@ -61,6 +61,9 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
   const hasShadow = item.k === 'scenerep' && scenes.length > 0;
   const pages: ('video' | 'quiz' | 'review' | 'shadow')[] = ['video', ...(qs.length ? ['quiz' as const] : []), ...(hasReview ? ['review' as const] : []), ...(hasShadow ? ['shadow' as const] : [])];
   const shadow = view === 'shadow';
+  // 위쪽 진행 동그라미: 영상 + 문항 하나하나 + 해설 + (따라 말하기) 쪽수만큼
+  const dotsN = 1 + qs.length + (hasReview ? 1 : 0) + (hasShadow ? 1 : 0);
+  useCardProgress(dotsN, view === 'video' ? 0 : view === 'quiz' ? 1 + qi : view === 'review' ? 1 + qs.length : dotsN - 1);
   const cur = Math.max(0, pages.indexOf(view));
   // 영상을 다 보면 문제(또는 해설)로, 문제를 모두 풀면 해설로 [>] 가 열린다. 문제와 해설까지 끝낸 뒤(또는 영상만 보고 끝난 뒤)에는 마지막의 '문장 따라 말해보기'로 갈 수 있다
   const finished = phase === 'after' && (!qs.length || qDone);

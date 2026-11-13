@@ -12,8 +12,9 @@ export function Fb({ className, children }: { className: string; children?: Reac
 /** 카드를 `<` `>` 로 넘기는 활동: 화면 위쪽 진행 점을 문항 수 대신 카드 수로 보여 준다. */
 export type CardProg = { n: number; cur: number } | null;
 export const ProgCtx = createContext<((p: CardProg) => void) | null>(null);
-export function useCardProgress(n: number, cur: number) {
+/** on=false 면 등록하지 않는다(문항이 붙은 세트 템플릿은 바깥 껍데기가 전체 쪽수로 대신 등록한다) */
+export function useCardProgress(n: number, cur: number, on = true) {
   const set = useContext(ProgCtx);
-  useEffect(() => { set?.({ n, cur }); }, [n, cur]); // eslint-disable-line
-  useEffect(() => () => { set?.(null); }, []); // eslint-disable-line
+  useEffect(() => { if (on) set?.({ n, cur }); }, [n, cur, on]); // eslint-disable-line
+  useEffect(() => () => { if (on) set?.(null); }, []); // eslint-disable-line
 }

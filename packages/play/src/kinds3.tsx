@@ -182,7 +182,7 @@ export function PRead({ item, onDone, onNext }: KindProps & { onNext?: { ready: 
   const kos: string[] = item.ko ? String(item.ko).split(/\n-{3,}\n/) : [];
   const [p, setP] = useState(0); const [seen, setSeen] = useState<Set<number>>(new Set()); const [ko, setKo] = useState(false); const fired = useRef(false);
   const [mode, setMode] = useState<'' | 'listen' | 'follow'>(''); const [hl, setHl] = useState(-1); const [wait, setWait] = useState(false);
-  useCardProgress(pages.length, p);
+  useCardProgress(pages.length, p, !onNext);
   useEffect(() => { if (!fired.current && seen.size === pages.length) { fired.current = true; onDone([]); } /* eslint-disable-next-line */ }, [seen]);
   useEffect(() => () => stopSeq(), []);
   const heard = () => setSeen((s) => new Set(s).add(p));

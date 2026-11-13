@@ -4,7 +4,7 @@ import { PageHead } from '../../shared/ui';
 import { specOf } from '../units/ItemForm';
 import { openPreview } from '../../shared/ui';
 import { NativePlayer } from '@mango/play';
-import { NATIVE_SAMPLES, SAMPLE_VOCAB, isNativeKind } from '../../shared/samples';
+import { NATIVE_SAMPLES, SAMPLE_VOCAB, isNativeKind, isSetKind } from '../../shared/samples';
 
 export const CATEGORIES = ['어휘', '표현', '듣기', '말하기', '읽기', '쓰기', '공통'];
 /** 영역 표시 이름 (DB에는 한글 값 그대로 저장) */
@@ -54,7 +54,7 @@ export function Types() {
               <tbody>
                 {shown.map((r, n) => (
                   <tr key={r.key} className={'mx-click' + (r.key === selKey ? ' mx-sel' : '')} onClick={() => setSelKey(r.key)}>
-                    <td className="mx-no">{n + 1}</td><td>{catLabel(r.category)}</td><td>{isNativeKind(r.key) && <img className="mx-lthumb" src={`/thumbs/${r.key}.jpg`} alt="" loading="lazy" />}</td><td>{r.name_ko}{SET_KINDS.includes(r.key) && <span className="mx-setbadge">세트</span>}</td><td>{r.name_en}</td><td>{r.importance ?? ''}</td><td>v{r.version ?? 1}</td>
+                    <td className="mx-no">{n + 1}</td><td>{catLabel(r.category)}</td><td>{isNativeKind(r.key) && <img className="mx-lthumb" src={`/thumbs/${r.key}.jpg`} alt="" loading="lazy" />}</td><td>{r.name_ko}{isSetKind(r.key) && <span className="mx-setbadge">세트</span>}</td><td>{r.name_en}</td><td>{r.importance ?? ''}</td><td>v{r.version ?? 1}</td>
                     
                     <td><span className={'mx-chip mx-chip-k ' + (r.active ? 'approved' : 'draft')}>{r.active ? '사용' : '숨김'}</span></td>
                   </tr>
@@ -73,8 +73,6 @@ export function Types() {
 }
 
 /** 기획서(PDF) 밖의 옛 12종: 목록에서 숨긴다(기존 Unit 2 문항이 아직 쓰고 있어 삭제하지 않음) */
-/** 본문 + 확인 문항이 한 활동으로 묶인 세트 템플릿 */
-const SET_KINDS = ['scene', 'scenerep', 'mtext', 'pread'];
 const OLD12 = ['learn', 'text', 'brief', 'choose', 'match', 'build', 'fill', 'write', 'compose', 'speak', 'fade', 'dialog'];
 function Detail({ row, use, onSaved }: { row: KindRow; use?: { items: number; units: number; old: number }; onSaved: (m: { t: 'ok' | 'err'; s: string }) => void }) {
   const [f, setF] = useState(row);

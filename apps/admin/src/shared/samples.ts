@@ -110,3 +110,7 @@ export function nativeVocab(item: Record<string, any>, vocab: VocabOpt[]): VWord
   const keys: string[] = item.k === 'vspell' || item.k === 'wchoice' ? [item.word] : item.words ?? [];
   return keys.map((k) => vocab.find((v) => v.key === k)).filter(Boolean).map((v) => ({ key: v!.key, en: v!.en, ko: v!.ko, image: v!.image_path ?? null }));
 }
+
+/** 본문 + 확인 문항이 한 활동으로 묶인 세트 템플릿 */
+export const SET_KINDS = ['scene', 'scenerep', 'mtext', 'pread'];
+export const isSetKind = (k?: string | null) => !!k && SET_KINDS.includes(k);

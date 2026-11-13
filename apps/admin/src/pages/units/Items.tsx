@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../shared/supabase';
 import { openPreview } from '../../shared/ui';
-import { isNativeKind, nativeVocab } from '../../shared/samples';
+import { isNativeKind, isSetKind, nativeVocab } from '../../shared/samples';
 import { ItemForm, KIND_NAME, defaultItem, validate, type VocabOpt } from './ItemForm';
 import { catLabel, type KindRow } from '../kinds/Kinds';
 
@@ -11,7 +11,7 @@ const STATUS_KO: Record<Status, string> = { draft: '초안', review: '검수중'
 const LEVELS = ['CORE', 'SUPPORT', 'ADVANCED'];
 
 interface ItemRow { id: string; unit_id: string; lesson: number; act_idx: number; level: string; template: string; tag: string | null; status: Status; version: number; step_id: string | null; tpl_ver?: number; payload: Record<string, any> }
-interface StepInfo { id: string; lessonNo: number; pos: number; name: string; ref?: string | null }
+interface StepInfo { id: string; lessonNo: number; pos: number; name: string; kind?: string | null; ref?: string | null }
 type Msg = { t: 'ok' | 'err'; s: string } | null;
 
 function summary(p: Record<string, any>): string {
@@ -39,9 +39,9 @@ export function Items({ unitId, uid }: { unitId: string; uid: string }) {
     setLoading(true);
     const it = await supabase.from('items').select('id,unit_id,lesson,act_idx,level,template,tag,status,version,step_id,tpl_ver,payload').eq('unit_id', unitId).order('lesson').order('act_idx').limit(5000);
     if (it.error) setMsg({ t: 'err', s: it.error.message }); else setItems((it.data ?? []) as unknown as ItemRow[]);
-    const fl = await supabase.from('flow_lessons').select('no, flow_steps(id,pos,name_en,name_ko,ref_step_id)').eq('unit_id', unitId).order('no');
+    const fl = await supabase.from('flow_lessons').select('no, flow_steps(id,pos,name_en,name_ko,kind,ref_step_id)').eq('unit_id', unitId).order('no');
     const st: StepInfo[] = [];
-    ((fl.data ?? []) as any[]).forEach((l) => (l.flow_steps ?? []).forEach((s: any) => st.push({ id: s.id, lessonNo: l.no, pos: s.pos, name: s.name_ko || s.name_en })));
+    ((fl.data ?? []) as any[]).forEach((l) => (l.flow_steps ?? []).forEach((s: any) => st.push({ id: s.id, lessonNo: l.no, pos: s.pos, name: s.name_ko || s.name_en, kind: s.kind })));
     st.sort((a, b) => a.lessonNo - b.lessonNo || a.pos - b.pos);
     setSteps(st);
     const at = await supabase.from('activity_types').select('key,name_ko,version,description,category,sort,active').eq('active', true).order('category').order('sort');
@@ -60,6 +60,7 @@ export function Items({ unitId, uid }: { unitId: string; uid: string }) {
     && (!q || JSON.stringify(i.payload).toLowerCase().includes(q.toLowerCase()))), [items, level, stepF, status, q]);
   const stale = (i: ItemRow) => (i.tpl_ver ?? 1) < (kinds.find((x) => x.key === i.template)?.version ?? 1);
   const kindName = (k: string) => kinds.find((x) => x.key === k)?.name_ko ?? KIND_NAME[k] ?? k;
+  const kindLabel = (k: string) => kindName(k) + (isSetKind(k) ? ' (세트)' : ''); // 목록·선택 상자 표기(미리보기 제목에는 쓰지 않음)
   const sel = items.find((i) => i.id === selId) ?? null;
   const counts = useMemo(() => { const c: Record<string, number> = {}; items.forEach((i) => { c[i.status] = (c[i.status] ?? 0) + 1; }); return c; }, [items]);
 
@@ -106,7 +107,7 @@ export function Items({ unitId, uid }: { unitId: string; uid: string }) {
       <div className="mx-card">
         <div className="mx-row">
           <label><select value={level} onChange={(e) => setLevel(e.target.value)} aria-label="레벨"><option value="all">레벨 전체</option>{LEVELS.map((l) => <option key={l}>{l}</option>)}</select></label>
-          <label><select value={stepF} onChange={(e) => setStepF(e.target.value)} aria-label="활동"><option value="all">활동 전체</option><option value="none">(연결 안 됨)</option>{steps.map((s) => <option key={s.id} value={s.id}>{s.lessonNo}차시 · {s.name}</option>)}</select></label>
+          <label><select value={stepF} onChange={(e) => setStepF(e.target.value)} aria-label="활동"><option value="all">활동 전체</option><option value="none">(연결 안 됨)</option>{steps.map((s) => <option key={s.id} value={s.id}>{s.lessonNo}차시 · {s.name}{isSetKind(s.kind) ? ' (세트)' : ''}</option>)}</select></label>
           <label><select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="상태"><option value="all">상태 전체</option>{STATUSES.map((s) => <option key={s} value={s}>{STATUS_KO[s]}</option>)}<option value="stale">옛 버전 (재검토 필요)</option></select></label>
           <label><input aria-label="검색" value={q} onChange={(e) => setQ(e.target.value)} placeholder="문항 내용에서 찾기" /></label>
           <span style={{ flex: 1 }} />
@@ -125,7 +126,7 @@ export function Items({ unitId, uid }: { unitId: string; uid: string }) {
               <tbody>
                 {shown.map((i) => (
                   <tr key={i.id} className={'mx-click' + (i.id === selId ? ' mx-sel' : '')} onClick={() => setSelId(i.id)}>
-                    <td>{i.lesson}</td><td>{i.level}</td><td>{i.step_id ? stepOf[i.step_id]?.name : <span className="mx-muted">(연결 안 됨)</span>}</td><td>{kindName(i.template)}</td>
+                    <td>{i.lesson}</td><td>{i.level}</td><td>{i.step_id ? stepOf[i.step_id]?.name : <span className="mx-muted">(연결 안 됨)</span>}</td><td>{kindLabel(i.template)}</td>
                     <td className="mx-muted">{summary(i.payload)}</td>
                     <td><span className={`mx-chip ${i.status}`}>{STATUS_KO[i.status]}</span>{stale(i) && <span className="mx-chip review" style={{ marginLeft: 6 }} title="템플릿이 바뀐 뒤 아직 확인하지 않은 문항이에요">옛 버전</span>}</td>
                   </tr>
@@ -150,8 +151,8 @@ function AddBar({ kinds, steps, level, step, onAdd, onCancel }: { kinds: KindRow
   return (
     <div className="mx-row" style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--line)' }}>
       <label>레벨<select value={lv} onChange={(e) => setLv(e.target.value)}>{LEVELS.map((l) => <option key={l}>{l}</option>)}</select></label>
-      <label>활동<select value={st} onChange={(e) => setSt(e.target.value)}>{steps.map((s) => <option key={s.id} value={s.id}>{s.lessonNo}차시 · {s.name}</option>)}</select></label>
-      <label>문항 종류<select value={kind} onChange={(e) => setKind(e.target.value)}>{[...new Set(kinds.map((k) => k.category))].map((c) => <optgroup key={c} label={catLabel(c)}>{kinds.filter((k) => k.category === c).map((k) => <option key={k.key} value={k.key}>{k.name_ko}</option>)}</optgroup>)}</select></label>
+      <label>활동<select value={st} onChange={(e) => setSt(e.target.value)}>{steps.map((s) => <option key={s.id} value={s.id}>{s.lessonNo}차시 · {s.name}{isSetKind(s.kind) ? ' (세트)' : ''}</option>)}</select></label>
+      <label>문항 종류<select value={kind} onChange={(e) => setKind(e.target.value)}>{[...new Set(kinds.map((k) => k.category))].map((c) => <optgroup key={c} label={catLabel(c)}>{kinds.filter((k) => k.category === c).map((k) => <option key={k.key} value={k.key}>{k.name_ko}{isSetKind(k.key) ? ' (세트)' : ''}</option>)}</optgroup>)}</select></label>
       <button className="mx-btn" onClick={() => onAdd(lv, st, kind)}>만들기</button>
       <button className="mx-btn sec" onClick={onCancel}>취소</button>
     </div>
@@ -223,7 +224,7 @@ function Editor({ kindName, item, siblings, steps, keys, vocab, uid, onSaved }: 
     <>
       <h3>{KIND_NAME[item.template] ?? item.template} · {item.lesson}차시 · {item.level}</h3>
       <div className="mx-row" style={{ marginBottom: 8 }}>
-        <label>활동<select value={stepId} onChange={(e) => setStepId(e.target.value)}><option value="">(연결 안 됨)</option>{steps.map((s) => <option key={s.id} value={s.id}>{s.lessonNo}차시 · {s.name}</option>)}</select></label>
+        <label>활동<select value={stepId} onChange={(e) => setStepId(e.target.value)}><option value="">(연결 안 됨)</option>{steps.map((s) => <option key={s.id} value={s.id}>{s.lessonNo}차시 · {s.name}{isSetKind(s.kind) ? ' (세트)' : ''}</option>)}</select></label>
         <label>상태<select value={status} onChange={(e) => setStatus(e.target.value as Status)}>{STATUSES.map((s) => <option key={s} value={s}>{STATUS_KO[s]}</option>)}</select></label>
         <span className="mx-muted">버전 {item.version}</span>
         <span style={{ flex: 1 }} />

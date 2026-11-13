@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ComponentType } from 'react';
-import { Fb } from './fb';
+import { Fb, useCardProgress } from './fb';
 import { Rich } from './kinds3';
 import { say, shuffle, stopSeq, type KindProps } from './common';
 
@@ -95,6 +95,7 @@ function QuizShell({ Inner, p, qs }: { Inner: ComponentType<KindProps>; p: KindP
   const total = 1 + qs.length + (hasEx ? 1 : 0); const qi = pg - 1; const isQ = qi >= 0 && qi < qs.length; const isEx = hasEx && pg === total - 1;
   useEffect(() => { stopSeq(); }, [pg]);
   useEffect(() => { if (!fired.current && sol.every((x) => x !== undefined)) { fired.current = true; p.onDone(sol.map((ok) => ({ tag: 'read', ok: !!ok }))); } /* eslint-disable-next-line */ }, [sol]);
+  useCardProgress(total, pg); // 위쪽 진행 동그라미: 본문·문항·해설 쪽수만큼
   const canNext = pg < total - 1 && (pg === 0 ? readDone : isQ ? sol[qi] !== undefined : false);
   const onSolved = (i: number) => (ft: boolean) => setSol((a) => { const b = [...a]; if (b[i] === undefined) b[i] = ft; return b; });
   return (
