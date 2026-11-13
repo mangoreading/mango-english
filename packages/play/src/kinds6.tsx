@@ -15,10 +15,10 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
   const [idx, setIdx] = useState(0); const [paused, setPaused] = useState(false); const [plays, setPlays] = useState(0); const [cc, setCc] = useState(item.sub !== 'none');
   const run = useRef(0); const fired = useRef(false);
   const [back, setBack] = useState<'video' | 'quiz' | 'review' | 'shadow' | null>(null); const [maxPg, setMaxPg] = useState(0); // 이전 버튼으로 돌아가 보는 화면 / 지금까지 도달한 가장 먼 화면
-  const [qi, setQi] = useState(0); const [res, setRes] = useState<boolean[]>([]); const wrong = useRef(false); const [bad, setBad] = useState<number | null>(null); const [okq, setOkq] = useState(false);
+  const [qi, setQi] = useState(0); const [res, setRes] = useState<boolean[]>([]); const wrong = useRef(false); const [bad, setBad] = useState<number | null>(null); const [okq, setOkq] = useState(false); const [qDone, setQDone] = useState(false);
   const opts = useMemo(() => (!qs[qi] || qs[qi].t === 'tf' ? [] : shuffle([{ t: qs[qi].ans ?? '', c: true }, ...(qs[qi].wrong ?? []).map((t) => ({ t, c: false }))])), [qi]); // eslint-disable-line
   useEffect(() => () => { run.current++; stopSeq(); }, []);
-  useEffect(() => { if (phase === 'after' && !qs.length) { if (hasReview) setPhase('review'); else if (!fired.current) { fired.current = true; onDone([]); } } if (phase === 'review' && !qs.length && !fired.current) { fired.current = true; onDone([]); } /* eslint-disable-next-line */ }, [phase]);
+  useEffect(() => { if (phase === 'after' && !qs.length && !fired.current) { fired.current = true; onDone([]); } /* eslint-disable-next-line */ }, [phase]);
   const src = (k?: string) => (k ? (/^https?:|^word\/|^scene\//.test(k) ? imgSrc(k) : imgSrc(pic(k))) : '');
   function step(i: number, id: number) {
     if (id !== run.current) return;
@@ -45,7 +45,7 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
   const firstTry = useRef(true);
   function finishQ(ft: boolean) {
     firstTry.current = ft; setOkq(true);
-    if (qi + 1 >= qs.length) { const r = [...res, ft]; setTimeout(() => { if (!fired.current) { fired.current = true; onDone(r.map((ok) => ({ tag: 'listen', ok }))); } setRes(r); if (hasReview) setPhase('review'); }, 700); }
+    if (qi + 1 >= qs.length) { const r = [...res, ft]; setRes(r); setQDone(true); if (!fired.current) { fired.current = true; onDone(r.map((ok) => ({ tag: 'listen', ok }))); } }
   }
   function nextQ() { setRes([...res, firstTry.current]); setQi(qi + 1); setOkq(false); wrong.current = false; firstTry.current = true; }
   function choose(i: number) {
@@ -55,17 +55,21 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
   }
   const sc = scenes[Math.min(idx, scenes.length - 1)]; const img = src(sc?.pic) || src(scenes.find((s) => s.pic)?.pic);
   const left = Math.max(0, max + 1 - plays);
-  const natural: 'video' | 'quiz' | 'review' = phase === 'review' ? 'review' : phase === 'after' && qs.length > 0 ? 'quiz' : 'video';
+  const natural: 'video' | 'quiz' | 'review' = 'video'; // 영상이 끝나도 저절로 넘어가지 않는다 — 오른쪽 [>] 를 눌러야 문제로 간다
   const view = back ?? natural; const quiz = view === 'quiz' && qs.length > 0; const review = view === 'review';
   const qPend = quiz && okq && qi + 1 < qs.length; // 문항을 맞혔고 다음 문항이 남음 → 오른쪽 [>] 로 이동
   const hasShadow = item.k === 'scenerep' && scenes.length > 0;
   const pages: ('video' | 'quiz' | 'review' | 'shadow')[] = ['video', ...(qs.length ? ['quiz' as const] : []), ...(hasReview ? ['review' as const] : []), ...(hasShadow ? ['shadow' as const] : [])];
   const shadow = view === 'shadow';
   const cur = Math.max(0, pages.indexOf(view));
-  // 문제와 해설까지 끝낸 뒤(또는 영상만 보고 끝난 뒤)에는 마지막의 '문장 따라 말해보기'로 갈 수 있다
-  const finished = phase === 'review' || (phase === 'after' && (!qs.length || okq));
-  const reach = Math.max(maxPg, pages.indexOf(natural), hasShadow && finished ? pages.length - 1 : 0);
-  useEffect(() => { setMaxPg((m) => Math.max(m, pages.indexOf(natural), hasShadow && finished ? pages.length - 1 : 0)); }, [phase, okq]); // eslint-disable-line
+  // 영상을 다 보면 문제(또는 해설)로, 문제를 모두 풀면 해설로 [>] 가 열린다. 문제와 해설까지 끝낸 뒤(또는 영상만 보고 끝난 뒤)에는 마지막의 '문장 따라 말해보기'로 갈 수 있다
+  const finished = phase === 'after' && (!qs.length || qDone);
+  const iq = pages.indexOf('quiz'); const ir = pages.indexOf('review'); const isx = pages.indexOf('shadow');
+  let lim = 0; if (phase === 'after') lim = Math.min(1, pages.length - 1);
+  if (qs.length && qDone) lim = ir >= 0 ? ir : isx >= 0 ? isx : Math.max(iq, 0);
+  if (hasShadow && finished) lim = pages.length - 1;
+  const reach = Math.max(maxPg, lim);
+  useEffect(() => { setMaxPg((m) => Math.max(m, lim)); }, [lim]); // eslint-disable-line
   /** 화면 이동: 이전은 언제나, 다음은 이미 거친 화면까지만(영상을 끝까지 보기 전에 문제로 건너뛰지 못하게) */
   function goPage(n: number) {
     if (n < 0 || n >= pages.length || n > reach) return;
@@ -100,7 +104,7 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
           )}
           {shadow && <ShadowSay scenes={scenes} src={src} />}
           {quiz && qs[qi] && (
-            qs[qi].t === 'tf' ? <TfBlock key={qi} q={qs[qi]} no={qs.length > 1 ? String(qi + 1) : ''} onFinish={finishQ} /> : <div className="nv-sq">
+            qs[qi].t === 'tf' ? <TfBlock key={qi + (okq ? 's' : '')} q={qs[qi]} no={qs.length > 1 ? String(qi + 1) : ''} onFinish={finishQ} done={okq} /> : <div className="nv-sq">
               <p className="nv-qt">Q{qs.length > 1 ? qi + 1 : ''}. {qs[qi].q}</p>
               <div className="nv-list nv-list-s">{opts.map((o, i) => <button key={i} className={'nv-opt' + (okq && o.c ? ' nv-right' : bad === i ? ' nv-wrong nv-shake' : '')} onClick={() => choose(i)}>{o.t}</button>)}</div>
               <Fb className={'nv-fbmsg' + (okq ? ' on' : '')}>{okq ? '정답이에요! 👏' : ''}</Fb>
@@ -109,9 +113,9 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
         </div>
         <button className="nv-arrow" disabled={qPend ? false : cur >= pages.length - 1 || cur + 1 > reach || phase === 'play'} onClick={() => (qPend ? nextQ() : goPage(cur + 1))} title={qPend ? '다음 문제' : undefined} aria-label={qPend ? '다음 문제' : '다음'}>›</button>
       </div>
-      {phase !== 'ready' && !shadow && (
-        <div className="nv-ptools">
-          {item.sub !== 'none' && !quiz && !review && <button className="nv-hintbtn" onClick={() => setCc(!cc)}>{cc ? '자막 끄기' : '자막 켜기'}</button>}
+      {!shadow && (
+        <div className="nv-ptools nv-scene-tools" style={phase === 'ready' || quiz || review ? { visibility: 'hidden' } : undefined}>
+          {item.sub !== 'none' && <button className="nv-hintbtn" onClick={() => setCc(!cc)}>{cc ? '자막 끄기' : '자막 켜기'}</button>}
           <button className="nv-hintbtn" disabled={phase === 'play' || !left} onClick={start}>다시 보기{phase === 'play' ? '' : ` (${left}회 남음)`}</button>
         </div>
       )}
