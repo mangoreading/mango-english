@@ -15,7 +15,7 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
   const [idx, setIdx] = useState(0); const [paused, setPaused] = useState(false); const [plays, setPlays] = useState(0); const [cc, setCc] = useState(item.sub !== 'none');
   const run = useRef(0); const fired = useRef(false);
   const [back, setBack] = useState<'video' | 'quiz' | 'review' | 'shadow' | null>(null); const [maxPg, setMaxPg] = useState(0); // 이전 버튼으로 돌아가 보는 화면 / 지금까지 도달한 가장 먼 화면
-  const [qi, setQi] = useState(0); const [res, setRes] = useState<boolean[]>([]); const wrong = useRef(false); const [bad, setBad] = useState<number | null>(null); const [okq, setOkq] = useState(false); const [qDone, setQDone] = useState(false);
+  const [qi, setQi] = useState(0); const [sol, setSol] = useState<(boolean | undefined)[]>(() => qs.map(() => undefined)); const wrong = useRef(false); const [bad, setBad] = useState<number | null>(null); const okq = sol[qi] !== undefined; const qDone = qs.length > 0 && sol.every((x) => x !== undefined); // 문항별 풀이 기록(처음 시도에 맞혔는지)
   const opts = useMemo(() => (!qs[qi] || qs[qi].t === 'tf' ? [] : shuffle([{ t: qs[qi].ans ?? '', c: true }, ...(qs[qi].wrong ?? []).map((t) => ({ t, c: false }))])), [qi]); // eslint-disable-line
   useEffect(() => () => { run.current++; stopSeq(); }, []);
   useEffect(() => { if (phase === 'after' && !qs.length && !fired.current) { fired.current = true; onDone([]); } /* eslint-disable-next-line */ }, [phase]);
@@ -42,12 +42,12 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
     if (!paused) step(i, id);
   }
   /** 문항을 맞힘: 마지막이면 바로 이어가고, 아니면 [>] 를 눌러야 다음 문항으로 간다 */
-  const firstTry = useRef(true);
   function finishQ(ft: boolean) {
-    firstTry.current = ft; setOkq(true);
-    if (qi + 1 >= qs.length) { const r = [...res, ft]; setRes(r); setQDone(true); if (!fired.current) { fired.current = true; onDone(r.map((ok) => ({ tag: 'listen', ok }))); } }
+    const nb = [...sol]; if (nb[qi] === undefined) nb[qi] = ft; setSol(nb);
+    if (nb.every((x) => x !== undefined) && !fired.current) { fired.current = true; onDone(nb.map((ok) => ({ tag: 'listen', ok: !!ok }))); }
   }
-  function nextQ() { setRes([...res, firstTry.current]); setQi(qi + 1); setOkq(false); wrong.current = false; firstTry.current = true; }
+  function nextQ() { setQi(qi + 1); wrong.current = false; }
+  function prevQ() { setQi(qi - 1); wrong.current = false; }
   function choose(i: number) {
     if (okq) return;
     if (opts[i].c) finishQ(!wrong.current);
@@ -79,7 +79,7 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
   return (
     <div className="nv-body nv-scene">
       <div className="nv-row nv-lec-row">
-        <button className="nv-arrow" disabled={cur === 0 || phase === 'play'} onClick={() => goPage(cur - 1)} aria-label="이전">‹</button>
+        <button className="nv-arrow" disabled={(cur === 0 && !(quiz && qi > 0)) || phase === 'play'} onClick={() => (quiz && qi > 0 ? prevQ() : goPage(cur - 1))} aria-label="이전">‹</button>
         <div className="nv-scene-main">
           {!quiz && !review && !shadow && (
             <div className="nv-stage" onClick={phase === 'play' ? () => (paused ? resume() : pause()) : undefined} style={phase === 'play' ? { cursor: 'pointer' } : undefined}>
