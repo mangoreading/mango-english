@@ -848,10 +848,13 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-mtl.nv-mtcur { background:#FFF3C4; border-radius:.5em; }
 
 /* 본문 세트(문항 붙은 mtext/pread): 문제 풀기 버튼 줄, 본문 보기 오버레이, T/F 두 칸 */
-.nv-setbar { display:flex; justify-content:center; padding:.4em 0 .2em; }
-.nv-setbar .nv-hintbtn:disabled { opacity:.55; cursor:default; }
+
+
 .nv-setov { position:absolute; inset:0; z-index:30; background:#fff; border-radius:inherit; display:flex; flex-direction:column; overflow:auto; padding:.6em; }
 .nv-setov-in { flex:1; min-height:0; overflow:auto; }
 .nv-setov-x { align-self:center; margin:.5em 0 .2em; }
 .nv-setq-tf { flex-direction:row; gap:.8em; } .nv-setq-tf .nv-opt { flex:1; text-align:center; }
 .nv-setq-fb { margin:.4em 0 0; color:#176B3A; font-size:.95em; font-weight:600; }
+
+/* 본문 오른쪽 [>] 로 문제 풀기로 이동 (Model Text) */
+.nv-mtbody { position:relative; } .nv-mt-next { position:absolute; right:.8em; top:42%; font-size:1.8em; }

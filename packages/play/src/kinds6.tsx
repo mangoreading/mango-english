@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Fb } from './fb';
 import { Rich } from './kinds3';
+import { TfBlock, type SetQ } from './kinds8';
 import { imgSrc, prefetchSay, sayScript, shuffle, stopSeq, type KindProps } from './common';
 
 interface Sc { who?: string; en: string; ko?: string; pic?: string }
-interface Q { t?: 'mc' | 'tf'; q: string; ans: string; wrong?: string[] }
+type Q = SetQ
 
 /** 장면 영상: 그림·대사가 이어지는 짧은 장면을 보고 듣는다. 확인 문항이 있으면 다 본 뒤 이어서 푼다. */
 export function SceneStory({ item, pic, onDone }: KindProps) {
@@ -15,7 +16,7 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
   const run = useRef(0); const fired = useRef(false);
   const [back, setBack] = useState<'video' | 'quiz' | 'review' | 'shadow' | null>(null); const [maxPg, setMaxPg] = useState(0); // 이전 버튼으로 돌아가 보는 화면 / 지금까지 도달한 가장 먼 화면
   const [qi, setQi] = useState(0); const [res, setRes] = useState<boolean[]>([]); const wrong = useRef(false); const [bad, setBad] = useState<number | null>(null); const [okq, setOkq] = useState(false);
-  const opts = useMemo(() => (!qs[qi] ? [] : qs[qi].t === 'tf' ? [{ t: 'True', c: qs[qi].ans === 'True' }, { t: 'False', c: qs[qi].ans === 'False' }] : shuffle([{ t: qs[qi].ans, c: true }, ...(qs[qi].wrong ?? []).map((t) => ({ t, c: false }))])), [qi]); // eslint-disable-line
+  const opts = useMemo(() => (!qs[qi] || qs[qi].t === 'tf' ? [] : shuffle([{ t: qs[qi].ans ?? '', c: true }, ...(qs[qi].wrong ?? []).map((t) => ({ t, c: false }))])), [qi]); // eslint-disable-line
   useEffect(() => () => { run.current++; stopSeq(); }, []);
   useEffect(() => { if (phase === 'after' && !qs.length) { if (hasReview) setPhase('review'); else if (!fired.current) { fired.current = true; onDone([]); } } if (phase === 'review' && !qs.length && !fired.current) { fired.current = true; onDone([]); } /* eslint-disable-next-line */ }, [phase]);
   const src = (k?: string) => (k ? (/^https?:|^word\/|^scene\//.test(k) ? imgSrc(k) : imgSrc(pic(k))) : '');
@@ -39,6 +40,11 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
     const i = Math.max(0, Math.min(scenes.length - 1, Math.floor(((e.clientX - r.left) / r.width) * scenes.length)));
     const id = ++run.current; stopSeq(); setIdx(i);
     if (!paused) step(i, id);
+  }
+  function passQ(firstTry: boolean) {
+    const r = [...res, firstTry];
+    if (qi + 1 >= qs.length) { if (!fired.current) { fired.current = true; onDone(r.map((ok) => ({ tag: 'listen', ok }))); } setRes(r); setOkq(true); if (hasReview) setPhase('review'); }
+    else { setRes(r); setQi(qi + 1); setOkq(false); wrong.current = false; }
   }
   function choose(i: number) {
     if (okq) return;
@@ -94,7 +100,7 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
           )}
           {shadow && <ShadowSay scenes={scenes} src={src} />}
           {quiz && qs[qi] && (
-            <div className="nv-sq">
+            qs[qi].t === 'tf' ? <TfBlock key={qi} q={qs[qi]} no={qs.length > 1 ? String(qi + 1) : ''} onFinish={passQ} /> : <div className="nv-sq">
               <p className="nv-qt">Q{qs.length > 1 ? qi + 1 : ''}. {qs[qi].q}</p>
               <div className="nv-list nv-list-s">{opts.map((o, i) => <button key={i} className={'nv-opt' + (okq && o.c ? ' nv-right' : bad === i ? ' nv-wrong nv-shake' : '')} onClick={() => choose(i)}>{o.t}</button>)}</div>
               <Fb className={'nv-fbmsg' + (okq ? ' on' : '')}>{okq ? '정답이에요! 👏' : ''}</Fb>

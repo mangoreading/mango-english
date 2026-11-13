@@ -176,7 +176,7 @@ export function SDrill({ item, onDone }: KindProps) {
 }
 
 /** 글 듣고 읽기: 쪽을 넘기며 듣고, 해설(한글)을 열어 본다 */
-export function PRead({ item, onDone }: KindProps) {
+export function PRead({ item, onDone, onNext }: KindProps & { onNext?: { ready: boolean; go: () => void } }) {
   // 본문 줄 중 '---' 는 쪽 나눔 표시, 해설도 같은 방식
   const pages: string[][] = ((item.text ?? []) as string[]).reduce<string[][]>((a, l) => { if (l.trim() === '---') a.push([]); else a[a.length - 1].push(l); return a; }, [[]]).filter((g) => g.length);
   const kos: string[] = item.ko ? String(item.ko).split(/\n-{3,}\n/) : [];
@@ -202,7 +202,7 @@ export function PRead({ item, onDone }: KindProps) {
       <div className="nv-row nv-row-w">
         <button className="nv-arrow" disabled={p === 0} onClick={() => go(p - 1)} aria-label="이전">‹</button>
         <div className="nv-pbox">{pages[p].map((l, i) => <p key={i} className={hl === i ? 'nv-hl' : ''}><Rich text={l} />{hl === i && wait && <span className="nv-ftag"> 🗣 따라 읽어 보세요</span>}</p>)}</div>
-        <button className="nv-arrow" disabled={p === pages.length - 1} onClick={() => go(p + 1)} aria-label="다음">›</button>
+        <button className="nv-arrow" disabled={p === pages.length - 1 ? !(onNext && onNext.ready) : false} title={p === pages.length - 1 && onNext ? '문제 풀기' : undefined} onClick={() => (p === pages.length - 1 && onNext ? onNext.go() : go(p + 1))} aria-label={p === pages.length - 1 && onNext ? '문제 풀기' : '다음'}>›</button>
       </div>
       <div className="nv-ptools">
         {mode ? <button className="nv-listen nv-listen-s" onClick={stop}><b>■ 멈추기</b></button> : <>
@@ -217,7 +217,7 @@ export function PRead({ item, onDone }: KindProps) {
 }
 
 /** 모범 글 읽기: 왼쪽 본문, 오른쪽 해설/해석 */
-export function MText({ item, onDone }: KindProps) {
+export function MText({ item, onDone, onNext }: KindProps & { onNext?: { ready: boolean; go: () => void } }) {
   const [tab, setTab] = useState<'ex' | 'ko'>('ex'); const lines: string[] = item.text ?? [];
   useEffect(() => { onDone([]); /* eslint-disable-next-line */ }, []);
   const sideEx: string[] = item.explain ?? []; const sideKo: string[] = item.ko ? String(item.ko).split('\n') : [];
@@ -251,6 +251,7 @@ export function MText({ item, onDone }: KindProps) {
       </div>
       <div className="nv-ptools"><button className="nv-listen nv-listen-s" onClick={() => { stopRep(); say(lines.map(plain).join(' ')); }}><i className="nv-sico" aria-hidden="true" /> <b>듣기</b></button><button className={'nv-listen nv-listen-s nv-repbtn' + (rep != null ? ' on' : '')} onClick={toggleRep}><b>{rep != null ? '■ 멈춤' : '🗣 따라 읽기'}</b></button></div>
       </div>
+      {onNext && <button className="nv-arrow nv-mt-next" disabled={!onNext.ready} onClick={onNext.go} title="문제 풀기" aria-label="문제 풀기">›</button>}
     </div>
   );
 }
