@@ -4,7 +4,7 @@ import { Rich } from './kinds3';
 import { imgSrc, prefetchSay, sayScript, shuffle, stopSeq, type KindProps } from './common';
 
 interface Sc { who?: string; en: string; ko?: string; pic?: string }
-interface Q { q: string; ans: string; wrong: string[] }
+interface Q { t?: 'mc' | 'tf'; q: string; ans: string; wrong?: string[] }
 
 /** 장면 영상: 그림·대사가 이어지는 짧은 장면을 보고 듣는다. 확인 문항이 있으면 다 본 뒤 이어서 푼다. */
 export function SceneStory({ item, pic, onDone }: KindProps) {
@@ -15,7 +15,7 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
   const run = useRef(0); const fired = useRef(false);
   const [back, setBack] = useState<'video' | 'quiz' | 'review' | 'shadow' | null>(null); const [maxPg, setMaxPg] = useState(0); // 이전 버튼으로 돌아가 보는 화면 / 지금까지 도달한 가장 먼 화면
   const [qi, setQi] = useState(0); const [res, setRes] = useState<boolean[]>([]); const wrong = useRef(false); const [bad, setBad] = useState<number | null>(null); const [okq, setOkq] = useState(false);
-  const opts = useMemo(() => (qs[qi] ? shuffle([{ t: qs[qi].ans, c: true }, ...qs[qi].wrong.map((t) => ({ t, c: false }))]) : []), [qi]); // eslint-disable-line
+  const opts = useMemo(() => (!qs[qi] ? [] : qs[qi].t === 'tf' ? [{ t: 'True', c: qs[qi].ans === 'True' }, { t: 'False', c: qs[qi].ans === 'False' }] : shuffle([{ t: qs[qi].ans, c: true }, ...(qs[qi].wrong ?? []).map((t) => ({ t, c: false }))])), [qi]); // eslint-disable-line
   useEffect(() => () => { run.current++; stopSeq(); }, []);
   useEffect(() => { if (phase === 'after' && !qs.length) { if (hasReview) setPhase('review'); else if (!fired.current) { fired.current = true; onDone([]); } } if (phase === 'review' && !qs.length && !fired.current) { fired.current = true; onDone([]); } /* eslint-disable-next-line */ }, [phase]);
   const src = (k?: string) => (k ? (/^https?:|^word\/|^scene\//.test(k) ? imgSrc(k) : imgSrc(pic(k))) : '');

@@ -40,6 +40,7 @@ const STORY: Field[] = [
 const EXROWS = (label: string, pic = false, lab = false, grp = false): Field => ({ k: 'items', label, t: 'rows', req: true, blank: () => ({ en: '', ko: '' }), cols: [
   { k: 'en', label: '영어 (강조: [[파랑]] {{빨강}})', t: 'text' }, { k: 'ko', label: '한글', t: 'text' },
   ...(pic ? [{ k: 'pic', label: '그림(단원 단어)', t: 'text' as const, w: 120 }] : []), ...(lab ? [{ k: 'label', label: '설명 (오른쪽에 표시, 선택)', t: 'text' as const, w: 170 }] : []), ...(grp ? [{ k: 'group', label: '소제목 (같은 소제목끼리 묶임)', t: 'text' as const, w: 190 }] : [])] });
+const SETQ: Field = { k: 'qs', label: '확인 문항 (선택, 최대 3개 · 본문을 다 본 뒤 풀어요. 문제 풀이 중에도 "본문 보기" 버튼이 있어요)', t: 'rows', blank: () => ({ t: 'mc', q: '', ans: '', wrong: [] }), cols: [{ k: 't', label: '종류', t: 'sel', opts: [['mc', '선다'], ['tf', 'T/F']], w: 80 }, { k: 'q', label: '질문 / 판단할 문장', t: 'text' }, { k: 'ans', label: '정답 (T/F는 True 또는 False)', t: 'text', w: 170 }, { k: 'wrong', label: '오답 (선다만, 한 줄에 하나, 2~3개)', t: 'lines', w: 220 }, { k: 'fb', label: '정답 후 설명 (선택)', t: 'text', w: 200 }] };
 const SPEC2: Record<string, Field[]> = {
   goal: [{ k: 'title', label: '학습목표 (2~3줄 분량, 강조: [[파랑]])', t: 'area', req: true }, { k: 'ko', label: '학습목표 보충 설명 (선택)', t: 'text' }, { k: 'pic', label: '왼쪽 아래 그림 (선택: 단원 단어 key 또는 이미지 주소)', t: 'text' }, { k: 'head', label: '오른쪽 제목 (비우면 "핵심표현")', t: 'text' }, EXROWS('핵심표현 (최대 5~6개)', false, false, true), VINST],
   kexp: [EXROWS('핵심 표현 (말풍선, 최대 5개)', false, true), VINST],
@@ -50,12 +51,12 @@ const SPEC2: Record<string, Field[]> = {
   scene: [{ k: 'title', label: '제목 (선택)', t: 'text' },
     { k: 'scenes', label: '장면 (위에서 아래로 이어짐 · 그림은 단원 단어 key 또는 이미지 주소)', t: 'rows', req: true, blank: () => ({ who: '', en: '', ko: '', pic: '' }), cols: [{ k: 'who', label: '말하는 사람', t: 'text', w: 110 }, { k: 'en', label: '영어 대사', t: 'text' }, { k: 'ko', label: '한글 해석 (선택)', t: 'text' }, { k: 'pic', label: '그림', t: 'text', w: 160 }] },
     { k: 'sub', label: '자막 (en: 영어 · enko: 영어+한글 · none: 없음, 비우면 영어)', t: 'text' }, { k: 'replay', label: '다시 보기 횟수 (비우면 2)', t: 'num' }, { k: 'explain', label: '해설 (한 줄에 하나, 강조 [[파랑]] · 문항을 푼 뒤 "해석과 해설" 화면에 보여요)', t: 'lines' },
-    { k: 'qs', label: '확인 문항 (선택, 영상을 다 본 뒤 풀어요)', t: 'rows', blank: () => ({ q: '', ans: '', wrong: [] }), cols: [{ k: 'q', label: '질문', t: 'text' }, { k: 'ans', label: '정답', t: 'text', w: 170 }, { k: 'wrong', label: '오답 (한 줄에 하나, 1~3개)', t: 'lines', w: 220 }] }, VINST],
+    { k: 'qs', label: '확인 문항 (선택, 영상을 다 본 뒤 풀어요)', t: 'rows', blank: () => ({ q: '', ans: '', wrong: [] }), cols: [{ k: 't', label: '종류', t: 'sel', opts: [['mc', '선다'], ['tf', 'T/F']], w: 80 }, { k: 'q', label: '질문 / 판단할 문장', t: 'text' }, { k: 'ans', label: '정답 (T/F는 True 또는 False)', t: 'text', w: 170 }, { k: 'wrong', label: '오답 (선다만, 한 줄에 하나, 1~3개)', t: 'lines', w: 220 }] }, VINST],
 
   scenerep: [{ k: 'title', label: '제목 (선택)', t: 'text' },
     { k: 'scenes', label: '장면 (위에서 아래로 이어짐 · 그림은 단원 단어 key 또는 이미지 주소)', t: 'rows', req: true, blank: () => ({ who: '', en: '', ko: '', pic: '' }), cols: [{ k: 'who', label: '말하는 사람', t: 'text', w: 110 }, { k: 'en', label: '영어 대사', t: 'text' }, { k: 'ko', label: '한글 해석 (선택)', t: 'text' }, { k: 'pic', label: '그림', t: 'text', w: 160 }] },
     { k: 'sub', label: '자막 (en: 영어 · enko: 영어+한글 · none: 없음, 비우면 영어)', t: 'text' }, { k: 'replay', label: '다시 보기 횟수 (비우면 2)', t: 'num' }, { k: 'explain', label: '해설 (한 줄에 하나, 강조 [[파랑]] · 문항을 푼 뒤 "해석과 해설" 화면에 보여요)', t: 'lines' },
-    { k: 'qs', label: '확인 문항 (선택, 영상을 다 본 뒤 풀어요)', t: 'rows', blank: () => ({ q: '', ans: '', wrong: [] }), cols: [{ k: 'q', label: '질문', t: 'text' }, { k: 'ans', label: '정답', t: 'text', w: 170 }, { k: 'wrong', label: '오답 (한 줄에 하나, 1~3개)', t: 'lines', w: 220 }] }, VINST],
+    { k: 'qs', label: '확인 문항 (선택, 영상을 다 본 뒤 풀어요)', t: 'rows', blank: () => ({ q: '', ans: '', wrong: [] }), cols: [{ k: 't', label: '종류', t: 'sel', opts: [['mc', '선다'], ['tf', 'T/F']], w: 80 }, { k: 'q', label: '질문 / 판단할 문장', t: 'text' }, { k: 'ans', label: '정답 (T/F는 True 또는 False)', t: 'text', w: 170 }, { k: 'wrong', label: '오답 (선다만, 한 줄에 하나, 1~3개)', t: 'lines', w: 220 }] }, VINST],
   lnum: [{ k: 'q', label: '질문 (소리로 먼저 읽어 줘요)', t: 'text', req: true }, { k: 'opts', label: '선택지 (한 줄에 하나, 2~4개 · 화면에는 번호만 보이고 소리로 "One, Two…" 하며 읽어 줘요)', t: 'lines', req: true }, { k: 'ans', label: '정답 번호 (1~4)', t: 'num', req: true }, { k: 'plays', label: '들을 수 있는 횟수 (비우면 2)', t: 'num' }, { k: 'pic', label: '그림 (선택: 단원 단어 key 또는 이미지 주소 · 넣으면 "그림에 알맞은 답" 문구로 바뀌어요)', t: 'text' }, VINST],
   wsent: [{ k: 'cards', label: '카드 (위에서 아래로 한 장씩 · 단어를 보여 주며 2번 읽고, 3번째에 문장을 보여 주며 읽어 줘요 · 문장 안의 단어는 빨강)', t: 'rows', req: true, blank: () => ({ word: '', wko: '', sent: '', ko: '', pic: '' }), cols: [
     { k: 'word', label: '단어', t: 'text', w: 120 }, { k: 'wko', label: '단어 뜻 (한글)', t: 'text', w: 100 }, { k: 'sent', label: '단어가 들어간 문장', t: 'text' }, { k: 'ko', label: '문장 뜻 (한글, 선택)', t: 'text', w: 150 }, { k: 'pic', label: '그림(단원 단어 key 또는 이미지 주소)', t: 'text', w: 150 }] }, VINST],
@@ -68,8 +69,8 @@ const SPEC2: Record<string, Field[]> = {
       { k: 'tip', label: '알아 두기 (선택)', t: 'text' }, { k: 'pic', label: '그림 (단원 단어 key 또는 주소, 선택)', t: 'text', w: 120 }] }, VINST],
   wrepeat: [VW('따라 말할 단어'), VINST],
   sdrill: [{ k: 'tpl', label: '문장 ({} 가 바꿔 넣을 자리, 예: How much are these {}?)', t: 'text', req: true }, { k: 'words', label: '바꿔 넣을 단어 (한 줄에 하나)', t: 'lines', req: true }, VINST],
-  pread: [{ k: 'text', label: '본문 (한 줄에 한 문장, "---" 줄은 쪽 나눔)', t: 'lines', req: true }, { k: 'ko', label: '해설·번역 (쪽 나눔은 "---" 한 줄)', t: 'area' }, VINST],
-  mtext: [{ k: 'title', label: '제목 (예: SALE)', t: 'text' }, { k: 'text', label: '본문 (한 줄에 한 문장, 강조 [[파랑]] {{빨강}})', t: 'lines', req: true }, { k: 'explain', label: '해설 (한 줄에 하나, 강조 가능)', t: 'lines' }, { k: 'ko', label: '해석(한글 번역)', t: 'area' }, VINST],
+  pread: [{ k: 'text', label: '본문 (한 줄에 한 문장, "---" 줄은 쪽 나눔)', t: 'lines', req: true }, { k: 'ko', label: '해설·번역 (쪽 나눔은 "---" 한 줄)', t: 'area' }, SETQ, VINST],
+  mtext: [{ k: 'title', label: '제목 (예: SALE)', t: 'text' }, { k: 'text', label: '본문 (한 줄에 한 문장, 강조 [[파랑]] {{빨강}})', t: 'lines', req: true }, { k: 'explain', label: '해설 (한 줄에 하나, 강조 가능)', t: 'lines' }, { k: 'ko', label: '해석(한글 번역)', t: 'area' }, SETQ, VINST],
 };
 const ANSW = (label = '정답 (여러 정답은 | 로 구분)'): Field => ({ k: 'ans', label, t: 'text', req: true });
 const SPEC3: Record<string, Field[]> = {

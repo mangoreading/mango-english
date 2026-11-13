@@ -6,6 +6,7 @@ import { AiTalk, LookSpeak, LSpeak, Present, RAloud, ReadAlong, Role, SayKor } f
 import { setOutputScope } from './outputs';
 import { DFill, LWrite, LMWrite, MFree, MWBank, SBuild, SCloze, SFill, SOrder, SScram, SWrite, SWrt } from './kinds4';
 import { SceneStory } from './kinds6';
+import { withQuiz } from './kinds8';
 import { Lecture, WordSent, LNum } from './kinds7';
 import { MicTest } from './mictest';
 import { Goal, KExp, LCardP, LCardT, LSent, MText, PRead, SDrill, TapL, WRepeat } from './kinds3';
@@ -90,7 +91,7 @@ const OWN_PIC = ['lookspeak', 'role', 'dreadp', 'pchoice', 'dchoice', 'dfill', '
 /** 듣고 고르기: 질문을 맨 위 안내 자리에 보여 준다 */
 const LCH = ['lchtext', 'lchpic', 'lchlist', 'lwrite'];
 const INST_SUB: Record<string, string> = { kexp: '(3번 반복해서 들어주세요)', present: '(동영상 촬영해 보기)' };
-const KIND = { scene: SceneStory, scenerep: SceneStory, sscraml: SScram, sscramlr: SScram, sscramr: SScram, lecture: Lecture, wsent: WordSent, lnum: LNum, lookspeak: LookSpeak, saykor: SayKor, lspeak: LSpeak, raloud: RAloud, role: Role, dreadp: ReadAlong, dreadt: ReadAlong, present: Present, aitalk: AiTalk, sbuild: SBuild, swrite: SWrite, sfill: SFill, dfill: DFill, dfillt: DFill, sscram: SScram, sorder: SOrder, mwbank: MWBank, scloze: SCloze, lwrite: LWrite, mfree: MFree, swrt: SWrt, goal: Goal, kexp: KExp, tapl: TapL, lsent: LSent, lcardp: LCardP, lcardt: LCardT, sdrill: SDrill, pread: PRead, mtext: MText, wrepeat: WRepeat, vcards: VCards, vtype1: VType1, vspell: VSpell, vmatch: VMatch, vsound: VSound, vwrite: VWrite,
+const KIND = { scene: SceneStory, scenerep: SceneStory, sscraml: SScram, sscramlr: SScram, sscramr: SScram, lecture: Lecture, wsent: WordSent, lnum: LNum, lookspeak: LookSpeak, saykor: SayKor, lspeak: LSpeak, raloud: RAloud, role: Role, dreadp: ReadAlong, dreadt: ReadAlong, present: Present, aitalk: AiTalk, sbuild: SBuild, swrite: SWrite, sfill: SFill, dfill: DFill, dfillt: DFill, sscram: SScram, sorder: SOrder, mwbank: MWBank, scloze: SCloze, lwrite: LWrite, mfree: MFree, swrt: SWrt, goal: Goal, kexp: KExp, tapl: TapL, lsent: LSent, lcardp: LCardP, lcardt: LCardT, sdrill: SDrill, pread: withQuiz(PRead), mtext: withQuiz(MText), wrepeat: WRepeat, vcards: VCards, vtype1: VType1, vspell: VSpell, vmatch: VMatch, vsound: VSound, vwrite: VWrite,
   wchoice: WChoice, pchoice: PChoice, dchoice: DChoice, tf: TrueFalse, lchtext: LChText, lchpic: LChPic, lchlist: LChList, lmatch: LMatch, lmwrite: LMWrite,
   sqchoice: SqChoice, sqtf: SqTF, sqmulti: SqMulti } as const;
 
@@ -153,7 +154,7 @@ export function NativePlayer({ title, items, vocab, nextLabel, step, quiet, scop
         <span className="nv-pts"><i className="nv-star">★</i> 포인트 : +{pts}</span>
       </div>
       <div className="nv-instrow">
-      <p className="nv-inst"><span>{hl(LCH.includes(it.k) && it.q ? it.q : it.inst || (it.k === 'lnum' && it.pic ? '잘 듣고, 그림에 알맞은 답을 선택해 주세요.' : INST[it.k]) || '', SPEAK_SKIN.includes(it.k) || BG_SKIN.includes(it.k))}{INST_SUB[it.k] && <small>{INST_SUB[it.k]}</small>}</span></p>
+      <p className="nv-inst"><span>{hl(LCH.includes(it.k) && it.q ? it.q : it.inst || (it.k === 'lnum' && it.pic ? '잘 듣고, 그림에 알맞은 답을 선택해 주세요.' : (it.k === 'mtext' || it.k === 'pread') && it.qs?.length ? '글을 읽고 문제를 풀어 보세요.' : INST[it.k]) || '', SPEAK_SKIN.includes(it.k) || BG_SKIN.includes(it.k))}{INST_SUB[it.k] && <small>{INST_SUB[it.k]}</small>}</span></p>
         {MIC_KINDS.includes(it.k) && <button type="button" className="nv-mtbtn" onClick={() => setMt(true)}><i aria-hidden="true">🎤</i> 마이크 테스트</button>}
       </div>
       <ProgCtx.Provider value={setProg}>

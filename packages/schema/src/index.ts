@@ -158,12 +158,13 @@ export const LCardP = z.object({ ...T1, k: z.literal('lcardp'), items: exs(1) })
 export const LCardT = z.object({ ...T1, k: z.literal('lcardt'), items: exs(1) });
 export const WRepeat = z.object({ ...vbase, k: z.literal('wrepeat'), words: VKeys });
 export const SDrill = z.object({ ...T1, k: z.literal('sdrill'), tpl: z.string().refine((v) => v.includes('{}'), '문장에 {} (바꿀 자리)가 있어야 해요'), words: z.array(z.string().min(1)).min(2).max(10) });
-export const PRead = z.object({ ...T1, k: z.literal('pread'), text: z.array(z.string().min(1)).min(1), ko: z.string().optional() });
+export const SetQs = z.array(z.object({ t: z.enum(['mc', 'tf']).optional(), q: z.string().min(1), ans: z.string().min(1), wrong: z.array(z.string().min(1)).max(3).optional(), fb: z.string().optional() }).refine((x) => (x.t === 'tf' ? x.ans === 'True' || x.ans === 'False' : (x.wrong?.length ?? 0) >= 2), '선다는 오답 2~3개, T/F 정답은 True 또는 False')).max(3);
+export const PRead = z.object({ ...T1, k: z.literal('pread'), text: z.array(z.string().min(1)).min(1), ko: z.string().optional(), qs: SetQs.optional() });
 /** 장면 영상: 그림·대사가 이어지는 30초 안팎의 짧은 장면 + (선택) 확인 문항 */
 export const Scene = z.object({ ...T1, k: z.literal('scene'), title: z.string().optional(),
   scenes: z.array(z.object({ who: z.string().optional(), en: z.string().min(1), ko: z.string().optional(), pic: z.string().optional() })).min(2).max(14),
   sub: z.enum(['en', 'enko', 'none']).optional(), explain: z.array(z.string()).optional(), review: z.boolean().optional(), replay: z.number().int().min(0).max(5).optional(),
-  qs: z.array(z.object({ q: z.string().min(1), ans: z.string().min(1), wrong: z.array(z.string().min(1)).min(1).max(3) })).max(4).optional() });
+  qs: z.array(z.object({ t: z.enum(['mc', 'tf']).optional(), q: z.string().min(1), ans: z.string().min(1), wrong: z.array(z.string().min(1)).max(3).optional() }).refine((x) => (x.t === 'tf' ? x.ans === 'True' || x.ans === 'False' : (x.wrong?.length ?? 0) >= 1), '선다는 오답 1~3개, T/F 정답은 True 또는 False')).max(4).optional() });
 /** 장면 영상 보기 + 따라 말하기: 장면 영상 보기와 같고, 해설 뒤에 대사를 한 문장씩 듣고 따라 말하는 단계가 붙음 */
 export const SceneRep = z.object({ ...Scene.shape, k: z.literal('scenerep') });
 /** 강의 슬라이드: 이번 Lesson 의 표현·문법을 강의처럼 짧은 슬라이드로 설명 (cards: "영어 | 한글 | 설명", formula: 한 줄에 한 식(+로 연결), table: 첫 줄이 머리글(| 로 칸 구분)) */
@@ -172,7 +173,7 @@ export const Lecture = z.object({ ...T1, k: z.literal('lecture'), title: z.strin
     formula: z.array(z.string()).optional(), table: z.array(z.string()).optional(), tip: z.string().optional() })).min(1).max(10) });
 /** 단어·문장 듣고 따라 말하기: 카드마다 그림 + 단어(2번 읽기) + 그 단어가 들어간 문장(읽어 주기). 문장 안의 단어는 빨강으로 표시 */
 export const WSent = z.object({ ...T1, k: z.literal('wsent'), cards: z.array(z.object({ word: z.string().min(1), wko: z.string().optional(), sent: z.string().min(1), ko: z.string().optional(), pic: z.string().optional() })).min(1).max(9) });
-export const MText = z.object({ ...T1, k: z.literal('mtext'), title: z.string().optional(), text: z.array(z.string().min(1)).min(1), explain: z.array(z.string()).optional(), ko: z.string().optional() });
+export const MText = z.object({ ...T1, k: z.literal('mtext'), title: z.string().optional(), text: z.array(z.string().min(1)).min(1), explain: z.array(z.string()).optional(), ko: z.string().optional(), qs: SetQs.optional() });
 
 /* ===== 3단계: 쓰기류 =====  빈칸은 {} (정답은 ans 에 순서대로, "|" 로 여러 정답) */
 const alts = z.array(z.string()).optional();
