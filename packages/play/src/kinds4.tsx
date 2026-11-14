@@ -246,9 +246,9 @@ export function LBlank({ item, onDone }: KindProps) {
   const info = useRef<BInfo | null>(null); const [foc, setFoc] = useState<number | null>(null);
   const bh: string[] = item.blankHints ?? [];
   return (
-    <div className="nv-body nv-wbody nv-lblank">
+    <div className="nv-body nv-wbody nv-wtop nv-lblank">
       <AudioBar text={item.say ?? ''} max={item.plays} />
-      <Blanks lines={item.lines ?? []} ans={item.ans ?? []} big box onDone={onDone} tag="listen" info={info} onFoc={setFoc} />
+      <Blanks lines={item.lines ?? []} ans={item.ans ?? []} big cap onDone={onDone} tag="listen" info={info} onFoc={setFoc} />
       <HintBox lines={foc != null && bh[foc] ? [bh[foc]] : item.hint ?? []} item={item} ctx={() => ({ input: `The student listens to a short dialogue and fills in the blank(s).\n${blanksDesc(item.lines ?? [], info.current, foc)}\nScript the student heard:\n${item.say ?? ''}`, wrong: info.current?.wrong.filter(Boolean).length ?? 0 })} />
     </div>
   );

@@ -841,8 +841,9 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-lmw-in em { font-style:normal; color:#1F2A44; font-size:1.1em; } .nv-lmw-in input { flex:1; min-width:0; border:0; outline:0; font:inherit; background:transparent; }
 .nv-lmw-in:focus-within { border-color:var(--nv-blue); box-shadow:0 0 0 .18em rgba(79,125,240,.18); } .nv-lmw-in.ok { background:#F2FBF5; border-color:#7BC89A; } .nv-lmw-in.ok input { color:#1E8E4E; font-weight:700; } .nv-lmw-in.bad { border-color:#D64545; background:#FFF1F0; }
 /* 소리 막대(lblank): ▶ + 진행 막대 + 시간 */
-.nv-lblank { align-items:center; }
-.nv-abar { display:flex; align-items:center; gap:.8em; width:min(26em,92%); height:2.6em; padding:0 1.1em; margin:1.2em auto 1.6em; border:.08em solid #B8C2D4; border-radius:2em; background:#fff; font-size:1.05em; }
+.nv-lblank { align-items:center; } .nv-wbody.nv-wtop.nv-lblank { padding-top:15.5vh; }
+/* 소리 막대는 다른 듣기 템플릿의 '듣기' 버튼과 같은 자리(위에서 2.4em)·같은 높이에 둔다 */
+.nv-lblank > .nv-abar { position:absolute; top:2.2em; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:.8em; width:min(24em,92%); height:2.75em; padding:0 1.1em; margin:0; border:.08em solid #B8C2D4; border-radius:2em; background:#fff; box-sizing:border-box; }
 .nv-abar-btn { flex:none; width:1.8em; height:1.8em; padding:0; border:0; border-radius:50%; background:#E3EDFF; display:grid; place-items:center; cursor:pointer; }
 .nv-abar-btn.on { background:#3B6FD8; } .nv-abar-btn.on .nv-sico { filter:brightness(0) invert(1); }
 .nv-abar-track { position:relative; flex:1; height:.14em; background:#C9D1E0; border-radius:.1em; }
@@ -851,7 +852,6 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-abar-time { flex:none; font-size:.9em; color:#3a4560; font-variant-numeric:tabular-nums; } .nv-abar-left { flex:none; font-size:.8em; color:#6b7893; }
 /* 듣고 그림에 맞게 쓰기(lpwrite): 듣기 버튼 아래에 그림 카드 3~4장, 카드마다 답 칸 */
 .nv-lpw { gap:0; align-items:center; }
-.nv-lpw > .nv-listen.nv-listen-top { position:static; transform:none; margin:1.6em 0 0; }
 .nv-lpw-cards { display:flex; justify-content:center; flex-wrap:wrap; gap:1.2em; width:100%; max-width:54em; margin-top:2.6em; }
 .nv-lpw-card { flex:1 1 13em; max-width:17em; display:flex; flex-direction:column; align-items:center; gap:.7em; padding:1em .8em 1.2em; border:.08em solid #C5CEDC; background:#fff; }
 .nv-lpw-card.ok { border-color:#7BC89A; }
@@ -902,5 +902,3 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-setroot .nv-rv .nv-ptools { display:flex; justify-content:center; margin:.2em 0; }
 
 .nv-rv-tools { display:flex; justify-content:center; margin:.1em 0; }
-/* 듣고 빈칸 쓰기(lblank): 문장 상자를 둥근 알약 모양으로 넓게 */
-.nv-lblank .nv-bl.nv-bl-box { border-radius:2.4em; width:min(40em,94%); border-color:#4F7DF0; }
