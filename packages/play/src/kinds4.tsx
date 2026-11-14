@@ -181,6 +181,42 @@ export function LMWrite({ item, onDone }: KindProps) {
   );
 }
 
+/** 듣고 그림에 맞게 쓰기: 한 번 듣기 버튼으로 지문(대화) 전체를 듣고, 그림 카드마다 알맞은 답(가격 등)을 직접 쓴다 */
+export function LPWrite({ item, pic, onDone }: KindProps) {
+  const cards: { pic?: string; ans: string; label?: string }[] = item.cards ?? []; const pre: string = item.pre ?? '';
+  const [v, setV] = useState<string[]>(cards.map(() => '')); const [okS, setOkS] = useState<boolean[]>(cards.map(() => false)); const [bad, setBad] = useState<boolean[]>(cards.map(() => false));
+  const wrong = useRef<boolean[]>(cards.map(() => false)); const fired = useRef(false); const [foc, setFoc] = useState<number | null>(null); const [n, setN] = useState(0);
+  const max: number | undefined = item.plays; const left = max == null ? null : Math.max(0, max - n);
+  const norm = (x: string) => x.replace(/[\s,]/g, '').replace(/원$/, '').replace(pre ? new RegExp('^' + pre.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) : /^$/, '').toLowerCase();
+  function judge(i: number, val: string, final: boolean) {
+    setV((x) => x.map((y, k) => (k === i ? val : y)));
+    if (norm(val) === norm(cards[i].ans)) {
+      setBad((b) => b.map((y, k) => (k === i ? false : y)));
+      setOkS((o) => { const nx = o.map((y, k) => (k === i ? true : y)); if (!fired.current && nx.every(Boolean)) { fired.current = true; setTimeout(() => onDone(cards.map((_, k) => ({ tag: 'listen', ok: !wrong.current[k] }))), 0); } return nx; });
+    } else if (final && val.trim()) { wrong.current[i] = true; setBad((b) => b.map((y, k) => (k === i ? true : y))); setTimeout(() => setBad((b) => b.map((y, k) => (k === i ? false : y))), 700); }
+  }
+  const done = okS.every(Boolean);
+  return (
+    <div className="nv-body nv-wbody nv-lpw">
+      <button type="button" className="nv-listen nv-listen-top" disabled={left === 0} style={left === 0 ? { opacity: .45 } : undefined} onClick={() => { setN(n + 1); sayScript(item.say ?? ''); }}>
+        <i className="nv-sico" aria-hidden="true" /> <b>듣기</b>{left != null && <span style={{ marginLeft: '.5em', fontSize: '.8em' }}>({left}번 남음)</span>}
+      </button>
+      <div className="nv-lpw-cards">{cards.map((c, i) => {
+        const src = pic(c.pic) ?? c.pic ?? null;
+        return (
+          <div key={i} className={'nv-lpw-card' + (okS[i] ? ' ok' : '')}>
+            {src ? <img className="nv-lpw-img" src={imgSrc(src)} alt="" draggable={false} /> : <div className="nv-lpw-img" />}
+            {c.label && <span className="nv-lpw-lab">{c.label}</span>}
+            <label className={'nv-lmw-in nv-lpw-in' + (okS[i] ? ' ok' : '') + (bad[i] ? ' bad nv-shake' : '')}>{pre && <em>{pre}</em>}
+              <input value={okS[i] ? c.ans : v[i]} disabled={okS[i]} inputMode="text" aria-label={`${i + 1}번 그림의 답`} onFocus={() => setFoc(i)} onChange={(e) => judge(i, e.target.value, false)} onBlur={(e) => judge(i, e.target.value, true)} onKeyDown={(e) => { if (e.key === 'Enter') judge(i, v[i], true); }} /></label>
+          </div>);
+      })}</div>
+      <Msg ok={done} bad={bad.some(Boolean)} />
+      <HintBox lines={item.hint ?? []} item={item} ctx={() => ({ input: `The student listens once to a short dialogue and writes the answer (for example the price) under each picture.\n${cards.map((c, i) => `- picture ${i + 1}${c.label ? ' (' + c.label + ')' : ''}: ${okS[i] ? v[i] + ' ✓' : v[i]?.trim() ? v[i] + ' (not correct yet)' : '(empty)'}${foc === i ? '  ← student is here' : ''}`).join('\n')}\nScript the student heard:\n${item.say ?? ''}`, wrong: wrong.current.filter(Boolean).length })} />
+    </div>
+  );
+}
+
 /** 문장(대화)을 순서대로 맞추기 (M33): 끌어서 옮기거나, 한 줄을 누르고 옮길 자리를 눌러 맞바꾼다. 맞으면 바로 완료 */
 export function SOrder({ item, onDone }: KindProps) {
   const rows: { en: string; ko?: string }[] = item.items ?? [];
