@@ -288,6 +288,7 @@ export function LPMatch({ item, pic, onDone }: KindProps) {
             </button>);
         })}</div>
       </div>
+      <p className="nv-hint nv-lpm-ment">{done ? '모두 연결했어요!' : `연결되는 2개를 터치하세요 (${Object.keys(match).length}/${pairs.length})`}</p>
       <Msg ok={done} bad={bad != null} />
       <HintBox lines={item.hint ?? []} item={item} ctx={() => ({ input: `The student listens to a short dialogue and connects each picture on the left to the matching item on the right.\nPictures: ${pairs.length}. Matched so far: ${Object.keys(match).length}.\nScript the student heard:\n${item.say ?? ''}`, wrong: wrong.current.size })} />
     </div>

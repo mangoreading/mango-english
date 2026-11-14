@@ -855,7 +855,7 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-lpm-col { display:flex; flex-direction:column; gap:1.4em; } .nv-lpm-rcol { justify-content:center; }
 .nv-lpm-lines { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible; }
 .nv-lpm-card, .nv-lpm-tag { position:relative; font:inherit; cursor:pointer; background:#fff; border:.1em solid #C5CEDC; }
-.nv-lpm-card { box-sizing:border-box; width:12em; height:6em; display:flex; align-items:center; justify-content:center; padding:.4em; border-radius:.2em; overflow:hidden; }
+.nv-lpm-card { box-sizing:border-box; width:12em; height:6em; display:flex; align-items:center; justify-content:center; padding:.4em; border-radius:.2em; }
 .nv-lpm-card img { width:auto; height:100%; max-width:100%; object-fit:contain; display:block; margin:0; }
 .nv-lpm-ph { display:block; width:100%; height:100%; }
 .nv-lpm-tag { width:13em; height:3.2em; display:flex; align-items:center; justify-content:center; padding:0 1em; border-radius:.5em; font-size:1.15em; color:#1F2A44; }
@@ -864,6 +864,7 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-lpm-card .nv-lpm-dot { right:-1.6em; } .nv-lpm-tag .nv-lpm-dot { left:-1.6em; }
 .nv-lpm-card.on, .nv-lpm-tag.on { border-color:#E0A100; background:#FFF6D8; box-shadow:0 0 0 .18em rgba(240,165,0,.25); }
 .nv-lpm-card.ok, .nv-lpm-tag.ok { cursor:default; border-width:.16em; }
+.nv-lpm-ment { margin:1.4em 0 .2em; text-align:center; }
 .nv-lpm-tag.bad { background:#FFE3E0; border-color:#D64545; }
 /* 듣고 그림에 맞게 쓰기(lpwrite): 듣기 버튼 아래에 그림 카드 3~4장, 카드마다 답 칸 */
 .nv-lpw { gap:0; align-items:center; }
