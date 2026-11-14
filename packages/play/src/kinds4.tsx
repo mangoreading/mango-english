@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { aiHandlers, imgSrc, say, sayAuto, sayScript, shuffle, type KindProps } from './common';
+import { aiHandlers, imgSrc, say, sayAuto, sayScript, shuffle, stopSeq, type KindProps } from './common';
 import { Rich } from './kinds3';
 import { Hint } from './hint';
 import { Fb } from './fb';
@@ -213,6 +213,43 @@ export function LPWrite({ item, pic, onDone }: KindProps) {
       })}</div>
       <Msg ok={done} bad={bad.some(Boolean)} />
       <HintBox lines={item.hint ?? []} item={item} ctx={() => ({ input: `The student listens once to a short dialogue and writes the answer (for example the price) under each picture.\n${cards.map((c, i) => `- picture ${i + 1}${c.label ? ' (' + c.label + ')' : ''}: ${okS[i] ? v[i] + ' ✓' : v[i]?.trim() ? v[i] + ' (not correct yet)' : '(empty)'}${foc === i ? '  ← student is here' : ''}`).join('\n')}\nScript the student heard:\n${item.say ?? ''}`, wrong: wrong.current.filter(Boolean).length })} />
+    </div>
+  );
+}
+
+/** 소리 막대: ▶ 누르면 지문을 들려주고 진행 막대·시간이 흐른다 (소리 길이는 글자 수로 어림한다). 다시 누르면 멈춘다 */
+function AudioBar({ text, max }: { text: string; max?: number }) {
+  const [on, setOn] = useState(false); const [t, setT] = useState(0); const [n, setN] = useState(0); const gen = useRef(0);
+  const dur = Math.max(3, text.split(/\s+/).filter(Boolean).length / 2.4); // 초 (어림)
+  useEffect(() => { if (!on) return; const t0 = Date.now(); const id = setInterval(() => setT(Math.min(dur, (Date.now() - t0) / 1000)), 100); return () => clearInterval(id); }, [on, dur]);
+  useEffect(() => () => { stopSeq(); }, []);
+  const left = max == null ? null : Math.max(0, max - n);
+  function toggle() {
+    if (on) { gen.current++; stopSeq(); setOn(false); setT(0); return; }
+    if (left === 0) return;
+    const g = ++gen.current; setN(n + 1); setT(0); setOn(true);
+    sayScript(text, () => { if (g === gen.current) { setT(dur); setOn(false); } });
+  }
+  const mm = (x: number) => `${String(Math.floor(x / 60)).padStart(2, '0')}:${String(Math.floor(x % 60)).padStart(2, '0')}`;
+  return (
+    <div className="nv-abar" style={left === 0 && !on ? { opacity: .5 } : undefined}>
+      <button type="button" className={'nv-abar-btn' + (on ? ' on' : '')} onClick={toggle} aria-label={on ? '멈추기' : '듣기'}><i className="nv-sico" aria-hidden="true" /></button>
+      <span className="nv-abar-track"><i style={{ width: `${(t / dur) * 100}%` }} /><b style={{ left: `${(t / dur) * 100}%` }} /></span>
+      <span className="nv-abar-time">{mm(t)}</span>
+      {left != null && <span className="nv-abar-left">({left}번 남음)</span>}
+    </div>
+  );
+}
+
+/** 듣고 빈칸 쓰기: 소리 막대로 지문을 듣고, 문장의 빈칸({})에 들은 말을 직접 쓴다 */
+export function LBlank({ item, onDone }: KindProps) {
+  const info = useRef<BInfo | null>(null); const [foc, setFoc] = useState<number | null>(null);
+  const bh: string[] = item.blankHints ?? [];
+  return (
+    <div className="nv-body nv-wbody nv-lblank">
+      <AudioBar text={item.say ?? ''} max={item.plays} />
+      <Blanks lines={item.lines ?? []} ans={item.ans ?? []} big box onDone={onDone} tag="listen" info={info} onFoc={setFoc} />
+      <HintBox lines={foc != null && bh[foc] ? [bh[foc]] : item.hint ?? []} item={item} ctx={() => ({ input: `The student listens to a short dialogue and fills in the blank(s).\n${blanksDesc(item.lines ?? [], info.current, foc)}\nScript the student heard:\n${item.say ?? ''}`, wrong: info.current?.wrong.filter(Boolean).length ?? 0 })} />
     </div>
   );
 }
