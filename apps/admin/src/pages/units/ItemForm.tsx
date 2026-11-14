@@ -19,7 +19,7 @@ export const KIND_NAME: Record<string, string> = {
   mwbank: '모범 글 완성 (쓰기)', scloze: '글 빈칸 채우기 (읽기)', lwrite: '듣고 쓰기', lmwrite: '듣고 짝지어 쓰기', lpwrite: '듣고 그림에 맞게 쓰기', lblank: '듣고 빈칸 쓰기', mfree: '나만의 글 쓰기', swrt: '글 요약·쓰기',
   goal: '학습목표', kexp: '핵심표현 듣고 따라 읽기', tapl: '문장 눌러 듣기', lsent: '문장 듣고 고르기(카드)', lcardp: '듣고 익히기 (그림)', lcardt: '듣고 익히기 (글)',
   scene: '장면 영상 보기', scenerep: '장면 영상 보기 + 따라 말하기', sscraml: '문장 만들기 (듣고 만들기)', sscramlr: '문장 만들기 (듣고 이어질 말)', sscramr: '문장 만들기 (보고 이어질 말)', lecture: '강의 슬라이드', wsent: '단어·문장 듣고 따라 말하기', lnum: '듣고 번호 고르기', wrepeat: '단어 듣고 따라 말하기', sdrill: '문장 바꿔 말하기', pread: '글 듣고 읽기', mtext: '모범 글 읽기',
-  lmatch: '듣고 짝짓기', sqchoice: '글 읽고 답하기 (선택)', sqtf: '글 읽고 답하기 (T/F)', sqmulti: '글 읽고 답하기 (복수선택)',
+  lmatch: '듣고 짝짓기', lmatchp: '듣고 그림 짝짓기', sqchoice: '글 읽고 답하기 (선택)', sqtf: '글 읽고 답하기 (T/F)', sqmulti: '글 읽고 답하기 (복수선택)',
 };
 export interface VocabOpt { key: string; en: string; ko: string; image_path?: string | null }
 export const TAGS: [string, string][] = [['vocab', '어휘'], ['expr', '표현'], ['listen', '듣기'], ['speak', '말하기'], ['read', '읽기'], ['write', '쓰기']];
@@ -124,6 +124,7 @@ const SPEC: Record<string, Field[]> = {
   lchtext: [{ k: 'q', label: '질문', t: 'text' }, { k: 'say', label: '들려줄 문장 (긴 지문은 여러 줄, 화자는 "Jina(girl): 문장" · 괄호 girl/boy/woman/man)', t: 'area', req: true }, { k: 'replay', label: '다시 듣기 횟수 (비우면 제한 없음, 긴 지문은 2 권장)', t: 'num' }, OPTS, HINT, VINST],
   lchpic: [{ k: 'q', label: '질문', t: 'text' }, { k: 'say', label: '들려줄 문장 (긴 지문은 여러 줄, 화자는 "Jina(girl): 문장" · 괄호 girl/boy/woman/man)', t: 'area', req: true }, { k: 'replay', label: '다시 듣기 횟수 (비우면 제한 없음, 긴 지문은 2 권장)', t: 'num' }, OPTS, HINT, VINST],
   lchlist: [{ k: 'q', label: '질문', t: 'text' }, { k: 'say', label: '들려줄 문장 (긴 지문은 여러 줄, 화자는 "Jina(girl): 문장" · 괄호 girl/boy/woman/man)', t: 'area', req: true }, { k: 'replay', label: '다시 듣기 횟수 (비우면 제한 없음, 긴 지문은 2 권장)', t: 'num' }, OPTS, HINT, VINST],
+  lmatchp: [{ k: 'pairs', label: '짝 (3개 고정 · 왼쪽 그림 · 들려줄 말 · 오른쪽 정답) — 그림은 단원 단어 key 또는 이미지 주소', t: 'rows', req: true, blank: () => ({ pic: '', say: '', right: '' }), cols: [{ k: 'pic', label: '왼쪽(그림)', t: 'text', w: 160 }, { k: 'say', label: '들려줄 말', t: 'text' }, { k: 'right', label: '오른쪽 짝', t: 'text', w: 200 }] }, VINST],
   lmatch: [{ k: 'pairs', label: '짝 (왼쪽 이름 · 들려줄 말 · 오른쪽 정답)', t: 'rows', req: true, blank: () => ({ left: '', right: '' }), cols: [{ k: 'left', label: '왼쪽(소리)', t: 'text', w: 160 }, { k: 'say', label: '들려줄 말 (비우면 왼쪽 글)', t: 'text' }, { k: 'right', label: '오른쪽 짝', t: 'text', w: 200 }] }, VINST],
   sqchoice: [...STORY, { k: 'q', label: '질문', t: 'text', req: true }, OPTS, HINT, VINST],
   sqtf: [...STORY, { k: 'q', label: '질문 (비우면 기본 문구)', t: 'text' }, { k: 'items', label: '판단할 문장들', t: 'rows', req: true, blank: () => ({ t: '' }), cols: [{ k: 't', label: '문장', t: 'text' }, { k: 'a', label: '정답이 T', t: 'bool', w: 80 }] }, HINT, VINST],
@@ -250,6 +251,7 @@ export function defaultItem(kind: string): Obj {
     case 'lblank': return { k: 'lblank', tag: 'listen', say: '', lines: [''], ans: [''] };
     case 'lpwrite': return { k: 'lpwrite', tag: 'listen', say: '', cards: [{ pic: '', ans: '' }] };
     case 'lmwrite': return { k: 'lmwrite', tag: 'listen', pairs: [{ left: '', say: '', ans: '' }] };
+    case 'lmatchp': return { k: 'lmatchp', tag: 'listen', pairs: [{ pic: '', say: '', right: '' }, { pic: '', say: '', right: '' }, { pic: '', say: '', right: '' }] };
     case 'lmatch': return { k: 'lmatch', tag: 'listen', pairs: [{ left: '', right: '' }, { left: '', right: '' }] };
     case 'sqchoice': return { k: 'sqchoice', tag: 'read', text: [], q: '', opts: [{ t: '' }, { t: '' }, { t: '' }, { t: '' }], a: 0 };
     case 'sqtf': return { k: 'sqtf', tag: 'read', text: [], items: [{ t: '' }, { t: '' }] };

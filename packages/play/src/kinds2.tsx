@@ -134,8 +134,9 @@ export const LChPic = (p: KindProps) => <LChoose {...p} mode="pic" />;
 export const LChList = (p: KindProps) => <LChoose {...p} mode="list" />;
 
 /* ---------- 듣고 짝짓기 (lmatch): 왼쪽(소리) → 오른쪽(물건) ---------- */
-export function LMatch({ item, onDone }: KindProps) {
-  const pairs: { left: string; say?: string; right: string }[] = item.pairs ?? [];
+export function LMatch({ item, pic, onDone }: KindProps) {
+  const picMode = item.k === 'lmatchp'; // 듣고 그림 짝짓기: 왼쪽이 글 대신 그림 (3개 고정)
+  const pairs: { left: string; pic?: string; say?: string; right: string }[] = item.pairs ?? [];
   const rights = useMemo(() => shuffle(pairs.map((p, i) => ({ i, t: p.right }))), [item]); // eslint-disable-line
   const [sel, setSel] = useState<number | null>(null);
   const [done, setDone] = useState<Set<number>>(new Set());
@@ -143,7 +144,7 @@ export function LMatch({ item, onDone }: KindProps) {
   const wrongs = useRef<Set<number>>(new Set()); const fired = useRef(false);
   const hue = ['#DCE8FA', '#FFE7A8', '#D8F0E0', '#F6DDF0', '#E6E3F8', '#FAD9D3'];
   useEffect(() => { if (!fired.current && done.size === pairs.length) { fired.current = true; onDone(pairs.map((_, i) => ({ tag: 'listen', ok: !wrongs.current.has(i) }))); } /* eslint-disable-next-line */ }, [done]);
-  function left(i: number) { if (done.has(i)) return; say(pairs[i].say ?? pairs[i].left); setSel(i); }
+  function left(i: number) { if (done.has(i)) return; say(pairs[i].say || pairs[i].left || ''); setSel(i); }
   function right(ri: number) {
     if (sel == null || done.has(ri)) return;
     if (sel === ri) { setDone(new Set(done).add(ri)); setSel(null); }
@@ -151,10 +152,13 @@ export function LMatch({ item, onDone }: KindProps) {
   }
   return (
     <div className="nv-body">
-      <div className="nv-lm">
-        <div className="nv-lmcol">{pairs.map((p, i) => (
-          <button key={i} className={'nv-lmc' + (sel === i ? ' nv-on' : '') + (done.has(i) ? ' nv-lmdone' : '')} style={done.has(i) ? { background: hue[i % hue.length] } : undefined} onClick={() => left(i)}>
-            <b>{p.left}</b><span><i className="nv-sico" aria-hidden="true" /></span></button>))}</div>
+      <div className={'nv-lm' + (picMode ? ' nv-lmp' : '')}>
+        <div className="nv-lmcol">{pairs.map((p, i) => {
+          const src = picMode ? (pic(p.pic) ?? p.pic ?? null) : null;
+          return (
+          <button key={i} className={'nv-lmc' + (sel === i ? ' nv-on' : '') + (done.has(i) ? ' nv-lmdone' : '')} style={done.has(i) ? { background: hue[i % hue.length] } : undefined} onClick={() => left(i)} aria-label={picMode ? `${i + 1}번 그림 소리 듣기` : undefined}>
+            {picMode ? (src ? <img className="nv-lmimg" src={imgSrc(src)} alt="" draggable={false} /> : <span className="nv-lmimg" />) : <b>{p.left}</b>}<span><i className="nv-sico" aria-hidden="true" /></span></button>);
+        })}</div>
         <div className="nv-lmcol">{rights.map((r) => (
           <button key={r.i} className={'nv-lmc nv-lmr' + (bad === r.i ? ' nv-wrong nv-shake' : '') + (done.has(r.i) ? ' nv-lmdone' : '')} style={done.has(r.i) ? { background: hue[r.i % hue.length] } : undefined} onClick={() => right(r.i)}>
             <b>{r.t}</b></button>))}</div>

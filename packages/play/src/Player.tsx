@@ -75,6 +75,7 @@ const INST: Record<string, string> = {
   lchpic: '잘 듣고, 알맞은 그림을 고르세요.',
   lchlist: '잘 듣고, 알맞은 것을 고르세요.',
   lmatch: '말을 듣고 알맞은 짝을 찾아 연결하세요.',
+  lmatchp: '말을 듣고 알맞은 짝을 찾아 연결하세요.',
   sqchoice: '글을 읽고, 질문에 답해 보세요.',
   sqtf: '글을 읽고, 질문에 답해 보세요.',
   sqmulti: '글을 읽고, 질문에 답해 보세요.',
@@ -88,13 +89,13 @@ const VOCAB_SKIN: string[] = [];
 function hl(t: string, on: boolean) { const m = on ? t.match(/^(.*?)((?:영어로 |따라 )?말해 보세요.*)$/) : null; return m ? <>{m[1]}<span className="nv-hl">{m[2]}</span></> : t; }
 const BG_SKIN = ['sdrill', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat', 'pchoice'];
 const MIC_KINDS = ['lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'dreadp', 'dreadt', 'aitalk']; // 마이크를 쓰는 활동(지시문 오른쪽에 '마이크 테스트' 버튼)
-const SPEAK_SKIN = ['goal', 'lmwrite', 'lpwrite', 'lblank', 'sscraml', 'sscramlr', 'sscramr', 'dreadp', 'dreadt', 'scene', 'scenerep', 'lecture', 'wsent', 'lnum', 'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'tapl', 'aitalk', 'lwrite', 'kexp', 'lsent', 'lcardp', 'lcardt', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sbuild', 'swrite', 'sfill', 'dfill', 'dfillt', 'sscram', 'sorder', 'mwbank', 'scloze', 'mfree', 'swrt', 'mtext', 'pread', 'dchoice', 'tf', 'sqchoice', 'sqtf', 'sqmulti'];
-const OWN_PIC = ['lpwrite', 'lookspeak', 'role', 'dreadp', 'pchoice', 'dchoice', 'dfill', 'goal', 'lcardp', 'lchpic', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat'];
+const SPEAK_SKIN = ['goal', 'lmwrite', 'lpwrite', 'lblank', 'sscraml', 'sscramlr', 'sscramr', 'dreadp', 'dreadt', 'scene', 'scenerep', 'lecture', 'wsent', 'lnum', 'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'tapl', 'aitalk', 'lwrite', 'kexp', 'lsent', 'lcardp', 'lcardt', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'lmatchp', 'sbuild', 'swrite', 'sfill', 'dfill', 'dfillt', 'sscram', 'sorder', 'mwbank', 'scloze', 'mfree', 'swrt', 'mtext', 'pread', 'dchoice', 'tf', 'sqchoice', 'sqtf', 'sqmulti'];
+const OWN_PIC = ['lmatchp', 'lpwrite', 'lookspeak', 'role', 'dreadp', 'pchoice', 'dchoice', 'dfill', 'goal', 'lcardp', 'lchpic', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat'];
 /** 듣고 고르기: 질문을 맨 위 안내 자리에 보여 준다 */
 const LCH = ['lchtext', 'lchpic', 'lchlist', 'lwrite'];
 const INST_SUB: Record<string, string> = { kexp: '(3번 반복해서 들어주세요)', present: '(동영상 촬영해 보기)' };
 const KIND = { scene: SceneStory, scenerep: SceneStory, sscraml: SScram, sscramlr: SScram, sscramr: SScram, lecture: Lecture, wsent: WordSent, lnum: LNum, lookspeak: LookSpeak, saykor: SayKor, lspeak: LSpeak, raloud: RAloud, role: Role, dreadp: ReadAlong, dreadt: ReadAlong, present: Present, aitalk: AiTalk, sbuild: SBuild, swrite: SWrite, sfill: SFill, dfill: DFill, dfillt: DFill, sscram: SScram, sorder: SOrder, mwbank: MWBank, scloze: SCloze, lwrite: LWrite, mfree: MFree, swrt: SWrt, goal: Goal, kexp: KExp, tapl: TapL, lsent: LSent, lcardp: LCardP, lcardt: LCardT, sdrill: SDrill, pread: withQuiz(PRead), mtext: withQuiz(MText), wrepeat: WRepeat, vcards: VCards, vtype1: VType1, vspell: VSpell, vmatch: VMatch, vsound: VSound, vwrite: VWrite,
-  wchoice: WChoice, pchoice: PChoice, dchoice: DChoice, tf: TrueFalse, lchtext: LChText, lchpic: LChPic, lchlist: LChList, lmatch: LMatch, lmwrite: LMWrite, lpwrite: LPWrite, lblank: LBlank,
+  wchoice: WChoice, pchoice: PChoice, dchoice: DChoice, tf: TrueFalse, lchtext: LChText, lchpic: LChPic, lchlist: LChList, lmatch: LMatch, lmatchp: LMatch, lmwrite: LMWrite, lpwrite: LPWrite, lblank: LBlank,
   sqchoice: SqChoice, sqtf: SqTF, sqmulti: SqMulti } as const;
 
 /** 어휘 활동 6종 재생기: 문항(화면)을 차례로 보여 주고, 끝나면 결과 화면을 보여 준다. */

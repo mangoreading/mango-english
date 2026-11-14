@@ -140,6 +140,8 @@ export const LChList = z.object({ ...lch, k: z.literal('lchlist') });
 export const LNum = z.object({ ...T1, k: z.literal('lnum'), q: z.string().min(1), opts: z.array(z.string().min(1)).min(2).max(4), ans: z.number().int().min(1).max(4), plays: z.number().int().min(1).max(9).optional() });
 /** 듣고 짝짓기 */
 export const LMatch = z.object({ ...T1, k: z.literal('lmatch'), pairs: z.array(z.object({ left: z.string().min(1), say: z.string().optional(), right: z.string().min(1) })).min(2).max(6) });
+/** 듣고 그림 짝짓기: 왼쪽은 그림(소리 버튼), 오른쪽은 글. 짝은 3개로 고정. pic = 단원 단어 key 또는 이미지 주소 */
+export const LMatchP = z.object({ ...T1, k: z.literal('lmatchp'), pairs: z.array(z.object({ pic: z.string().min(1), say: z.string().min(1), right: z.string().min(1) })).length(3, '짝은 3개로 맞춰 주세요') });
 /** 글 읽고 답하기 3종 */
 const sq = { ...T1, title: z.string().optional(), text: z.array(z.string().min(1)).min(1), ko: z.string().optional(), q: z.string().optional(), hint };
 export const SqChoice = z.object({ ...sq, k: z.literal('sqchoice'), q: z.string().min(1), opts: z.array(Opt).min(2).max(6), a: z.number().int().min(0) });
@@ -217,7 +219,7 @@ export const ActivityItem = z.discriminatedUnion('k', [
   LookSpeak, SayKor, LSpeak, RAloud, Role, DRead, Present, AiTalk,
   LMWrite, LPWrite, LBlank, SBuild, SWrite, SFill, DFill, SScram, SOrder, MWBank, SCloze, LWrite, MFree, SWrt,
   Goal, KExp, TapL, LSent, LCardP, LCardT, Scene, SceneRep, SScramL, SScramR, Lecture, WSent, LNum, WRepeat, SDrill, PRead, MText,
-  WChoice, PChoice, DChoice, TrueFalse, LChText, LChPic, LChList, LMatch, SqChoice, SqTF, SqMulti,
+  WChoice, PChoice, DChoice, TrueFalse, LChText, LChPic, LChList, LMatch, LMatchP, SqChoice, SqTF, SqMulti,
 ]).superRefine((v, ctx) => {
   if (v.k === 'choose' && v.a >= v.opts.length) ctx.addIssue({ code: 'custom', path: ['a'], message: 'a(정답 index)가 opts 범위를 벗어났어요' });
   if ((v.k === 'pchoice' || v.k === 'dchoice' || v.k === 'lchtext' || v.k === 'lchpic' || v.k === 'lchlist' || v.k === 'sqchoice') && v.a >= v.opts.length) ctx.addIssue({ code: 'custom', path: ['a'], message: '정답 번호가 보기 범위를 벗어났어요' });
@@ -234,7 +236,7 @@ export const KINDS = ['learn', 'text', 'brief', 'choose', 'match', 'build', 'fil
   'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'dreadp', 'dreadt', 'present', 'aitalk',
   'sbuild', 'swrite', 'sfill', 'dfill', 'dfillt', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'lmwrite', 'lpwrite', 'lblank', 'mfree', 'swrt',
   'goal', 'scene', 'scenerep', 'sscraml', 'sscramlr', 'sscramr', 'lecture', 'wsent', 'lnum', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext',
-  'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti'] as const;
+  'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'lmatchp', 'sqchoice', 'sqtf', 'sqmulti'] as const;
 
 /** 아이템 상태 (검수 워크플로) */
 export const ItemStatus = z.enum(['draft', 'review', 'approved', 'rejected']);
