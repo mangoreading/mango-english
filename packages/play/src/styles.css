@@ -862,7 +862,7 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-lpm-tag b { font-weight:500; }
 .nv-lpm-dot { position:absolute; top:50%; width:.55em; height:.55em; margin-top:-.28em; border-radius:50%; background:#8A93A6; pointer-events:none; }
 .nv-lpm-card .nv-lpm-dot { right:-1.6em; } .nv-lpm-tag .nv-lpm-dot { left:-1.6em; }
-.nv-lpm-card.on { border-color:#E0A100; background:#FFF6D8; box-shadow:0 0 0 .18em rgba(240,165,0,.25); }
+.nv-lpm-card.on, .nv-lpm-tag.on { border-color:#E0A100; background:#FFF6D8; box-shadow:0 0 0 .18em rgba(240,165,0,.25); }
 .nv-lpm-card.ok, .nv-lpm-tag.ok { cursor:default; border-width:.16em; }
 .nv-lpm-tag.bad { background:#FFE3E0; border-color:#D64545; }
 /* 듣고 그림에 맞게 쓰기(lpwrite): 듣기 버튼 아래에 그림 카드 3~4장, 카드마다 답 칸 */
