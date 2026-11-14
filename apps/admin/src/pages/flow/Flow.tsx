@@ -108,7 +108,7 @@ export function FlowEditor({ owner }: { owner: Owner }) {
             <button className="mx-btn sec" onClick={() => delLesson(l)}>차시 삭제</button>
           </div>
           <table className="mx-fixed" style={{ minWidth: 1000 }}>
-            <colgroup><col style={{ width: 26 }} /><col style={{ width: 36 }} /><col style={{ width: 108 }} /><col style={{ width: '20%' }} /><col style={{ width: '19%' }} /><col style={{ width: '21%' }} /><col style={{ width: 68 }} /><col style={{ width: 60 }} /><col style={{ width: 56 }} /><col style={{ width: 56 }} /><col style={{ width: 150 }} /><col style={{ width: 52 }} />{owner.kind === 'unit' && <col style={{ width: 56 }} />}<col style={{ width: 84 }} /></colgroup>
+            <colgroup><col style={{ width: 26 }} /><col style={{ width: 36 }} /><col style={{ width: 108 }} /><col style={{ width: '20%' }} /><col style={{ width: '19%' }} /><col style={{ width: '21%' }} /><col style={{ width: 68 }} /><col style={{ width: 60 }} /><col style={{ width: 56 }} /><col style={{ width: 56 }} /><col style={{ width: 150 }} /><col style={{ width: 68 }} />{owner.kind === 'unit' && <col style={{ width: 56 }} />}<col style={{ width: 84 }} /></colgroup>
             <thead><tr><th /><th>#</th><th>미리보기</th><th>활동 (영문)</th><th>활동 (한글)</th><th>활동 템플릿</th><th>문항 수</th><th>분</th><th>학습</th><th>숙제</th><th>문항 출처</th><th>구분</th>{owner.kind === 'unit' && <th>문항</th>}<th /></tr></thead>
             <tbody>
               {l.flow_steps.map((s, i) => (
