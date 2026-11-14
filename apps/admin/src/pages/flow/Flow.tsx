@@ -127,12 +127,12 @@ export function FlowEditor({ owner }: { owner: Owner }) {
                   <td><Txt value={s.minutes == null ? '' : String(s.minutes)} w={44} onSave={(v) => updStep(s.id, { minutes: v === '' ? null : Math.max(0, parseInt(v, 10) || 0) })} /></td>
                   <td style={{ textAlign: 'center' }}><input type="checkbox" checked={s.study !== false} title="수업(학습)에서 하는 활동" onChange={(e) => updStep(s.id, { study: e.target.checked })} /></td>
                   <td style={{ textAlign: 'center' }}><input type="checkbox" checked={!!s.homework} title="숙제로 낼 수 있는 활동" onChange={(e) => updStep(s.id, { homework: e.target.checked })} /></td>
-                  <td>{(() => { const all = ls.flatMap((x) => x.flow_steps.map((y, i) => ({ y, no: x.no, i: i + 1 }))); const src = all.find((z) => z.y.id === s.ref_step_id); const cands = all.filter((z) => z.y.id !== s.id && z.y.kind && z.y.kind === s.kind);
+                  <td>{(() => { const all = ls.flatMap((x) => x.flow_steps.map((y, i) => ({ y, no: x.no, i: i + 1 }))); const src = all.find((z) => z.y.id === s.ref_step_id); const cands = all.filter((z) => z.y.id !== s.id && z.y.kind && z.y.kind === s.kind && (z.no < l.no || z.y.id === s.ref_step_id)); // 앞 차시 활동만 (이미 걸린 연결은 유지)
                     return (<>
                       
                       {src || cands.length ? <select className="mx-cell" value={s.ref_step_id ?? ''} title={src ? `${src.no}차시 ${src.i}번째 활동(${src.y.name_ko || src.y.name_en})의 문항을 그대로 씁니다` : "다른 활동의 문항을 그대로 가져다 쓸 때 고르세요"} onChange={(e) => updStep(s.id, { ref_step_id: e.target.value || null })}>
                     <option value="">[연결 없음]</option>
-                    {all.filter((z) => z.y.id !== s.id && z.y.kind && z.y.kind === s.kind).map((z) => <option key={z.y.id} value={z.y.id} title={z.y.name_ko || z.y.name_en}>{z.no}차시-{z.i}</option>)}
+                    {cands.map((z) => <option key={z.y.id} value={z.y.id} title={z.y.name_ko || z.y.name_en}>{z.no}차시-{z.i}</option>)}
                   </select> : <span className="mx-muted" title="같은 종류의 다른 활동이 없어서 연결할 대상이 없어요">-</span>}
                     </>); })()}</td>
                   <td>{s.special ? <span className="mx-tag">{SPECIAL_KO[s.special]}</span> : owner.kind === 'unit' && !s.src_id ? <span className="mx-tag">추가됨</span> : ''}</td>
