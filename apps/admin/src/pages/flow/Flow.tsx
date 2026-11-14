@@ -193,6 +193,7 @@ export function Templates() {
   const [list, setList] = useState<TplRow[] | null>(null);
   const [pubs, setPubs] = useState<PubRow[]>([]);
   const [sel, setSel] = useState<string | null>(null); // null 이면 목록 화면
+  const [form, setForm] = useState<{ pub: string; grade: number; name: string } | null>(null);
   const [err, setErr] = useState('');
   async function load() {
     const [t, p] = await Promise.all([
@@ -204,8 +205,7 @@ export function Templates() {
   }
   useEffect(() => { void load(); }, []);
   const pubName = (id: string | null) => pubs.find((x) => x.id === id)?.name ?? '미분류';
-  async function add(publisher_id: string, grade: number) {
-    const name = window.prompt(`새 템플릿 이름 (${pubName(publisher_id)} · ${grade}학년)`); if (!name) return;
+  async function add(publisher_id: string, grade: number, name: string) {
     const r = await supabase.from('flow_templates').insert({ name, publisher_id, grade }).select('id').single();
     if (r.error) setErr(r.error.message); else { await load(); setSel(r.data.id); }
   }
@@ -249,7 +249,7 @@ export function Templates() {
         <PageHead title="흐름 템플릿" sub="새 단원에 처음 복사되는 기본 흐름이에요. 여기를 고쳐도 이미 만들어진 단원의 흐름은 바뀌지 않아요." />
         <div className="mx-row" style={{ margin: '10px 0' }}>
           <button className="mx-btn sec" onClick={() => setSel(null)}>← 목록</button>
-          <b style={{ margin: '0 4px' }}>{pubName(cur.publisher_id)} · {cur.grade ? cur.grade + '학년' : '학년 미정'}</b>
+          <b style={{ margin: '0 4px' }}>{pubName(cur.publisher_id)} · {cur.grade ? '초' + cur.grade + ' 영어' : '학년 미정'}</b>
           <label className="mx-inline">템플릿<select value={cur.id} onChange={(e) => setSel(e.target.value)}>{sibs.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
           <button className="mx-btn sec" onClick={() => dup(cur)}>복제</button>
           <button className="mx-btn sec" onClick={() => del(cur)}>삭제</button>
@@ -258,41 +258,38 @@ export function Templates() {
       </>
     );
   }
-  const loose = list.filter((t) => !t.publisher_id || !t.grade);
+  const shown = [...list].sort((x, y) => pubName(x.publisher_id).localeCompare(pubName(y.publisher_id)) || (x.grade ?? 0) - (y.grade ?? 0) || x.name.localeCompare(y.name));
   return (
     <>
-      <PageHead title="흐름 템플릿" sub="출판사 × 학년 칸마다 흐름 템플릿을 둬요. 칸에서 새로 만들거나 복제하고, 이름을 눌러 편집해요." />
-      <div className="mx-box" style={{ overflowX: 'auto' }}>
+      <PageHead title="흐름 템플릿" sub="교재(출판사·학년)별 기본 흐름이에요. 이름을 눌러 편집하고, 새 단원에는 여기서 복사돼요." />
+      <div className="mx-box">
+        <div className="mx-row" style={{ marginBottom: 8 }}>
+          {!form ? <button className="mx-btn sec" onClick={() => setForm({ pub: pubs[0]?.id ?? '', grade: 5, name: '' })}>+ 새 템플릿</button> : (
+            <>
+              <select value={form.pub} onChange={(e) => setForm({ ...form, pub: e.target.value })} aria-label="출판사">{pubs.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select>
+              <button type="button" className="mx-btn sec" onClick={addPub}>+ 출판사</button>
+              <select value={form.grade} onChange={(e) => setForm({ ...form, grade: Number(e.target.value) })} aria-label="학년">{GRADES.map((g) => <option key={g} value={g}>{g}학년</option>)}</select>
+              <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="템플릿 이름" aria-label="템플릿 이름" />
+              <button className="mx-btn" disabled={!form.pub || !form.name.trim()} onClick={() => { const f = form; setForm(null); void add(f.pub, f.grade, f.name.trim()); }}>만들기</button>
+              <button className="mx-btn sec" onClick={() => setForm(null)}>취소</button>
+            </>
+          )}
+        </div>
+        {shown.length === 0 && <p className="mx-muted">템플릿이 없어요.</p>}
         <table>
-          <thead><tr><th style={{ width: 140 }}>출판사</th>{GRADES.map((g) => <th key={g}>{g}학년</th>)}</tr></thead>
+          <thead><tr><th style={{ width: 200 }}>교재</th><th>템플릿</th><th>메모</th><th style={{ width: 150 }} /></tr></thead>
           <tbody>
-            {pubs.map((pb) => (
-              <tr key={pb.id}>
-                <td><b>{pb.name}</b></td>
-                {GRADES.map((g) => {
-                  const cell = list.filter((t) => t.publisher_id === pb.id && t.grade === g);
-                  return (
-                    <td key={g} style={{ verticalAlign: 'top', minWidth: 180 }}>
-                      {cell.length === 0 && <div className="mx-muted" style={{ marginBottom: 4 }}>준비 중</div>}
-                      {cell.map((t) => (
-                        <div key={t.id} className="mx-row" style={{ gap: 6, marginBottom: 4 }}>
-                          <button type="button" className="mx-btn" style={{ padding: '2px 8px' }} onClick={() => setSel(t.id)} title={t.note || undefined}>{t.name}</button>
-                          <button type="button" className="mx-btn sec" style={{ padding: '2px 8px' }} onClick={() => dup(t)}>복제</button>
-                        </div>
-                      ))}
-                      <button type="button" className="mx-btn sec" style={{ padding: '2px 8px' }} onClick={() => add(pb.id, g)}>+ 새 템플릿</button>
-                    </td>
-                  );
-                })}
+            {shown.map((t) => (
+              <tr key={t.id}>
+                <td>{pubName(t.publisher_id)}{t.grade ? ` · 초${t.grade} 영어` : ''}</td>
+                <td><button type="button" className="mx-link" style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer', color: 'inherit', fontWeight: 700, textDecoration: 'underline' }} onClick={() => setSel(t.id)}>{t.name}</button></td>
+                <td className="mx-muted">{t.note}</td>
+                <td><button className="mx-btn sec" style={{ padding: '2px 8px', marginRight: 4 }} onClick={() => dup(t)}>복제</button><button className="mx-btn sec" style={{ padding: '2px 8px' }} onClick={() => del(t)}>삭제</button></td>
               </tr>
             ))}
-            {loose.length > 0 && (
-              <tr><td><b>미분류</b></td><td colSpan={GRADES.length}>{loose.map((t) => <button key={t.id} type="button" className="mx-btn sec" style={{ padding: '2px 8px', marginRight: 6 }} onClick={() => setSel(t.id)}>{t.name}</button>)}</td></tr>
-            )}
           </tbody>
         </table>
       </div>
-      <div className="mx-row" style={{ marginTop: 10 }}><button className="mx-btn sec" onClick={addPub}>+ 출판사 추가</button></div>
     </>
   );
 }
