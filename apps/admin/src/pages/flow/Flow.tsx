@@ -181,7 +181,7 @@ function Txt({ value, onSave, w }: { value: string; onSave: (v: string) => void;
   const [v, setV] = useState(value);
   useEffect(() => setV(value), [value]);
   const commit = () => { if (v !== value) onSave(v); };
-  return <input className="mx-cell" style={w ? { width: w } : undefined} value={v} onChange={(e) => setV(e.target.value)} onBlur={commit} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} />;
+  return <input className="mx-cell" style={w ? { width: '100%', maxWidth: w, boxSizing: 'border-box' } : undefined} value={v} onChange={(e) => setV(e.target.value)} onBlur={commit} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} />;
 }
 
 interface TplRow { id: string; name: string; note: string; publisher_id: string | null; grade: number | null }
