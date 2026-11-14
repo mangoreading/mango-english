@@ -662,11 +662,12 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-stage-go { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.4em; background:rgba(30,45,80,.42); border:0; color:#fff; cursor:pointer; font:inherit; }
 .nv-stage-go i { font-style:normal; width:2.6em; height:2.6em; border-radius:50%; background:#fff; color:#3B6FD8; display:flex; align-items:center; justify-content:center; font-size:1.5em; padding-left:.12em; }
 .nv-stage-go b { font-size:1.2em; }
-.nv-subs { position:absolute; left:0; right:0; bottom:.55em; text-align:center; padding:0 1em; }
+.nv-subs { position:absolute; left:0; right:0; bottom:1.8em; text-align:center; padding:0 1em; }
 .nv-subs p { display:inline-block; margin:0; background:rgba(20,28,50,.78); color:#fff; font-size:1.25em; line-height:1.35; padding:.25em .8em; border-radius:.5em; }
 .nv-subs small { display:block; margin-top:.25em; font-size:.95em; color:#fff; text-shadow:0 0 .3em #000; }
 .nv-subs-end { opacity:.75; }
-.nv-bar { position:absolute; left:0; right:0; bottom:0; height:.3em; background:rgba(255,255,255,.55); } .nv-bar.seek { cursor:pointer; height:.6em; } .nv-bar.seek::before { content:''; position:absolute; left:0; right:0; bottom:0; height:1.6em; } .nv-bar.seek:hover { height:.8em; } .nv-bar i { display:block; height:100%; background:#3B6FD8; transition:width .35s; }
+/* 영상 진행바: 둥근 영상 틀에 잘리지 않도록 안쪽으로 띄우고, 양 끝은 각지게 */
+.nv-bar { position:absolute; left:1.1em; right:1.1em; bottom:.8em; height:.34em; border-radius:0; background:rgba(60,80,120,.28); } .nv-bar.seek { cursor:pointer; height:.6em; } .nv-bar.seek::before { content:''; position:absolute; left:0; right:0; bottom:-.6em; height:1.6em; } .nv-bar.seek:hover { height:.8em; } .nv-bar i { display:block; height:100%; border-radius:0; background:#3B6FD8; transition:width .35s; }
 .nv-sq { width:42em; max-width:100%; display:flex; flex-direction:column; gap:.8em; }
 .nv-scene-main { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:.9em; }
 .nv-scene .nv-ptools { margin-top:1.4em; }
