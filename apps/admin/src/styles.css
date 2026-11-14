@@ -163,3 +163,5 @@ h3 + .mx-sec { border-top:0; padding-top:6px; }
 .mx-st-ta { min-height:0 !important; resize:vertical; }
 .mx-st-words { width:100%; border-collapse:collapse; } .mx-st-words td { padding:3px 4px 3px 0; } .mx-st-words input { width:100%; box-sizing:border-box; padding:6px 9px; }
 .mx-setbadge { display:inline-block; margin-left:.4em; padding:.05em .5em; border-radius:99px; background:#FFF1C9; color:#8A5A00; font-size:.78em; font-weight:700; vertical-align:middle; }
+
+.mx-reftag { display:block; margin:0 0 2px; padding:2px 8px; background:#E4F0FF; color:#1F4E8C; border-radius:6px; font-weight:600; white-space:normal; }

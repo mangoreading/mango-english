@@ -41,7 +41,7 @@ export function Items({ unitId, uid }: { unitId: string; uid: string }) {
     if (it.error) setMsg({ t: 'err', s: it.error.message }); else setItems((it.data ?? []) as unknown as ItemRow[]);
     const fl = await supabase.from('flow_lessons').select('no, flow_steps(id,pos,name_en,name_ko,kind,ref_step_id)').eq('unit_id', unitId).order('no');
     const st: StepInfo[] = [];
-    ((fl.data ?? []) as any[]).forEach((l) => (l.flow_steps ?? []).forEach((s: any) => st.push({ id: s.id, lessonNo: l.no, pos: s.pos, name: s.name_ko || s.name_en, kind: s.kind })));
+    ((fl.data ?? []) as any[]).forEach((l) => (l.flow_steps ?? []).forEach((s: any) => st.push({ id: s.id, lessonNo: l.no, pos: s.pos, name: s.name_ko || s.name_en, kind: s.kind, ref: s.ref_step_id })));
     st.sort((a, b) => a.lessonNo - b.lessonNo || a.pos - b.pos);
     setSteps(st);
     const at = await supabase.from('activity_types').select('key,name_ko,version,description,category,sort,active').eq('active', true).order('category').order('sort');
@@ -107,7 +107,7 @@ export function Items({ unitId, uid }: { unitId: string; uid: string }) {
       <div className="mx-card">
         <div className="mx-row">
           <label><select value={level} onChange={(e) => setLevel(e.target.value)} aria-label="레벨"><option value="all">레벨 전체</option>{LEVELS.map((l) => <option key={l}>{l}</option>)}</select></label>
-          <label><select value={stepF} onChange={(e) => setStepF(e.target.value)} aria-label="활동"><option value="all">활동 전체</option><option value="none">(연결 안 됨)</option>{steps.map((s) => <option key={s.id} value={s.id}>{s.lessonNo}차시 · {s.name}{isSetKind(s.kind) ? ' (세트)' : ''}</option>)}</select></label>
+          <label><select value={stepF} onChange={(e) => setStepF(e.target.value)} aria-label="활동"><option value="all">활동 전체</option><option value="none">(연결 안 됨)</option>{steps.map((s) => <option key={s.id} value={s.id}>{s.lessonNo}차시 · {s.name}{isSetKind(s.kind) ? ' (세트)' : ''}{s.ref && steps.find((z) => z.id === s.ref) ? ` ← ${steps.find((z) => z.id === s.ref)!.lessonNo}차시 ${steps.find((z) => z.id === s.ref)!.name} 문항 사용` : ''}</option>)}</select></label>
           <label><select value={status} onChange={(e) => setStatus(e.target.value)} aria-label="상태"><option value="all">상태 전체</option>{STATUSES.map((s) => <option key={s} value={s}>{STATUS_KO[s]}</option>)}<option value="stale">옛 버전 (재검토 필요)</option></select></label>
           <label><input aria-label="검색" value={q} onChange={(e) => setQ(e.target.value)} placeholder="문항 내용에서 찾기" /></label>
           <span style={{ flex: 1 }} />
@@ -151,7 +151,7 @@ function AddBar({ kinds, steps, level, step, onAdd, onCancel }: { kinds: KindRow
   return (
     <div className="mx-row" style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--line)' }}>
       <label>레벨<select value={lv} onChange={(e) => setLv(e.target.value)}>{LEVELS.map((l) => <option key={l}>{l}</option>)}</select></label>
-      <label>활동<select value={st} onChange={(e) => setSt(e.target.value)}>{steps.map((s) => <option key={s.id} value={s.id}>{s.lessonNo}차시 · {s.name}{isSetKind(s.kind) ? ' (세트)' : ''}</option>)}</select></label>
+      <label>활동<select value={st} onChange={(e) => setSt(e.target.value)}>{steps.map((s) => <option key={s.id} value={s.id}>{s.lessonNo}차시 · {s.name}{isSetKind(s.kind) ? ' (세트)' : ''}{s.ref && steps.find((z) => z.id === s.ref) ? ` ← ${steps.find((z) => z.id === s.ref)!.lessonNo}차시 ${steps.find((z) => z.id === s.ref)!.name} 문항 사용` : ''}</option>)}</select></label>
       <label>문항 종류<select value={kind} onChange={(e) => setKind(e.target.value)}>{[...new Set(kinds.map((k) => k.category))].map((c) => <optgroup key={c} label={catLabel(c)}>{kinds.filter((k) => k.category === c).map((k) => <option key={k.key} value={k.key}>{k.name_ko}{isSetKind(k.key) ? ' (세트)' : ''}</option>)}</optgroup>)}</select></label>
       <button className="mx-btn" onClick={() => onAdd(lv, st, kind)}>만들기</button>
       <button className="mx-btn sec" onClick={onCancel}>취소</button>
@@ -224,7 +224,7 @@ function Editor({ kindName, item, siblings, steps, keys, vocab, uid, onSaved }: 
     <>
       <h3>{KIND_NAME[item.template] ?? item.template} · {item.lesson}차시 · {item.level}</h3>
       <div className="mx-row" style={{ marginBottom: 8 }}>
-        <label>활동<select value={stepId} onChange={(e) => setStepId(e.target.value)}><option value="">(연결 안 됨)</option>{steps.map((s) => <option key={s.id} value={s.id}>{s.lessonNo}차시 · {s.name}{isSetKind(s.kind) ? ' (세트)' : ''}</option>)}</select></label>
+        <label>활동<select value={stepId} onChange={(e) => setStepId(e.target.value)}><option value="">(연결 안 됨)</option>{steps.map((s) => <option key={s.id} value={s.id}>{s.lessonNo}차시 · {s.name}{isSetKind(s.kind) ? ' (세트)' : ''}{s.ref && steps.find((z) => z.id === s.ref) ? ` ← ${steps.find((z) => z.id === s.ref)!.lessonNo}차시 ${steps.find((z) => z.id === s.ref)!.name} 문항 사용` : ''}</option>)}</select></label>
         <label>상태<select value={status} onChange={(e) => setStatus(e.target.value as Status)}>{STATUSES.map((s) => <option key={s} value={s}>{STATUS_KO[s]}</option>)}</select></label>
         <span className="mx-muted">버전 {item.version}</span>
         <span style={{ flex: 1 }} />

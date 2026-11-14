@@ -127,10 +127,14 @@ export function FlowEditor({ owner }: { owner: Owner }) {
                   <td><Txt value={s.minutes == null ? '' : String(s.minutes)} w={44} onSave={(v) => updStep(s.id, { minutes: v === '' ? null : Math.max(0, parseInt(v, 10) || 0) })} /></td>
                   <td style={{ textAlign: 'center' }}><input type="checkbox" checked={s.study !== false} title="수업(학습)에서 하는 활동" onChange={(e) => updStep(s.id, { study: e.target.checked })} /></td>
                   <td style={{ textAlign: 'center' }}><input type="checkbox" checked={!!s.homework} title="숙제로 낼 수 있는 활동" onChange={(e) => updStep(s.id, { homework: e.target.checked })} /></td>
-                  <td><select className="mx-cell" value={s.ref_step_id ?? ''} title="다른 활동의 문항을 그대로 가져다 쓸 때 고르세요" onChange={(e) => updStep(s.id, { ref_step_id: e.target.value || null })}>
+                  <td>{(() => { const all = ls.flatMap((x) => x.flow_steps.map((y) => ({ y, no: x.no }))); const src = all.find((z) => z.y.id === s.ref_step_id); const cands = all.filter((z) => z.y.id !== s.id && z.y.kind && z.y.kind === s.kind);
+                    return (<>
+                      {src ? <span className="mx-tag mx-reftag" title="이 활동은 아래 활동의 문항을 그대로 씁니다">↩ {src.no}차시 · {src.y.name_ko || src.y.name_en}</span> : null}
+                      {src || cands.length ? <select className="mx-cell" value={s.ref_step_id ?? ''} title="다른 활동의 문항을 그대로 가져다 쓸 때 고르세요" onChange={(e) => updStep(s.id, { ref_step_id: e.target.value || null })}>
                     <option value="">(이 활동 문항)</option>
                     {ls.flatMap((x) => x.flow_steps.filter((y) => y.id !== s.id && y.kind && y.kind === s.kind).map((y) => <option key={y.id} value={y.id}>{x.no}차시 · {y.name_ko || y.name_en}</option>))}
-                  </select></td>
+                  </select> : <span className="mx-muted" title="같은 종류의 다른 활동이 없어서 가져올 문항이 없어요">이 활동 문항</span>}
+                    </>); })()}</td>
                   <td>{s.special ? <span className="mx-tag">{SPECIAL_KO[s.special]}</span> : owner.kind === 'unit' && !s.src_id ? <span className="mx-tag">추가됨</span> : ''}</td>
                   {owner.kind === 'unit' && <td>{counts[s.id] ?? 0}</td>}
                   <td className="mx-act">
