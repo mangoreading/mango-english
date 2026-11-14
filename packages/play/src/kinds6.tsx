@@ -102,6 +102,7 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
               <div className="nv-rv-list">{scenes.map((x, i) => (
                 <div key={i} className="nv-rv-row"><span className="nv-rv-who">{x.who}</span><div><b>{x.en}</b>{x.ko && <small>{x.ko}</small>}</div></div>
               ))}</div>
+              <div className="nv-ptools nv-rv-tools"><button type="button" className="nv-listen nv-listen-s" onClick={() => { stopSeq(); sayScript(scenes.map((x) => (x.who ? `${x.who}: ${x.en}` : x.en)).join('\n')); }}><i className="nv-sico" aria-hidden="true" /> <b>전체 듣기</b></button></div>
               {!!item.explain?.length && <div className="nv-rv-ex">{item.explain.map((l: string, i: number) => <p key={i}><Rich text={l} /></p>)}</div>}
             </div>
           )}
