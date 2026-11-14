@@ -108,7 +108,7 @@ export function FlowEditor({ owner }: { owner: Owner }) {
             <button className="mx-btn sec" onClick={() => delLesson(l)}>차시 삭제</button>
           </div>
           <table className="mx-fixed" style={{ minWidth: 1000 }}>
-            <colgroup><col style={{ width: 26 }} /><col style={{ width: 36 }} /><col style={{ width: 108 }} /><col style={{ width: '20%' }} /><col style={{ width: '19%' }} /><col style={{ width: '21%' }} /><col style={{ width: 68 }} /><col style={{ width: 60 }} /><col style={{ width: 56 }} /><col style={{ width: 56 }} /><col style={{ width: 150 }} /><col style={{ width: 68 }} />{owner.kind === 'unit' && <col style={{ width: 56 }} />}<col style={{ width: 84 }} /></colgroup>
+            <colgroup><col style={{ width: 26 }} /><col style={{ width: 36 }} /><col style={{ width: 116 }} /><col style={{ width: '17%' }} /><col style={{ width: '19%' }} /><col style={{ width: '24%' }} /><col style={{ width: 68 }} /><col style={{ width: 60 }} /><col style={{ width: 56 }} /><col style={{ width: 56 }} /><col style={{ width: 150 }} /><col style={{ width: 68 }} />{owner.kind === 'unit' && <col style={{ width: 56 }} />}<col style={{ width: 84 }} /></colgroup>
             <thead><tr><th /><th>#</th><th>미리보기</th><th>활동 (영문)</th><th>활동 (한글)</th><th>활동 템플릿</th><th>문항 수</th><th>분</th><th>학습</th><th>숙제</th><th>문항 출처</th><th>구분</th>{owner.kind === 'unit' && <th>문항</th>}<th /></tr></thead>
             <tbody>
               {l.flow_steps.map((s, i) => (
@@ -121,7 +121,7 @@ export function FlowEditor({ owner }: { owner: Owner }) {
                   <td>{i + 1}</td>
                   <td>{s.kind && isNativeKind(s.kind) && <button type="button" style={{ padding: 0, border: 0, background: 'none', cursor: 'pointer' }} title="눌러서 샘플 보기" onClick={() => void sample(s.kind!, s.name_ko || s.name_en)}><img className="mx-lthumb" src={`/thumbs/${s.kind}.jpg`} alt="샘플 미리보기" loading="lazy" /></button>}</td>
                   <td><Txt value={s.name_en} onSave={(v) => updStep(s.id, { name_en: v })} /></td>
-                  <td><Txt value={s.name_ko} onSave={(v) => updStep(s.id, { name_ko: v })} />{isSetKind(s.kind) && <span className="mx-setbadge">세트</span>}</td>
+                  <td><div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ flex: 1, minWidth: 0 }}><Txt value={s.name_ko} onSave={(v) => updStep(s.id, { name_ko: v })} /></div>{isSetKind(s.kind) && <span className="mx-setbadge" style={{ flexShrink: 0 }}>세트</span>}</div></td>
                   <td><select className="mx-cell" value={s.kind ?? ''} onChange={(e) => changeKind(s, e.target.value)}><option value="">(지정 안 함)</option>{kinds.map((k) => <option key={k.key} value={k.key}>{k.name_ko}{isSetKind(k.key) ? ' (세트)' : ''}</option>)}</select></td>
                   <td><Txt value={s.qty == null ? '' : String(s.qty)} w={44} onSave={(v) => updStep(s.id, { qty: v === '' ? null : Math.max(0, parseInt(v, 10) || 0) })} /></td>
                   <td><Txt value={s.minutes == null ? '' : String(s.minutes)} w={44} onSave={(v) => updStep(s.id, { minutes: v === '' ? null : Math.max(0, parseInt(v, 10) || 0) })} /></td>
