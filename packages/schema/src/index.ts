@@ -191,6 +191,8 @@ export const MWBank = z.object({ ...T1, k: z.literal('mwbank'), lines: z.array(z
 export const SCloze = z.object({ ...T1, k: z.literal('scloze'), lines: z.array(z.string().min(1)).min(1), ans: z.array(z.string().min(1)).min(1), extra: z.array(z.string()).optional(), blankHints: z.array(z.string()).optional(), hint });
 /** 듣고 짝지어 쓰기: 왼쪽 카드(이름+소리 버튼)마다 대화를 들려주고, 오른쪽 칸에 질문에 맞는 정답(가격 등)을 직접 쓴다. pre = 칸 앞에 붙는 기호(예: ₩) */
 export const LMWrite = z.object({ ...T1, k: z.literal('lmwrite'), pre: z.string().optional(), pairs: z.array(z.object({ left: z.string().min(1), say: z.string().min(1), ans: z.string().min(1) })).min(1).max(6), hint });
+/** 듣고 그림·글 연결하기: 소리 막대로 지문(say)을 듣고 왼쪽 그림(pairs[].pic) ↔ 오른쪽 글(pairs[].right)을 잇는다. extra = 정답 없는 보기(0~2개). pic = 단원 단어 key 또는 이미지 주소 */
+export const LPMatch = z.object({ ...T1, k: z.literal('lpmatch'), say: z.string().min(1), plays: z.number().int().min(1).max(9).optional(), pairs: z.array(z.object({ pic: z.string().min(1), right: z.string().min(1) })).min(2).max(3), extra: z.array(z.string().min(1)).max(2).optional(), hint });
 /** 듣고 빈칸 쓰기: 소리 막대로 지문(say)을 듣고, lines 의 빈칸({})을 ans 순서대로 쓴다 */
 export const LBlank = z.object({ ...T1, k: z.literal('lblank'), say: z.string().min(1), plays: z.number().int().min(1).max(9).optional(), lines: z.array(z.string().min(1)).min(1), ans: z.array(z.string().min(1)).min(1), blankHints: z.array(z.string()).optional(), hint });
 /** 듣고 그림에 맞게 쓰기: 듣기 버튼 하나로 지문 전체를 들려주고, 그림 카드마다 답(가격 등)을 쓴다. cards[].pic = 단원 단어 key 또는 이미지 주소 */
@@ -215,7 +217,7 @@ export const ActivityItem = z.discriminatedUnion('k', [
   Learn, Text, Brief, Choose, Match, Build, Fill, Write, Compose, Speak, Fade, Dialog,
   VCards, VType1, VSpell, VMatch, VSound, VWrite,
   LookSpeak, SayKor, LSpeak, RAloud, Role, DRead, Present, AiTalk,
-  LMWrite, LPWrite, LBlank, SBuild, SWrite, SFill, DFill, SScram, SOrder, MWBank, SCloze, LWrite, MFree, SWrt,
+  LMWrite, LPWrite, LBlank, LPMatch, SBuild, SWrite, SFill, DFill, SScram, SOrder, MWBank, SCloze, LWrite, MFree, SWrt,
   Goal, KExp, TapL, LSent, LCardP, LCardT, Scene, SceneRep, SScramL, SScramR, Lecture, WSent, LNum, WRepeat, SDrill, PRead, MText,
   WChoice, PChoice, DChoice, TrueFalse, LChText, LChPic, LChList, LMatch, SqChoice, SqTF, SqMulti,
 ]).superRefine((v, ctx) => {
@@ -232,7 +234,7 @@ export type ActivityItem = z.infer<typeof ActivityItem>;
 export type Kind = ActivityItem['k'];
 export const KINDS = ['learn', 'text', 'brief', 'choose', 'match', 'build', 'fill', 'write', 'compose', 'speak', 'fade', 'dialog', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite',
   'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'dreadp', 'dreadt', 'present', 'aitalk',
-  'sbuild', 'swrite', 'sfill', 'dfill', 'dfillt', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'lmwrite', 'lpwrite', 'lblank', 'mfree', 'swrt',
+  'sbuild', 'swrite', 'sfill', 'dfill', 'dfillt', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'lmwrite', 'lpwrite', 'lblank', 'lpmatch', 'mfree', 'swrt',
   'goal', 'scene', 'scenerep', 'sscraml', 'sscramlr', 'sscramr', 'lecture', 'wsent', 'lnum', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext',
   'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti'] as const;
 

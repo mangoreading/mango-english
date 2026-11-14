@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { aiHandlers, imgSrc, say, sayAuto, sayScript, shuffle, stopSeq, type KindProps } from './common';
 import { Rich } from './kinds3';
 import { Hint } from './hint';
@@ -237,6 +237,57 @@ function AudioBar({ text, max }: { text: string; max?: number }) {
       <span className="nv-abar-track"><i style={{ width: `${(t / dur) * 100}%` }} /><b style={{ left: `${(t / dur) * 100}%` }} /></span>
       <span className="nv-abar-time">{mm(t)}</span>
       {left != null && <span className="nv-abar-left">({left}번 남음)</span>}
+    </div>
+  );
+}
+
+/** 듣고 그림·글 연결하기: 소리 막대로 대화 전체를 듣고, 왼쪽 그림을 누른 다음 알맞은 오른쪽 글(가격표 등)을 눌러 연결한다. 오른쪽에 정답 아닌 보기를 더 둘 수 있다 */
+export function LPMatch({ item, pic, onDone }: KindProps) {
+  const pairs: { pic?: string; right: string }[] = item.pairs ?? []; const extra: string[] = item.extra ?? [];
+  const rights = useMemo(() => {
+    const r = [...pairs.map((p, i) => ({ i, t: p.right })), ...extra.map((t, k) => ({ i: -1 - k, t }))];
+    const num = (t: string) => parseFloat(t.replace(/[^\d.]/g, '')) || 0;
+    return r.every((x) => /\d/.test(x.t)) ? r.sort((a, b) => num(a.t) - num(b.t)) : shuffle(r); // 숫자(가격)는 작은 것부터, 아니면 섞기
+  }, [item]); // eslint-disable-line
+  const [sel, setSel] = useState<number | null>(null); const [match, setMatch] = useState<Record<number, number>>({}); const [bad, setBad] = useState<number | null>(null);
+  const wrong = useRef<Set<number>>(new Set()); const fired = useRef(false);
+  const box = useRef<HTMLDivElement>(null); const ld = useRef<(HTMLElement | null)[]>([]); const rd = useRef<(HTMLElement | null)[]>([]);
+  const [lines, setLines] = useState<{ x1: number; y1: number; x2: number; y2: number; c: string }[]>([]);
+  const hue = ['#4F7DF0', '#F0A500', '#3CB371'];
+  const used = new Set(Object.values(match)); const done = Object.keys(match).length === pairs.length && pairs.length > 0;
+  useEffect(() => { if (done && !fired.current) { fired.current = true; onDone(pairs.map((_, i) => ({ tag: 'listen', ok: !wrong.current.has(i) }))); } /* eslint-disable-next-line */ }, [done]);
+  useLayoutEffect(() => {
+    const b = box.current?.getBoundingClientRect(); if (!b) return;
+    setLines(Object.entries(match).map(([l, r]) => { const a = ld.current[+l]?.getBoundingClientRect(); const c = rd.current[r]?.getBoundingClientRect(); return a && c ? { x1: a.left + a.width / 2 - b.left, y1: a.top + a.height / 2 - b.top, x2: c.left + c.width / 2 - b.left, y2: c.top + c.height / 2 - b.top, c: hue[+l % hue.length] } : null; }).filter(Boolean) as typeof lines);
+  }, [match]); // eslint-disable-line
+  function pickRight(ri: number) {
+    if (sel == null || used.has(ri)) return;
+    if (rights[ri].i === sel) { setMatch((m) => ({ ...m, [sel]: ri })); setSel(null); }
+    else { wrong.current.add(sel); setBad(ri); setTimeout(() => setBad(null), 500); }
+  }
+  return (
+    <div className="nv-body nv-wbody nv-wtop nv-lblank nv-lpm">
+      <AudioBar text={item.say ?? ''} max={item.plays} />
+      <div className="nv-lpm-box" ref={box}>
+        <svg className="nv-lpm-lines" aria-hidden="true">{lines.map((l, i) => <line key={i} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke={l.c} strokeWidth="3" strokeLinecap="round" />)}</svg>
+        <div className="nv-lpm-col">{pairs.map((p, i) => {
+          const src = pic(p.pic) ?? p.pic ?? null; const on = sel === i; const dn = match[i] != null;
+          return (
+            <button key={i} type="button" disabled={dn} className={'nv-lpm-card' + (on ? ' on' : '') + (dn ? ' ok' : '')} style={dn ? { borderColor: hue[i % hue.length] } : undefined} onClick={() => setSel(on ? null : i)} aria-label={`${i + 1}번 그림`}>
+              {src ? <img src={imgSrc(src)} alt="" draggable={false} /> : <span className="nv-lpm-ph" />}
+              <i className="nv-lpm-dot" ref={(e) => { ld.current[i] = e; }} />
+            </button>);
+        })}</div>
+        <div className="nv-lpm-col nv-lpm-rcol">{rights.map((r, ri) => {
+          const owner = Object.keys(match).find((k) => match[+k] === ri); const dn = owner != null;
+          return (
+            <button key={ri} type="button" disabled={dn} className={'nv-lpm-tag' + (bad === ri ? ' bad nv-shake' : '') + (dn ? ' ok' : '')} style={dn ? { borderColor: hue[+owner! % hue.length] } : undefined} onClick={() => pickRight(ri)}>
+              <i className="nv-lpm-dot" ref={(e) => { rd.current[ri] = e; }} /><b>{r.t}</b>
+            </button>);
+        })}</div>
+      </div>
+      <Msg ok={done} bad={bad != null} />
+      <HintBox lines={item.hint ?? []} item={item} ctx={() => ({ input: `The student listens to a short dialogue and connects each picture on the left to the matching item on the right.\nPictures: ${pairs.length}. Matched so far: ${Object.keys(match).length}.\nScript the student heard:\n${item.say ?? ''}`, wrong: wrong.current.size })} />
     </div>
   );
 }
