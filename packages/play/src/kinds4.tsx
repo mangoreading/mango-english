@@ -243,7 +243,7 @@ function AudioBar({ text, max }: { text: string; max?: number }) {
 
 /** 듣고 그림·글 연결하기: 소리 막대로 대화 전체를 듣고, 왼쪽 그림을 누른 다음 알맞은 오른쪽 글(가격표 등)을 눌러 연결한다. 오른쪽에 정답 아닌 보기를 더 둘 수 있다 */
 export function LPMatch({ item, pic, onDone }: KindProps) {
-  const pairs: { pic?: string; right: string }[] = item.pairs ?? []; const extra: string[] = item.extra ?? [];
+  const pairs: { pic?: string; right: string }[] = item.pairs ?? []; const extra: string[] = ((item.extra ?? []) as string[]).slice(0, Math.max(0, 4 - pairs.length)); // 오른쪽 보기는 정답과 합쳐 최대 4개
   const rights = useMemo(() => {
     const r = [...pairs.map((p, i) => ({ i, t: p.right })), ...extra.map((t, k) => ({ i: -1 - k, t }))];
     const num = (t: string) => parseFloat(t.replace(/[^\d.]/g, '')) || 0;
