@@ -184,54 +184,115 @@ function Txt({ value, onSave, w }: { value: string; onSave: (v: string) => void;
   return <input className="mx-cell" style={w ? { width: w } : undefined} value={v} onChange={(e) => setV(e.target.value)} onBlur={commit} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} />;
 }
 
-interface TplRow { id: string; name: string; note: string }
-/** 흐름 템플릿 화면 */
+interface TplRow { id: string; name: string; note: string; publisher_id: string | null; grade: number | null }
+interface PubRow { id: string; name: string }
+const GRADES = [3, 4, 5, 6];
+const HIDDEN_PUBS = ['테스트']; // 어휘 템플릿 시험용으로 만든 가짜 출판사는 목록에서 숨긴다
+/** 흐름 템플릿 화면: 앞쪽은 출판사 × 학년 목록, 칸이나 템플릿을 누르면 편집 화면 */
 export function Templates() {
   const [list, setList] = useState<TplRow[] | null>(null);
-  const [sel, setSel] = useState<string | null>(null);
+  const [pubs, setPubs] = useState<PubRow[]>([]);
+  const [sel, setSel] = useState<string | null>(null); // null 이면 목록 화면
   const [err, setErr] = useState('');
   async function load() {
-    const r = await supabase.from('flow_templates').select('id,name,note').order('name');
-    if (r.error) setErr(r.error.message); else { setList(r.data as TplRow[]); if (!sel && r.data?.length) setSel(r.data[0].id); }
+    const [t, p] = await Promise.all([
+      supabase.from('flow_templates').select('id,name,note,publisher_id,grade').order('name'),
+      supabase.from('publishers').select('id,name').order('name'),
+    ]);
+    if (t.error) setErr(t.error.message); else if (p.error) setErr(p.error.message);
+    else { setList(t.data as TplRow[]); setPubs((p.data as PubRow[]).filter((x) => !HIDDEN_PUBS.includes(x.name))); }
   }
-  useEffect(() => { void load(); /* eslint-disable-next-line */ }, []);
-  async function add() {
-    const name = window.prompt('새 템플릿 이름'); if (!name) return;
-    const r = await supabase.from('flow_templates').insert({ name }).select('id').single();
-    if (r.error) setErr(r.error.message); else { setSel(r.data.id); await load(); }
+  useEffect(() => { void load(); }, []);
+  const pubName = (id: string | null) => pubs.find((x) => x.id === id)?.name ?? '미분류';
+  async function add(publisher_id: string, grade: number) {
+    const name = window.prompt(`새 템플릿 이름 (${pubName(publisher_id)} · ${grade}학년)`); if (!name) return;
+    const r = await supabase.from('flow_templates').insert({ name, publisher_id, grade }).select('id').single();
+    if (r.error) setErr(r.error.message); else { await load(); setSel(r.data.id); }
   }
-  async function dup() {
-    const cur = list?.find((t) => t.id === sel); if (!cur) return;
+  async function dup(cur: TplRow) {
     const name = window.prompt('복제할 새 템플릿 이름', cur.name + ' (복사)'); if (!name) return;
-    const n = await supabase.from('flow_templates').insert({ name }).select('id').single();
+    const n = await supabase.from('flow_templates').insert({ name, publisher_id: cur.publisher_id, grade: cur.grade }).select('id').single();
     if (n.error) { setErr(n.error.message); return; }
     const src = await supabase.from('flow_lessons').select('*, flow_steps(*)').eq('template_id', cur.id).order('no');
+    const idMap: Record<string, string> = {}; const refs: { id: string; ref: string }[] = [];
     for (const l of (src.data ?? []) as unknown as Lesson[]) {
       const nl = await supabase.from('flow_lessons').insert({ template_id: n.data.id, no: l.no, en: l.en, ko: l.ko, goal: l.goal, color: l.color, track: l.track ?? 'core' }).select('id').single();
       if (nl.error) { setErr(nl.error.message); return; }
-      const steps = l.flow_steps.map((s) => ({ lesson_id: nl.data.id, pos: s.pos, name_en: s.name_en, name_ko: s.name_ko, minutes: s.minutes, special: s.special, kind: s.kind, qty: s.qty }));
-      if (steps.length) await supabase.from('flow_steps').insert(steps);
+      const rows = [...l.flow_steps].sort((x, y) => x.pos - y.pos);
+      const steps = rows.map((s) => ({ lesson_id: nl.data.id, pos: s.pos, name_en: s.name_en, name_ko: s.name_ko, minutes: s.minutes, special: s.special, kind: s.kind, qty: s.qty, homework: s.homework ?? false, study: s.study ?? true, opts: (s as unknown as { opts?: unknown }).opts ?? {} }));
+      if (steps.length) {
+        const ins = await supabase.from('flow_steps').insert(steps).select('id,pos');
+        if (ins.error) { setErr(ins.error.message); return; }
+        rows.forEach((s) => { const m = ins.data?.find((x) => x.pos === s.pos); if (m) { idMap[s.id] = m.id; if (s.ref_step_id) refs.push({ id: m.id, ref: s.ref_step_id }); } });
+      }
     }
-    setSel(n.data.id); await load();
+    for (const r of refs) if (idMap[r.ref]) await supabase.from('flow_steps').update({ ref_step_id: idMap[r.ref] }).eq('id', r.id); // 문항 출처 연결도 복사본 안의 활동으로 이어 준다
+    await load(); setSel(n.data.id);
   }
-  async function del() {
-    const cur = list?.find((t) => t.id === sel); if (!cur) return;
+  async function del(cur: TplRow) {
     if (!window.confirm(`템플릿 "${cur.name}"을 삭제할까요? 이미 단원에 적용된 흐름에는 영향이 없어요.`)) return;
     const r = await supabase.from('flow_templates').delete().eq('id', cur.id);
     if (r.error) setErr(r.error.message); else { setSel(null); await load(); }
   }
+  async function addPub() {
+    const name = window.prompt('새 출판사 이름'); if (!name?.trim()) return;
+    const r = await supabase.from('publishers').insert({ name: name.trim() });
+    if (r.error) setErr(r.error.message); else await load();
+  }
   if (err) return <p className="mx-err">{err}</p>;
   if (!list) return <p className="mx-muted">불러오는 중…</p>;
+  const cur = list.find((t) => t.id === sel) ?? null;
+  if (cur) {
+    const sibs = list.filter((t) => t.publisher_id === cur.publisher_id && t.grade === cur.grade);
+    return (
+      <>
+        <PageHead title="흐름 템플릿" sub="새 단원에 처음 복사되는 기본 흐름이에요. 여기를 고쳐도 이미 만들어진 단원의 흐름은 바뀌지 않아요." />
+        <div className="mx-row" style={{ margin: '10px 0' }}>
+          <button className="mx-btn sec" onClick={() => setSel(null)}>← 목록</button>
+          <b style={{ margin: '0 4px' }}>{pubName(cur.publisher_id)} · {cur.grade ? cur.grade + '학년' : '학년 미정'}</b>
+          <label className="mx-inline">템플릿<select value={cur.id} onChange={(e) => setSel(e.target.value)}>{sibs.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
+          <button className="mx-btn sec" onClick={() => dup(cur)}>복제</button>
+          <button className="mx-btn sec" onClick={() => del(cur)}>삭제</button>
+        </div>
+        <FlowEditor owner={{ kind: 'template', id: cur.id }} />
+      </>
+    );
+  }
+  const loose = list.filter((t) => !t.publisher_id || !t.grade);
   return (
     <>
-      <PageHead title="흐름 템플릿" sub="새 단원에 처음 복사되는 기본 흐름이에요. 여기를 고쳐도 이미 만들어진 단원의 흐름은 바뀌지 않아요." />
-      <div className="mx-row" style={{ margin: '10px 0' }}>
-        <label className="mx-inline">템플릿<select value={sel ?? ''} onChange={(e) => setSel(e.target.value)}>{list.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
-        <button className="mx-btn sec" onClick={add}>+ 새 템플릿</button>
-        <button className="mx-btn sec" disabled={!sel} onClick={dup}>복제</button>
-        <button className="mx-btn sec" disabled={!sel} onClick={del}>삭제</button>
+      <PageHead title="흐름 템플릿" sub="출판사 × 학년 칸마다 흐름 템플릿을 둬요. 칸에서 새로 만들거나 복제하고, 이름을 눌러 편집해요." />
+      <div className="mx-box" style={{ overflowX: 'auto' }}>
+        <table>
+          <thead><tr><th style={{ width: 140 }}>출판사</th>{GRADES.map((g) => <th key={g}>{g}학년</th>)}</tr></thead>
+          <tbody>
+            {pubs.map((pb) => (
+              <tr key={pb.id}>
+                <td><b>{pb.name}</b></td>
+                {GRADES.map((g) => {
+                  const cell = list.filter((t) => t.publisher_id === pb.id && t.grade === g);
+                  return (
+                    <td key={g} style={{ verticalAlign: 'top', minWidth: 180 }}>
+                      {cell.length === 0 && <div className="mx-muted" style={{ marginBottom: 4 }}>준비 중</div>}
+                      {cell.map((t) => (
+                        <div key={t.id} className="mx-row" style={{ gap: 6, marginBottom: 4 }}>
+                          <button type="button" className="mx-btn" style={{ padding: '2px 8px' }} onClick={() => setSel(t.id)} title={t.note || undefined}>{t.name}</button>
+                          <button type="button" className="mx-btn sec" style={{ padding: '2px 8px' }} onClick={() => dup(t)}>복제</button>
+                        </div>
+                      ))}
+                      <button type="button" className="mx-btn sec" style={{ padding: '2px 8px' }} onClick={() => add(pb.id, g)}>+ 새 템플릿</button>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+            {loose.length > 0 && (
+              <tr><td><b>미분류</b></td><td colSpan={GRADES.length}>{loose.map((t) => <button key={t.id} type="button" className="mx-btn sec" style={{ padding: '2px 8px', marginRight: 6 }} onClick={() => setSel(t.id)}>{t.name}</button>)}</td></tr>
+            )}
+          </tbody>
+        </table>
       </div>
-      {sel ? <FlowEditor owner={{ kind: 'template', id: sel }} /> : <p className="mx-muted">템플릿이 없어요.</p>}
+      <div className="mx-row" style={{ marginTop: 10 }}><button className="mx-btn sec" onClick={addPub}>+ 출판사 추가</button></div>
     </>
   );
 }
@@ -240,7 +301,7 @@ interface TplOpt { id: string; name: string }
 /** 단원에 흐름이 없을 때 템플릿 적용 */
 export function ApplyTemplate({ unitId, onDone }: { unitId: string; onDone: () => void }) {
   const [opts, setOpts] = useState<TplOpt[]>([]); const [sel, setSel] = useState(''); const [err, setErr] = useState('');
-  useEffect(() => { supabase.from('flow_templates').select('id,name').order('name').then((r) => { setOpts((r.data ?? []) as TplOpt[]); setSel(r.data?.[0]?.id ?? ''); }); }, []);
+  useEffect(() => { supabase.from('flow_templates').select('id,name,grade,publishers(name)').order('name').then((r) => { const rows = ((r.data ?? []) as unknown as { id: string; name: string; grade: number | null; publishers: { name: string } | null }[]).map((t) => ({ id: t.id, name: `${t.publishers?.name ?? '미분류'}${t.grade ? ' · ' + t.grade + '학년' : ''} · ${t.name}` })); setOpts(rows); setSel(rows[0]?.id ?? ''); }); }, []);
   async function apply() {
     const r = await supabase.rpc('apply_flow_template', { p_template: sel, p_unit: unitId });
     if (r.error) setErr(r.error.message); else onDone();
