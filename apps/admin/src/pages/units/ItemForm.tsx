@@ -14,7 +14,7 @@ export const KIND_NAME: Record<string, string> = {
   fill: '빈칸 채우기', write: '쓰기', compose: '작문', speak: '말하기', fade: '점점 지우기', dialog: '대화',
   vcards: '단어 카드 보기', vtype1: '단어 따라 쓰기', vspell: '철자 완성', vmatch: '단어-뜻 매칭', vsound: '소리-단어 매칭', vwrite: '그림 보고 쓰기',
   wchoice: '뜻 고르기', pchoice: '그림 보고 고르기', dchoice: '대화 고르기', tf: 'True or False', lchtext: '듣고 고르기 (글 4칸)', lchpic: '듣고 고르기 (그림 4칸)', lchlist: '듣고 고르기 (세로형)',
-  lookspeak: '그림 보고 말하기', saykor: '우리말 보고 영어로 말하기', lspeak: '듣고 대답하기', raloud: '따라 읽기 평가', role: '역할 나눠 말하기', dreadp: '대화 따라 읽기 (그림)', dreadt: '대화 따라 읽기 (글)', present: '발표 영상 찍기', aitalk: 'AI 자유대화',
+  lookspeak: '그림 보고 말하기', looktalk: '그림 보고 대화하기', saykor: '우리말 보고 영어로 말하기', lspeak: '듣고 대답하기', raloud: '따라 읽기 평가', role: '역할 나눠 말하기', dreadp: '대화 따라 읽기 (그림)', dreadt: '대화 따라 읽기 (글)', present: '발표 영상 찍기', aitalk: 'AI 자유대화',
   sbuild: '문장 쓰기 (우리말→영어)', swrite: '정답 써 보기', sfill: '빈칸 단어 쓰기', dfill: '대화 완성하기 (그림)', dfillt: '대화 완성하기 (글 단서)', sscram: '문장 만들기', sorder: '문장 순서 맞추기',
   mwbank: '모범 글 완성 (쓰기)', scloze: '글 빈칸 채우기 (읽기)', lwrite: '듣고 쓰기', lmwrite: '듣고 짝지어 쓰기', lpwrite: '듣고 그림에 맞게 쓰기', lblank: '듣고 빈칸 쓰기', lpmatch: '듣고 그림·글 연결하기', mfree: '나만의 글 쓰기', swrt: '글 요약·쓰기',
   goal: '학습목표', kexp: '핵심표현 듣고 따라 읽기', tapl: '문장 눌러 듣기', lsent: '문장 듣고 고르기(카드)', lcardp: '듣고 익히기 (그림)', lcardt: '듣고 익히기 (글)',
@@ -101,6 +101,7 @@ const SPEC3: Record<string, Field[]> = {
     { k: 'minSent', label: '최소 문장 수', t: 'num' }, { k: 'starter', label: '입력칸 안내 글', t: 'text' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
 };
 const SPEC4: Record<string, Field[]> = {
+  looktalk: [{ k: 'pic', label: '상황 그림(단원 단어 또는 이미지 주소)', t: 'vword' }, { k: 'label', label: '그림 이름표 (예: shoes)', t: 'text' }, { k: 'price', label: '가격표 글자 (예: ₩30,000)', t: 'text' }, { k: 'turns', label: '말할 문장 (2~3개, 위에서부터 차례로)', t: 'rows', req: true, blank: () => ({ target: '', task: '' }), cols: [{ k: 'target', label: '말할 문장', t: 'text' }, { k: 'task', label: '안내 (선택, 비우면 기본: 가격을 물어보세요 / 가격을 대답해 보세요)', t: 'text', w: 260 }] }, { k: 'pass', label: '통과 기준 0.3~1 (비우면 0.5)', t: 'num' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
   lookspeak: [{ k: 'pic', label: '그림(단원 단어)', t: 'vword' }, { k: 'label', label: '그림 이름표 (예: jacket)', t: 'text' }, { k: 'price', label: '가격표 글자 (예: $16,000)', t: 'text' }, { k: 'target', label: '말할 문장', t: 'text', req: true }, { k: 'pass', label: '통과 기준 0.3~1 (비우면 0.5)', t: 'num' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
   saykor: [{ k: 'ko', label: '우리말 문장', t: 'text', req: true }, { k: 'koHl', label: '빨갛게 강조할 부분 (우리말 문장 안의 글자, 선택)', t: 'text' }, { k: 'target', label: '말할 영어 문장', t: 'text', req: true }, { k: 'pass', label: '통과 기준 0.3~1 (비우면 0.5)', t: 'num' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
   lspeak: [{ k: 'ask', label: '들려줄 질문 (비우면 말할 문장)', t: 'text' }, { k: 'ko', label: '상황 설명 (예: Ken의 가게 / 선글라스 13,000원)', t: 'text' }, { k: 'target', label: '말할 대답 문장', t: 'text', req: true }, { k: 'pass', label: '통과 기준 0.3~1 (비우면 0.5)', t: 'num' }, { k: 'hint', label: '힌트', t: 'lines' }, VINST],
@@ -213,6 +214,7 @@ export function defaultItem(kind: string): Obj {
     case 'compose': return { k: 'compose', title: '', rules: [{ label: '' }], minSent: 1, sample: '' };
     case 'vcards': case 'vtype1': case 'vmatch': case 'vsound': case 'vwrite': return { k: kind, tag: 'vocab', words: [] };
     case 'vspell': return { k: 'vspell', tag: 'vocab', word: '' };
+    case 'looktalk': return { k: 'looktalk', tag: 'speak', turns: [{ target: '' }, { target: '' }] };
     case 'lookspeak': case 'lspeak': case 'raloud': return { k: kind, tag: 'speak', target: '' };
     case 'saykor': return { k: 'saykor', tag: 'speak', ko: '', target: '' };
     case 'dreadp': case 'dreadt': return { k: kind, tag: 'speak', lines: [] };

@@ -204,6 +204,8 @@ export const SWrt = z.object({ ...T1, k: z.literal('swrt'), title: z.string().op
 /* ===== 4단계: 말하기 ===== */
 const sp = { ...T1, target: z.string().min(1), pass: z.number().min(0.3).max(1).optional(), hint };
 export const LookSpeak = z.object({ ...sp, k: z.literal('lookspeak'), pic: z.string().optional(), label: z.string().optional(), price: z.string().optional() });
+/** 그림 보고 대화하기: 그림 한 장을 보고 문장 2~3개(예: 가격 묻기 → 가격 답하기)를 차례로 말한다. label/price = 그림 이름표·가격표, turns[].task = 안내(선택) */
+export const LookTalk = z.object({ ...T1, k: z.literal('looktalk'), pic: z.string().optional(), label: z.string().optional(), price: z.string().optional(), pass: z.number().min(0.3).max(1).optional(), turns: z.array(z.object({ target: z.string().min(1), task: z.string().optional() })).min(2).max(3), hint });
 export const SayKor = z.object({ ...sp, k: z.literal('saykor'), ko: z.string().min(1), koHl: z.string().optional() });
 export const LSpeak = z.object({ ...sp, k: z.literal('lspeak'), ask: z.string().optional(), ko: z.string().optional() });
 export const RAloud = z.object({ ...T1, k: z.literal('raloud'), target: z.string().min(1), stars: z.boolean().optional(), fluency: z.boolean().optional() });
@@ -217,7 +219,7 @@ export const ActivityItem = z.discriminatedUnion('k', [
   Learn, Text, Brief, Choose, Match, Build, Fill, Write, Compose, Speak, Fade, Dialog,
   VCards, VType1, VSpell, VMatch, VSound, VWrite,
   LookSpeak, SayKor, LSpeak, RAloud, Role, DRead, Present, AiTalk,
-  LMWrite, LPWrite, LBlank, LPMatch, SBuild, SWrite, SFill, DFill, SScram, SOrder, MWBank, SCloze, LWrite, MFree, SWrt,
+  LMWrite, LPWrite, LBlank, LPMatch, LookTalk, SBuild, SWrite, SFill, DFill, SScram, SOrder, MWBank, SCloze, LWrite, MFree, SWrt,
   Goal, KExp, TapL, LSent, LCardP, LCardT, Scene, SceneRep, SScramL, SScramR, Lecture, WSent, LNum, WRepeat, SDrill, PRead, MText,
   WChoice, PChoice, DChoice, TrueFalse, LChText, LChPic, LChList, LMatch, SqChoice, SqTF, SqMulti,
 ]).superRefine((v, ctx) => {
@@ -234,7 +236,7 @@ export type ActivityItem = z.infer<typeof ActivityItem>;
 export type Kind = ActivityItem['k'];
 export const KINDS = ['learn', 'text', 'brief', 'choose', 'match', 'build', 'fill', 'write', 'compose', 'speak', 'fade', 'dialog', 'vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite',
   'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'dreadp', 'dreadt', 'present', 'aitalk',
-  'sbuild', 'swrite', 'sfill', 'dfill', 'dfillt', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'lmwrite', 'lpwrite', 'lblank', 'lpmatch', 'mfree', 'swrt',
+  'sbuild', 'swrite', 'sfill', 'dfill', 'dfillt', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'lmwrite', 'lpwrite', 'lblank', 'lpmatch', 'looktalk', 'mfree', 'swrt',
   'goal', 'scene', 'scenerep', 'sscraml', 'sscramlr', 'sscramr', 'lecture', 'wsent', 'lnum', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext',
   'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti'] as const;
 

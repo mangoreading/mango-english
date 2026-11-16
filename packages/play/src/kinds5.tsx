@@ -126,6 +126,55 @@ export const LookSpeak = (p: KindProps) => <Speak {...p} mode="look" peekHint />
 export const SayKor = (p: KindProps) => <Speak {...p} mode="kor" peekHint />;
 export const LSpeak = (p: KindProps) => <Speak {...p} mode="listen" peekHint />;
 
+/** 그림 보고 대화하기: 그림 한 장(이름표·가격표)을 보고, 학생이 문장 2~3개(예: 가격 묻기 → 가격 답하기)를 차례로 말한다. 문장은 숨겨 두었다가 Hint 를 누르면 잠깐 보여 준다 */
+export function LookTalk({ item, pic, onDone }: KindProps) {
+  const speaking = useSpeaking();
+  const turns: { target: string; task?: string }[] = item.turns ?? []; const need: number = item.pass ?? 0.5;
+  const TASKS = ['가격을 물어보세요.', '가격을 대답해 보세요.', '이어서 말해 보세요.'];
+  const [ti, setTi] = useState(0); const [g, setG] = useState<GW[] | null>(null); const [heard, setHeard] = useState(''); const [tries, setTries] = useState(0);
+  const [log, setLog] = useState<{ target: string; g: GW[] }[]>([]); const first = useRef<boolean[]>([]); const [fin, setFin] = useState(false); const [passed, setPassed] = useState(false);
+  const [peek, setPeek] = useState(false); const peekT = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showHint = () => { setPeek(true); if (peekT.current) clearTimeout(peekT.current); peekT.current = setTimeout(() => setPeek(false), 3000); };
+  useEffect(() => () => { if (peekT.current) clearTimeout(peekT.current); }, []);
+  const target = turns[ti]?.target ?? '';
+  function pass(best: GW[]) {
+    first.current[ti] = tries === 0; setPassed(true); setLog((l) => [...l, { target, g: best }]);
+    if (ti + 1 >= turns.length) { setFin(true); onDone(turns.map((_, k) => ({ tag: 'speak', ok: !!first.current[k] }))); }
+    else setTimeout(() => { setTi((n) => n + 1); setG(null); setHeard(''); setTries(0); setPassed(false); setPeek(false); }, 900);
+  }
+  const mic = useMic((t) => {
+    const opts = t.split(' | '); const best = opts.map((o) => grade(target, o)).sort((a, b) => pct(b) - pct(a))[0];
+    setHeard(opts[0]); setG(best); setTries((n) => n + 1);
+    if (pct(best) >= need) pass(best);
+  }, () => target);
+  const src = pic(item.pic);
+  const self = () => pass(target.split(/\s+/).filter(Boolean).map((w) => ({ w, ok: true })));
+  const sel = !passed && !fin;
+  return (
+    <div className="nv-body nv-wbody nv-spz nv-lt">
+      <div className="nv-sptop">
+        {src && <div className="nv-picwrap"><img className="nv-img nv-img-md" src={imgSrc(src)} alt="" draggable={false} />{item.label && <span className="nv-pill">{item.label}</span>}{item.price && <span className="nv-price">{item.price}</span>}</div>}
+      </div>
+      {log.length > 0 && <div className="nv-ltlog">{log.map((l, i) => <p key={i}><em>{'①②③'[i]}</em><Words g={l.g} plain /></p>)}</div>}
+      {!fin && <>
+        <p className="nv-lttask">{'①②③'[ti]} {turns[ti]?.task || TASKS[ti] || TASKS[2]} <small>({ti + 1}/{turns.length})</small></p>
+        <div className={'nv-capsule nv-capsule-sp nv-main' + (passed ? ' nv-okc' : '')}>
+          <div className="nv-hintwrap nv-hint-in"><button type="button" className="nv-hintbtn" onClick={showHint}><span className="nv-bulb">💡</span> Hint</button></div>
+          <b className={'nv-peek' + (passed || peek ? ' on' : '')}>{g && passed ? <Words g={g} /> : target}</b>
+          <button className={'nv-spk nv-peek' + (passed || peek ? ' on' : '')} onClick={() => say(target)} aria-label="듣기"><i className="nv-sico" aria-hidden="true" /></button>
+        </div>
+        <MicBtn on={mic.on} busy={mic.busy} level={mic.level} starting={mic.starting} locked={speaking} onClick={passed ? () => undefined : mic.on ? mic.stop : mic.start} dim={passed} />
+        <div className="nv-spstat">
+          <p className="nv-heard">{g ? <>들린 말: “{heard}” · 일치 {Math.round(pct(g) * 100)}%</> : '\u00a0'}</p>
+          <button className="nv-btn nv-ghost nv-selfbtn" style={{ visibility: sel && (mic.err === 'nosupport' || mic.err === 'denied' || mic.fails >= 2 || tries >= 3) ? 'visible' : 'hidden' }} onClick={self}>소리 내어 말했어요</button>
+        </div>
+        {passed ? <Fb className="nv-fbmsg on">좋아요! 👏</Fb> : mic.err && <Fb className="nv-fbmsg on nv-fbbad">{ERRMSG[mic.err]}</Fb>}
+      </>}
+      {fin && <Fb className="nv-fbmsg on">잘했어요! 대화를 모두 말했어요 👏</Fb>}
+    </div>
+  );
+}
+
 /** 따라 읽기: 듣기 → 말하기 → 단어별 결과(색) → 약한 단어를 짚어 다시 듣고 한 번 더 */
 export function RAloud({ item, onDone }: KindProps) {
   const speaking = useSpeaking();

@@ -1,7 +1,7 @@
 import type { VWord } from '@mango/play';
 import type { VocabOpt } from '../pages/units/ItemForm';
 
-const NATIVE = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'lmwrite', 'lpwrite', 'lblank', 'lpmatch', 'sqchoice', 'sqtf', 'sqmulti', 'goal', 'scene', 'scenerep', 'dreadp', 'dreadt', 'dfillt', 'sscraml', 'sscramlr', 'sscramr', 'lecture', 'wsent', 'lnum', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext', 'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'mfree', 'swrt', 'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'aitalk'];
+const NATIVE = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'lmwrite', 'lpwrite', 'lblank', 'lpmatch', 'looktalk', 'sqchoice', 'sqtf', 'sqmulti', 'goal', 'scene', 'scenerep', 'dreadp', 'dreadt', 'dfillt', 'sscraml', 'sscramlr', 'sscramr', 'lecture', 'wsent', 'lnum', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext', 'sbuild', 'swrite', 'sfill', 'dfill', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'mfree', 'swrt', 'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'present', 'aitalk'];
 export const isNativeKind = (k: string) => NATIVE.includes(k);
 
 /** 샘플 미리보기용 단어 (앱에 들어 있는 그림 사용) */
@@ -22,6 +22,7 @@ export const NATIVE_SAMPLES: Record<string, Record<string, unknown>> = {
   vcards: { k: 'vcards', tag: 'vocab', words: W }, vtype1: { k: 'vtype1', tag: 'vocab', words: W },
   vspell: { k: 'vspell', tag: 'vocab', word: 'sunglasses', shown: 6 }, vmatch: { k: 'vmatch', tag: 'vocab', words: W },
   vsound: { k: 'vsound', tag: 'vocab', words: W }, vwrite: { k: 'vwrite', tag: 'vocab', words: W },
+  looktalk: { k: 'looktalk', tag: 'speak', pic: 'shoes', label: 'shoes', price: '₩30,000', turns: [{ target: 'How much are these shoes?' }, { target: "They're thirty thousand won." }], hint: ['How much are ~? / They\'re ~ won.'] },
   lookspeak: { k: 'lookspeak', tag: 'speak', pic: 'jackettag', target: 'How much are these jackets?', hint: ['How much are ~?'] },
   saykor: { k: 'saykor', tag: 'speak', ko: '16,000원입니다.', koHl: '16,000원', target: "They're sixteen thousand won.", hint: ["They're ~."] },
   lspeak: { k: 'lspeak', tag: 'speak', ask: 'How much are these sunglasses?', ko: 'Ken의 가게 / 선글라스 13,000원', target: "They're thirteen thousand won.", hint: ["They're ~ won."] },
