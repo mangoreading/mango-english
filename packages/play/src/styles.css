@@ -930,3 +930,5 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-sqroot { width:calc(100% - 10em); margin-left:auto; margin-right:auto; overflow:visible; } .nv-sqroot .nv-split { width:100%; } .nv-setroot.nv-sqroot .nv-arrow { top:calc(50% - 1.76em); } .nv-setroot.nv-sqroot .nv-q-prev { left:-.85em; } .nv-setroot.nv-sqroot .nv-q-next { right:-.85em; }
 .nv-sqrev { padding-top:.5em; } .nv-setroot.nv-sqrev .nv-rv-list { max-height:none; }
 .nv-body.nv-sqrev { justify-content:flex-start; padding-top:.3em; } .nv-sqrev .nv-rv { position:relative; gap:.4em; } .nv-setroot.nv-sqrev .nv-rv .nv-ptools { position:absolute; top:-.3em; right:0; margin:0; } .nv-setroot.nv-sqrev .nv-rv-list { max-height:23.5em; }
+/* sqset: 페이지(문항)마다 내용이 위아래로 움직이지 않게, 본문·문항 영역 높이를 고정하고 위에서부터 배치 */
+.nv-sqroot .nv-split { height:19.5em; } .nv-sqroot .nv-split > .nv-qpane { justify-content:flex-start; }
