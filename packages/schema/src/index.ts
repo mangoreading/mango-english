@@ -145,6 +145,10 @@ const sq = { ...T1, title: z.string().optional(), text: z.array(z.string().min(1
 export const SqChoice = z.object({ ...sq, k: z.literal('sqchoice'), q: z.string().min(1), opts: z.array(Opt).min(2).max(6), a: z.number().int().min(0) });
 export const SqTF = z.object({ ...sq, k: z.literal('sqtf'), items: z.array(z.object({ t: z.string().min(1), a: z.boolean().optional() })).min(1).max(6) });
 export const SqMulti = z.object({ ...sq, k: z.literal('sqmulti'), items: z.array(z.object({ t: z.string().min(1), ok: z.boolean().optional() })).min(2).max(6) });
+/** 글 읽고 답하기 (세트): 본문 하나(왼쪽)에 문항 최대 5개(오른쪽). 문항마다 선다(mc) · T/F(tf, 문장 1~3개 "문장 | T") · 복수선택(multi, ans 에 정답을 | 로 구분)을 고른다 */
+export const SqSet = z.object({ ...T1, k: z.literal('sqset'), title: z.string().optional(), text: z.array(z.string().min(1)).min(1), ko: z.string().optional(),
+  qs: z.array(z.object({ t: z.enum(['mc', 'tf', 'multi']).optional(), q: z.string().optional(), ans: z.string().optional(), wrong: z.array(z.string().min(1)).max(4).optional(), fb: z.string().optional(), lines: z.array(z.string().regex(/\|\s*[TFtf]\s*$/, '문장 뒤에 | T 또는 | F 를 붙여 주세요')).max(3).optional() })
+    .refine((x) => (x.t === 'tf' ? (x.lines?.length ?? 0) >= 1 : !!x.q && !!x.ans && (x.wrong?.length ?? 0) >= 1), 'T/F는 문장 1~3개, 선다·복수선택은 질문·정답·오답 1개 이상')).min(1).max(5) });
 
 /* ===== 2단계: 듣고 익히기 · 따라 말하기 · 학습목표 · 문장 바꿔 말하기 · 글 듣고 읽기 · 모범 글 =====
  * 강조 표기: [[파랑]] {{빨강}}. 본문의 '---' 줄은 쪽 나눔. */
@@ -221,7 +225,7 @@ export const ActivityItem = z.discriminatedUnion('k', [
   LookSpeak, SayKor, LSpeak, RAloud, Role, DRead, Present, AiTalk,
   LMWrite, LPWrite, LBlank, LPMatch, LookTalk, SBuild, SWrite, SFill, DFill, SScram, SOrder, MWBank, SCloze, LWrite, MFree, SWrt,
   Goal, KExp, TapL, LSent, LCardP, LCardT, Scene, SceneRep, SScramL, SScramR, Lecture, WSent, LNum, WRepeat, SDrill, PRead, MText,
-  WChoice, PChoice, DChoice, TrueFalse, LChText, LChPic, LChList, LMatch, SqChoice, SqTF, SqMulti,
+  WChoice, PChoice, DChoice, TrueFalse, LChText, LChPic, LChList, LMatch, SqChoice, SqTF, SqMulti, SqSet,
 ]).superRefine((v, ctx) => {
   if (v.k === 'choose' && v.a >= v.opts.length) ctx.addIssue({ code: 'custom', path: ['a'], message: 'a(정답 index)가 opts 범위를 벗어났어요' });
   if ((v.k === 'pchoice' || v.k === 'dchoice' || v.k === 'lchtext' || v.k === 'lchpic' || v.k === 'lchlist' || v.k === 'sqchoice') && v.a >= v.opts.length) ctx.addIssue({ code: 'custom', path: ['a'], message: '정답 번호가 보기 범위를 벗어났어요' });
@@ -238,7 +242,7 @@ export const KINDS = ['learn', 'text', 'brief', 'choose', 'match', 'build', 'fil
   'lookspeak', 'saykor', 'lspeak', 'raloud', 'role', 'dreadp', 'dreadt', 'present', 'aitalk',
   'sbuild', 'swrite', 'sfill', 'dfill', 'dfillt', 'sscram', 'sorder', 'mwbank', 'scloze', 'lwrite', 'lmwrite', 'lpwrite', 'lblank', 'lpmatch', 'looktalk', 'mfree', 'swrt',
   'goal', 'scene', 'scenerep', 'sscraml', 'sscramlr', 'sscramr', 'lecture', 'wsent', 'lnum', 'kexp', 'tapl', 'lsent', 'lcardp', 'lcardt', 'wrepeat', 'sdrill', 'pread', 'mtext',
-  'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti'] as const;
+  'wchoice', 'pchoice', 'dchoice', 'tf', 'lchtext', 'lchpic', 'lchlist', 'lmatch', 'sqchoice', 'sqtf', 'sqmulti', 'sqset'] as const;
 
 /** 아이템 상태 (검수 워크플로) */
 export const ItemStatus = z.enum(['draft', 'review', 'approved', 'rejected']);

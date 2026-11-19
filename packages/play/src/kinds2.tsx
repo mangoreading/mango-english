@@ -165,7 +165,7 @@ export function LMatch({ item, onDone }: KindProps) {
 }
 
 /* ---------- 글 읽고 답하기 3종 (sqchoice 선택 · sqtf T/F · sqmulti 복수 선택) ---------- */
-function Story({ item, side, tag }: { item: Record<string, any>; side: ReactNode; tag?: string }) { // eslint-disable-line @typescript-eslint/no-explicit-any
+export function Story({ item, side, tag }: { item: Record<string, any>; side: ReactNode; tag?: string }) { // eslint-disable-line @typescript-eslint/no-explicit-any
   const [ko, setKo] = useState(false);
   const text: string[] = item.text ?? [];
   return (

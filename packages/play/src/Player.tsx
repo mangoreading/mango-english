@@ -6,7 +6,7 @@ import { AiTalk, LookSpeak, LookTalk, LSpeak, Present, RAloud, ReadAlong, Role, 
 import { setOutputScope } from './outputs';
 import { DFill, LBlank, LPMatch, LWrite, LMWrite, LPWrite, MFree, MWBank, SBuild, SCloze, SFill, SOrder, SScram, SWrite, SWrt } from './kinds4';
 import { SceneStory } from './kinds6';
-import { withQuiz } from './kinds8';
+import { SqSet, withQuiz } from './kinds8';
 import { Lecture, WordSent, LNum } from './kinds7';
 import { MicTest } from './mictest';
 import { Goal, KExp, LCardP, LCardT, LSent, MText, PRead, SDrill, TapL, WRepeat } from './kinds3';
@@ -80,10 +80,11 @@ const INST: Record<string, string> = {
   sqchoice: '글을 읽고, 질문에 답해 보세요.',
   sqtf: '글을 읽고, 질문에 답해 보세요.',
   sqmulti: '글을 읽고, 질문에 답해 보세요.',
+  sqset: '글을 읽고, 질문에 답해 보세요.',
 };
 /** 그림을 문항 화면 안에서 직접 그리는 템플릿 (그 밖의 템플릿은 오른쪽 위에 보조 그림으로 보인다) */
 /** 기획안에 보조 그림이 없는 템플릿(쓰기류): 문항에 pic 이 있어도 우상단 그림을 그리지 않는다 */
-const NO_SIDE = ['dreadt', 'sdrill', 'sbuild', 'swrite', 'sfill', 'sscram', 'sscraml', 'sscramlr', 'sscramr', 'sorder', 'mwbank', 'scloze', 'mfree', 'swrt', 'mtext', 'lwrite', 'saykor', 'lspeak', 'raloud', 'present', 'aitalk', 'pread', 'scene', 'lecture', 'wsent', 'lnum', 'tf', 'sqchoice', 'sqtf', 'sqmulti'];
+const NO_SIDE = ['dreadt', 'sdrill', 'sbuild', 'swrite', 'sfill', 'sscram', 'sscraml', 'sscramlr', 'sscramr', 'sorder', 'mwbank', 'scloze', 'mfree', 'swrt', 'mtext', 'lwrite', 'saykor', 'lspeak', 'raloud', 'present', 'aitalk', 'pread', 'scene', 'lecture', 'wsent', 'lnum', 'tf', 'sqchoice', 'sqtf', 'sqmulti', 'sqset'];
 const VOCAB_BG = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat', 'pchoice'];
 const VOCAB_SKIN: string[] = [];
 /** 말하기 지시문의 '영어로 말해 보세요' 부분을 파랗게 강조 (mango 스킨) */
@@ -97,7 +98,7 @@ const LCH = ['lchtext', 'lchpic', 'lchlist', 'lwrite'];
 const INST_SUB: Record<string, string> = { kexp: '(3번 반복해서 들어주세요)', present: '(동영상 촬영해 보기)' };
 const KIND = { scene: SceneStory, scenerep: SceneStory, sscraml: SScram, sscramlr: SScram, sscramr: SScram, lecture: Lecture, wsent: WordSent, lnum: LNum, lookspeak: LookSpeak, looktalk: LookTalk, saykor: SayKor, lspeak: LSpeak, raloud: RAloud, role: Role, dreadp: ReadAlong, dreadt: ReadAlong, present: Present, aitalk: AiTalk, sbuild: SBuild, swrite: SWrite, sfill: SFill, dfill: DFill, dfillt: DFill, sscram: SScram, sorder: SOrder, mwbank: MWBank, scloze: SCloze, lwrite: LWrite, mfree: MFree, swrt: SWrt, goal: Goal, kexp: KExp, tapl: TapL, lsent: LSent, lcardp: LCardP, lcardt: LCardT, sdrill: SDrill, pread: withQuiz(PRead), mtext: withQuiz(MText), wrepeat: WRepeat, vcards: VCards, vtype1: VType1, vspell: VSpell, vmatch: VMatch, vsound: VSound, vwrite: VWrite,
   wchoice: WChoice, pchoice: PChoice, dchoice: DChoice, tf: TrueFalse, lchtext: LChText, lchpic: LChPic, lchlist: LChList, lmatch: LMatch, lmwrite: LMWrite, lpwrite: LPWrite, lblank: LBlank, lpmatch: LPMatch,
-  sqchoice: SqChoice, sqtf: SqTF, sqmulti: SqMulti } as const;
+  sqchoice: SqChoice, sqtf: SqTF, sqmulti: SqMulti, sqset: SqSet } as const;
 
 /** 어휘 활동 6종 재생기: 문항(화면)을 차례로 보여 주고, 끝나면 결과 화면을 보여 준다. */
 export function NativePlayer({ title, items, vocab, nextLabel, step, quiet, scope, ctx, onResult, onFinish }: Props) {

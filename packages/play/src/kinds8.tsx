@@ -2,9 +2,10 @@ import { useEffect, useMemo, useRef, useState, type ComponentType } from 'react'
 import { Fb, useCardProgress } from './fb';
 import { Rich } from './kinds3';
 import { say, shuffle, stopSeq, type KindProps } from './common';
+import { Story } from './kinds2';
 
 /** 본문 세트의 확인 문항: t 가 'tf' 면 문장 1~3개에 T/F 를 고르는 한 문제, 아니면 3~4지 선다(정답 1 + 오답 1~3) */
-export interface SetQ { t?: 'mc' | 'tf'; q?: string; ans?: string; wrong?: string[]; fb?: string; lines?: string[] }
+export interface SetQ { t?: 'mc' | 'tf' | 'multi'; q?: string; ans?: string; wrong?: string[]; fb?: string; lines?: string[] }
 
 /** T/F 한 문제: 문장 최대 3개(ⓐⓑⓒ)를 보고 각각 T 또는 F 를 고른다. 모두 맞히면 onFinish(처음부터 맞혔는지) */
 export function TfBlock({ q, no, onFinish, done }: { q: SetQ; no: string; onFinish: (firstTry: boolean) => void; done?: boolean }) {
@@ -61,9 +62,18 @@ function ReviewPage({ item }: { item: Record<string, any> }) { // eslint-disable
 /** 확인 문항 한 쪽: 이미 푼 문항으로 돌아오면 정답이 채워진 상태로 보여 준다 */
 function QPage({ q, no, solved, onSolved, hasNext }: { q: SetQ; no: string; solved: boolean | undefined; onSolved: (firstTry: boolean) => void; hasNext: boolean }) {
   const [ok, setOk] = useState(solved !== undefined); const [bad, setBad] = useState<number | null>(null); const wrong = useRef(false);
-  const opts = useMemo(() => (q.t === 'tf' ? [] : shuffle([{ t: q.ans ?? '', c: true }, ...(q.wrong ?? []).map((t) => ({ t, c: false }))])), []); // eslint-disable-line
+  const [sel, setSel] = useState<Set<number>>(new Set()); const [shake, setShake] = useState(false);
+  const opts = useMemo(() => (q.t === 'tf' ? [] : shuffle([...(q.t === 'multi' ? (q.ans ?? '').split('|').map((t) => t.trim()).filter(Boolean) : [q.ans ?? '']).map((t) => ({ t, c: true })), ...(q.wrong ?? []).map((t) => ({ t, c: false }))])), []); // eslint-disable-line
   function choose(i: number) {
     if (ok) return;
+    if (q.t === 'multi') { // 복수선택: 정답 개수만큼 고르면 판정, 틀리면 선택이 풀린다
+      const n = new Set(sel); if (n.has(i)) n.delete(i); else n.add(i); setSel(n);
+      if (n.size === opts.filter((o) => o.c).length) {
+        if (opts.every((o, k) => o.c === n.has(k))) { setOk(true); onSolved(!wrong.current); }
+        else { wrong.current = true; setShake(true); setTimeout(() => { setShake(false); setSel(new Set()); }, 600); }
+      }
+      return;
+    }
     if (opts[i].c) { setOk(true); onSolved(!wrong.current); }
     else { wrong.current = true; setBad(i); setTimeout(() => setBad(null), 500); }
   }
@@ -71,8 +81,8 @@ function QPage({ q, no, solved, onSolved, hasNext }: { q: SetQ; no: string; solv
   if (q.t === 'tf') return <TfBlock q={q} no={no} done={solved !== undefined} onFinish={(ft) => { setOk(true); onSolved(ft); }} />;
   return (
     <div className="nv-sq">
-      <p className="nv-qt">Q{no}. {q.q}</p>
-      <div className="nv-list nv-list-s">{opts.map((o, i) => <button key={i} className={'nv-opt' + (ok && o.c ? ' nv-right' : bad === i ? ' nv-wrong nv-shake' : '')} onClick={() => choose(i)}>{o.t}</button>)}</div>
+      <p className="nv-qt">Q{no}. {q.t === 'multi' ? '(알맞은 것을 모두 고르세요) ' : ''}{q.q}</p>
+      <div className={'nv-list nv-list-s' + (shake ? ' nv-shake' : '')}>{opts.map((o, i) => <button key={i} className={'nv-opt' + (q.t === 'multi' ? ' nv-opt-l' : '') + (ok && o.c ? ' nv-right' : q.t === 'multi' && sel.has(i) ? ' nv-on' : bad === i ? ' nv-wrong nv-shake' : '')} onClick={() => choose(i)}>{o.t}</button>)}</div>
       {ok && q.fb && <p className="nv-setq-fb">{q.fb}</p>}
       <Fb className={'nv-fbmsg' + (ok ? ' on' : '')}>{msg}</Fb>
     </div>
@@ -107,4 +117,19 @@ function QuizShell({ Inner, p, qs }: { Inner: ComponentType<KindProps>; p: KindP
       {pg > 0 && pg < total - 1 && <button type="button" className="nv-arrow nv-q-next" disabled={!canNext} onClick={() => setPg(pg + 1)} title="다음" aria-label="다음">›</button>}
     </div>
   );
+}
+
+/** 글 읽고 답하기 (세트): 왼쪽에 본문(듣기·해석 보기)을 계속 보여 주고, 오른쪽에서 문항(최대 5개)을 차례로 푼다. 문항마다 선다·T/F·복수선택 */
+export function SqSet({ item, onDone }: KindProps) {
+  const qs: SetQ[] = (item.qs ?? []).slice(0, 5);
+  const [qi, setQi] = useState(0); const res = useRef<boolean[]>([]); const fired = useRef(false);
+  const solved = (ft: boolean) => {
+    res.current[qi] = ft;
+    setTimeout(() => {
+      if (qi + 1 < qs.length) setQi(qi + 1);
+      else if (!fired.current) { fired.current = true; onDone(res.current.map((ok) => ({ tag: 'read', ok }))); }
+    }, 900);
+  };
+  if (!qs.length) return null;
+  return <div className="nv-body nv-bodyw"><Story item={item} side={<QPage key={qi} q={qs[qi]} no={qs.length > 1 ? String(qi + 1) : ''} solved={undefined} onSolved={solved} hasNext={false} />} /></div>;
 }
