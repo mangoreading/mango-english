@@ -8,29 +8,32 @@ import { Hint } from './hint';
 /** 본문 세트의 확인 문항: t 가 'tf' 면 문장 1~3개에 T/F 를 고르는 한 문제, 아니면 3~4지 선다(정답 1 + 오답 1~3) */
 export interface SetQ { t?: 'mc' | 'tf' | 'multi'; q?: string; ans?: string; wrong?: string[]; fb?: string; lines?: string[] }
 
-/** T/F 한 문제: 문장 최대 3개(ⓐⓑⓒ)를 보고 각각 T 또는 F 를 고른다. 모두 맞히면 onFinish(처음부터 맞혔는지) */
+/** T/F 한 문제: 문장 최대 3개(ⓐⓑⓒ)를 보고 각각 T 또는 F 를 고른다. 모두 고른 뒤에야 한꺼번에 정·오답을 알려 준다(찍기 방지).
+ *  틀린 문장만 빨갛게 표시했다가 다시 고르게 하고, 맞힌 문장은 잠근다. 모두 맞히면 onFinish(처음 판정에서 모두 맞혔는지) */
 export function TfBlock({ q, no, onFinish, done }: { q: SetQ; no: string; onFinish: (firstTry: boolean) => void; done?: boolean }) {
   const rows = (q.lines ?? []).slice(0, 3).map((l) => { const m = l.match(/^(.*)\|\s*([TFtf])\s*$/); return { t: (m ? m[1] : l).trim(), a: m ? m[2].toUpperCase() === 'T' : true }; });
-  const [res, setRes] = useState<Record<number, boolean>>(() => (done ? Object.fromEntries(rows.map((r, i) => [i, r.a])) : {})); const [bad, setBad] = useState<string | null>(null);
-  const wrongs = useRef<Set<number>>(new Set()); const fired = useRef(!!done);
-  useEffect(() => {
-    if (!fired.current && rows.length && rows.every((_, i) => res[i] != null)) { fired.current = true; onFinish(wrongs.current.size === 0); }
-    // eslint-disable-next-line
-  }, [res]);
-  function pick(i: number, v: boolean) {
-    if (res[i] != null) return;
-    if (!!rows[i].a === v) setRes({ ...res, [i]: v });
-    else { wrongs.current.add(i); setBad(i + (v ? 'T' : 'F')); setTimeout(() => setBad(null), 500); }
+  const [pick, setPick] = useState<Record<number, boolean>>(() => (done ? Object.fromEntries(rows.map((r, i) => [i, r.a])) : {}));
+  const [locked, setLocked] = useState<number[]>(() => (done ? rows.map((_, i) => i) : [])); const [bad, setBad] = useState<number[]>([]); const [ok, setOk] = useState(!!done);
+  const first = useRef(true);
+  function choose(i: number, v: boolean) {
+    if (ok || bad.length || locked.includes(i)) return;
+    const n = { ...pick, [i]: v }; setPick(n);
+    if (!rows.every((_, k) => n[k] != null)) return;
+    const wr = rows.map((r, k) => (n[k] === r.a ? -1 : k)).filter((k) => k >= 0);
+    if (!wr.length) { setLocked(rows.map((_, k) => k)); setOk(true); onFinish(first.current); return; }
+    first.current = false; setBad(wr); setLocked(rows.map((_, k) => k).filter((k) => !wr.includes(k)));
+    setTimeout(() => { setPick((p) => { const m = { ...p }; wr.forEach((k) => delete m[k]); return m; }); setBad([]); }, 1200);
   }
   const mark = (i: number) => String.fromCharCode(9424 + i);
+  const cls = (i: number, v: boolean) => (locked.includes(i) ? (pick[i] === v ? ' nv-right' : '') : bad.includes(i) && pick[i] === v ? ' nv-wrong nv-shake' : pick[i] === v ? ' nv-on' : '');
   return (
     <div className="nv-sq">
       <p className="nv-qt">Q{no}. {q.q || '글의 내용과 일치하면 T, 아니면 F를 선택하세요.'}</p>
       <div className="nv-tfl">{rows.map((r, i) => (
         <div key={i} className="nv-tfr"><span>{mark(i)} {r.t}</span>
-          {[true, false].map((v) => <button key={String(v)} className={'nv-tfb' + (res[i] === v ? ' nv-right' : '') + (bad === i + (v ? 'T' : 'F') ? ' nv-wrong nv-shake' : '')} onClick={() => pick(i, v)}>{v ? 'T' : 'F'}</button>)}
+          {[true, false].map((v) => <button key={String(v)} className={'nv-tfb' + cls(i, v)} onClick={() => choose(i, v)}>{v ? 'T' : 'F'}</button>)}
         </div>))}</div>
-      <Fb className={'nv-fbmsg' + (rows.length > 0 && rows.every((_, i) => res[i] != null) ? ' on' : '')}>{rows.length > 0 && rows.every((_, i) => res[i] != null) ? '정답이에요! 👏' : ''}</Fb>
+      {bad.length > 0 ? <Fb className="nv-fbmsg on nv-fbbad">{bad.length === 1 ? '틀린 문장이 1개 있어요. 다시 골라 보세요.' : `틀린 문장이 ${bad.length}개 있어요. 다시 골라 보세요.`}</Fb> : <Fb className={'nv-fbmsg' + (ok ? ' on' : '')}>{ok ? '정답이에요! 👏' : ''}</Fb>}
     </div>
   );
 }
@@ -120,26 +123,32 @@ function QuizShell({ Inner, p, qs }: { Inner: ComponentType<KindProps>; p: KindP
   );
 }
 
-/** 글 읽고 답하기 (세트): 왼쪽에 본문(듣기)을 계속 보여 주고, 오른쪽에서 문항(최대 5개)을 차례로 푼다. 문항마다 선다·T/F·복수선택, Hint(누르면 근거 문장이 본문에서 노랗게 표시).
- *  해석은 문항을 모두 푼 뒤 "해석과 해설" 쪽에서 보여 준다. */
+/** 글 읽고 답하기 (세트): 왼쪽에 본문(듣기)을 계속 보여 주고, 오른쪽에서 문항(최대 5개)을 푼다. 문항마다 선다·T/F·복수선택, Hint(누르면 근거 문장이 본문에서 노랗게 표시).
+ *  다른 세트처럼 [<] [>] 로 쪽을 옮긴다(문항을 풀어야 [>] 가 열리고, [<] 는 언제나). 해석은 문항 뒤 "해석과 해설" 쪽에서 보여 준다. */
 export function SqSet({ item, onDone }: KindProps) {
   const qs: (SetQ & { hint?: string; ev?: string })[] = (item.qs ?? []).slice(0, 5);
-  const [qi, setQi] = useState(0); const [hl, setHl] = useState<number[]>([]); const [rev, setRev] = useState(false); const res = useRef<boolean[]>([]); const fired = useRef(false);
-  const hasRev = !!(item.explain?.length || item.ko);
-  const solved = (ft: boolean) => {
-    res.current[qi] = ft;
-    setTimeout(() => {
-      if (qi + 1 < qs.length) { setQi(qi + 1); setHl([]); }
-      else { if (hasRev) setRev(true); if (!fired.current) { fired.current = true; onDone(res.current.map((ok) => ({ tag: 'read', ok }))); } }
-    }, 900);
-  };
-  useEffect(() => { stopSeq(); }, [rev]);
+  const hasEx = !!(item.explain?.length || item.ko);
+  const [pg, setPg] = useState(0); const [hl, setHl] = useState<number[]>([]); const [sol, setSol] = useState<(boolean | undefined)[]>(() => qs.map(() => undefined)); const fired = useRef(false);
+  const total = qs.length + (hasEx ? 1 : 0); const isEx = hasEx && pg === qs.length;
+  useEffect(() => { stopSeq(); setHl([]); }, [pg]);
+  useEffect(() => { if (!fired.current && qs.length && sol.every((x) => x !== undefined)) { fired.current = true; onDone(sol.map((ok) => ({ tag: 'read', ok: !!ok }))); } /* eslint-disable-next-line */ }, [sol]);
+  useCardProgress(total, pg);
   if (!qs.length) return null;
-  if (rev) return <div className="nv-body nv-wbody nv-wtop"><ReviewPage item={item} /></div>;
-  const q = qs[qi]; const ev = (q.ev ?? '').match(/\d+/g)?.map((n) => Number(n) - 1) ?? [];
+  const q = qs[Math.min(pg, qs.length - 1)];
+  const ev = (q.ev ?? '').match(/\d+/g)?.map((n) => Number(n) - 1) ?? [];
   const hint = q.hint ? [q.hint] : ev.length ? ['본문에서 노란색으로 표시된 문장을 다시 읽어 보세요.'] : undefined;
-  return <div className="nv-body nv-bodyw"><Story item={item} noKo hl={hl} side={<>
-    <QPage key={qi} q={q} no={qs.length > 1 ? String(qi + 1) : ''} solved={undefined} onSolved={solved} hasNext={false} />
-    <div className="nv-sqhint"><Hint key={'h' + qi} lines={hint} kind="sqset" item={{ ...item, q: q.q ?? q.lines?.join(' / ') }} onOpen={() => setHl(ev)} /></div>
-  </>} /></div>;
+  const canNext = pg < total - 1 && !isEx && sol[pg] !== undefined;
+  const onSolved = (i: number) => (ft: boolean) => setSol((a) => { const b = [...a]; if (b[i] === undefined) b[i] = ft; return b; });
+  return (
+    <div className="nv-body nv-bodyw nv-setroot nv-sqroot">
+      {isEx ? <ReviewPage item={item} /> : (
+        <Story item={item} noKo hl={hl} side={<>
+          <QPage key={pg} q={q} no={qs.length > 1 ? String(pg + 1) : ''} solved={sol[pg]} onSolved={onSolved(pg)} hasNext={pg < total - 1} />
+          <div className="nv-sqhint"><Hint key={'h' + pg} lines={hint} kind="sqset" item={{ ...item, q: q.q ?? q.lines?.join(' / ') }} onOpen={() => setHl(ev)} /></div>
+        </>} />
+      )}
+      {pg > 0 && <button type="button" className="nv-arrow nv-q-prev" onClick={() => setPg(pg - 1)} title="이전" aria-label="이전">‹</button>}
+      {pg < total - 1 && <button type="button" className="nv-arrow nv-q-next" disabled={!canNext} onClick={() => setPg(pg + 1)} title="다음" aria-label="다음">›</button>}
+    </div>
+  );
 }
