@@ -928,5 +928,5 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-sqhint { min-height:5.2em; }
 .nv-tfb.nv-on { background:#E8F0FF; border-color:#3979f3; }
 .nv-sqroot .nv-split { width:calc(100% - 9em); margin:0 auto; }
-.nv-sqrev { padding-top:.5em; } .nv-sqrev .nv-rv { width:calc(100% - 9em); max-width:none; } .nv-setroot.nv-sqrev .nv-rv-list { max-height:none; }
+.nv-sqrev { padding-top:.5em; } .nv-setroot.nv-sqrev .nv-rv-list { max-height:none; }
 .nv-body.nv-sqrev { justify-content:flex-start; padding-top:.3em; } .nv-sqrev .nv-rv { position:relative; gap:.4em; } .nv-setroot.nv-sqrev .nv-rv .nv-ptools { position:absolute; top:-.3em; right:0; margin:0; } .nv-setroot.nv-sqrev .nv-rv-list { max-height:23.5em; }
