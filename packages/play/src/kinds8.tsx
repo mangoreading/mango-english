@@ -10,18 +10,18 @@ export interface SetQ { t?: 'mc' | 'tf' | 'multi'; q?: string; ans?: string; wro
 
 /** T/F 한 문제: 문장 최대 3개(ⓐⓑⓒ)를 보고 각각 T 또는 F 를 고른다. 모두 고른 뒤에야 한꺼번에 정·오답을 알려 준다(찍기 방지).
  *  틀린 문장만 빨갛게 표시했다가 다시 고르게 하고, 맞힌 문장은 잠근다. 모두 맞히면 onFinish(처음 판정에서 모두 맞혔는지) */
-export function TfBlock({ q, no, onFinish, done }: { q: SetQ; no: string; onFinish: (firstTry: boolean) => void; done?: boolean }) {
-  const rows = (q.lines ?? []).slice(0, 3).map((l) => { const m = l.match(/^(.*)\|\s*([TFtf])\s*$/); return { t: (m ? m[1] : l).trim(), a: m ? m[2].toUpperCase() === 'T' : true }; });
+export function TfBlock({ q, no, onFinish, done }: { q: SetQ; no: string; onFinish: (firstTry: boolean, wrongRows?: number[]) => void; done?: boolean }) {
+  const rows = (q.lines ?? []).slice(0, 6).map((l) => { const m = l.match(/^(.*)\|\s*([TFtf])\s*$/); return { t: (m ? m[1] : l).trim(), a: m ? m[2].toUpperCase() === 'T' : true }; });
   const [pick, setPick] = useState<Record<number, boolean>>(() => (done ? Object.fromEntries(rows.map((r, i) => [i, r.a])) : {}));
   const [locked, setLocked] = useState<number[]>(() => (done ? rows.map((_, i) => i) : [])); const [bad, setBad] = useState<number[]>([]); const [ok, setOk] = useState(!!done);
-  const first = useRef(true);
+  const first = useRef(true); const wrongAll = useRef<Set<number>>(new Set());
   function choose(i: number, v: boolean) {
     if (ok || bad.length || locked.includes(i)) return;
     const n = { ...pick, [i]: v }; setPick(n);
     if (!rows.every((_, k) => n[k] != null)) return;
     const wr = rows.map((r, k) => (n[k] === r.a ? -1 : k)).filter((k) => k >= 0);
-    if (!wr.length) { setLocked(rows.map((_, k) => k)); setOk(true); onFinish(first.current); return; }
-    first.current = false; setBad(wr); setLocked(rows.map((_, k) => k).filter((k) => !wr.includes(k)));
+    if (!wr.length) { setLocked(rows.map((_, k) => k)); setOk(true); onFinish(first.current, [...wrongAll.current]); return; }
+    first.current = false; wr.forEach((k) => wrongAll.current.add(k)); setBad(wr); setLocked(rows.map((_, k) => k).filter((k) => !wr.includes(k)));
     setTimeout(() => { setPick((p) => { const m = { ...p }; wr.forEach((k) => delete m[k]); return m; }); setBad([]); }, 1200);
   }
   const mark = (i: number) => String.fromCharCode(9424 + i);
@@ -140,7 +140,7 @@ export function SqSet({ item, onDone }: KindProps) {
   const canNext = pg < total - 1 && !isEx && sol[pg] !== undefined;
   const onSolved = (i: number) => (ft: boolean) => setSol((a) => { const b = [...a]; if (b[i] === undefined) b[i] = ft; return b; });
   return (
-    <div className="nv-body nv-bodyw nv-setroot nv-sqroot">
+    <div className={'nv-body nv-setroot nv-sqroot ' + (isEx ? 'nv-wbody nv-wtop nv-sqrev' : 'nv-bodyw')}>
       {isEx ? <ReviewPage item={item} /> : (
         <Story item={item} noKo hl={hl} side={<>
           <QPage key={pg} q={q} no={qs.length > 1 ? String(pg + 1) : ''} solved={sol[pg]} onSolved={onSolved(pg)} hasNext={pg < total - 1} />
@@ -151,4 +151,14 @@ export function SqSet({ item, onDone }: KindProps) {
       {pg < total - 1 && <button type="button" className="nv-arrow nv-q-next" disabled={!canNext} onClick={() => setPg(pg + 1)} title="다음" aria-label="다음">›</button>}
     </div>
   );
+}
+
+/** 글 읽고 답하기 (T/F) (옛 템플릿, 목록에서는 숨김): 문장 여러 개를 모두 고른 뒤 한꺼번에 판정한다 */
+export function SqTF({ item, onDone }: KindProps) {
+  const rows: { t: string; a?: boolean }[] = item.items ?? [];
+  const q: SetQ = { t: 'tf', q: item.q ? String(item.q).replace(/^Q\d*\.\s*/, '') : undefined, lines: rows.map((r) => `${r.t} | ${r.a ? 'T' : 'F'}`) };
+  return <div className="nv-body nv-bodyw"><Story item={item} side={<>
+    <TfBlock q={q} no="" onFinish={(_, wr) => onDone(rows.map((_r, i) => ({ tag: 'read', ok: !(wr ?? []).includes(i) })))} />
+    <Hint lines={item.hint} kind={item.k} item={item} />
+  </>} /></div>;
 }

@@ -193,28 +193,6 @@ export function SqChoice({ item, onDone }: KindProps) {
     </>} /></div>
   );
 }
-export function SqTF({ item, onDone }: KindProps) {
-  const rows: { t: string; a?: boolean }[] = item.items ?? [];
-  const [res, setRes] = useState<Record<number, boolean>>({}); const [bad, setBad] = useState<string | null>(null);
-  const wrongs = useRef<Set<number>>(new Set()); const fired = useRef(false);
-  useEffect(() => { if (!fired.current && rows.length && rows.every((_, i) => res[i] != null)) { fired.current = true; onDone(rows.map((_, i) => ({ tag: 'read', ok: !wrongs.current.has(i) }))); } /* eslint-disable-next-line */ }, [res]);
-  function pick(i: number, v: boolean) {
-    if (res[i] != null) return;
-    if (!!rows[i].a === v) setRes({ ...res, [i]: v });
-    else { wrongs.current.add(i); setBad(i + (v ? 'T' : 'F')); setTimeout(() => setBad(null), 500); }
-  }
-  const mark = (i: number) => String.fromCharCode(9424 + i);
-  return (
-    <div className="nv-body nv-bodyw"><Story item={item} side={<>
-      <p className="nv-qt">{item.q || 'Q. 글의 내용과 일치하면 T, 아니면 F를 선택하세요.'}</p>
-      <div className="nv-tfl">{rows.map((r, i) => (
-        <div key={i} className="nv-tfr"><span>{mark(i)} {r.t}</span>
-          {[true, false].map((v) => <button key={String(v)} className={'nv-tfb' + (res[i] === v ? ' nv-right' : '') + (bad === i + (v ? 'T' : 'F') ? ' nv-wrong nv-shake' : '')} onClick={() => pick(i, v)}>{v ? 'T' : 'F'}</button>)}
-        </div>))}</div>
-      <Msg ok={rows.length > 0 && rows.every((_, i) => res[i] != null)} /><Hint lines={item.hint} kind={item.k} item={item} />
-    </>} /></div>
-  );
-}
 export function SqMulti({ item, onDone }: KindProps) {
   const rows: { t: string; ok?: boolean }[] = item.items ?? [];
   const [sel, setSel] = useState<Set<number>>(new Set()); const [ok, setOk] = useState(false); const [bad, setBad] = useState(false); const wrong = useRef(false);

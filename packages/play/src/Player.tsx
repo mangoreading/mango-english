@@ -6,11 +6,11 @@ import { AiTalk, LookSpeak, LookTalk, LSpeak, Present, RAloud, ReadAlong, Role, 
 import { setOutputScope } from './outputs';
 import { DFill, LBlank, LPMatch, LWrite, LMWrite, LPWrite, MFree, MWBank, SBuild, SCloze, SFill, SOrder, SScram, SWrite, SWrt } from './kinds4';
 import { SceneStory } from './kinds6';
-import { SqSet, withQuiz } from './kinds8';
+import { SqSet, SqTF, withQuiz } from './kinds8';
 import { Lecture, WordSent, LNum } from './kinds7';
 import { MicTest } from './mictest';
 import { Goal, KExp, LCardP, LCardT, LSent, MText, PRead, SDrill, TapL, WRepeat } from './kinds3';
-import { DChoice, LChList, LChPic, LChText, LMatch, PChoice, SqChoice, SqMulti, SqTF, TrueFalse, WChoice } from './kinds2';
+import { DChoice, LChList, LChPic, LChText, LMatch, PChoice, SqChoice, SqMulti, TrueFalse, WChoice } from './kinds2';
 
 export interface NativeResult { results: Res[]; total: number; scored: number }
 interface Props {
