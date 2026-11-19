@@ -153,7 +153,7 @@ export function LookTalk({ item, pic, onDone }: KindProps) {
   return (
     <div className="nv-body nv-wbody nv-spz nv-lt">
       <div className="nv-sptop">
-        {src && <div className="nv-picwrap"><img className="nv-img nv-img-md" src={imgSrc(src)} alt="" draggable={false} />{item.label && <span className="nv-pill">{item.label}</span>}{item.price && <span className="nv-price">{item.price}</span>}</div>}
+        {src && <div className="nv-picwrap"><img className="nv-img nv-img-md" src={imgSrc(src)} alt="" draggable={false} />{item.price && <span className="nv-price">{item.price}</span>}</div>}
       </div>
       {log.length > 0 && <div className="nv-ltlog">{log.map((l, i) => <p key={i}><em>{'①②③'[i]}</em><Words g={l.g} plain /></p>)}</div>}
       {!fin && <>

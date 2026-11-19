@@ -921,3 +921,5 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 /* 그림 보고 대화하기(looktalk): 말한 문장 기록과 지금 할 안내 */
 .nv-ltlog { display:flex; flex-direction:column; align-items:center; gap:.15em; margin:.6em 0 .2em; } .nv-ltlog p { margin:0; font-size:1.1em; color:#1F2A44; } .nv-ltlog em { font-style:normal; margin-right:.5em; color:#3B6FD8; font-weight:700; }
 .nv-lttask { margin:.5em 0 .2em; font-size:1.05em; color:#3B6FD8; font-weight:700; text-align:center; } .nv-lttask small { color:#6b7893; font-weight:400; }
+
+.nv-lt .nv-picwrap .nv-price { right:1.6em; top:auto; bottom:2em; }
