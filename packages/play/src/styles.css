@@ -924,3 +924,5 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 
 .nv-lt .nv-picwrap .nv-price { right:1.6em; top:auto; bottom:2em; }
 .nv-qpane .nv-sq { width:100%; }
+.nv-evl { background:#FFF3C4; border-radius:.4em; margin-left:-.3em; padding-left:.3em; }
+.nv-sqhint { min-height:5.2em; }

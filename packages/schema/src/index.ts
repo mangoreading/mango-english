@@ -146,8 +146,8 @@ export const SqChoice = z.object({ ...sq, k: z.literal('sqchoice'), q: z.string(
 export const SqTF = z.object({ ...sq, k: z.literal('sqtf'), items: z.array(z.object({ t: z.string().min(1), a: z.boolean().optional() })).min(1).max(6) });
 export const SqMulti = z.object({ ...sq, k: z.literal('sqmulti'), items: z.array(z.object({ t: z.string().min(1), ok: z.boolean().optional() })).min(2).max(6) });
 /** 글 읽고 답하기 (세트): 본문 하나(왼쪽)에 문항 최대 5개(오른쪽). 문항마다 선다(mc) · T/F(tf, 문장 1~3개 "문장 | T") · 복수선택(multi, ans 에 정답을 | 로 구분)을 고른다 */
-export const SqSet = z.object({ ...T1, k: z.literal('sqset'), title: z.string().optional(), text: z.array(z.string().min(1)).min(1), ko: z.string().optional(),
-  qs: z.array(z.object({ t: z.enum(['mc', 'tf', 'multi']).optional(), q: z.string().optional(), ans: z.string().optional(), wrong: z.array(z.string().min(1)).max(4).optional(), fb: z.string().optional(), lines: z.array(z.string().regex(/\|\s*[TFtf]\s*$/, '문장 뒤에 | T 또는 | F 를 붙여 주세요')).max(3).optional() })
+export const SqSet = z.object({ ...T1, k: z.literal('sqset'), title: z.string().optional(), text: z.array(z.string().min(1)).min(1), ko: z.string().optional(), explain: z.array(z.string()).optional(),
+  qs: z.array(z.object({ t: z.enum(['mc', 'tf', 'multi']).optional(), q: z.string().optional(), ans: z.string().optional(), wrong: z.array(z.string().min(1)).max(4).optional(), fb: z.string().optional(), hint: z.string().optional(), ev: z.string().optional(), lines: z.array(z.string().regex(/\|\s*[TFtf]\s*$/, '문장 뒤에 | T 또는 | F 를 붙여 주세요')).max(3).optional() })
     .refine((x) => (x.t === 'tf' ? (x.lines?.length ?? 0) >= 1 : !!x.q && !!x.ans && (x.wrong?.length ?? 0) >= 1), 'T/F는 문장 1~3개, 선다·복수선택은 질문·정답·오답 1개 이상')).min(1).max(5) });
 
 /* ===== 2단계: 듣고 익히기 · 따라 말하기 · 학습목표 · 문장 바꿔 말하기 · 글 듣고 읽기 · 모범 글 =====

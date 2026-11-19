@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { aiHandlers } from './common';
 
 /** 힌트 버튼: 문항에 적힌 힌트를 보여 주고, AI 연결이 있으면 "AI 선생님 힌트"를 더 받을 수 있다(학생이 지금까지 한 입력·오답을 보고 만든다) */
-export function Hint({ lines, kind, item, ctx, inline }: { lines?: string[]; kind?: string; item?: unknown; ctx?: () => { input: string; wrong: number }; inline?: boolean }) {
+export function Hint({ lines, kind, item, ctx, inline, onOpen }: { onOpen?: () => void; lines?: string[]; kind?: string; item?: unknown; ctx?: () => { input: string; wrong: number }; inline?: boolean }) {
   const [on, setOn] = useState(false); const [ai, setAi] = useState<string[]>([]); const [busy, setBusy] = useState(false); const [err, setErr] = useState('');
   const given = useRef(0); const canAi = !!(aiHandlers.hint && kind);
   if (!lines?.length && !canAi) return null;
@@ -19,7 +19,7 @@ export function Hint({ lines, kind, item, ctx, inline }: { lines?: string[]; kin
   }
   return (
     <div className={'nv-hintwrap' + (inline ? ' nv-hint-in' : '')}>
-      <button type="button" className="nv-hintbtn" onClick={() => setOn(!on)} aria-expanded={on}><span className="nv-bulb">💡</span> Hint</button>
+      <button type="button" className="nv-hintbtn" onClick={() => { if (!on) onOpen?.(); setOn(!on); }} aria-expanded={on}><span className="nv-bulb">💡</span> Hint</button>
       <div className={'nv-hintbox' + (on ? ' on' : '')}>
         {lines?.map((l, i) => <p key={i}>{l}</p>)}
         {ai.map((l, i) => <p key={'a' + i} className="nv-aihint">🤖 {l}</p>)}

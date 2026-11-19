@@ -3,6 +3,7 @@ import { Fb, useCardProgress } from './fb';
 import { Rich } from './kinds3';
 import { say, shuffle, stopSeq, type KindProps } from './common';
 import { Story } from './kinds2';
+import { Hint } from './hint';
 
 /** 본문 세트의 확인 문항: t 가 'tf' 면 문장 1~3개에 T/F 를 고르는 한 문제, 아니면 3~4지 선다(정답 1 + 오답 1~3) */
 export interface SetQ { t?: 'mc' | 'tf' | 'multi'; q?: string; ans?: string; wrong?: string[]; fb?: string; lines?: string[] }
@@ -119,17 +120,26 @@ function QuizShell({ Inner, p, qs }: { Inner: ComponentType<KindProps>; p: KindP
   );
 }
 
-/** 글 읽고 답하기 (세트): 왼쪽에 본문(듣기·해석 보기)을 계속 보여 주고, 오른쪽에서 문항(최대 5개)을 차례로 푼다. 문항마다 선다·T/F·복수선택 */
+/** 글 읽고 답하기 (세트): 왼쪽에 본문(듣기)을 계속 보여 주고, 오른쪽에서 문항(최대 5개)을 차례로 푼다. 문항마다 선다·T/F·복수선택, Hint(누르면 근거 문장이 본문에서 노랗게 표시).
+ *  해석은 문항을 모두 푼 뒤 "해석과 해설" 쪽에서 보여 준다. */
 export function SqSet({ item, onDone }: KindProps) {
-  const qs: SetQ[] = (item.qs ?? []).slice(0, 5);
-  const [qi, setQi] = useState(0); const res = useRef<boolean[]>([]); const fired = useRef(false);
+  const qs: (SetQ & { hint?: string; ev?: string })[] = (item.qs ?? []).slice(0, 5);
+  const [qi, setQi] = useState(0); const [hl, setHl] = useState<number[]>([]); const [rev, setRev] = useState(false); const res = useRef<boolean[]>([]); const fired = useRef(false);
+  const hasRev = !!(item.explain?.length || item.ko);
   const solved = (ft: boolean) => {
     res.current[qi] = ft;
     setTimeout(() => {
-      if (qi + 1 < qs.length) setQi(qi + 1);
-      else if (!fired.current) { fired.current = true; onDone(res.current.map((ok) => ({ tag: 'read', ok }))); }
+      if (qi + 1 < qs.length) { setQi(qi + 1); setHl([]); }
+      else { if (hasRev) setRev(true); if (!fired.current) { fired.current = true; onDone(res.current.map((ok) => ({ tag: 'read', ok }))); } }
     }, 900);
   };
+  useEffect(() => { stopSeq(); }, [rev]);
   if (!qs.length) return null;
-  return <div className="nv-body nv-bodyw"><Story item={item} side={<QPage key={qi} q={qs[qi]} no={qs.length > 1 ? String(qi + 1) : ''} solved={undefined} onSolved={solved} hasNext={false} />} /></div>;
+  if (rev) return <div className="nv-body nv-wbody nv-wtop"><ReviewPage item={item} /></div>;
+  const q = qs[qi]; const ev = (q.ev ?? '').match(/\d+/g)?.map((n) => Number(n) - 1) ?? [];
+  const hint = q.hint ? [q.hint] : ev.length ? ['본문에서 노란색으로 표시된 문장을 다시 읽어 보세요.'] : undefined;
+  return <div className="nv-body nv-bodyw"><Story item={item} noKo hl={hl} side={<>
+    <QPage key={qi} q={q} no={qs.length > 1 ? String(qi + 1) : ''} solved={undefined} onSolved={solved} hasNext={false} />
+    <div className="nv-sqhint"><Hint key={'h' + qi} lines={hint} kind="sqset" item={{ ...item, q: q.q ?? q.lines?.join(' / ') }} onOpen={() => setHl(ev)} /></div>
+  </>} /></div>;
 }

@@ -165,17 +165,17 @@ export function LMatch({ item, onDone }: KindProps) {
 }
 
 /* ---------- 글 읽고 답하기 3종 (sqchoice 선택 · sqtf T/F · sqmulti 복수 선택) ---------- */
-export function Story({ item, side, tag }: { item: Record<string, any>; side: ReactNode; tag?: string }) { // eslint-disable-line @typescript-eslint/no-explicit-any
+export function Story({ item, side, tag, noKo, hl }: { item: Record<string, any>; side: ReactNode; tag?: string; noKo?: boolean; hl?: number[] }) { // eslint-disable-line @typescript-eslint/no-explicit-any
   const [ko, setKo] = useState(false);
   const text: string[] = item.text ?? [];
   return (
     <div className="nv-split">
       <div className="nv-passage">
         {item.title && <h3>{item.title}</h3>}
-        {text.map((l, i) => <p key={i}>{l}</p>)}
+        {text.map((l, i) => <p key={i} className={hl?.includes(i) ? 'nv-evl' : undefined}>{l}</p>)}
         <div className="nv-ptools">
           <button type="button" className="nv-listen nv-listen-s" onClick={() => say(text.join(' '))}><i className="nv-sico" aria-hidden="true" /> <b>듣기</b></button>
-          {item.ko && <button type="button" className="nv-hintbtn" onClick={() => setKo(!ko)}>{ko ? '해석 닫기' : '해석 보기'}</button>}
+          {item.ko && !noKo && <button type="button" className="nv-hintbtn" onClick={() => setKo(!ko)}>{ko ? '해석 닫기' : '해석 보기'}</button>}
         </div>
         {ko && <div className="nv-hintbox on">{String(item.ko).split('\n').map((l, i) => <p key={i}>{l}</p>)}</div>}
       </div>
