@@ -84,7 +84,7 @@ export function Studio() {
   const [profs, setProfs] = useState<Prof[]>([DEFAULT_PROF]); const [cur, setCur] = useState(DEFAULT_PROF.name); const [profLoaded, setProfLoaded] = useState(false); const [sceneStyle, setSceneStyle] = useState(SCENE_STYLE);
   const [imgs, setImgs] = useState<Img[]>([]);
   const [busy, setBusy] = useState(false); const [msg, setMsg] = useState<{ t: 'ok' | 'err'; s: string } | null>(null);
-  const [dir, setDir] = useState<any>(null); const [auto, setAuto] = useState(false); // eslint-disable-line @typescript-eslint/no-explicit-any
+  const [dir, setDir] = useState<any>(null); const [auto, setAuto] = useState(true); // eslint-disable-line @typescript-eslint/no-explicit-any
   const [editId, setEditId] = useState<number | null>(null); const [oldT, setOldT] = useState(''); const [newT, setNewT] = useState(''); const [editExtra, setEditExtra] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -98,9 +98,9 @@ export function Studio() {
   const saveChars = (next: Char[]) => setChars(next);
 
   /* ----- DB 에 저장된 장면 프롬프트: Lesson·장면 활동을 고르면 불러오고, 고친 내용은 저장 ----- */
-  interface DbStep { id: string; unit_id: string; label: string; n: number }
+  interface DbStep { id: string; unit_id: string; book: string; label: string; n: number }
   interface DbArt { id: string; name: string; style: string; avoid: string; chars: Char[]; refs?: string[] }
-  const [dbSteps, setDbSteps] = useState<DbStep[]>([]); const [dbArts, setDbArts] = useState<DbArt[]>([]); const [dbSel, setDbSel] = useState(''); const [dbLoaded, setDbLoaded] = useState(false);
+  const [dbSteps, setDbSteps] = useState<DbStep[]>([]); const [dbArts, setDbArts] = useState<DbArt[]>([]); const [dbSel, setDbSel] = useState(''); const [dbBook, setDbBook] = useState(''); const [dbLoaded, setDbLoaded] = useState(false);
   const [dbRows, setDbRows] = useState<any[]>([]); // eslint-disable-line @typescript-eslint/no-explicit-any
   interface ScriptLine { who?: string; en: string; ko?: string }
   const [scripts, setScripts] = useState<Record<string, { title: string; scenes: ScriptLine[] }[]>>({}); // step_id → 학생에게 보이는 장면 스크립트(확인용)
@@ -116,8 +116,8 @@ export function Studio() {
     const rows = (pr.data ?? []) as any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
     const list = ((st.data ?? []) as any[]).map((x) => { const l = x.flow_lessons; const u = l?.units; return { id: x.id as string, unit_id: l?.unit_id as string, t: u?.books?.title ?? '', un: u?.no ?? 0, ln: l?.no ?? 0, pos: x.pos as number, name: x.name_ko as string, n: rows.filter((r) => r.step_id === x.id).length }; }) // eslint-disable-line @typescript-eslint/no-explicit-any
       .sort((a, b) => a.t.localeCompare(b.t) || a.un - b.un || a.ln - b.ln || a.pos - b.pos)
-      .map((x) => ({ id: x.id, unit_id: x.unit_id, n: x.n, label: `${x.t} · Lesson ${x.un} · ${x.ln}차시-${x.pos + 1} ${x.name}` }));
-    setDbSteps(list); setDbRows(rows); setDbArts((ar.data ?? []) as DbArt[]); setDbLoaded(true);
+      .map((x) => ({ id: x.id, unit_id: x.unit_id, n: x.n, book: x.t || '(책 이름 없음)', label: `Lesson ${x.un} · ${x.ln}차시-${x.pos + 1} ${x.name}` }));
+    setDbSteps(list); { const bs = Array.from(new Set(list.map((x) => x.book))); if (bs.length === 1) setDbBook((cur0) => cur0 || bs[0]); } setDbRows(rows); setDbArts((ar.data ?? []) as DbArt[]); setDbLoaded(true);
   }
   useEffect(() => { if (preset === 'scene' && !dbLoaded) void loadDb(); }, [preset, dbLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
   function applyArt(a: DbArt) {
@@ -321,8 +321,10 @@ export function Studio() {
             <>
               <section className="mx-sc">
                 <h3><i>1</i>불러오기</h3>
+                <div className="mx-sc-r"><span className="mx-sc-l">책</span>
+                  <select value={dbBook} onChange={(e) => { setDbBook(e.target.value); setDbSel(''); }}><option value="">책 선택…</option>{Array.from(new Set(dbSteps.map((x) => x.book))).map((t) => <option key={t} value={t}>{t}</option>)}</select></div>
                 <div className="mx-sc-r"><span className="mx-sc-l">Lesson·활동</span>
-                  <select value={dbSel} onChange={(e) => pickDb(e.target.value)}><option value="">DB에서 선택… (프롬프트·스타일 세트가 자동으로 채워져요)</option>{dbSteps.map((x) => <option key={x.id} value={x.id}>{x.label}{x.n ? ` (프롬프트 ${x.n}개)` : ' (없음)'}</option>)}</select>
+                  <select value={dbSel} disabled={!dbBook} onChange={(e) => pickDb(e.target.value)}><option value="">{dbBook ? 'Lesson·활동 선택… (프롬프트·스타일 세트가 자동으로 채워져요)' : '먼저 책을 고르세요'}</option>{dbSteps.filter((x) => x.book === dbBook).map((x) => <option key={x.id} value={x.id}>{x.label}{x.n ? ` (프롬프트 ${x.n}개)` : ' (없음)'}</option>)}</select>
                   <button className="mx-btn sec" disabled={!dbSel} onClick={saveDb}>DB에 저장</button></div>
                 <div className="mx-sc-r"><span className="mx-sc-l">스타일 세트</span>
                   <select value={cur} onChange={(e) => pickProf(e.target.value)}>{profs.map((x) => <option key={x.name}>{x.name}</option>)}</select>
