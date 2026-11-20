@@ -53,7 +53,7 @@ begin
       values (v_unit, (l->>'no')::int, l->>'en', l->>'ko', l->>'goal', coalesce((select color from _col where no = (l->>'no')::int), ''), 'core') returning id into v_les;
     for s in select * from jsonb_array_elements(l->'steps') loop
       insert into flow_steps(lesson_id, pos, name_en, name_ko, minutes, kind, qty, homework, study)
-        values (v_les, (s->>'pos')::int, s->>'name_en', s->>'name_ko', (s->>'minutes')::int, s->>'kind', (s->>'qty')::int, (s->>'homework')::boolean, true);
+        values (v_les, (s->>'pos')::int, s->>'name_en', s->>'name_ko', (s->>'minutes')::int, s->>'kind', (s->>'qty')::int, (s->>'homework')::boolean, not (s->>'homework')::boolean);
     end loop;
   end loop;
 
