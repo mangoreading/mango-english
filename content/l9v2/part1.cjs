@@ -87,19 +87,19 @@ step(2, 2, 'Listen & Learn (Text)', '듣고 익히기 (글)', 2, 'lcardt', 1, fa
   ex("They're forty thousand won.", '40,000원이에요.'), ex("They're fifteen thousand won.", '15,000원이에요.'), ex("They're twenty-five thousand won.", '25,000원이에요.')] }]);
 step(2, 3, 'Scene Story + Repeat', '장면 영상 보기 + 따라 말하기', 4, 'scenerep', 2, false, [{ title: '웃기게 생긴 신발', sub: 'en', replay: 2, review: true, pic: 'shoes',
   scenes: [
-    { who: 'Sam', en: "They're so funny.", ko: '정말 웃기게 생겼다.' },
-    { who: 'Sam', en: 'Look at these shoes.', ko: '이 신발 좀 봐.' },
-    { who: 'Sam', en: 'They look like boats.', ko: '배처럼 생겼어.' },
-    { who: 'Sam', en: "They're so funny.", ko: '정말 웃기게 생겼다.' },
-    { who: 'Sam', en: 'May I try them on?', ko: '신어 봐도 될까요?' },
+    { who: 'Mia', en: "They're so funny.", ko: '정말 웃기게 생겼다.' },
+    { who: 'Mia', en: 'Look at these shoes.', ko: '이 신발 좀 봐.' },
+    { who: 'Mia', en: 'They look like boats.', ko: '배처럼 생겼어.' },
+    { who: 'Mia', en: "They're so funny.", ko: '정말 웃기게 생겼다.' },
+    { who: 'Mia', en: 'May I try them on?', ko: '신어 봐도 될까요?' },
     { who: 'Clerk', en: 'Sure, go ahead.', ko: '그럼요, 신어 보세요.' },
-    { who: 'Sam', en: 'How much are these shoes?', ko: '이 신발은 얼마예요?' },
+    { who: 'Mia', en: 'How much are these shoes?', ko: '이 신발은 얼마예요?' },
     { who: 'Clerk', en: "They're 7,000 won.", ko: '7,000원이에요.' },
     { who: 'Clerk', en: "They're on sale.", ko: '세일 중이에요.' },
-    { who: 'Sam', en: 'Cool.', ko: '좋아요.' },
-    { who: 'Sam', en: "I'll take them.", ko: '이걸로 살게요.' }],
+    { who: 'Mia', en: 'Cool.', ko: '좋아요.' },
+    { who: 'Mia', en: "I'll take them.", ko: '이걸로 살게요.' }],
   explain: ['[[May I try them on?]]은 "입어(신어) 봐도 될까요?"라는 뜻이에요.', '허락할 때는 [[Sure, go ahead.]]라고 대답해요.', '[[on sale]]은 "세일 중"이라는 뜻이에요.'],
-  qs: [{ t: 'mc', q: 'How much are the shoes?', ans: "They're 7,000 won.", wrong: ["They're 17,000 won.", "They're 70,000 won."] }, { t: 'mc', q: 'What does the clerk say when Sam asks to try them on?', ans: 'Sure, go ahead.', wrong: ['Yes, please.', "They're on sale."] }] }]);
+  qs: [{ t: 'mc', q: 'How much are the shoes?', ans: "They're 7,000 won.", wrong: ["They're 17,000 won.", "They're 70,000 won."] }, { t: 'mc', q: 'What does the clerk say when Mia asks to try them on?', ans: 'Sure, go ahead.', wrong: ['Yes, please.', "They're on sale."] }] }]);
 step(2, 4, 'Scene Story + Repeat', '장면 영상 보기 + 따라 말하기', 4, 'scenerep', 2, false, [{ title: '반바지를 찾아요', sub: 'en', replay: 2, review: true, pic: 'shorts',
   scenes: [
     { who: 'Clerk', en: 'May I help you?', ko: '도와드릴까요?' },
