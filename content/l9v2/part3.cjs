@@ -68,7 +68,7 @@ step(6, 7, 'Story Check', '글 읽고 답하기', 3, 'sqset', 2, false, [{ title
   qs: [{ t: 'mc', q: '오늘은 누구의 생일인가요?', ans: '아빠', wrong: ['엄마', '여동생'], hint: '첫 번째 문장을 읽어 보세요.', ev: '1' },
        { t: 'mc', q: '글쓴이가 어제 산 것은 무엇인가요?', ans: '스티커', wrong: ['양말', '과자'], hint: 'yesterday 가 나오는 문장을 찾아 보세요.', ev: '6' }] }]);
 const sb = (ko, ans, alts, starter) => ({ ko, ans, ...(alts ? { alts } : {}), ...(starter ? { starter } : {}) });
-step(6, 8, 'Sentence Build-up', '문장 쓰기 (우리말→영어)', 3, 'sbuild', 6, false, [
+step(6, 8, 'Sentence Build-up', '문장 쓰기 (우리말→영어)', 3, 'sbuild', 6, true, [
   sb('도와드릴까요?', 'May I help you?', null, 'May'), sb('네, 부탁해요.', 'Yes, please.', null, 'Yes'), sb('이 모자는 얼마예요?', 'How much is this hat?', null, 'How much'),
   sb('이 양말은 얼마예요?', 'How much are these socks?', null, 'How much'), sb('10,000원이에요. (모자)', "It's ten thousand won.", ['It is ten thousand won.'], "It's"),
   sb('2,000원이에요. (양말)', "They're two thousand won.", ['They are two thousand won.'], "They're")]);
