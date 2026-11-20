@@ -934,3 +934,11 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 /* sqset: 페이지(문항)마다 내용이 위아래로 움직이지 않게, 본문·문항 영역 높이를 고정하고 위에서부터 배치 */
 .nv-sqroot .nv-split { height:19.5em; } .nv-sqroot .nv-split > .nv-qpane { justify-content:flex-start; }
 .nv-stage-go:disabled { cursor:progress; }
+
+/* 장면 영상: 그림이 천천히 움직인다 (동작 줄이기 설정이면 정지) */
+.nv-mv { transform:scale(1.1); animation-duration:var(--mv-dur,6s); animation-timing-function:linear; animation-fill-mode:forwards; will-change:transform; }
+.nv-mv-r { animation-name:nv-mv-r; } .nv-mv-l { animation-name:nv-mv-l; } .nv-mv-z { animation-name:nv-mv-z; }
+@keyframes nv-mv-r { from { transform:scale(1.1) translateX(-3.5%); } to { transform:scale(1.1) translateX(3.5%); } }
+@keyframes nv-mv-l { from { transform:scale(1.1) translateX(3.5%); } to { transform:scale(1.1) translateX(-3.5%); } }
+@keyframes nv-mv-z { from { transform:scale(1.02); } to { transform:scale(1.12); } }
+@media (prefers-reduced-motion: reduce) { .nv-mv { animation:none; transform:none; } }

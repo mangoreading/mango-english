@@ -64,6 +64,12 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
     else { wrong.current = true; setBad(i); setTimeout(() => setBad(null), 500); }
   }
   const sc = scenes[Math.min(idx, scenes.length - 1)]; const img = src(sc?.pic) || src(scenes.find((s) => s.pic)?.pic);
+  // 천천히 움직이는 그림(켄 번스): 같은 그림이 이어지는 대사 묶음마다 한 번씩 좌우로 이동·확대. 그림이 바뀌면 새로 시작하고, 방향은 번갈아 바뀐다.
+  const picAt = (k: number) => src(scenes[k]?.pic) || src(scenes.find((s) => s.pic)?.pic);
+  let segStart = 0; let segNo = 0; for (let k = 1; k <= Math.min(idx, scenes.length - 1); k++) if (picAt(k) !== picAt(k - 1)) { segStart = k; segNo++; }
+  let segEnd = segStart; while (segEnd + 1 < scenes.length && picAt(segEnd + 1) === picAt(segStart)) segEnd++;
+  const segDur = Math.max(3, scenes.slice(segStart, segEnd + 1).reduce((t, l) => t + (l.en?.length ?? 0) * 0.065 + 0.9, 0));
+  const motion = ['nv-mv-r', 'nv-mv-l', 'nv-mv-z'][segNo % 3];
   const left = Math.max(0, max + 1 - plays);
   const natural: 'video' | 'quiz' | 'review' = 'video'; // 영상이 끝나도 저절로 넘어가지 않는다 — 오른쪽 [>] 를 눌러야 문제로 간다
   const view = back ?? natural; const quiz = view === 'quiz' && qs.length > 0; const review = view === 'review';
@@ -96,7 +102,7 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
         <div className="nv-scene-main">
           {!quiz && !review && !shadow && (
             <div className="nv-stage" onClick={phase === 'play' ? () => (paused ? resume() : pause()) : undefined} style={phase === 'play' ? { cursor: 'pointer' } : undefined}>
-              {img ? <img className="nv-stage-img" src={img} alt="" draggable={false} /> : <div className="nv-stage-img nv-stage-ph" />}
+              {img ? <img key={`${segStart}-${plays}`} className={'nv-stage-img' + (phase !== 'ready' ? ' nv-mv ' + motion : '')} style={{ ['--mv-dur' as string]: `${segDur.toFixed(1)}s`, animationPlayState: phase === 'play' && !paused ? 'running' : 'paused' }} src={img} alt="" draggable={false} /> : <div className="nv-stage-img nv-stage-ph" />}
               {phase === 'play' && sc.who && <span className="nv-who">{sc.who}</span>}
               {phase === 'play' && paused && <button type="button" className="nv-stage-go" onClick={(e) => { e.stopPropagation(); resume(); }} aria-label="계속 보기"><i>▶</i></button>}
               {phase === 'ready' && <button type="button" className="nv-stage-go" onClick={start} disabled={!loaded} aria-label="영상 보기"><i>▶</i><b>{loaded ? '장면 보기' : '그림 불러오는 중…'}</b></button>}
