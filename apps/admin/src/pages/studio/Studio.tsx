@@ -23,7 +23,7 @@ const PRESETS: Record<Preset, { name: string; style: string; size: string; bg: s
   scene: { name: '장면 이미지 (영상용)', style: SCENE_STYLE, size: '1280x720', bg: 'opaque' },
   free: { name: '자유', style: '', size: '1024x1024', bg: 'auto' },
 };
-interface Img { id: number; b64: string; name: string; saved?: string }
+interface Img { id: number; b64: string; name: string; saved?: string; applied?: string }
 let uid = 0;
 
 /* ----- 로컬 저장: 폴더를 한 번 고르면 기억(IndexedDB)해 두고 거기에 저장. 지원 안 되면 내려받기 ----- */
@@ -164,13 +164,41 @@ export function Studio() {
     if (old.length > rows.length) await supabase.from('scene_prompts').delete().eq('step_id', dbSel).gt('seq', rows.length);
     setMsg({ t: 'ok', s: `DB에 저장했어요 (프롬프트 ${rows.length}개 · 스타일 세트 ${cur} · 이 Lesson 인물 ${chars.length}명).` }); setDbLoaded(false);
   }
+  const lineNums = (txt: string): number[] => { const nums: number[] = []; for (const part of String(txt ?? '').split(',')) { const m = part.trim().match(/^(\d+)(?:\s*-\s*(\d+))?$/); if (!m) continue; const a = Number(m[1]); const b = m[2] ? Number(m[2]) : a; for (let k = a; k <= b; k++) nums.push(k); } return nums; };
+  /** 만든 이미지를 서버에 올리고, 고른 장면 활동 문항에서 그 장면의 대사 줄 그림 칸(pic)에 주소를 채운다 */
+  async function applyImg(im: Img, quiet = false): Promise<boolean> {
+    const fail = (t: string) => { setMsg({ t: 'err', s: t }); return false; };
+    const stp = dbSteps.find((x) => x.id === dbSel); if (!stp) return fail('먼저 위 ① 불러오기에서 Lesson·장면 활동을 골라 주세요.');
+    const base = im.name.replace(/_edit$/, '').replace(/_\d+$/, '');
+    const row = dbRows.find((x) => x.step_id === dbSel && safe(String(x.file_name ?? '')) === base);
+    if (!row) return fail(`이미지 이름 '${im.name}'이 이 활동의 장면 프롬프트 파일 이름과 맞지 않아요. (이름 끝의 _1, _edit은 무시해요)`);
+    const nums = lineNums(row.lines); if (!nums.length) return fail(`장면 '${row.file_name}'에 연결된 대사 줄이 없어요.`);
+    const it = await supabase.from('items').select('id,payload,version').eq('step_id', dbSel).order('act_idx');
+    if (it.error) return fail('문항을 불러오지 못했어요: ' + it.error.message);
+    const item = ((it.data ?? []) as { id: string; payload: { scenes?: { pic?: string }[] }; version: number }[]).find((x) => Array.isArray(x.payload?.scenes) && x.payload.scenes.length);
+    if (!item) return fail('이 활동에 장면 문항이 없어요.');
+    const sc = item.payload.scenes!; if (nums.some((n) => n > sc.length)) return fail(`대사 줄 ${row.lines}이(가) 스크립트 줄 수(${sc.length})를 넘어요.`);
+    const bin = atob(im.b64); const u8 = new Uint8Array(bin.length); for (let k = 0; k < bin.length; k++) u8[k] = bin.charCodeAt(k);
+    const path = `${stp.unit_id}/${base}-${Date.now()}.png`;
+    const up = await supabase.storage.from('scene-images').upload(path, new Blob([u8], { type: 'image/png' }), { contentType: 'image/png', upsert: true }); if (up.error) return fail('이미지를 올리지 못했어요: ' + up.error.message);
+    const url = supabase.storage.from('scene-images').getPublicUrl(path).data.publicUrl;
+    const next = { ...item.payload, scenes: sc.map((l, i) => (nums.includes(i + 1) ? { ...l, pic: url } : l)) };
+    const u = await supabase.from('items').update({ payload: next, version: item.version + 1, updated_at: new Date().toISOString() }).eq('id', item.id); if (u.error) return fail('문항에 연결하지 못했어요: ' + u.error.message);
+    setImgs((xs) => xs.map((x) => (x.id === im.id ? { ...x, applied: `대사 ${row.lines}` } : x)));
+    if (!quiet) setMsg({ t: 'ok', s: `적용했어요: 대사 ${row.lines}에 이 그림이 연결됐어요. (문항 발행 후 학습앱에 반영돼요)` });
+    return true;
+  }
+  async function applyAll() {
+    let ok = 0, bad = 0; for (const im of imgs) { if (im.applied) continue; if (await applyImg(im, true)) ok++; else bad++; }
+    if (!bad) setMsg({ t: 'ok', s: `${ok}장을 이 활동의 장면 문항에 적용했어요. (문항 발행 후 학습앱에 반영돼요)` });
+  }
   /** 장면 프롬프트의 '대사 줄'(예: 1-3, 5-6) 기준으로 스크립트를 장면별로 묶는다. 어느 장면에도 없는 줄은 '그 밖의 대사'로 */
   function scriptGroups(stepId: string, sc: ScriptLine[]): { head: string; lines: (ScriptLine & { n: number })[] }[] {
     const rows = dbRows.filter((r) => r.step_id === stepId).sort((x, y) => x.seq - y.seq);
     const all = sc.map((l, i) => ({ ...l, n: i + 1 })); if (!rows.length) return [{ head: '대사 전체', lines: all }];
     const used = new Set<number>(); const out: { head: string; lines: (ScriptLine & { n: number })[] }[] = [];
     for (const r of rows) {
-      const nums: number[] = []; for (const part of String(r.lines ?? '').split(',')) { const m = part.trim().match(/^(\d+)(?:\s*-\s*(\d+))?$/); if (!m) continue; const a = Number(m[1]); const b = m[2] ? Number(m[2]) : a; for (let k = a; k <= b; k++) nums.push(k); }
+      const nums = lineNums(r.lines);
       const ls = all.filter((l) => nums.includes(l.n)); ls.forEach((l) => used.add(l.n));
       out.push({ head: `장면 ${r.seq}${r.file_name ? ' · ' + r.file_name : ''} (대사 ${r.lines || '-'})${r.desc_ko ? ' — ' + r.desc_ko : ''}`, lines: ls });
     }
@@ -397,7 +425,7 @@ export function Studio() {
         <div className="mx-card">
           <div className="mx-row" style={{ justifyContent: 'space-between' }}>
             <span><b>만든 이미지 {imgs.length}장</b> <span className="mx-muted">(이 화면을 닫으면 사라져요. 필요한 건 꼭 저장하세요)</span></span>
-            {imgs.length > 0 && <button className="mx-btn sec" onClick={clearAll}>모두 지우기</button>}
+            {imgs.length > 0 && <span className="mx-row">{preset === 'scene' && <button className="mx-btn" disabled={!dbSel} onClick={applyAll} title={dbSel ? '' : '① 불러오기에서 Lesson·활동을 먼저 고르세요'}>모두 이 단원에 적용</button>}<button className="mx-btn sec" onClick={clearAll}>모두 지우기</button></span>}
           </div>
           <div className="mx-st-grid">
             {imgs.map((im) => (
@@ -407,10 +435,12 @@ export function Studio() {
                 <div className="mx-row">
                   <button className="mx-btn" onClick={() => saveLocal(im)}>저장</button>
                   <button className="mx-btn sec" onClick={() => { setEditId(editId === im.id ? null : im.id); setOldT(''); setNewT(''); }}>글자 수정</button>
+                  {preset === 'scene' && <button className="mx-btn sec" disabled={!dbSel} onClick={() => void applyImg(im)}>이 단원에 적용</button>}
                   <button className="mx-link" onClick={() => setImgs((xs) => xs.filter((x) => x.id !== im.id))} aria-label="이 이미지 지우기">지우기</button>
                   <button className="mx-btn sec" disabled={refs.length >= 4} onClick={() => setRefs((xs) => [...xs, { id: ++uid, b64: im.b64 }])}>참고로 쓰기</button>
                 </div>
                 {im.saved && <span className="mx-ok">저장됨: {im.saved}</span>}
+                {im.applied && <span className="mx-ok">단원에 적용됨: {im.applied}</span>}
                 {editId === im.id && (
                   <div className="mx-st-edit">
                     <input value={oldT} onChange={(e) => setOldT(e.target.value)} placeholder="지금 그림 속 글자 (비우면 새로 추가)" />
