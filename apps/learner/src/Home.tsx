@@ -92,7 +92,7 @@ export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUni
                 </ul>
                 {hw.length > 0 && (
                   <div className={'mx-hw' + (hwDone ? ' mx-hw-done' : '')}>
-                    <div className="mx-hw-h"><b>📒 {l.no % 2 === 0 ? `이번 주 숙제 (${l.no - 1}~${l.no}차시)` : '숙제'}</b><span className="mx-muted">집에서 해요 · 약 {hwMin}분 · {hw.filter((x) => x.done).length}/{hw.length} 완료</span>
+                    <div className="mx-hw-h"><b><svg className="mx-hw-ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M6 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6z"/><path d="M6 3v18"/><path d="M10 8h5M10 12h5"/></svg> {l.no % 2 === 0 ? `이번 주 숙제 (${l.no - 1}~${l.no}차시)` : '숙제'}</b><span className="mx-muted">집에서 해요 · 약 {hwMin}분 · {hw.filter((x) => x.done).length}/{hw.length} 완료</span>
                       {hwGo && <button className="mx-hwbtn" onClick={() => onStart(unit, { no: hwGo.no, idx: hwGo.idx })}>{hwDone ? '숙제 다시 하기' : hw.some((x) => x.done) ? '숙제 이어서 하기' : '숙제 시작하기'} <span aria-hidden>→</span></button>}</div>
                     <ul className="mx-hw-l">{hw.map((x) => <li key={x.no * 100 + x.idx} className={x.done ? 'on' : ''}><button onClick={() => onStart(unit, { no: x.no, idx: x.idx })}><span>{x.done ? '✓' : '○'}</span>{x.t}{x.done ? <em>{stars(x.stars)}</em> : null}</button></li>)}</ul>
                   </div>
