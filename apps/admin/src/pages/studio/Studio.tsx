@@ -91,7 +91,7 @@ export function Studio() {
   useEffect(() => { void kvGet('dir').then((h) => { if (h) setDir(h); }); void (async () => { const ps: Prof[] | undefined = await kvGet('profiles'); const c: string | undefined = await kvGet('profCur'); const list = Array.isArray(ps) && ps.length ? ps : [DEFAULT_PROF]; const pr = list.find((x) => x.name === c) ?? list[0]; setProfs(list); setCur(pr.name); setChars(pr.chars); setAvoid(pr.avoid); setSceneStyle(pr.style); setProfLoaded(true); })(); }, []);
   /** 화면에서 고친 장면 설정(스타일·인물·피할 것)을 지금 고른 세트에 자동 저장 */
   useEffect(() => { if (!profLoaded) return; setProfs((xs) => { const next = xs.map((x) => (x.name === cur ? { ...x, style: sceneStyle, avoid, chars } : x)); void kvSet('profiles', next); void kvSet('profCur', cur); return next; }); }, [sceneStyle, avoid, chars, cur, profLoaded]);
-  function pickProf(name: string) { const pr = profs.find((x) => x.name === name); if (!pr) return; setCur(name); setChars(pr.chars); setAvoid(pr.avoid); setSceneStyle(pr.style); if (preset === 'scene') setStyle(pr.style); }
+  function pickProf(name: string) { const pr = profs.find((x) => x.name === name); if (!pr) return; setCur(name); setChars(pr.chars); setAvoid(pr.avoid); setSceneStyle(pr.style); if (preset === 'scene') setStyle(pr.style); const da = dbArts.find((x) => x.name === name); if (da) void loadBaseRefs(da); }
   function newProf() { const nm = (window.prompt('새 스타일 세트 이름 (예: 천재교육 초4 L3). 지금 내용을 복사해서 시작해요.') ?? '').trim(); if (!nm) return; if (profs.some((x) => x.name === nm)) { setMsg({ t: 'err', s: '같은 이름의 세트가 이미 있어요.' }); return; } setProfs((xs) => [...xs, { name: nm, style: sceneStyle, avoid, chars }]); setCur(nm); }
   function delProf() { if (profs.length < 2) { setMsg({ t: 'err', s: '세트는 하나 이상 있어야 해요.' }); return; } if (!window.confirm(`'${cur}' 세트를 지울까요?`)) return; const rest = profs.filter((x) => x.name !== cur); setProfs(rest); void kvSet('profiles', rest); pickProf(rest[0].name); }
 
@@ -99,13 +99,15 @@ export function Studio() {
 
   /* ----- DB 에 저장된 장면 프롬프트: Lesson·장면 활동을 고르면 불러오고, 고친 내용은 저장 ----- */
   interface DbStep { id: string; unit_id: string; label: string; n: number }
-  interface DbArt { id: string; name: string; style: string; avoid: string; chars: Char[] }
+  interface DbArt { id: string; name: string; style: string; avoid: string; chars: Char[]; refs?: string[] }
   const [dbSteps, setDbSteps] = useState<DbStep[]>([]); const [dbArts, setDbArts] = useState<DbArt[]>([]); const [dbSel, setDbSel] = useState(''); const [dbLoaded, setDbLoaded] = useState(false);
   const [dbRows, setDbRows] = useState<any[]>([]); // eslint-disable-line @typescript-eslint/no-explicit-any
+  const [lessonChars, setLessonChars] = useState<Record<string, Char[]>>({}); // unit_id → 그 단원 전용 인물
   async function loadDb() {
     const st = await supabase.from('flow_steps').select('id,pos,name_ko,flow_lessons!inner(no,unit_id,units!inner(no,books(title)))').in('kind', ['scene', 'scenerep']).not('flow_lessons.unit_id', 'is', null);
-    const pr = await supabase.from('scene_prompts').select('*').order('seq'); const ar = await supabase.from('art_styles').select('*').order('name');
-    if (st.error || pr.error || ar.error) { setMsg({ t: 'err', s: 'DB 프롬프트를 불러오지 못했어요: ' + (st.error ?? pr.error ?? ar.error)!.message }); return; }
+    const pr = await supabase.from('scene_prompts').select('*').order('seq'); const ar = await supabase.from('art_styles').select('*').order('name'); const lc = await supabase.from('lesson_chars').select('unit_id,chars');
+    if (st.error || pr.error || ar.error || lc.error) { setMsg({ t: 'err', s: 'DB 프롬프트를 불러오지 못했어요: ' + (st.error ?? pr.error ?? ar.error ?? lc.error)!.message }); return; }
+    const lcm: Record<string, Char[]> = {}; for (const x of (lc.data ?? []) as { unit_id: string; chars: Char[] }[]) lcm[x.unit_id] = Array.isArray(x.chars) ? x.chars : []; setLessonChars(lcm);
     const rows = (pr.data ?? []) as any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
     const list = ((st.data ?? []) as any[]).map((x) => { const l = x.flow_lessons; const u = l?.units; return { id: x.id as string, unit_id: l?.unit_id as string, t: u?.books?.title ?? '', un: u?.no ?? 0, ln: l?.no ?? 0, pos: x.pos as number, name: x.name_ko as string, n: rows.filter((r) => r.step_id === x.id).length }; }) // eslint-disable-line @typescript-eslint/no-explicit-any
       .sort((a, b) => a.t.localeCompare(b.t) || a.un - b.un || a.ln - b.ln || a.pos - b.pos)
@@ -117,6 +119,24 @@ export function Studio() {
     const pr: Prof = { name: a.name, style: a.style, avoid: a.avoid, chars: Array.isArray(a.chars) ? a.chars : [] };
     setProfs((xs) => (xs.some((x) => x.name === a.name) ? xs.map((x) => (x.name === a.name ? pr : x)) : [...xs, pr]));
     setCur(a.name); setChars(pr.chars); setAvoid(pr.avoid); setSceneStyle(pr.style); setStyle(pr.style);
+    void loadBaseRefs(a);
+  }
+  /** 스타일 세트에 저장된 기준 참고 이미지를 내려받아 참고 이미지 칸에 채운다 */
+  async function loadBaseRefs(a: DbArt | undefined) {
+    const paths = a?.refs ?? []; if (!paths.length) { setRefs([]); return; }
+    const got: { id: number; b64: string }[] = [];
+    for (const pa of paths.slice(0, 4)) { const d = await supabase.storage.from('art-refs').download(pa); if (d.error || !d.data) { setMsg({ t: 'err', s: '기준 이미지를 불러오지 못했어요: ' + (d.error?.message ?? pa) }); continue; } try { got.push({ id: ++uid, b64: await fileToB64(d.data) }); } catch { /* 건너뜀 */ } }
+    setRefs(got);
+  }
+  async function saveBaseRefs() {
+    if (!refs.length) { setMsg({ t: 'err', s: '저장할 참고 이미지를 먼저 올려 주세요.' }); return; }
+    const a = await supabase.from('art_styles').upsert({ name: cur, style: sceneStyle, avoid }, { onConflict: 'name' }).select('id,refs').single();
+    if (a.error) { setMsg({ t: 'err', s: '스타일 세트를 저장하지 못했어요: ' + a.error.message }); return; }
+    const id = a.data.id as string; const oldPaths = (a.data.refs ?? []) as string[]; const paths: string[] = []; const t0 = Date.now();
+    for (let i = 0; i < refs.length; i++) { const bin = atob(refs[i].b64); const u8 = new Uint8Array(bin.length); for (let k = 0; k < bin.length; k++) u8[k] = bin.charCodeAt(k); const pa = `${id}/${t0}-${i + 1}.png`; const up = await supabase.storage.from('art-refs').upload(pa, new Blob([u8], { type: 'image/png' }), { upsert: true, contentType: 'image/png' }); if (up.error) { setMsg({ t: 'err', s: '기준 이미지를 올리지 못했어요: ' + up.error.message }); return; } paths.push(pa); }
+    const u2 = await supabase.from('art_styles').update({ refs: paths }).eq('id', id); if (u2.error) { setMsg({ t: 'err', s: '기준 이미지 경로를 저장하지 못했어요: ' + u2.error.message }); return; }
+    if (oldPaths.length) await supabase.storage.from('art-refs').remove(oldPaths);
+    setMsg({ t: 'ok', s: `스타일 세트 '${cur}'의 기준 이미지 ${paths.length}장을 저장했어요.` }); setDbLoaded(false);
   }
   function pickDb(id: string) {
     setDbSel(id); if (!id) return;
@@ -124,18 +144,20 @@ export function Studio() {
     if (!rows.length) { setPrompt(''); setMsg({ t: 'ok', s: '이 활동에는 저장된 프롬프트가 아직 없어요. 아래 "장면" 칸에 쓰고 [DB에 저장]을 눌러 주세요.' }); return; }
     setPrompt(rows.map((r) => `${r.file_name ? r.file_name + ' | ' : ''}${r.prompt}`).join('\n'));
     const a = dbArts.find((x) => x.id === rows[0].style_id); if (a) applyArt(a);
+    const stp = dbSteps.find((x) => x.id === id); const lc = stp ? lessonChars[stp.unit_id] : undefined; if (lc && lc.length) setChars(lc);
     setMsg({ t: 'ok', s: `프롬프트 ${rows.length}개를 불러왔어요.${a ? ` 스타일 세트: ${a.name}` : ''}` });
   }
   async function saveDb() {
     const stp = dbSteps.find((x) => x.id === dbSel); if (!stp) { setMsg({ t: 'err', s: '먼저 위에서 Lesson·장면 활동을 골라 주세요.' }); return; }
     const lines = prompt.split('\n').map((l) => l.trim()).filter(Boolean); if (!lines.length) { setMsg({ t: 'err', s: '저장할 장면이 없어요.' }); return; }
-    const a = await supabase.from('art_styles').upsert({ name: cur, style: sceneStyle, avoid, chars }, { onConflict: 'name' }).select('id').single();
+    const a = await supabase.from('art_styles').upsert({ name: cur, style: sceneStyle, avoid }, { onConflict: 'name' }).select('id').single();
+    const lcu = await supabase.from('lesson_chars').upsert({ unit_id: stp.unit_id, chars, updated_at: new Date().toISOString() }, { onConflict: 'unit_id' }); if (lcu.error) { setMsg({ t: 'err', s: '이 Lesson의 인물을 저장하지 못했어요: ' + lcu.error.message }); return; }
     if (a.error) { setMsg({ t: 'err', s: '스타일 세트를 저장하지 못했어요: ' + a.error.message }); return; }
     const old = dbRows.filter((r) => r.step_id === dbSel);
     const rows = lines.map((l, i) => { const k = l.indexOf('|'); const named = k > 0 && k < 40; const o = old.find((r) => r.seq === i + 1); return { unit_id: stp.unit_id, step_id: dbSel, seq: i + 1, prompt: (named ? l.slice(k + 1) : l).trim(), file_name: named ? l.slice(0, k).trim() : o?.file_name ?? '', lines: o?.lines ?? '', desc_ko: o?.desc_ko ?? '', style_id: a.data.id }; });
     const up = await supabase.from('scene_prompts').upsert(rows, { onConflict: 'step_id,seq' }); if (up.error) { setMsg({ t: 'err', s: '프롬프트를 저장하지 못했어요: ' + up.error.message }); return; }
     if (old.length > rows.length) await supabase.from('scene_prompts').delete().eq('step_id', dbSel).gt('seq', rows.length);
-    setMsg({ t: 'ok', s: `DB에 저장했어요 (프롬프트 ${rows.length}개 · 스타일 세트 ${cur}).` }); setDbLoaded(false);
+    setMsg({ t: 'ok', s: `DB에 저장했어요 (프롬프트 ${rows.length}개 · 스타일 세트 ${cur} · 이 Lesson 인물 ${chars.length}명).` }); setDbLoaded(false);
   }
   function pickPreset(p: Preset) { setPreset(p); setStyle(p === 'scene' ? sceneStyle : PRESETS[p].style); setSize(PRESETS[p].size); setBg(PRESETS[p].bg); }
 
@@ -249,14 +271,14 @@ export function Studio() {
                 <textarea className="mx-st-ta" rows={9} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder={"예:\n1-8-1 | Jun and Mom walk in front of a clothing store. The setting is a clothing store, not a school.\n1-8-2 | The clerk greets Jun and Mom inside the shop."} />
               </section>
               <section className="mx-sc">
-                <h3><i>3</i>화풍·인물 <span className="mx-muted">고치면 선택한 스타일 세트에 자동 저장돼요</span></h3>
+                <h3><i>3</i>화풍·인물 <span className="mx-muted">화풍은 스타일 세트(책 단위), 인물은 Lesson 단위로 [DB에 저장]돼요</span></h3>
                 <details className="mx-fold">
                   <summary>화풍 (스타일 문장 · 피할 것)</summary>
                   <label className="mx-f">스타일 문장<textarea className="mx-st-ta" rows={5} value={style} onChange={(e) => { setStyle(e.target.value); setSceneStyle(e.target.value); }} /></label>
                   <label className="mx-f">피할 것 (네거티브)<textarea className="mx-st-ta" rows={2} value={avoid} onChange={(e) => setAvoid(e.target.value)} /></label>
                 </details>
                 <details className="mx-fold">
-                  <summary>등장인물 {chars.length}명 <span className="mx-muted">{chars.map((c) => c.name).filter(Boolean).join(', ')}</span></summary>
+                  <summary>등장인물 (이 Lesson) {chars.length}명 <span className="mx-muted">{chars.map((c) => c.name).filter(Boolean).join(', ')}</span></summary>
                   <p className="mx-muted" style={{ margin: '4px 0 6px' }}>장면 줄에 이름이 나오면 그 인물 설명이 자동으로 붙어요.</p>
                   <table className="mx-st-words"><tbody>
                     {chars.map((c, i) => (
@@ -271,12 +293,15 @@ export function Studio() {
           ) : (
             <label className="mx-f">프롬프트 {preset === 'word' ? '(추가 설명, 선택)' : '(만들 그림 설명)'}<textarea className="mx-st-ta" rows={5} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="예: 파란색 줄무늬 양말" /></label>
           )}
-          <div className="mx-f">참고 이미지 (최대 4장){preset === 'scene' ? ' — 화풍 참고로 쓸지, 이 그림을 고칠지 아래에서 골라요' : ' — 올리면 이 그림을 바탕으로 만들어요'}
+          <div className="mx-f">참고 이미지 (최대 4장){preset === 'scene' ? ' — 스타일 세트의 기준 이미지가 자동으로 붙어요(배경이 단순한 인물·화풍 샘플 권장)' : ' — 올리면 이 그림을 바탕으로 만들어요'}
             {preset === 'scene' && refs.length > 0 && (
               <div className="mx-seg" style={{ marginTop: 6 }}>
                 <button className={refMode === 'style' ? 'on' : ''} onClick={() => setRefMode('style')}>화풍만 참고 (장면은 새로)</button>
                 <button className={refMode === 'edit' ? 'on' : ''} onClick={() => setRefMode('edit')}>이 그림을 고치기</button>
               </div>)}
+            {preset === 'scene' && <div className="mx-row" style={{ marginTop: 6 }}><span className="mx-muted">스타일 세트 '{cur}' 기준 이미지: {dbArts.find((x) => x.name === cur)?.refs?.length ?? 0}장 저장됨</span>
+              <button className="mx-btn sec" disabled={!refs.length} onClick={saveBaseRefs}>지금 이미지를 기준으로 저장</button>
+              <button className="mx-btn sec" disabled={!dbArts.find((x) => x.name === cur)?.refs?.length} onClick={() => void loadBaseRefs(dbArts.find((x) => x.name === cur))}>기준 이미지 불러오기</button></div>}
             <div className="mx-row" style={{ marginTop: 6 }}>
               {refs.map((r) => <span key={r.id} className="mx-st-ref"><img src={'data:image/png;base64,' + r.b64} alt="참고" /><button onClick={() => setRefs((xs) => xs.filter((x) => x.id !== r.id))} aria-label="빼기">×</button></span>)}
               {refs.length < 4 && <button className="mx-btn sec" onClick={() => fileRef.current?.click()}>+ 올리기</button>}
