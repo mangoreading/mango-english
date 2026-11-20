@@ -165,3 +165,17 @@ h3 + .mx-sec { border-top:0; padding-top:6px; }
 .mx-setbadge { display:inline-block; margin-left:.4em; padding:.05em .5em; border-radius:99px; background:#FFF1C9; color:#8A5A00; font-size:.78em; font-weight:700; vertical-align:middle; }
 
 .mx-reftag { display:block; margin:0 0 2px; padding:2px 8px; background:#E4F0FF; color:#1F4E8C; border-radius:6px; font-weight:600; white-space:normal; }
+/* 장면 이미지 화면: 단계별 구역 + 접이식 */
+.mx-sc { border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-top:12px; background:#fff; }
+.mx-sc h3 { margin:0 0 8px; font-size:14px; font-weight:800; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.mx-sc h3 i { font-style:normal; width:20px; height:20px; border-radius:50%; background:var(--navy); color:#fff; font-size:12px; display:inline-flex; align-items:center; justify-content:center; }
+.mx-sc h3 .mx-muted { font-weight:500; }
+.mx-sc-r { display:flex; gap:8px; align-items:center; margin-top:6px; }
+.mx-sc-r select { flex:1; min-width:0; }
+.mx-sc-l { width:82px; flex:none; font-size:12px; font-weight:700; color:var(--sub); }
+.mx-sc textarea { width:100%; box-sizing:border-box; }
+.mx-fold { border:1px solid var(--line); border-radius:10px; padding:0 12px; margin-top:8px; background:var(--soft); }
+.mx-fold > summary { cursor:pointer; font-weight:700; font-size:13px; padding:9px 0; list-style-position:inside; }
+.mx-fold[open] > summary { border-bottom:1px solid var(--line); margin-bottom:8px; }
+.mx-fold[open] { padding-bottom:12px; background:#fff; }
+.mx-fold > summary .mx-muted { font-weight:500; margin-left:6px; }

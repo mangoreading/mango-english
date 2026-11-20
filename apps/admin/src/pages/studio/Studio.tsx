@@ -221,7 +221,7 @@ export function Studio() {
       <div className="mx-grid" style={{ gridTemplateColumns: '1fr 1.3fr' }}>
         <div className="mx-card">
           <div className="mx-seg">{(Object.keys(PRESETS) as Preset[]).map((p) => <button key={p} className={preset === p ? 'on' : ''} onClick={() => pickPreset(p)}>{PRESETS[p].name}</button>)}</div>
-          <label className="mx-f">스타일 문장 (그림 톤을 맞추는 고정 문장, 고쳐도 돼요)<textarea className="mx-st-ta" rows={5} value={style} onChange={(e) => { setStyle(e.target.value); if (preset === 'scene') setSceneStyle(e.target.value); }} /></label>
+          {preset !== 'scene' && <label className="mx-f">스타일 문장 (그림 톤을 맞추는 고정 문장, 고쳐도 돼요)<textarea className="mx-st-ta" rows={5} value={style} onChange={(e) => setStyle(e.target.value)} /></label>}
           {preset === 'word' && (
             <div className="mx-f">단어 (한 번에 여러 개 — 채운 줄만 만들어요)
               <table className="mx-st-words"><tbody>
@@ -235,23 +235,38 @@ export function Studio() {
             </div>)}
           {preset === 'scene' ? (
             <>
-              <div className="mx-f">DB에서 불러오기 (Lesson·장면 활동을 고르면 저장된 프롬프트와 스타일 세트가 채워져요)
-                <div className="mx-row"><select value={dbSel} onChange={(e) => pickDb(e.target.value)}><option value="">Lesson · 장면 활동 선택…</option>{dbSteps.map((x) => <option key={x.id} value={x.id}>{x.label}{x.n ? ` (프롬프트 ${x.n}개)` : ' (없음)'}</option>)}</select>
-                  <button className="mx-btn sec" disabled={!dbSel} onClick={saveDb}>DB에 저장</button></div></div>
-              <div className="mx-f">스타일 세트 (책·출판사마다 화풍·인물·피할 것을 따로 저장해요. 아래에서 고치면 이 세트에 자동 저장돼요)
-                <div className="mx-row"><select value={cur} onChange={(e) => pickProf(e.target.value)}>{profs.map((x) => <option key={x.name}>{x.name}</option>)}</select><button className="mx-btn sec" onClick={newProf}>+ 새 세트 (지금 내용 복사)</button><button className="mx-link" onClick={delProf}>이 세트 지우기</button></div></div>
-              <label className="mx-f">장면 (한 줄에 한 장면 — 여러 줄이면 한 번에 여러 장 만들어요. '파일이름 | 장면 설명' 형식도 돼요)
-                <textarea className="mx-st-ta" rows={8} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder={"예:\n1-8-1 | Jun and Mom walk in front of a clothing store. The setting is a clothing store, not a school.\n1-8-2 | The clerk greets Jun and Mom inside the shop."} /></label>
-              <div className="mx-f">인물 (장면 줄에 이름이 나오면 그 인물 설명이 자동으로 붙어요 · 이 브라우저에 기억돼요)
-                <table className="mx-st-words"><tbody>
-                  {chars.map((c, i) => (
-                    <tr key={i}><td style={{ width: 90 }}><input value={c.name} onChange={(e) => saveChars(chars.map((x, k) => (k === i ? { ...x, name: e.target.value } : x)))} placeholder="이름" /></td>
-                      <td><input value={c.desc} onChange={(e) => saveChars(chars.map((x, k) => (k === i ? { ...x, desc: e.target.value } : x)))} placeholder="외모 설명 (영어)" /></td>
-                      <td><button className="mx-link" onClick={() => saveChars(chars.filter((_, k) => k !== i))} aria-label="인물 지우기">×</button></td></tr>))}
-                </tbody></table>
-                <div className="mx-row"><button className="mx-btn sec" onClick={() => saveChars([...chars, { name: '', desc: '' }])}>+ 인물 추가</button><button className="mx-link" onClick={() => saveChars(DEFAULT_CHARS)}>기본 인물로 되돌리기</button></div>
-              </div>
-              <label className="mx-f">피할 것 (네거티브)<textarea className="mx-st-ta" rows={2} value={avoid} onChange={(e) => setAvoid(e.target.value)} /></label>
+              <section className="mx-sc">
+                <h3><i>1</i>불러오기</h3>
+                <div className="mx-sc-r"><span className="mx-sc-l">Lesson·활동</span>
+                  <select value={dbSel} onChange={(e) => pickDb(e.target.value)}><option value="">DB에서 선택… (프롬프트·스타일 세트가 자동으로 채워져요)</option>{dbSteps.map((x) => <option key={x.id} value={x.id}>{x.label}{x.n ? ` (프롬프트 ${x.n}개)` : ' (없음)'}</option>)}</select>
+                  <button className="mx-btn sec" disabled={!dbSel} onClick={saveDb}>DB에 저장</button></div>
+                <div className="mx-sc-r"><span className="mx-sc-l">스타일 세트</span>
+                  <select value={cur} onChange={(e) => pickProf(e.target.value)}>{profs.map((x) => <option key={x.name}>{x.name}</option>)}</select>
+                  <button className="mx-btn sec" onClick={newProf}>+ 새 세트</button><button className="mx-link" onClick={delProf}>지우기</button></div>
+              </section>
+              <section className="mx-sc">
+                <h3><i>2</i>장면 <span className="mx-muted">한 줄 = 한 장면 · '파일이름 | 설명' 형식 가능</span></h3>
+                <textarea className="mx-st-ta" rows={9} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder={"예:\n1-8-1 | Jun and Mom walk in front of a clothing store. The setting is a clothing store, not a school.\n1-8-2 | The clerk greets Jun and Mom inside the shop."} />
+              </section>
+              <section className="mx-sc">
+                <h3><i>3</i>화풍·인물 <span className="mx-muted">고치면 선택한 스타일 세트에 자동 저장돼요</span></h3>
+                <details className="mx-fold">
+                  <summary>화풍 (스타일 문장 · 피할 것)</summary>
+                  <label className="mx-f">스타일 문장<textarea className="mx-st-ta" rows={5} value={style} onChange={(e) => { setStyle(e.target.value); setSceneStyle(e.target.value); }} /></label>
+                  <label className="mx-f">피할 것 (네거티브)<textarea className="mx-st-ta" rows={2} value={avoid} onChange={(e) => setAvoid(e.target.value)} /></label>
+                </details>
+                <details className="mx-fold">
+                  <summary>등장인물 {chars.length}명 <span className="mx-muted">{chars.map((c) => c.name).filter(Boolean).join(', ')}</span></summary>
+                  <p className="mx-muted" style={{ margin: '4px 0 6px' }}>장면 줄에 이름이 나오면 그 인물 설명이 자동으로 붙어요.</p>
+                  <table className="mx-st-words"><tbody>
+                    {chars.map((c, i) => (
+                      <tr key={i}><td style={{ width: 90 }}><input value={c.name} onChange={(e) => saveChars(chars.map((x, k) => (k === i ? { ...x, name: e.target.value } : x)))} placeholder="이름" /></td>
+                        <td><input value={c.desc} onChange={(e) => saveChars(chars.map((x, k) => (k === i ? { ...x, desc: e.target.value } : x)))} placeholder="외모 설명 (영어)" /></td>
+                        <td><button className="mx-link" onClick={() => saveChars(chars.filter((_, k) => k !== i))} aria-label="인물 지우기">×</button></td></tr>))}
+                  </tbody></table>
+                  <div className="mx-row" style={{ marginTop: 6 }}><button className="mx-btn sec" onClick={() => saveChars([...chars, { name: '', desc: '' }])}>+ 인물 추가</button><button className="mx-link" onClick={() => saveChars(DEFAULT_CHARS)}>기본 인물로 되돌리기</button></div>
+                </details>
+              </section>
             </>
           ) : (
             <label className="mx-f">프롬프트 {preset === 'word' ? '(추가 설명, 선택)' : '(만들 그림 설명)'}<textarea className="mx-st-ta" rows={5} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="예: 파란색 줄무늬 양말" /></label>
