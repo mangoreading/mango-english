@@ -36,9 +36,10 @@ create table if not exists backup_20261120.unit_sources as select * from public.
 revoke all on schema backup_20261120 from anon, authenticated;
 
 do $do$
-declare v_unit uuid; v_les uuid; v_n int; v_miss int; l jsonb; s jsonb;
+declare v_unit uuid; v_cnt int; v_les uuid; v_n int; v_miss int; l jsonb; s jsonb;
 begin
-  select u.id into v_unit from units u join books b on b.id = u.book_id where b.title = '비상교육 초5 영어' and u.no = 9;
+  select count(*), min(u.id::text)::uuid into v_cnt, v_unit from units u join books b on b.id = u.book_id left join publishers pb on pb.id = b.publisher_id where u.no = 9 and u.kind = 'lesson' and b.grade = 5 and (pb.name like '%비상%' or b.title like '%비상%');
+  if v_cnt <> 1 then raise exception 'L9 unit lookup: % match(es). books: %', v_cnt, (select string_agg(b.title || '#' || coalesce(u.no::text, '?'), ' / ') from books b left join units u on u.book_id = b.id); end if;
   if v_unit is null then raise exception 'L9 unit not found'; end if;
 
   create temp table _col on commit drop as select no, color from flow_lessons where unit_id = v_unit and track = 'core';
