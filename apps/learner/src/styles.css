@@ -207,3 +207,11 @@ input { font:inherit; padding:12px 14px; border:2px solid #CBD6E6; border-radius
 .mx-shell.mx-h800 .mx-nowbody { min-height:0; grid-template-rows:minmax(0,1fr); }
 .mx-shell.mx-h800 .mx-lside { min-height:0; overflow-y:auto; grid-auto-rows:minmax(50px,1fr); }
 .mx-shell.mx-h800 .mx-detail { min-height:0; overflow-y:auto; }
+.mx-goals-fold { margin:2px 0 10px; padding:0 4px; }
+.mx-goals-fold summary { cursor:pointer; font-size:.85rem; font-weight:700; color:var(--blue); list-style:none; width:max-content; padding:4px 10px; border-radius:999px; background:#EEF3FD; }
+.mx-goals-fold summary::-webkit-details-marker { display:none; }
+.mx-goals-fold summary::after { content:' ▾'; }
+.mx-goals-fold[open] summary::after { content:' ▴'; }
+.mx-goals-fold ol { list-style:none; margin:8px 0 0; padding:0; display:flex; flex-wrap:wrap; gap:6px 14px; }
+.mx-goals-fold li { display:flex; gap:7px; align-items:center; font-size:.85rem; color:var(--ink); }
+.mx-goals-fold li b { flex:none; width:20px; height:20px; border-radius:50%; background:var(--blue); color:#fff; font-size:.72rem; display:grid; place-items:center; }

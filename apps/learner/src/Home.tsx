@@ -42,13 +42,18 @@ export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUni
           <button className="mx-arrow" disabled={!prev} onClick={() => prev && onUnit(prev.unit_id)} aria-label="이전 Lesson">◀</button>
           <div className="mx-now-title">
             <span className="mx-chip">LESSON {unit.unit_no}</span><h2>{unit.unit_title}</h2>
-            <span className="mx-muted">{up.complete ? '모든 활동을 마쳤어요' : up.started ? '지금 학습 중' : '아직 시작 전'} · 활동 {up.done}/{up.total}</span>
             <select className="mx-lessonpick" value={unit.unit_id} onChange={(e) => onUnit(e.target.value)} aria-label="Lesson 이동">
               {units.map((u) => <option key={u.unit_id} value={u.unit_id}>Lesson {u.unit_no} · {u.unit_title}</option>)}
             </select>
           </div>
           <button className="mx-arrow" disabled={!next} onClick={() => next && onUnit(next.unit_id)} aria-label="다음 Lesson">▶</button>
         </div>
+        {goals.length > 0 && (
+          <details className="mx-goals-fold">
+            <summary>이번 Lesson 학습목표</summary>
+            <ol>{goals.map((g, i) => <li key={i}><b>{i + 1}</b><span>{g}</span></li>)}</ol>
+          </details>
+        )}
         <div className="mx-pbar" role="img" aria-label={`진행 ${up.pct}%`}><i style={{ width: up.pct + '%' }} /></div>
         <div className="mx-nowbody">
           <div className="mx-lside">
@@ -74,11 +79,13 @@ export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUni
               const todo = l.acts.find((x) => x.study && x.n > 0 && !x.done), first = l.acts.find((x) => x.study && x.n > 0);
               const isWk = l.no % 2 === 0 || l.no === up.lessons[up.lessons.length - 1]?.no, wkNos = l.no % 2 === 0 ? [l.no - 1, l.no] : [l.no];
               const hw = isWk ? up.lessons.filter((x) => wkNos.includes(x.no)).flatMap((x) => x.acts.filter((a) => a.n > 0 && a.hw).map((a) => ({ ...a, no: x.no }))) : [], hwTodo = hw.find((x) => !x.done), hwDone = hw.length > 0 && !hwTodo, hwGo = hwTodo ?? hw[0], hwMin = hw.reduce((m, x) => m + (x.min || 0), 0) || 10;
+              const prevDone = up.lessons.filter((x) => x.no < l.no && x.studyN > 0).every((x) => x.doneN >= x.studyN);
               const go = todo ?? first, label = !go ? '' : !todo ? '다시 학습하기' : l.doneN > 0 ? '이어서 학습하기' : '학습 시작하기';
+              const showGo = !!go && (l.doneN > 0 || prevDone);
               return (
               <div key={l.no} className="mx-dl">
                 <div className="mx-dl-h"><span className="mx-lchip">{`${l.no}차시`}</span><h3>{l.ko || l.en}</h3><span className="mx-muted">{l.en}</span>
-                  {go && <button className="mx-startbtn" onClick={() => onStart(unit, { no: l.no, idx: go.idx })}>{label} <span aria-hidden>→</span></button>}</div>
+                  {go && showGo && <button className="mx-startbtn" onClick={() => onStart(unit, { no: l.no, idx: go.idx })}>{label} <span aria-hidden>→</span></button>}</div>
                 {l.goal && <p className="mx-dl-goal">{l.goal}</p>}
                 <ul className="mx-dl-acts">
                   {l.acts.filter((a) => a.n > 0 && a.study).map((a) => (
@@ -99,12 +106,6 @@ export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUni
                 )}
               </div>);
             })}
-            {goals.length > 0 && (
-              <aside className="mx-goals" aria-label="학습목표">
-                <h4>이번 Lesson 학습목표</h4>
-                <ol>{goals.map((g, i) => <li key={i}><b>{i + 1}</b><span>{g}</span></li>)}</ol>
-              </aside>
-            )}
           </section>
         </div>
       </div>
