@@ -30,7 +30,6 @@ export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUni
   const next = idx >= 0 ? units[idx + 1] : undefined, prev = idx > 0 ? units[idx - 1] : undefined;
   const curNo = up.current?.no;
   const core = (unit.bundle.flow ?? []).filter((l) => (l.track ?? 'core') === 'core').slice(0, 6);
-  const goals = Object.entries((unit.bundle.unit.goals ?? {}) as Record<string, { ko?: string }>).sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true })).map(([, v]) => v?.ko ?? '').filter(Boolean);
   const shown: number = typeof sel === 'number' && up.lessons.some((l) => l.no === sel) ? sel : (curNo ?? up.lessons[0]?.no ?? 1);
   const detailLessons = up.lessons.filter((l) => l.no === shown);
   const pct = (d: number, t: number) => (t ? Math.round((d / t) * 100) : 0);
@@ -48,12 +47,6 @@ export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUni
           </div>
           <button className="mx-arrow" disabled={!next} onClick={() => next && onUnit(next.unit_id)} aria-label="다음 Lesson">▶</button>
         </div>
-        {goals.length > 0 && (
-          <details className="mx-goals-fold">
-            <summary>이번 Lesson 학습목표</summary>
-            <ol>{goals.map((g, i) => <li key={i}><b>{i + 1}</b><span>{g}</span></li>)}</ol>
-          </details>
-        )}
         <div className="mx-pbar" role="img" aria-label={`진행 ${up.pct}%`}><i style={{ width: up.pct + '%' }} /></div>
         <div className="mx-nowbody">
           <div className="mx-lside">
