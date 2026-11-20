@@ -106,7 +106,7 @@ export function Studio() {
   const [scripts, setScripts] = useState<Record<string, { title: string; scenes: ScriptLine[] }[]>>({}); // step_id → 학생에게 보이는 장면 스크립트(확인용)
   const [lessonChars, setLessonChars] = useState<Record<string, Char[]>>({}); // unit_id → 그 단원 전용 인물
   async function loadDb() {
-    const st = await supabase.from('flow_steps').select('id,pos,name_ko,flow_lessons!inner(no,unit_id,units!inner(no,books(title)))').in('kind', ['scene', 'scenerep']).not('flow_lessons.unit_id', 'is', null);
+    const st = await supabase.from('flow_steps').select('id,pos,name_ko,flow_lessons!inner(no,unit_id,units!inner(no,books(title,grade,publishers(name))))').in('kind', ['scene', 'scenerep']).not('flow_lessons.unit_id', 'is', null);
     const pr = await supabase.from('scene_prompts').select('*').order('seq'); const ar = await supabase.from('art_styles').select('*').order('name'); const lc = await supabase.from('lesson_chars').select('unit_id,chars');
     const stIds = ((st.data ?? []) as { id: string }[]).map((x) => x.id); const it = stIds.length ? await supabase.from('items').select('step_id,act_idx,payload').in('step_id', stIds).order('act_idx') : { data: [], error: null };
     if (it.error) setMsg({ t: 'err', s: '스크립트를 불러오지 못했어요: ' + it.error.message });
@@ -114,7 +114,7 @@ export function Studio() {
     if (st.error || pr.error || ar.error || lc.error) { setMsg({ t: 'err', s: 'DB 프롬프트를 불러오지 못했어요: ' + (st.error ?? pr.error ?? ar.error ?? lc.error)!.message }); return; }
     const lcm: Record<string, Char[]> = {}; for (const x of (lc.data ?? []) as { unit_id: string; chars: Char[] }[]) lcm[x.unit_id] = Array.isArray(x.chars) ? x.chars : []; setLessonChars(lcm);
     const rows = (pr.data ?? []) as any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
-    const list = ((st.data ?? []) as any[]).map((x) => { const l = x.flow_lessons; const u = l?.units; return { id: x.id as string, unit_id: l?.unit_id as string, t: u?.books?.title ?? '', un: u?.no ?? 0, ln: l?.no ?? 0, pos: x.pos as number, name: x.name_ko as string, n: rows.filter((r) => r.step_id === x.id).length }; }) // eslint-disable-line @typescript-eslint/no-explicit-any
+    const list = ((st.data ?? []) as any[]).map((x) => { const l = x.flow_lessons; const u = l?.units; return { id: x.id as string, unit_id: l?.unit_id as string, t: u?.books ? `${u.books.publishers?.name ?? ''} 초${u.books.grade} 영어`.trim() : '', un: u?.no ?? 0, ln: l?.no ?? 0, pos: x.pos as number, name: x.name_ko as string, n: rows.filter((r) => r.step_id === x.id).length }; }) // eslint-disable-line @typescript-eslint/no-explicit-any
       .sort((a, b) => a.t.localeCompare(b.t) || a.un - b.un || a.ln - b.ln || a.pos - b.pos)
       .map((x) => ({ id: x.id, unit_id: x.unit_id, n: x.n, book: x.t || '(책 이름 없음)', label: `Lesson ${x.un} · ${x.ln}차시-${x.pos + 1} ${x.name}` }));
     setDbSteps(list); { const bs = Array.from(new Set(list.map((x) => x.book))); if (bs.length === 1) setDbBook((cur0) => cur0 || bs[0]); } setDbRows(rows); setDbArts((ar.data ?? []) as DbArt[]); setDbLoaded(true);
