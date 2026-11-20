@@ -138,7 +138,7 @@ export function Studio() {
     const a = await supabase.from('art_styles').upsert({ name: cur, style: sceneStyle, avoid }, { onConflict: 'name' }).select('id,refs').single();
     if (a.error) { setMsg({ t: 'err', s: '스타일 세트를 저장하지 못했어요: ' + a.error.message }); return; }
     const id = a.data.id as string; const oldPaths = (a.data.refs ?? []) as string[]; const paths: string[] = []; const t0 = Date.now();
-    for (let i = 0; i < refs.length; i++) { const bin = atob(refs[i].b64); const u8 = new Uint8Array(bin.length); for (let k = 0; k < bin.length; k++) u8[k] = bin.charCodeAt(k); const pa = `${id}/${t0}-${i + 1}.png`; const up = await supabase.storage.from('art-refs').upload(pa, new Blob([u8], { type: 'image/png' }), { upsert: true, contentType: 'image/png' }); if (up.error) { setMsg({ t: 'err', s: '기준 이미지를 올리지 못했어요: ' + up.error.message }); return; } paths.push(pa); }
+    for (let i = 0; i < refs.length; i++) { const bin = atob(refs[i].b64); const u8 = new Uint8Array(bin.length); for (let k = 0; k < bin.length; k++) u8[k] = bin.charCodeAt(k); const pa = `${id}/${t0}-${i + 1}.png`; const up = await supabase.storage.from('art-refs').upload(pa, new Blob([u8], { type: 'image/png' }), { contentType: 'image/png' }); if (up.error) { setMsg({ t: 'err', s: '기준 이미지를 올리지 못했어요: ' + up.error.message }); return; } paths.push(pa); }
     const u2 = await supabase.from('art_styles').update({ refs: paths }).eq('id', id); if (u2.error) { setMsg({ t: 'err', s: '기준 이미지 경로를 저장하지 못했어요: ' + u2.error.message }); return; }
     if (oldPaths.length) await supabase.storage.from('art-refs').remove(oldPaths);
     setMsg({ t: 'ok', s: `스타일 세트 '${cur}'의 기준 이미지 ${paths.length}장을 저장했어요.` }); setDbLoaded(false);
@@ -180,7 +180,7 @@ export function Studio() {
     const sc = item.payload.scenes!; if (nums.some((n) => n > sc.length)) return fail(`대사 줄 ${row.lines}이(가) 스크립트 줄 수(${sc.length})를 넘어요.`);
     const bin = atob(im.b64); const u8 = new Uint8Array(bin.length); for (let k = 0; k < bin.length; k++) u8[k] = bin.charCodeAt(k);
     const path = `${stp.unit_id}/${base}-${Date.now()}.png`;
-    const up = await supabase.storage.from('scene-images').upload(path, new Blob([u8], { type: 'image/png' }), { contentType: 'image/png', upsert: true }); if (up.error) return fail('이미지를 올리지 못했어요: ' + up.error.message);
+    const up = await supabase.storage.from('scene-images').upload(path, new Blob([u8], { type: 'image/png' }), { contentType: 'image/png' }); if (up.error) return fail('이미지를 올리지 못했어요: ' + up.error.message);
     const url = supabase.storage.from('scene-images').getPublicUrl(path).data.publicUrl;
     const next = { ...item.payload, scenes: sc.map((l, i) => (nums.includes(i + 1) ? { ...l, pic: url } : l)) };
     const u = await supabase.from('items').update({ payload: next, version: item.version + 1, updated_at: new Date().toISOString() }).eq('id', item.id); if (u.error) return fail('문항에 연결하지 못했어요: ' + u.error.message);
