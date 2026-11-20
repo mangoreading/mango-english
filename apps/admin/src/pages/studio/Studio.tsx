@@ -96,6 +96,47 @@ export function Studio() {
   function delProf() { if (profs.length < 2) { setMsg({ t: 'err', s: '세트는 하나 이상 있어야 해요.' }); return; } if (!window.confirm(`'${cur}' 세트를 지울까요?`)) return; const rest = profs.filter((x) => x.name !== cur); setProfs(rest); void kvSet('profiles', rest); pickProf(rest[0].name); }
 
   const saveChars = (next: Char[]) => setChars(next);
+
+  /* ----- DB 에 저장된 장면 프롬프트: Lesson·장면 활동을 고르면 불러오고, 고친 내용은 저장 ----- */
+  interface DbStep { id: string; unit_id: string; label: string; n: number }
+  interface DbArt { id: string; name: string; style: string; avoid: string; chars: Char[] }
+  const [dbSteps, setDbSteps] = useState<DbStep[]>([]); const [dbArts, setDbArts] = useState<DbArt[]>([]); const [dbSel, setDbSel] = useState(''); const [dbLoaded, setDbLoaded] = useState(false);
+  const [dbRows, setDbRows] = useState<any[]>([]); // eslint-disable-line @typescript-eslint/no-explicit-any
+  async function loadDb() {
+    const st = await supabase.from('flow_steps').select('id,pos,name_ko,flow_lessons!inner(no,unit_id,units!inner(no,books(title)))').in('kind', ['scene', 'scenerep']).not('flow_lessons.unit_id', 'is', null);
+    const pr = await supabase.from('scene_prompts').select('*').order('seq'); const ar = await supabase.from('art_styles').select('*').order('name');
+    if (st.error || pr.error || ar.error) { setMsg({ t: 'err', s: 'DB 프롬프트를 불러오지 못했어요: ' + (st.error ?? pr.error ?? ar.error)!.message }); return; }
+    const rows = (pr.data ?? []) as any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
+    const list = ((st.data ?? []) as any[]).map((x) => { const l = x.flow_lessons; const u = l?.units; return { id: x.id as string, unit_id: l?.unit_id as string, t: u?.books?.title ?? '', un: u?.no ?? 0, ln: l?.no ?? 0, pos: x.pos as number, name: x.name_ko as string, n: rows.filter((r) => r.step_id === x.id).length }; }) // eslint-disable-line @typescript-eslint/no-explicit-any
+      .sort((a, b) => a.t.localeCompare(b.t) || a.un - b.un || a.ln - b.ln || a.pos - b.pos)
+      .map((x) => ({ id: x.id, unit_id: x.unit_id, n: x.n, label: `${x.t} · Lesson ${x.un} · ${x.ln}차시-${x.pos + 1} ${x.name}` }));
+    setDbSteps(list); setDbRows(rows); setDbArts((ar.data ?? []) as DbArt[]); setDbLoaded(true);
+  }
+  useEffect(() => { if (preset === 'scene' && !dbLoaded) void loadDb(); }, [preset, dbLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+  function applyArt(a: DbArt) {
+    const pr: Prof = { name: a.name, style: a.style, avoid: a.avoid, chars: Array.isArray(a.chars) ? a.chars : [] };
+    setProfs((xs) => (xs.some((x) => x.name === a.name) ? xs.map((x) => (x.name === a.name ? pr : x)) : [...xs, pr]));
+    setCur(a.name); setChars(pr.chars); setAvoid(pr.avoid); setSceneStyle(pr.style); setStyle(pr.style);
+  }
+  function pickDb(id: string) {
+    setDbSel(id); if (!id) return;
+    const rows = dbRows.filter((r) => r.step_id === id).sort((a, b) => a.seq - b.seq);
+    if (!rows.length) { setPrompt(''); setMsg({ t: 'ok', s: '이 활동에는 저장된 프롬프트가 아직 없어요. 아래 "장면" 칸에 쓰고 [DB에 저장]을 눌러 주세요.' }); return; }
+    setPrompt(rows.map((r) => `${r.file_name ? r.file_name + ' | ' : ''}${r.prompt}`).join('\n'));
+    const a = dbArts.find((x) => x.id === rows[0].style_id); if (a) applyArt(a);
+    setMsg({ t: 'ok', s: `프롬프트 ${rows.length}개를 불러왔어요.${a ? ` 스타일 세트: ${a.name}` : ''}` });
+  }
+  async function saveDb() {
+    const stp = dbSteps.find((x) => x.id === dbSel); if (!stp) { setMsg({ t: 'err', s: '먼저 위에서 Lesson·장면 활동을 골라 주세요.' }); return; }
+    const lines = prompt.split('\n').map((l) => l.trim()).filter(Boolean); if (!lines.length) { setMsg({ t: 'err', s: '저장할 장면이 없어요.' }); return; }
+    const a = await supabase.from('art_styles').upsert({ name: cur, style: sceneStyle, avoid, chars }, { onConflict: 'name' }).select('id').single();
+    if (a.error) { setMsg({ t: 'err', s: '스타일 세트를 저장하지 못했어요: ' + a.error.message }); return; }
+    const old = dbRows.filter((r) => r.step_id === dbSel);
+    const rows = lines.map((l, i) => { const k = l.indexOf('|'); const named = k > 0 && k < 40; const o = old.find((r) => r.seq === i + 1); return { unit_id: stp.unit_id, step_id: dbSel, seq: i + 1, prompt: (named ? l.slice(k + 1) : l).trim(), file_name: named ? l.slice(0, k).trim() : o?.file_name ?? '', lines: o?.lines ?? '', desc_ko: o?.desc_ko ?? '', style_id: a.data.id }; });
+    const up = await supabase.from('scene_prompts').upsert(rows, { onConflict: 'step_id,seq' }); if (up.error) { setMsg({ t: 'err', s: '프롬프트를 저장하지 못했어요: ' + up.error.message }); return; }
+    if (old.length > rows.length) await supabase.from('scene_prompts').delete().eq('step_id', dbSel).gt('seq', rows.length);
+    setMsg({ t: 'ok', s: `DB에 저장했어요 (프롬프트 ${rows.length}개 · 스타일 세트 ${cur}).` }); setDbLoaded(false);
+  }
   function pickPreset(p: Preset) { setPreset(p); setStyle(p === 'scene' ? sceneStyle : PRESETS[p].style); setSize(PRESETS[p].size); setBg(PRESETS[p].bg); }
 
   async function chooseDir() {
@@ -194,6 +235,9 @@ export function Studio() {
             </div>)}
           {preset === 'scene' ? (
             <>
+              <div className="mx-f">DB에서 불러오기 (Lesson·장면 활동을 고르면 저장된 프롬프트와 스타일 세트가 채워져요)
+                <div className="mx-row"><select value={dbSel} onChange={(e) => pickDb(e.target.value)}><option value="">Lesson · 장면 활동 선택…</option>{dbSteps.map((x) => <option key={x.id} value={x.id}>{x.label}{x.n ? ` (프롬프트 ${x.n}개)` : ' (없음)'}</option>)}</select>
+                  <button className="mx-btn sec" disabled={!dbSel} onClick={saveDb}>DB에 저장</button></div></div>
               <div className="mx-f">스타일 세트 (책·출판사마다 화풍·인물·피할 것을 따로 저장해요. 아래에서 고치면 이 세트에 자동 저장돼요)
                 <div className="mx-row"><select value={cur} onChange={(e) => pickProf(e.target.value)}>{profs.map((x) => <option key={x.name}>{x.name}</option>)}</select><button className="mx-btn sec" onClick={newProf}>+ 새 세트 (지금 내용 복사)</button><button className="mx-link" onClick={delProf}>이 세트 지우기</button></div></div>
               <label className="mx-f">장면 (한 줄에 한 장면 — 여러 줄이면 한 번에 여러 장 만들어요. '파일이름 | 장면 설명' 형식도 돼요)
