@@ -159,6 +159,11 @@ export function Studio() {
     if (old.length > rows.length) await supabase.from('scene_prompts').delete().eq('step_id', dbSel).gt('seq', rows.length);
     setMsg({ t: 'ok', s: `DB에 저장했어요 (프롬프트 ${rows.length}개 · 스타일 세트 ${cur} · 이 Lesson 인물 ${chars.length}명).` }); setDbLoaded(false);
   }
+  function clearAll() {
+    const unsaved = imgs.filter((x) => !x.saved).length;
+    if (!window.confirm(unsaved ? `저장하지 않은 이미지가 ${unsaved}장 있어요. 그래도 ${imgs.length}장을 모두 지울까요?` : `만든 이미지 ${imgs.length}장을 모두 지울까요? (저장된 파일은 그대로 있어요)`)) return;
+    setImgs([]); setEditId(null);
+  }
   function pickPreset(p: Preset) { setPreset(p); setStyle(p === 'scene' ? sceneStyle : PRESETS[p].style); setSize(PRESETS[p].size); setBg(PRESETS[p].bg); }
 
   async function chooseDir() {
@@ -354,7 +359,10 @@ export function Studio() {
           {msg && <p className={msg.t === 'ok' ? 'mx-ok' : 'mx-err'}>{msg.s}</p>}
         </div>
         <div className="mx-card">
-          <b>만든 이미지 {imgs.length}장</b> <span className="mx-muted">(이 화면을 닫으면 사라져요. 필요한 건 꼭 저장하세요)</span>
+          <div className="mx-row" style={{ justifyContent: 'space-between' }}>
+            <span><b>만든 이미지 {imgs.length}장</b> <span className="mx-muted">(이 화면을 닫으면 사라져요. 필요한 건 꼭 저장하세요)</span></span>
+            {imgs.length > 0 && <button className="mx-btn sec" onClick={clearAll}>모두 지우기</button>}
+          </div>
           <div className="mx-st-grid">
             {imgs.map((im) => (
               <div key={im.id} className="mx-st-card">
@@ -363,6 +371,7 @@ export function Studio() {
                 <div className="mx-row">
                   <button className="mx-btn" onClick={() => saveLocal(im)}>저장</button>
                   <button className="mx-btn sec" onClick={() => { setEditId(editId === im.id ? null : im.id); setOldT(''); setNewT(''); }}>글자 수정</button>
+                  <button className="mx-link" onClick={() => setImgs((xs) => xs.filter((x) => x.id !== im.id))} aria-label="이 이미지 지우기">지우기</button>
                   <button className="mx-btn sec" disabled={refs.length >= 4} onClick={() => setRefs((xs) => [...xs, { id: ++uid, b64: im.b64 }])}>참고로 쓰기</button>
                 </div>
                 {im.saved && <span className="mx-ok">저장됨: {im.saved}</span>}
