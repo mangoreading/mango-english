@@ -164,6 +164,19 @@ export function Studio() {
     if (old.length > rows.length) await supabase.from('scene_prompts').delete().eq('step_id', dbSel).gt('seq', rows.length);
     setMsg({ t: 'ok', s: `DB에 저장했어요 (프롬프트 ${rows.length}개 · 스타일 세트 ${cur} · 이 Lesson 인물 ${chars.length}명).` }); setDbLoaded(false);
   }
+  /** 장면 프롬프트의 '대사 줄'(예: 1-3, 5-6) 기준으로 스크립트를 장면별로 묶는다. 어느 장면에도 없는 줄은 '그 밖의 대사'로 */
+  function scriptGroups(stepId: string, sc: ScriptLine[]): { head: string; lines: (ScriptLine & { n: number })[] }[] {
+    const rows = dbRows.filter((r) => r.step_id === stepId).sort((x, y) => x.seq - y.seq);
+    const all = sc.map((l, i) => ({ ...l, n: i + 1 })); if (!rows.length) return [{ head: '대사 전체', lines: all }];
+    const used = new Set<number>(); const out: { head: string; lines: (ScriptLine & { n: number })[] }[] = [];
+    for (const r of rows) {
+      const nums: number[] = []; for (const part of String(r.lines ?? '').split(',')) { const m = part.trim().match(/^(\d+)(?:\s*-\s*(\d+))?$/); if (!m) continue; const a = Number(m[1]); const b = m[2] ? Number(m[2]) : a; for (let k = a; k <= b; k++) nums.push(k); }
+      const ls = all.filter((l) => nums.includes(l.n)); ls.forEach((l) => used.add(l.n));
+      out.push({ head: `장면 ${r.seq}${r.file_name ? ' · ' + r.file_name : ''} (대사 ${r.lines || '-'})${r.desc_ko ? ' — ' + r.desc_ko : ''}`, lines: ls });
+    }
+    const rest = all.filter((l) => !used.has(l.n)); if (rest.length) out.push({ head: '그 밖의 대사 (장면에 연결 안 됨)', lines: rest });
+    return out;
+  }
   function clearAll() {
     const unsaved = imgs.filter((x) => !x.saved).length;
     if (!window.confirm(unsaved ? `저장하지 않은 이미지가 ${unsaved}장 있어요. 그래도 ${imgs.length}장을 모두 지울까요?` : `만든 이미지 ${imgs.length}장을 모두 지울까요? (저장된 파일은 그대로 있어요)`)) return;
@@ -322,7 +335,11 @@ export function Studio() {
                     : scripts[dbSel].map((sc, k) => (
                       <div key={k} className="mx-script">
                         {sc.title && <b>{sc.title}</b>}
-                        <ol>{sc.scenes.map((l, j) => <li key={j}>{l.who && <span className="mx-script-who">{l.who}</span>}{l.en}{l.ko && <span className="mx-muted"> — {l.ko}</span>}</li>)}</ol>
+                        {scriptGroups(dbSel, sc.scenes).map((g, gi) => (
+                          <div key={gi} className="mx-script-g">
+                            <div className="mx-script-h">{g.head}</div>
+                            <ol>{g.lines.map((l) => <li key={l.n} value={l.n}>{l.who && <span className="mx-script-who">{l.who}</span>}{l.en}{l.ko && <span className="mx-muted"> — {l.ko}</span>}</li>)}</ol>
+                          </div>))}
                       </div>))}
               </section>
               <section className="mx-sc">
