@@ -179,3 +179,6 @@ h3 + .mx-sec { border-top:0; padding-top:6px; }
 .mx-fold[open] > summary { border-bottom:1px solid var(--line); margin-bottom:8px; }
 .mx-fold[open] { padding-bottom:12px; background:#fff; }
 .mx-fold > summary .mx-muted { font-weight:500; margin-left:6px; }
+.mx-sc-go { margin-top:14px; padding-top:12px; border-top:1px solid var(--line); }
+.mx-sc-go .mx-btn { padding:10px 22px; font-size:15px; }
+.mx-sc .mx-f { margin-top:6px; }

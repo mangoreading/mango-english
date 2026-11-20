@@ -237,6 +237,45 @@ export function Studio() {
     setRefs((xs) => [...xs, ...add]); if (fileRef.current) fileRef.current.value = '';
   }
 
+  const refBlock = (
+          <div className="mx-f">참고 이미지 (최대 4장){preset === 'scene' ? ' — 스타일 세트의 기준 이미지가 자동으로 붙어요(배경이 단순한 인물·화풍 샘플 권장)' : ' — 올리면 이 그림을 바탕으로 만들어요'}
+            {preset === 'scene' && refs.length > 0 && (
+              <div className="mx-seg" style={{ marginTop: 6 }}>
+                <button className={refMode === 'style' ? 'on' : ''} onClick={() => setRefMode('style')}>화풍만 참고 (장면은 새로)</button>
+                <button className={refMode === 'edit' ? 'on' : ''} onClick={() => setRefMode('edit')}>이 그림을 고치기</button>
+              </div>)}
+            {preset === 'scene' && <div className="mx-row" style={{ marginTop: 6 }}><span className="mx-muted">스타일 세트 '{cur}' 기준 이미지: {dbArts.find((x) => x.name === cur)?.refs?.length ?? 0}장 저장됨</span>
+              <button className="mx-btn sec" disabled={!refs.length} onClick={saveBaseRefs}>지금 이미지를 기준으로 저장</button>
+              <button className="mx-btn sec" disabled={!dbArts.find((x) => x.name === cur)?.refs?.length} onClick={() => void loadBaseRefs(dbArts.find((x) => x.name === cur))}>기준 이미지 불러오기</button></div>}
+            <div className="mx-row" style={{ marginTop: 6 }}>
+              {refs.map((r) => <span key={r.id} className="mx-st-ref"><img src={'data:image/png;base64,' + r.b64} alt="참고" /><button onClick={() => setRefs((xs) => xs.filter((x) => x.id !== r.id))} aria-label="빼기">×</button></span>)}
+              {refs.length < 4 && <button className="mx-btn sec" onClick={() => fileRef.current?.click()}>+ 올리기</button>}
+              <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => void addRefs(e.target.files)} />
+            </div></div>
+  );
+  const optBlock = (
+          <div className="mx-row">
+            <label className="mx-f">크기<select value={size} onChange={(e) => setSize(e.target.value)}>{(SIZES[preset] ?? SIZES.free).map(([v, t]) => <option key={v} value={v}>{t}</option>)}</select></label>
+            <label className="mx-f">배경<select value={bg} onChange={(e) => setBg(e.target.value)}><option value="transparent">투명</option><option value="opaque">불투명</option><option value="auto">자동</option></select></label>
+            <label className="mx-f">품질<select value={quality} onChange={(e) => setQuality(e.target.value)}><option value="low">낮음(저렴)</option><option value="medium">보통</option><option value="high">높음(비쌈)</option></select></label>
+            <label className="mx-f">개수<select value={n} onChange={(e) => setN(Number(e.target.value))}>{[1, 2, 3, 4].map((v) => <option key={v}>{v}</option>)}</select></label>
+          </div>
+  );
+  const genBlock = (
+          <div className="mx-row" style={{ marginTop: 8 }}>
+            <button className="mx-btn" disabled={busy} onClick={generate}>{busy ? (prog || '만드는 중… (30초 안팎)') : preset === 'word' ? `단어 ${rows.filter((r) => r.en.trim()).length}개 만들기` : preset === 'scene' ? `장면 ${prompt.split('\n').filter((l) => l.trim()).length}장 만들기` : refs.length ? '참고 이미지로 만들기' : '만들기'}</button>
+            <span className="mx-muted">{refs.length ? (preset === 'scene' ? (refMode === 'style' ? '참고 이미지는 화풍만 따라 해요' : '참고 이미지를 바탕으로 고쳐요') : '참고 이미지 있음 → 수정/참고 모드') : ''}</span>
+          </div>
+  );
+  const saveInner = (
+    <>
+            <div className="mx-row" style={{ marginTop: 6 }}>
+              {hasDir ? <><button className="mx-btn sec" onClick={chooseDir}>폴더 선택</button><span>{dir ? <b>{dir.name}</b> : <span className="mx-muted">선택 안 함 → 내려받기 폴더로 저장</span>}</span></>
+                : <span className="mx-muted">이 브라우저는 폴더 선택을 지원하지 않아요(크롬/엣지에서 가능). 저장하면 내려받기 폴더로 저장돼요.</span>}
+              <label className="mx-inline" style={{ whiteSpace: 'nowrap' }}><input type="checkbox" style={{ width: 'auto', padding: 0 }} checked={auto} onChange={(e) => setAuto(e.target.checked)} /> 만들면 자동 저장</label>
+            </div>
+    </>
+  );
   return (
     <>
       <PageHead title="이미지/영상 제작" sub="단어 그림과 영상(장면)용 이미지를 만들어요. 참고 이미지를 올리면 그 그림을 바탕으로 만들고, 글자가 있는 그림은 글자만 고칠 수 있어요." />
@@ -288,43 +327,30 @@ export function Studio() {
                   </tbody></table>
                   <div className="mx-row" style={{ marginTop: 6 }}><button className="mx-btn sec" onClick={() => saveChars([...chars, { name: '', desc: '' }])}>+ 인물 추가</button><button className="mx-link" onClick={() => saveChars(DEFAULT_CHARS)}>기본 인물로 되돌리기</button></div>
                 </details>
+                <details className="mx-fold">
+                  <summary>참고 이미지 {refs.length}장 <span className="mx-muted">스타일 세트 기준 이미지 · 배경이 단순한 인물/화풍 샘플 권장</span></summary>
+                  {refBlock}
+                </details>
               </section>
+              <section className="mx-sc">
+                <h3><i>4</i>이미지 크기</h3>
+                {optBlock}
+              </section>
+              <section className="mx-sc">
+                <h3><i>5</i>저장 위치 <span className="mx-muted">내 컴퓨터</span></h3>
+                {saveInner}
+              </section>
+              <div className="mx-sc-go">{genBlock}</div>
             </>
           ) : (
             <label className="mx-f">프롬프트 {preset === 'word' ? '(추가 설명, 선택)' : '(만들 그림 설명)'}<textarea className="mx-st-ta" rows={5} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="예: 파란색 줄무늬 양말" /></label>
           )}
-          <div className="mx-f">참고 이미지 (최대 4장){preset === 'scene' ? ' — 스타일 세트의 기준 이미지가 자동으로 붙어요(배경이 단순한 인물·화풍 샘플 권장)' : ' — 올리면 이 그림을 바탕으로 만들어요'}
-            {preset === 'scene' && refs.length > 0 && (
-              <div className="mx-seg" style={{ marginTop: 6 }}>
-                <button className={refMode === 'style' ? 'on' : ''} onClick={() => setRefMode('style')}>화풍만 참고 (장면은 새로)</button>
-                <button className={refMode === 'edit' ? 'on' : ''} onClick={() => setRefMode('edit')}>이 그림을 고치기</button>
-              </div>)}
-            {preset === 'scene' && <div className="mx-row" style={{ marginTop: 6 }}><span className="mx-muted">스타일 세트 '{cur}' 기준 이미지: {dbArts.find((x) => x.name === cur)?.refs?.length ?? 0}장 저장됨</span>
-              <button className="mx-btn sec" disabled={!refs.length} onClick={saveBaseRefs}>지금 이미지를 기준으로 저장</button>
-              <button className="mx-btn sec" disabled={!dbArts.find((x) => x.name === cur)?.refs?.length} onClick={() => void loadBaseRefs(dbArts.find((x) => x.name === cur))}>기준 이미지 불러오기</button></div>}
-            <div className="mx-row" style={{ marginTop: 6 }}>
-              {refs.map((r) => <span key={r.id} className="mx-st-ref"><img src={'data:image/png;base64,' + r.b64} alt="참고" /><button onClick={() => setRefs((xs) => xs.filter((x) => x.id !== r.id))} aria-label="빼기">×</button></span>)}
-              {refs.length < 4 && <button className="mx-btn sec" onClick={() => fileRef.current?.click()}>+ 올리기</button>}
-              <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => void addRefs(e.target.files)} />
-            </div></div>
-          <div className="mx-row">
-            <label className="mx-f">크기<select value={size} onChange={(e) => setSize(e.target.value)}>{(SIZES[preset] ?? SIZES.free).map(([v, t]) => <option key={v} value={v}>{t}</option>)}</select></label>
-            <label className="mx-f">배경<select value={bg} onChange={(e) => setBg(e.target.value)}><option value="transparent">투명</option><option value="opaque">불투명</option><option value="auto">자동</option></select></label>
-            <label className="mx-f">품질<select value={quality} onChange={(e) => setQuality(e.target.value)}><option value="low">낮음(저렴)</option><option value="medium">보통</option><option value="high">높음(비쌈)</option></select></label>
-            <label className="mx-f">개수<select value={n} onChange={(e) => setN(Number(e.target.value))}>{[1, 2, 3, 4].map((v) => <option key={v}>{v}</option>)}</select></label>
-          </div>
-          <div className="mx-row" style={{ marginTop: 8 }}>
-            <button className="mx-btn" disabled={busy} onClick={generate}>{busy ? (prog || '만드는 중… (30초 안팎)') : preset === 'word' ? `단어 ${rows.filter((r) => r.en.trim()).length}개 만들기` : preset === 'scene' ? `장면 ${prompt.split('\n').filter((l) => l.trim()).length}장 만들기` : refs.length ? '참고 이미지로 만들기' : '만들기'}</button>
-            <span className="mx-muted">{refs.length ? (preset === 'scene' ? (refMode === 'style' ? '참고 이미지는 화풍만 따라 해요' : '참고 이미지를 바탕으로 고쳐요') : '참고 이미지 있음 → 수정/참고 모드') : ''}</span>
-          </div>
-          <div className="mx-card" style={{ marginTop: 12, background: '#fafafa' }}>
-            <b>저장 위치 (내 컴퓨터)</b>
-            <div className="mx-row" style={{ marginTop: 6 }}>
-              {hasDir ? <><button className="mx-btn sec" onClick={chooseDir}>폴더 선택</button><span>{dir ? <b>{dir.name}</b> : <span className="mx-muted">선택 안 함 → 내려받기 폴더로 저장</span>}</span></>
-                : <span className="mx-muted">이 브라우저는 폴더 선택을 지원하지 않아요(크롬/엣지에서 가능). 저장하면 내려받기 폴더로 저장돼요.</span>}
-              <label className="mx-inline" style={{ whiteSpace: 'nowrap' }}><input type="checkbox" style={{ width: 'auto', padding: 0 }} checked={auto} onChange={(e) => setAuto(e.target.checked)} /> 만들면 자동 저장</label>
-            </div>
-          </div>
+          {preset !== 'scene' && <>
+            {refBlock}
+            {optBlock}
+            {genBlock}
+            <div className="mx-card" style={{ marginTop: 12, background: '#fafafa' }}><b>저장 위치 (내 컴퓨터)</b><div style={{ marginTop: 6 }}>{saveInner}</div></div>
+          </>}
           {msg && <p className={msg.t === 'ok' ? 'mx-ok' : 'mx-err'}>{msg.s}</p>}
         </div>
         <div className="mx-card">
