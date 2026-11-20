@@ -329,7 +329,8 @@ export function Studio() {
                   <button className="mx-btn sec" onClick={newProf}>+ 새 세트</button><button className="mx-link" onClick={delProf}>지우기</button></div>
               </section>
               <section className="mx-sc">
-                <h3><i>2</i>스크립트 <span className="mx-muted">학생에게 보이는 영문 대사 · 확인용 (프롬프트에는 쓰이지 않아요)</span></h3>
+                <details className="mx-fold" open>
+                  <summary><i className="mx-num">2</i>스크립트 <span className="mx-muted">학생에게 보이는 영문 대사 · 확인용 (프롬프트에는 쓰이지 않아요)</span></summary>
                 {!dbSel ? <p className="mx-muted" style={{ margin: 0 }}>위에서 Lesson·활동을 고르면 스크립트가 보여요.</p>
                   : !(scripts[dbSel]?.length) ? <p className="mx-muted" style={{ margin: 0 }}>이 활동에 등록된 스크립트가 없어요.</p>
                     : scripts[dbSel].map((sc, k) => (
@@ -338,9 +339,10 @@ export function Studio() {
                         {scriptGroups(dbSel, sc.scenes).map((g, gi) => (
                           <div key={gi} className="mx-script-g">
                             <div className="mx-script-h">{g.head}</div>
-                            <ol>{g.lines.map((l) => <li key={l.n} value={l.n}>{l.who && <span className="mx-script-who">{l.who}</span>}{l.en}{l.ko && <span className="mx-muted"> — {l.ko}</span>}</li>)}</ol>
+                            <ol>{g.lines.map((l) => <li key={l.n} value={l.n}>{l.who && <span className="mx-script-who">{l.who}</span>}{l.en}</li>)}</ol>
                           </div>))}
                       </div>))}
+              </details>
               </section>
               <section className="mx-sc">
                 <h3><i>3</i>장면 <span className="mx-muted">한 줄 = 한 장면 · '파일이름 | 설명' 형식 가능</span></h3>
