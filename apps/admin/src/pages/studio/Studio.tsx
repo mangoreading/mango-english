@@ -102,10 +102,15 @@ export function Studio() {
   interface DbArt { id: string; name: string; style: string; avoid: string; chars: Char[]; refs?: string[] }
   const [dbSteps, setDbSteps] = useState<DbStep[]>([]); const [dbArts, setDbArts] = useState<DbArt[]>([]); const [dbSel, setDbSel] = useState(''); const [dbLoaded, setDbLoaded] = useState(false);
   const [dbRows, setDbRows] = useState<any[]>([]); // eslint-disable-line @typescript-eslint/no-explicit-any
+  interface ScriptLine { who?: string; en: string; ko?: string }
+  const [scripts, setScripts] = useState<Record<string, { title: string; scenes: ScriptLine[] }[]>>({}); // step_id → 학생에게 보이는 장면 스크립트(확인용)
   const [lessonChars, setLessonChars] = useState<Record<string, Char[]>>({}); // unit_id → 그 단원 전용 인물
   async function loadDb() {
     const st = await supabase.from('flow_steps').select('id,pos,name_ko,flow_lessons!inner(no,unit_id,units!inner(no,books(title)))').in('kind', ['scene', 'scenerep']).not('flow_lessons.unit_id', 'is', null);
     const pr = await supabase.from('scene_prompts').select('*').order('seq'); const ar = await supabase.from('art_styles').select('*').order('name'); const lc = await supabase.from('lesson_chars').select('unit_id,chars');
+    const stIds = ((st.data ?? []) as { id: string }[]).map((x) => x.id); const it = stIds.length ? await supabase.from('items').select('step_id,act_idx,payload').in('step_id', stIds).order('act_idx') : { data: [], error: null };
+    if (it.error) setMsg({ t: 'err', s: '스크립트를 불러오지 못했어요: ' + it.error.message });
+    const scm: Record<string, { title: string; scenes: ScriptLine[] }[]> = {}; for (const x of (it.data ?? []) as { step_id: string; payload: { title?: string; scenes?: ScriptLine[] } }[]) { if (Array.isArray(x.payload?.scenes)) (scm[x.step_id] ??= []).push({ title: x.payload.title ?? '', scenes: x.payload.scenes }); } setScripts(scm);
     if (st.error || pr.error || ar.error || lc.error) { setMsg({ t: 'err', s: 'DB 프롬프트를 불러오지 못했어요: ' + (st.error ?? pr.error ?? ar.error ?? lc.error)!.message }); return; }
     const lcm: Record<string, Char[]> = {}; for (const x of (lc.data ?? []) as { unit_id: string; chars: Char[] }[]) lcm[x.unit_id] = Array.isArray(x.chars) ? x.chars : []; setLessonChars(lcm);
     const rows = (pr.data ?? []) as any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -311,11 +316,21 @@ export function Studio() {
                   <button className="mx-btn sec" onClick={newProf}>+ 새 세트</button><button className="mx-link" onClick={delProf}>지우기</button></div>
               </section>
               <section className="mx-sc">
-                <h3><i>2</i>장면 <span className="mx-muted">한 줄 = 한 장면 · '파일이름 | 설명' 형식 가능</span></h3>
+                <h3><i>2</i>스크립트 <span className="mx-muted">학생에게 보이는 영문 대사 · 확인용 (프롬프트에는 쓰이지 않아요)</span></h3>
+                {!dbSel ? <p className="mx-muted" style={{ margin: 0 }}>위에서 Lesson·활동을 고르면 스크립트가 보여요.</p>
+                  : !(scripts[dbSel]?.length) ? <p className="mx-muted" style={{ margin: 0 }}>이 활동에 등록된 스크립트가 없어요.</p>
+                    : scripts[dbSel].map((sc, k) => (
+                      <div key={k} className="mx-script">
+                        {sc.title && <b>{sc.title}</b>}
+                        <ol>{sc.scenes.map((l, j) => <li key={j}>{l.who && <span className="mx-script-who">{l.who}</span>}{l.en}{l.ko && <span className="mx-muted"> — {l.ko}</span>}</li>)}</ol>
+                      </div>))}
+              </section>
+              <section className="mx-sc">
+                <h3><i>3</i>장면 <span className="mx-muted">한 줄 = 한 장면 · '파일이름 | 설명' 형식 가능</span></h3>
                 <textarea className="mx-st-ta" rows={9} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder={"예:\n1-8-1 | Jun and Mom walk in front of a clothing store. The setting is a clothing store, not a school.\n1-8-2 | The clerk greets Jun and Mom inside the shop."} />
               </section>
               <section className="mx-sc">
-                <h3><i>3</i>화풍·인물 <span className="mx-muted">화풍은 스타일 세트(책 단위), 인물은 Lesson 단위로 [DB에 저장]돼요</span></h3>
+                <h3><i>4</i>화풍·인물 <span className="mx-muted">화풍은 스타일 세트(책 단위), 인물은 Lesson 단위로 [DB에 저장]돼요</span></h3>
                 <details className="mx-fold">
                   <summary>화풍 (스타일 문장 · 피할 것)</summary>
                   <label className="mx-f">스타일 문장<textarea className="mx-st-ta" rows={5} value={style} onChange={(e) => { setStyle(e.target.value); setSceneStyle(e.target.value); }} /></label>
@@ -338,11 +353,11 @@ export function Studio() {
                 </details>
               </section>
               <section className="mx-sc">
-                <h3><i>4</i>이미지 크기</h3>
+                <h3><i>5</i>이미지 크기</h3>
                 {optBlock}
               </section>
               <section className="mx-sc">
-                <h3><i>5</i>저장 위치 <span className="mx-muted">내 컴퓨터</span></h3>
+                <h3><i>6</i>저장 위치 <span className="mx-muted">내 컴퓨터</span></h3>
                 {saveInner}
               </section>
               <div className="mx-sc-go">{genBlock}</div>

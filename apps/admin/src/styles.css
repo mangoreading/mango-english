@@ -182,3 +182,5 @@ h3 + .mx-sec { border-top:0; padding-top:6px; }
 .mx-sc-go { margin-top:14px; padding-top:12px; border-top:1px solid var(--line); }
 .mx-sc-go .mx-btn { padding:10px 22px; font-size:15px; }
 .mx-sc .mx-f { margin-top:6px; }
+.mx-script { margin-top:6px; font-size:13px; } .mx-script ol { margin:4px 0 0; padding-left:22px; } .mx-script li { padding:1px 0; }
+.mx-script-who { display:inline-block; min-width:44px; margin-right:6px; font-weight:800; color:var(--navy); }
