@@ -20,6 +20,16 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
   useEffect(() => () => { run.current++; stopSeq(); }, []);
   useEffect(() => { if (phase === 'after' && !qs.length && !fired.current) { fired.current = true; onDone([]); } /* eslint-disable-next-line */ }, [phase]);
   const src = (k?: string) => (k ? (/^https?:|^word\/|^scene\//.test(k) ? imgSrc(k) : imgSrc(pic(k))) : '');
+  /** 장면 그림을 영상 시작 전에 모두 미리 받아 둔다 — 소리가 먼저 나오고 그림이 늦게 뜨는 어긋남 방지 (최대 8초 기다린 뒤에는 그대로 시작) */
+  const urls = useMemo(() => Array.from(new Set(scenes.map((s) => src(s.pic)).filter(Boolean))), []); // eslint-disable-line react-hooks/exhaustive-deps
+  const [loaded, setLoaded] = useState(urls.length === 0);
+  useEffect(() => {
+    if (!urls.length) return;
+    let alive = true; let n = 0; const done = () => { n++; if (alive && n >= urls.length) setLoaded(true); };
+    const t = setTimeout(() => { if (alive) setLoaded(true); }, 8000);
+    urls.forEach((u) => { const im = new Image(); im.onload = () => { done(); void im.decode?.().catch(() => {}); }; im.onerror = done; im.src = u; });
+    return () => { alive = false; clearTimeout(t); };
+  }, [urls]);
   function step(i: number, id: number) {
     if (id !== run.current) return;
     if (i >= scenes.length) { setPhase('after'); return; }
@@ -89,7 +99,7 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
               {img ? <img className="nv-stage-img" src={img} alt="" draggable={false} /> : <div className="nv-stage-img nv-stage-ph" />}
               {phase === 'play' && sc.who && <span className="nv-who">{sc.who}</span>}
               {phase === 'play' && paused && <button type="button" className="nv-stage-go" onClick={(e) => { e.stopPropagation(); resume(); }} aria-label="계속 보기"><i>▶</i></button>}
-              {phase === 'ready' && <button type="button" className="nv-stage-go" onClick={start} aria-label="영상 보기"><i>▶</i><b>장면 보기</b></button>}
+              {phase === 'ready' && <button type="button" className="nv-stage-go" onClick={start} disabled={!loaded} aria-label="영상 보기"><i>▶</i><b>{loaded ? '장면 보기' : '그림 불러오는 중…'}</b></button>}
               {phase !== 'ready' && cc && item.sub !== 'none' && (
                 <div className="nv-subs">{phase === 'play' ? <><p>{sc.en}</p>{item.sub === 'enko' && sc.ko && <small>{sc.ko}</small>}</> : <p className="nv-subs-end">끝났어요</p>}</div>
               )}
