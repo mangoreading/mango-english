@@ -7,6 +7,8 @@ const SCENE_STYLE = 'Semi-flat digital storybook illustration in the style of a 
 const SCENE_AVOID = 'text, letters, words, numbers, watermark, logo, Korean or East Asian setting, hanbok, Korean signs, manga style, anime style, chibi, realistic photo, 3D render, scary, dark, extra fingers, distorted faces, brand names';
 /** 장면에 이름이 나오면 자동으로 들어가는 인물 (고쳐서 쓸 수 있고, 이 브라우저에 기억돼요) */
 interface Char { name: string; desc: string }
+/** 스타일 세트: 책(출판사·학년·Lesson)마다 화풍·인물·피할 것을 따로 저장해 두고 골라 쓴다 */
+interface Prof { name: string; style: string; avoid: string; chars: Char[] }
 const DEFAULT_CHARS: Char[] = [
   { name: 'Jun', desc: 'Cartoon boy about 11 years old, light-skinned, wavy dark brown hair with a side fringe, thin round glasses, navy blue puffer hoodie with white drawstrings, bright talkative smile' },
   { name: 'Mom', desc: 'Cartoon mother in her late 30s, light-skinned, shoulder-length wavy chestnut hair, olive green cardigan and jeans, calm kind expression' },
@@ -14,6 +16,7 @@ const DEFAULT_CHARS: Char[] = [
   { name: 'Sam', desc: 'Cartoon boy about 11 years old, light-skinned, tousled brown hair, light blue button shirt, curious expression' },
   { name: 'Pablo', desc: 'Cartoon boy about 11 years old, tan skin, dark wavy hair, orange t-shirt, cheerful expression' },
 ];
+const DEFAULT_PROF: Prof = { name: '비상 초5 영어 L9', style: SCENE_STYLE, avoid: SCENE_AVOID, chars: DEFAULT_CHARS };
 type Preset = 'word' | 'scene' | 'free';
 const PRESETS: Record<Preset, { name: string; style: string; size: string; bg: string }> = {
   word: { name: '단어 그림 (3D 아이콘)', style: WORD_STYLE, size: '300x300', bg: 'transparent' },
@@ -78,15 +81,22 @@ export function Studio() {
   const [refs, setRefs] = useState<{ id: number; b64: string }[]>([]);
   const [refMode, setRefMode] = useState<'style' | 'edit'>('style'); // 장면 이미지: 참고 이미지를 '화풍만' 따라 할지, '이 그림을 고칠지'
   const [chars, setChars] = useState<Char[]>(DEFAULT_CHARS); const [avoid, setAvoid] = useState(SCENE_AVOID);
+  const [profs, setProfs] = useState<Prof[]>([DEFAULT_PROF]); const [cur, setCur] = useState(DEFAULT_PROF.name); const [profLoaded, setProfLoaded] = useState(false); const [sceneStyle, setSceneStyle] = useState(SCENE_STYLE);
   const [imgs, setImgs] = useState<Img[]>([]);
   const [busy, setBusy] = useState(false); const [msg, setMsg] = useState<{ t: 'ok' | 'err'; s: string } | null>(null);
   const [dir, setDir] = useState<any>(null); const [auto, setAuto] = useState(false); // eslint-disable-line @typescript-eslint/no-explicit-any
   const [editId, setEditId] = useState<number | null>(null); const [oldT, setOldT] = useState(''); const [newT, setNewT] = useState(''); const [editExtra, setEditExtra] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { void kvGet('dir').then((h) => { if (h) setDir(h); }); void kvGet('chars').then((c) => { if (Array.isArray(c) && c.length) setChars(c); }); }, []);
-  function saveChars(next: Char[]) { setChars(next); void kvSet('chars', next); }
-  function pickPreset(p: Preset) { setPreset(p); setStyle(PRESETS[p].style); setSize(PRESETS[p].size); setBg(PRESETS[p].bg); }
+  useEffect(() => { void kvGet('dir').then((h) => { if (h) setDir(h); }); void (async () => { const ps: Prof[] | undefined = await kvGet('profiles'); const c: string | undefined = await kvGet('profCur'); const list = Array.isArray(ps) && ps.length ? ps : [DEFAULT_PROF]; const pr = list.find((x) => x.name === c) ?? list[0]; setProfs(list); setCur(pr.name); setChars(pr.chars); setAvoid(pr.avoid); setSceneStyle(pr.style); setProfLoaded(true); })(); }, []);
+  /** 화면에서 고친 장면 설정(스타일·인물·피할 것)을 지금 고른 세트에 자동 저장 */
+  useEffect(() => { if (!profLoaded) return; setProfs((xs) => { const next = xs.map((x) => (x.name === cur ? { ...x, style: sceneStyle, avoid, chars } : x)); void kvSet('profiles', next); void kvSet('profCur', cur); return next; }); }, [sceneStyle, avoid, chars, cur, profLoaded]);
+  function pickProf(name: string) { const pr = profs.find((x) => x.name === name); if (!pr) return; setCur(name); setChars(pr.chars); setAvoid(pr.avoid); setSceneStyle(pr.style); if (preset === 'scene') setStyle(pr.style); }
+  function newProf() { const nm = (window.prompt('새 스타일 세트 이름 (예: 천재교육 초4 L3). 지금 내용을 복사해서 시작해요.') ?? '').trim(); if (!nm) return; if (profs.some((x) => x.name === nm)) { setMsg({ t: 'err', s: '같은 이름의 세트가 이미 있어요.' }); return; } setProfs((xs) => [...xs, { name: nm, style: sceneStyle, avoid, chars }]); setCur(nm); }
+  function delProf() { if (profs.length < 2) { setMsg({ t: 'err', s: '세트는 하나 이상 있어야 해요.' }); return; } if (!window.confirm(`'${cur}' 세트를 지울까요?`)) return; const rest = profs.filter((x) => x.name !== cur); setProfs(rest); void kvSet('profiles', rest); pickProf(rest[0].name); }
+
+  const saveChars = (next: Char[]) => setChars(next);
+  function pickPreset(p: Preset) { setPreset(p); setStyle(p === 'scene' ? sceneStyle : PRESETS[p].style); setSize(PRESETS[p].size); setBg(PRESETS[p].bg); }
 
   async function chooseDir() {
     try { const h = await (window as any).showDirectoryPicker({ mode: 'readwrite' }); setDir(h); await kvSet('dir', h); setMsg({ t: 'ok', s: `저장 폴더: ${h.name}` }); } // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -170,7 +180,7 @@ export function Studio() {
       <div className="mx-grid" style={{ gridTemplateColumns: '1fr 1.3fr' }}>
         <div className="mx-card">
           <div className="mx-seg">{(Object.keys(PRESETS) as Preset[]).map((p) => <button key={p} className={preset === p ? 'on' : ''} onClick={() => pickPreset(p)}>{PRESETS[p].name}</button>)}</div>
-          <label className="mx-f">스타일 문장 (그림 톤을 맞추는 고정 문장, 고쳐도 돼요)<textarea className="mx-st-ta" rows={5} value={style} onChange={(e) => setStyle(e.target.value)} /></label>
+          <label className="mx-f">스타일 문장 (그림 톤을 맞추는 고정 문장, 고쳐도 돼요)<textarea className="mx-st-ta" rows={5} value={style} onChange={(e) => { setStyle(e.target.value); if (preset === 'scene') setSceneStyle(e.target.value); }} /></label>
           {preset === 'word' && (
             <div className="mx-f">단어 (한 번에 여러 개 — 채운 줄만 만들어요)
               <table className="mx-st-words"><tbody>
@@ -184,6 +194,8 @@ export function Studio() {
             </div>)}
           {preset === 'scene' ? (
             <>
+              <div className="mx-f">스타일 세트 (책·출판사마다 화풍·인물·피할 것을 따로 저장해요. 아래에서 고치면 이 세트에 자동 저장돼요)
+                <div className="mx-row"><select value={cur} onChange={(e) => pickProf(e.target.value)}>{profs.map((x) => <option key={x.name}>{x.name}</option>)}</select><button className="mx-btn sec" onClick={newProf}>+ 새 세트 (지금 내용 복사)</button><button className="mx-link" onClick={delProf}>이 세트 지우기</button></div></div>
               <label className="mx-f">장면 (한 줄에 한 장면 — 여러 줄이면 한 번에 여러 장 만들어요. '파일이름 | 장면 설명' 형식도 돼요)
                 <textarea className="mx-st-ta" rows={8} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder={"예:\n1-8-1 | Jun and Mom walk in front of a clothing store. The setting is a clothing store, not a school.\n1-8-2 | The clerk greets Jun and Mom inside the shop."} /></label>
               <div className="mx-f">인물 (장면 줄에 이름이 나오면 그 인물 설명이 자동으로 붙어요 · 이 브라우저에 기억돼요)
