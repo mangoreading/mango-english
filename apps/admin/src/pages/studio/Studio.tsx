@@ -3,7 +3,17 @@ import { supabase } from '../../shared/supabase';
 import { PageHead } from '../../shared/ui';
 
 const WORD_STYLE = 'A single cute 3D glossy emoji-style icon of the object, soft rounded shapes, bright friendly colors, soft shading, centered, no text, no shadow on the ground, transparent background, no background elements, kids educational illustration.';
-const SCENE_STYLE = 'A bright, friendly children\'s picture-book illustration for an English lesson, flat soft colors, rounded shapes, clean composition, consistent characters, no text unless asked.';
+const SCENE_STYLE = 'Semi-flat digital storybook illustration in the style of a modern international English-language textbook animation: soft textured shading and subtle grain, clean smooth outlines, warm saturated colors with fresh greens and sky blues, large expressive round eyes, rosy cheeks, natural proportions of upper-elementary children, diverse international cast, detailed but uncluttered background, no text, no letters, no numbers.';
+const SCENE_AVOID = 'text, letters, words, numbers, watermark, logo, Korean or East Asian setting, hanbok, Korean signs, manga style, anime style, chibi, realistic photo, 3D render, scary, dark, extra fingers, distorted faces, brand names';
+/** 장면에 이름이 나오면 자동으로 들어가는 인물 (고쳐서 쓸 수 있고, 이 브라우저에 기억돼요) */
+interface Char { name: string; desc: string }
+const DEFAULT_CHARS: Char[] = [
+  { name: 'Jun', desc: 'Cartoon boy about 11 years old, light-skinned, wavy dark brown hair with a side fringe, thin round glasses, navy blue puffer hoodie with white drawstrings, bright talkative smile' },
+  { name: 'Mom', desc: 'Cartoon mother in her late 30s, light-skinned, shoulder-length wavy chestnut hair, olive green cardigan and jeans, calm kind expression' },
+  { name: 'Clerk', desc: 'Cartoon shop clerk woman, medium-brown skin, dark curly hair tied back, coral apron with a blank name badge, friendly smile' },
+  { name: 'Sam', desc: 'Cartoon boy about 11 years old, light-skinned, tousled brown hair, light blue button shirt, curious expression' },
+  { name: 'Pablo', desc: 'Cartoon boy about 11 years old, tan skin, dark wavy hair, orange t-shirt, cheerful expression' },
+];
 type Preset = 'word' | 'scene' | 'free';
 const PRESETS: Record<Preset, { name: string; style: string; size: string; bg: string }> = {
   word: { name: '단어 그림 (3D 아이콘)', style: WORD_STYLE, size: '300x300', bg: 'transparent' },
@@ -66,13 +76,16 @@ export function Studio() {
   const [size, setSize] = useState(PRESETS.word.size); const [bg, setBg] = useState(PRESETS.word.bg);
   const [quality, setQuality] = useState('medium'); const [n, setN] = useState(1);
   const [refs, setRefs] = useState<{ id: number; b64: string }[]>([]);
+  const [refMode, setRefMode] = useState<'style' | 'edit'>('style'); // 장면 이미지: 참고 이미지를 '화풍만' 따라 할지, '이 그림을 고칠지'
+  const [chars, setChars] = useState<Char[]>(DEFAULT_CHARS); const [avoid, setAvoid] = useState(SCENE_AVOID);
   const [imgs, setImgs] = useState<Img[]>([]);
   const [busy, setBusy] = useState(false); const [msg, setMsg] = useState<{ t: 'ok' | 'err'; s: string } | null>(null);
   const [dir, setDir] = useState<any>(null); const [auto, setAuto] = useState(false); // eslint-disable-line @typescript-eslint/no-explicit-any
   const [editId, setEditId] = useState<number | null>(null); const [oldT, setOldT] = useState(''); const [newT, setNewT] = useState(''); const [editExtra, setEditExtra] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { void kvGet('dir').then((h) => { if (h) setDir(h); }); }, []);
+  useEffect(() => { void kvGet('dir').then((h) => { if (h) setDir(h); }); void kvGet('chars').then((c) => { if (Array.isArray(c) && c.length) setChars(c); }); }, []);
+  function saveChars(next: Char[]) { setChars(next); void kvSet('chars', next); }
   function pickPreset(p: Preset) { setPreset(p); setStyle(PRESETS[p].style); setSize(PRESETS[p].size); setBg(PRESETS[p].bg); }
 
   async function chooseDir() {
@@ -104,12 +117,23 @@ export function Studio() {
     const obj = w?.en.trim() ? `Object: "${w.en.trim()}"${w.ko.trim() ? ` (${w.ko.trim()})` : ''}.` : '';
     return [style.trim(), obj, prompt.trim()].filter(Boolean).join(' ');
   }
+  /** 장면 이미지: 한 줄 = 한 장면 ('파일이름 | 설명' 형식도 가능). 줄에 나온 이름의 인물을 자동으로 붙인다 */
+  function sceneJobs(): { p: string; base: string }[] {
+    return prompt.split('\n').map((l) => l.trim()).filter(Boolean).map((l, i) => {
+      const k = l.indexOf('|'); const named = k > 0 && k < 40; const text = (named ? l.slice(k + 1) : l).trim(); const base = safe(named ? l.slice(0, k) : text.slice(0, 24) || 'scene' + (i + 1));
+      const who = chars.filter((c) => c.name.trim() && new RegExp('\\b' + c.name.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i').test(text));
+      const rule = refs.length && refMode === 'style' ? 'Create ONE new illustration. The attached reference images are for ART STYLE ONLY (line quality, coloring, soft shading, face and eye design). Do NOT copy their scenes, backgrounds, buildings, objects, composition or people.\n\n' : '';
+      const p = [rule + `SCENE (draw exactly this): ${text}`, who.length ? 'Show only these characters, no other people. CHARACTERS (keep consistent):\n' + who.map((c) => `- ${c.name}: ${c.desc}`).join('\n') : '', `STYLE: ${style.trim()}`, avoid.trim() ? `AVOID: ${avoid.trim()}` : ''].filter(Boolean).join('\n\n');
+      return { p, base };
+    });
+  }
   async function generate() {
     const words = preset === 'word' ? rows.filter((r) => r.en.trim()) : [];
     if (preset === 'word' && !words.length) { setMsg({ t: 'err', s: '단어를 한 개 이상 입력해 주세요.' }); return; }
-    if (preset !== 'word' && !fullPrompt()) { setMsg({ t: 'err', s: '프롬프트를 입력해 주세요.' }); return; }
+    if (preset === 'scene' && !sceneJobs().length) { setMsg({ t: 'err', s: '장면을 한 줄 이상 입력해 주세요.' }); return; }
+    if (preset !== 'word' && preset !== 'scene' && !fullPrompt()) { setMsg({ t: 'err', s: '프롬프트를 입력해 주세요.' }); return; }
     setBusy(true); setMsg(null);
-    const jobs: { p: string; base: string }[] = preset === 'word' ? words.map((w) => ({ p: fullPrompt(w), base: safe(w.en) })) : [{ p: fullPrompt(), base: safe(prompt.slice(0, 24) || 'image') }];
+    const jobs: { p: string; base: string }[] = preset === 'word' ? words.map((w) => ({ p: fullPrompt(w), base: safe(w.en) })) : preset === 'scene' ? sceneJobs() : [{ p: fullPrompt(), base: safe(prompt.slice(0, 24) || 'image') }];
     let made = 0; let fail = 0;
     for (let j = 0; j < jobs.length; j++) {
       setProg(jobs.length > 1 ? `${j + 1}/${jobs.length} 만드는 중… (${jobs[j].base})` : '');
@@ -158,8 +182,30 @@ export function Studio() {
               </tbody></table>
               <div className="mx-row"><button className="mx-btn sec" onClick={() => setRows((xs) => [...xs, { en: '', ko: '' }])}>+ 행 추가</button><button className="mx-link" onClick={() => setRows(Array.from({ length: 6 }, () => ({ en: '', ko: '' })))}>모두 비우기</button></div>
             </div>)}
-          <label className="mx-f">프롬프트 {preset === 'word' ? '(추가 설명, 선택)' : '(만들 그림 설명)'}<textarea className="mx-st-ta" rows={5} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder={preset === 'scene' ? '예: 가게에서 점원에게 모자 가격을 묻는 여자아이와 엄마. 가게 안, 모자가 진열된 선반.' : '예: 파란색 줄무늬 양말'} /></label>
-          <div className="mx-f">참고 이미지 (최대 4장 — 올리면 이 그림을 바탕으로 만들어요)
+          {preset === 'scene' ? (
+            <>
+              <label className="mx-f">장면 (한 줄에 한 장면 — 여러 줄이면 한 번에 여러 장 만들어요. '파일이름 | 장면 설명' 형식도 돼요)
+                <textarea className="mx-st-ta" rows={8} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder={"예:\n1-8-1 | Jun and Mom walk in front of a clothing store. The setting is a clothing store, not a school.\n1-8-2 | The clerk greets Jun and Mom inside the shop."} /></label>
+              <div className="mx-f">인물 (장면 줄에 이름이 나오면 그 인물 설명이 자동으로 붙어요 · 이 브라우저에 기억돼요)
+                <table className="mx-st-words"><tbody>
+                  {chars.map((c, i) => (
+                    <tr key={i}><td style={{ width: 90 }}><input value={c.name} onChange={(e) => saveChars(chars.map((x, k) => (k === i ? { ...x, name: e.target.value } : x)))} placeholder="이름" /></td>
+                      <td><input value={c.desc} onChange={(e) => saveChars(chars.map((x, k) => (k === i ? { ...x, desc: e.target.value } : x)))} placeholder="외모 설명 (영어)" /></td>
+                      <td><button className="mx-link" onClick={() => saveChars(chars.filter((_, k) => k !== i))} aria-label="인물 지우기">×</button></td></tr>))}
+                </tbody></table>
+                <div className="mx-row"><button className="mx-btn sec" onClick={() => saveChars([...chars, { name: '', desc: '' }])}>+ 인물 추가</button><button className="mx-link" onClick={() => saveChars(DEFAULT_CHARS)}>기본 인물로 되돌리기</button></div>
+              </div>
+              <label className="mx-f">피할 것 (네거티브)<textarea className="mx-st-ta" rows={2} value={avoid} onChange={(e) => setAvoid(e.target.value)} /></label>
+            </>
+          ) : (
+            <label className="mx-f">프롬프트 {preset === 'word' ? '(추가 설명, 선택)' : '(만들 그림 설명)'}<textarea className="mx-st-ta" rows={5} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="예: 파란색 줄무늬 양말" /></label>
+          )}
+          <div className="mx-f">참고 이미지 (최대 4장){preset === 'scene' ? ' — 화풍 참고로 쓸지, 이 그림을 고칠지 아래에서 골라요' : ' — 올리면 이 그림을 바탕으로 만들어요'}
+            {preset === 'scene' && refs.length > 0 && (
+              <div className="mx-seg" style={{ marginTop: 6 }}>
+                <button className={refMode === 'style' ? 'on' : ''} onClick={() => setRefMode('style')}>화풍만 참고 (장면은 새로)</button>
+                <button className={refMode === 'edit' ? 'on' : ''} onClick={() => setRefMode('edit')}>이 그림을 고치기</button>
+              </div>)}
             <div className="mx-row" style={{ marginTop: 6 }}>
               {refs.map((r) => <span key={r.id} className="mx-st-ref"><img src={'data:image/png;base64,' + r.b64} alt="참고" /><button onClick={() => setRefs((xs) => xs.filter((x) => x.id !== r.id))} aria-label="빼기">×</button></span>)}
               {refs.length < 4 && <button className="mx-btn sec" onClick={() => fileRef.current?.click()}>+ 올리기</button>}
@@ -172,8 +218,8 @@ export function Studio() {
             <label className="mx-f">개수<select value={n} onChange={(e) => setN(Number(e.target.value))}>{[1, 2, 3, 4].map((v) => <option key={v}>{v}</option>)}</select></label>
           </div>
           <div className="mx-row" style={{ marginTop: 8 }}>
-            <button className="mx-btn" disabled={busy} onClick={generate}>{busy ? (prog || '만드는 중… (30초 안팎)') : preset === 'word' ? `단어 ${rows.filter((r) => r.en.trim()).length}개 만들기` : refs.length ? '참고 이미지로 만들기' : '만들기'}</button>
-            <span className="mx-muted">{refs.length ? '참고 이미지 있음 → 수정/참고 모드' : ''}</span>
+            <button className="mx-btn" disabled={busy} onClick={generate}>{busy ? (prog || '만드는 중… (30초 안팎)') : preset === 'word' ? `단어 ${rows.filter((r) => r.en.trim()).length}개 만들기` : preset === 'scene' ? `장면 ${prompt.split('\n').filter((l) => l.trim()).length}장 만들기` : refs.length ? '참고 이미지로 만들기' : '만들기'}</button>
+            <span className="mx-muted">{refs.length ? (preset === 'scene' ? (refMode === 'style' ? '참고 이미지는 화풍만 따라 해요' : '참고 이미지를 바탕으로 고쳐요') : '참고 이미지 있음 → 수정/참고 모드') : ''}</span>
           </div>
           <div className="mx-card" style={{ marginTop: 12, background: '#fafafa' }}>
             <b>저장 위치 (내 컴퓨터)</b>
