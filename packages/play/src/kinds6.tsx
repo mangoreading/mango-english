@@ -11,7 +11,7 @@ type Q = SetQ
 export function SceneStory({ item, pic, onDone }: KindProps) {
   const scenes: Sc[] = item.scenes ?? []; const qs: Q[] = item.qs ?? []; const max: number = item.replay ?? 2;
   const [rvCur, setRvCur] = useState(-1); const rvRef = useRef<HTMLDivElement>(null);
-  useEffect(() => { if (rvCur >= 0) rvRef.current?.querySelector(`[data-li="${rvCur}"]`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, [rvCur]);
+  useEffect(() => { if (rvCur >= 0) { const q = (n: number) => rvRef.current?.querySelector(`[data-li="${n}"]`); const t = q(rvCur + 1) ?? q(rvCur); (t?.closest('.nv-rv-row') ?? t)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } }, [rvCur]);
   const [phase, setPhase] = useState<'ready' | 'play' | 'after' | 'review'>('ready');
   const hasReview = item.review !== false && (!!item.explain?.length || scenes.some((s) => s.ko));
   const [idx, setIdx] = useState(0); const [paused, setPaused] = useState(false); const [plays, setPlays] = useState(0); const [cc, setCc] = useState(item.sub !== 'none');

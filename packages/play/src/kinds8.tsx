@@ -44,7 +44,7 @@ function ReviewPage({ item }: { item: Record<string, any> }) { // eslint-disable
   const explain: string[] = item.explain ?? [];
   const [cur, setCur] = useState(-1); const listRef = useRef<HTMLDivElement>(null);
   useEffect(() => () => stopSeq(), []);
-  useEffect(() => { if (cur >= 0) listRef.current?.querySelector(`[data-li="${cur}"]`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, [cur]);
+  useEffect(() => { if (cur >= 0) { const q = (n: number) => listRef.current?.querySelector(`[data-li="${n}"]`); const t = q(cur + 1) ?? q(cur); (t?.closest('.nv-rv-row') ?? t)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } }, [cur]);
   const hl = (i: number) => (i === cur ? ' nv-rv-hl' : '');
   let gi = 0;
   let body;
