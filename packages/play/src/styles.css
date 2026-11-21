@@ -672,12 +672,12 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-scene-main { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:.9em; }
 .nv-scene .nv-ptools { margin-top:1.4em; }
 
-.nv-rv { width:42em; max-width:100%; display:flex; flex-direction:column; gap:.6em; }
+.nv-rv { width:42em; max-width:100%; display:flex; flex-direction:column; gap:.25em; margin-top:.6em; }
 .nv-rv-t { margin:0; font-weight:800; font-size:1.15em; color:#20233e; }
-.nv-rv-list { max-height:15em; overflow:auto; background:#fff; border:.1em solid #D6DEEA; border-radius:1em; padding:.4em .9em; }
+.nv-rv-list { max-height:18em; overflow:auto; background:#fff; border:.1em solid #D6DEEA; border-radius:1em; padding:.4em .9em; }
 .nv-rv-row { display:flex; gap:.7em; padding:.35em 0; border-bottom:.06em solid #EEF2F8; } .nv-rv-row:last-child { border-bottom:0; }
 .nv-rv-who { flex:none; width:4.2em; font-size:.85em; font-weight:700; color:#5B6B8C; padding-top:.15em; }
-.nv-rv-row b { display:block; font-weight:600; color:#20233e; } .nv-rv-row small { display:block; color:#7A7360; font-size:.9em; }
+.nv-rv-row b { display:block; font-weight:600; color:#20233e; margin:0; } .nv-rv-row small { display:block; color:#7A7360; font-size:.9em; }
 .nv-rv-ex { background:#F2F6FD; border:.1em solid #D6DEEA; border-radius:1em; padding:.5em 1em; } .nv-rv-ex p { margin:.3em 0; line-height:1.5; }
 
 /* ===== 마이크: 소리 크기 막대 · 마이크 테스트 ===== */
@@ -912,13 +912,13 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-set-pread .nv-arrow, .nv-set-pread .nv-q-prev, .nv-set-pread .nv-q-next { top:24%; }
 .nv-set-pread .nv-q-prev, .nv-set-pread.nv-setroot .nv-row-w > .nv-arrow:first-child { left:1.44em; right:auto; }
 .nv-set-pread .nv-q-next, .nv-set-pread.nv-setroot .nv-row-w > .nv-arrow:last-child { right:1.44em; left:auto; }
-.nv-setroot .nv-rv-list { max-height:27em; } .nv-setroot .nv-rv-row b { margin:.12em 0; } .nv-setroot .nv-rv-row small { margin-top:.25em; }
+
 /* Passage Read Aloud(세트): 본문 상자를 가운데에 알맞은 폭으로 — 좌우 버튼은 상자 바깥에 둔다 */
 .nv-set-pread .nv-row-w { justify-content:center; }
 .nv-set-pread .nv-pbox { flex:none; width:68%; max-width:52em; min-height:9em; padding:.8em 1.4em; }
-.nv-setroot .nv-rv .nv-ptools { display:flex; justify-content:center; margin:.2em 0; }
 
-.nv-rv-tools { display:flex; justify-content:center; margin:.1em 0; }
+
+.nv-rv .nv-rv-tools { display:flex; justify-content:center; margin:.1em 0 .3em; }
 /* 그림 보고 대화하기(looktalk): 말한 문장 기록과 지금 할 안내 */
 .nv-ltlog { display:flex; flex-direction:column; align-items:center; gap:.15em; margin:.6em 0 .2em; } .nv-ltlog p { margin:0; font-size:1.1em; color:#1F2A44; } .nv-ltlog em { font-style:normal; margin-right:.5em; color:#3B6FD8; font-weight:700; }
 .nv-lttask { margin:.5em 0 .2em; font-size:1.05em; color:#3B6FD8; font-weight:700; text-align:center; } .nv-lttask small { color:#6b7893; font-weight:400; }
@@ -929,8 +929,8 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-sqhint { min-height:5.2em; }
 .nv-tfb.nv-on { background:#E8F0FF; border-color:#3979f3; }
 .nv-sqroot { width:calc(100% - 10em); margin-left:auto; margin-right:auto; overflow:visible; } .nv-sqroot .nv-split { width:100%; } .nv-setroot.nv-sqroot .nv-arrow { top:calc(50% - 1.76em); } .nv-setroot.nv-sqroot .nv-q-prev { left:-.85em; } .nv-setroot.nv-sqroot .nv-q-next { right:-.85em; }
-.nv-sqrev { padding-top:.5em; } .nv-setroot.nv-sqrev .nv-rv-list { max-height:none; }
-.nv-body.nv-sqrev { justify-content:flex-start; padding-top:.3em; } .nv-sqrev .nv-rv { position:relative; gap:.4em; } .nv-setroot.nv-sqrev .nv-rv .nv-ptools { position:absolute; top:-.3em; right:0; margin:0; } .nv-setroot.nv-sqrev .nv-rv-list { max-height:23.5em; }
+.nv-sqrev { padding-top:.5em; }
+.nv-body.nv-sqrev { justify-content:flex-start; padding-top:.9em; }
 /* sqset: 페이지(문항)마다 내용이 위아래로 움직이지 않게, 본문·문항 영역 높이를 고정하고 위에서부터 배치 */
 .nv-sqroot .nv-split { height:19.5em; } .nv-sqroot .nv-split > .nv-qpane { justify-content:flex-start; }
 .nv-stage-go:disabled { cursor:progress; }
@@ -943,10 +943,4 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 @keyframes nv-mv-z { from { transform:scale(1.02); } to { transform:scale(1.12); } }
 @media (prefers-reduced-motion: reduce) { .nv-mv { animation:none; transform:none; } }
 .nv-rv-row b.nv-rv-hl { background:#FFF0C9; border-radius:.35em; box-shadow:0 0 0 .2em #FFF0C9; transition:background .2s; }
-/* 해석과 해설 쪽: Scene story 와 같은 모양으로 통일(해석 박스는 더 높게, 전체 듣기 버튼은 박스 바로 아래) */
-.nv-rv, .nv-sqrev .nv-rv { gap:.25em; }
-.nv-rv .nv-rv-list, .nv-setroot .nv-rv-list, .nv-setroot.nv-sqrev .nv-rv-list { max-height:18em; }
-.nv-rv .nv-rv-row b, .nv-setroot .nv-rv-row b { margin:0; } .nv-rv .nv-rv-row small, .nv-setroot .nv-rv-row small { margin-top:0; }
-.nv-rv .nv-ptools, .nv-setroot .nv-rv .nv-ptools, .nv-setroot.nv-sqrev .nv-rv .nv-ptools { position:static; display:flex; justify-content:center; margin:.1em 0 .3em; }
-.nv-rv { margin-top:.6em; } .nv-body.nv-sqrev { padding-top:.9em; }
 .nv-scene-main:has(> .nv-rv) { align-self:flex-start; margin-top:.4em; } /* 해석 쪽이 세로 가운데 정렬로 위 지시문까지 올라가지 않게 */

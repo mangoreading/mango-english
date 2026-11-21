@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type ComponentType } from 'react';
 import { Fb, useCardProgress } from './fb';
 import { Rich } from './kinds3';
-import { say, saySeq, shuffle, stopSeq, type KindProps } from './common';
+import { shuffle, stopSeq, type KindProps } from './common';
 import { Story } from './kinds2';
 import { Hint } from './hint';
+import { ReviewPanel, type RvRow } from './review';
 
 /** 본문 세트의 확인 문항: t 가 'tf' 면 문장 1~3개에 T/F 를 고르는 한 문제, 아니면 3~4지 선다(정답 1 + 오답 1~3) */
 export interface SetQ { t?: 'mc' | 'tf' | 'multi'; q?: string; ans?: string; wrong?: string[]; fb?: string; lines?: string[] }
@@ -41,31 +42,17 @@ export function TfBlock({ q, no, onFinish, done }: { q: SetQ; no: string; onFini
 /** 해석과 해설 쪽: Scene story 의 "해석과 해설" 과 같은 모양. 영어 문장(굵게)과 한글 해석, 그리고 해설 상자 */
 function ReviewPage({ item }: { item: Record<string, any> }) { // eslint-disable-line @typescript-eslint/no-explicit-any
   const text: string[] = item.text ?? [];
-  const explain: string[] = item.explain ?? [];
-  const [cur, setCur] = useState(-1); const listRef = useRef<HTMLDivElement>(null);
-  useEffect(() => () => stopSeq(), []);
-  useEffect(() => { if (cur >= 0) { const q = (n: number) => listRef.current?.querySelector(`[data-li="${n}"]`); const t = q(cur + 1) ?? q(cur); (t?.closest('.nv-rv-row') ?? t)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } }, [cur]);
-  const hl = (i: number) => (i === cur ? ' nv-rv-hl' : '');
-  let gi = 0;
-  let body;
+  const clean = (l: string) => l.replace(/\[\[|\]\]|\{\{|\}\}/g, '');
+  let rows: RvRow[];
   if (item.k === 'pread') {
     const pages: string[][] = text.reduce<string[][]>((a, l) => { if (l.trim() === '---') a.push([]); else a[a.length - 1].push(l); return a; }, [[]]).filter((g) => g.length);
     const kos: string[] = item.ko ? String(item.ko).split(/\n-{3,}\n/) : [];
-    body = pages.map((g, pi) => (
-      <div key={pi} className="nv-rv-row"><span className="nv-rv-who">{pages.length > 1 ? pi + 1 : ''}</span><div>{g.map((l, i) => { const n = gi++; return <b key={i} data-li={n} className={hl(n).trim()}><Rich text={l} /></b>; })}{kos[pi] && <small>{kos[pi]}</small>}</div></div>
-    ));
+    rows = pages.map((g, pi) => ({ who: pages.length > 1 ? pi + 1 : '', lines: g.map((l) => <Rich text={l} />), ko: kos[pi] }));
   } else {
     const kos: string[] = item.ko ? String(item.ko).split('\n') : [];
-    body = text.map((l, i) => <div key={i} className="nv-rv-row"><span className="nv-rv-who" /><div><b data-li={i} className={hl(i).trim()}><Rich text={l} /></b>{kos[i] && <small>{kos[i]}</small>}</div></div>);
+    rows = text.map((l, i) => ({ lines: [<Rich text={l} />], ko: kos[i] }));
   }
-  return (
-    <div className="nv-rv">
-      <p className="nv-rv-t">해석과 해설</p>
-      <div className="nv-rv-list" ref={listRef}>{body}</div>
-      <div className="nv-ptools"><button type="button" className="nv-listen nv-listen-s" onClick={() => { stopSeq(); saySeq(text.filter((l) => l.trim() !== '---').map((l) => l.replace(/\[\[|\]\]|\{\{|\}\}/g, '')), { onLine: setCur, onDone: () => setCur(-1), gap: () => 300 }); }}><i className="nv-sico" aria-hidden="true" /> <b>전체 듣기</b></button></div>
-      {!!explain.length && <div className="nv-rv-ex">{explain.map((l, i) => <p key={i}><Rich text={l} /></p>)}</div>}
-    </div>
-  );
+  return <ReviewPanel rows={rows} speak={text.filter((l) => l.trim() !== '---').map(clean)} explain={item.explain} />;
 }
 
 /** 확인 문항 한 쪽: 이미 푼 문항으로 돌아오면 정답이 채워진 상태로 보여 준다 */
