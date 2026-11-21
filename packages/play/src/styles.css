@@ -942,3 +942,4 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 @keyframes nv-mv-l { from { transform:scale(1.1) translateX(3.5%); } to { transform:scale(1.1) translateX(-3.5%); } }
 @keyframes nv-mv-z { from { transform:scale(1.02); } to { transform:scale(1.12); } }
 @media (prefers-reduced-motion: reduce) { .nv-mv { animation:none; transform:none; } }
+.nv-rv-row b.nv-rv-hl { background:#FFF0C9; border-radius:.35em; box-shadow:0 0 0 .2em #FFF0C9; transition:background .2s; }

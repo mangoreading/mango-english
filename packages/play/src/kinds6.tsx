@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Fb, useCardProgress } from './fb';
 import { Rich } from './kinds3';
 import { TfBlock, type SetQ } from './kinds8';
-import { imgSrc, prefetchSay, sayScript, shuffle, stopSeq, type KindProps } from './common';
+import { imgSrc, prefetchSay, saySeq, sayScript, shuffle, stopSeq, type KindProps } from './common';
 
 interface Sc { who?: string; en: string; ko?: string; pic?: string }
 type Q = SetQ
@@ -10,6 +10,8 @@ type Q = SetQ
 /** 장면 영상: 그림·대사가 이어지는 짧은 장면을 보고 듣는다. 확인 문항이 있으면 다 본 뒤 이어서 푼다. */
 export function SceneStory({ item, pic, onDone }: KindProps) {
   const scenes: Sc[] = item.scenes ?? []; const qs: Q[] = item.qs ?? []; const max: number = item.replay ?? 2;
+  const [rvCur, setRvCur] = useState(-1); const rvRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (rvCur >= 0) rvRef.current?.querySelector(`[data-li="${rvCur}"]`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, [rvCur]);
   const [phase, setPhase] = useState<'ready' | 'play' | 'after' | 'review'>('ready');
   const hasReview = item.review !== false && (!!item.explain?.length || scenes.some((s) => s.ko));
   const [idx, setIdx] = useState(0); const [paused, setPaused] = useState(false); const [plays, setPlays] = useState(0); const [cc, setCc] = useState(item.sub !== 'none');
@@ -115,10 +117,10 @@ export function SceneStory({ item, pic, onDone }: KindProps) {
           {review && (
             <div className="nv-rv">
               <p className="nv-rv-t">해석과 해설</p>
-              <div className="nv-rv-list">{scenes.map((x, i) => (
-                <div key={i} className="nv-rv-row"><span className="nv-rv-who">{x.who}</span><div><b>{x.en}</b>{x.ko && <small>{x.ko}</small>}</div></div>
+              <div className="nv-rv-list" ref={rvRef}>{scenes.map((x, i) => (
+                <div key={i} className="nv-rv-row"><span className="nv-rv-who">{x.who}</span><div><b data-li={i} className={i === rvCur ? 'nv-rv-hl' : undefined}>{x.en}</b>{x.ko && <small>{x.ko}</small>}</div></div>
               ))}</div>
-              <div className="nv-ptools nv-rv-tools"><button type="button" className="nv-listen nv-listen-s" onClick={() => { stopSeq(); sayScript(scenes.map((x) => (x.who ? `${x.who}: ${x.en}` : x.en)).join('\n')); }}><i className="nv-sico" aria-hidden="true" /> <b>전체 듣기</b></button></div>
+              <div className="nv-ptools nv-rv-tools"><button type="button" className="nv-listen nv-listen-s" onClick={() => { stopSeq(); saySeq(scenes.map((x) => (x.who ? `${x.who}: ${x.en}` : x.en)), { onLine: setRvCur, onDone: () => setRvCur(-1), gap: () => 300 }); }}><i className="nv-sico" aria-hidden="true" /> <b>전체 듣기</b></button></div>
               {!!item.explain?.length && <div className="nv-rv-ex">{item.explain.map((l: string, i: number) => <p key={i}><Rich text={l} /></p>)}</div>}
             </div>
           )}
