@@ -945,6 +945,7 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-rv-row b.nv-rv-hl { background:#FFF0C9; border-radius:.35em; box-shadow:0 0 0 .2em #FFF0C9; transition:background .2s; }
 /* 해석과 해설 쪽: Scene story 와 같은 모양으로 통일(해석 박스는 더 높게, 전체 듣기 버튼은 박스 바로 아래) */
 .nv-rv, .nv-sqrev .nv-rv { gap:.25em; }
-.nv-rv .nv-rv-list, .nv-setroot .nv-rv-list, .nv-setroot.nv-sqrev .nv-rv-list { max-height:21em; }
+.nv-rv .nv-rv-list, .nv-setroot .nv-rv-list, .nv-setroot.nv-sqrev .nv-rv-list { max-height:18em; }
 .nv-rv .nv-rv-row b, .nv-setroot .nv-rv-row b { margin:0; } .nv-rv .nv-rv-row small, .nv-setroot .nv-rv-row small { margin-top:0; }
 .nv-rv .nv-ptools, .nv-setroot .nv-rv .nv-ptools, .nv-setroot.nv-sqrev .nv-rv .nv-ptools { position:static; display:flex; justify-content:center; margin:.1em 0 .3em; }
+.nv-rv { margin-top:.6em; } .nv-body.nv-sqrev { padding-top:.9em; }
