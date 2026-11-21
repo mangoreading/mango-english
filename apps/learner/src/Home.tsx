@@ -24,6 +24,7 @@ export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUni
   onUnit: (id: string) => void; onOpenUnit: (u: UnitInfo, focusNo?: number) => void; onStart: (u: UnitInfo, a: { no: number; idx: number }) => void; onReport: (u: UnitInfo) => void;
 }) {
   const [sel, setSel] = useState<number | null>(null);
+  const [toc, setToc] = useState(false);
   if (!unit) return <div className="mx-card"><h2>학습할 Lesson이 아직 없어요</h2><p className="mx-muted">관리자가 Lesson을 발행하면 여기에 나타나요.</p></div>;
   const up = unitProgress(unit, rows);
   const idx = units.findIndex((u) => u.unit_id === unit.unit_id);
@@ -36,14 +37,21 @@ export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUni
   return (
     <>
       <div className="mx-hello"><h1>{name ? `${name}님, ` : ''}오늘도 Mango English!</h1><BookPick books={books} bookId={bookId} onBook={onBook} /></div>
+      {toc && (
+        <div className="mx-toc-bg" onClick={() => setToc(false)}>
+          <div className="mx-toc" role="dialog" aria-label="목차" onClick={(e) => e.stopPropagation()}>
+            <div className="mx-toc-h"><b>목차</b><button onClick={() => setToc(false)} aria-label="닫기">✕</button></div>
+            <ul>{units.map((u) => { const p = unitProgress(u, rows); return (
+              <li key={u.unit_id}><button className={u.unit_id === unit.unit_id ? 'on' : ''} onClick={() => { onUnit(u.unit_id); setToc(false); }}>
+                <span className="mx-chip">LESSON {u.unit_no}</span><span className="mx-toc-t">{u.unit_title}</span><small>{p.complete ? '완료' : p.pct + '%'}</small></button></li>); })}</ul>
+          </div>
+        </div>
+      )}
       <div className="mx-card mx-now">
         <div className="mx-now-top">
           <button className="mx-arrow" disabled={!prev} onClick={() => prev && onUnit(prev.unit_id)} aria-label="이전 Lesson">◀</button>
           <div className="mx-now-title">
-            <span className="mx-chip">LESSON {unit.unit_no}</span><h2>{unit.unit_title}</h2>
-            <select className="mx-lessonpick" value={unit.unit_id} onChange={(e) => onUnit(e.target.value)} aria-label="Lesson 이동">
-              {units.map((u) => <option key={u.unit_id} value={u.unit_id}>Lesson {u.unit_no} · {u.unit_title}</option>)}
-            </select>
+            <button className="mx-tocbtn" onClick={() => setToc(true)} aria-label="목차 열기" title="목차"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M8 6h12M8 12h12M8 18h12"/><path d="M4 6h.01M4 12h.01M4 18h.01"/></svg></button><span className="mx-chip">LESSON {unit.unit_no}</span><h2>{unit.unit_title}</h2>
           </div>
           <button className="mx-arrow" disabled={!next} onClick={() => next && onUnit(next.unit_id)} aria-label="다음 Lesson">▶</button>
         </div>

@@ -213,3 +213,13 @@ input { font:inherit; padding:12px 14px; border:2px solid #CBD6E6; border-radius
 .mx-now .mx-dl .mx-hw { position:sticky; bottom:0; margin-top:auto; z-index:2; box-shadow:0 -8px 10px #F8FAFE; }
 .mx-hw-h b { display:inline-flex; align-items:center; gap:6px; } .mx-hw-ico { color:var(--blue); flex:none; }
 .mx-lrow.mx-lrow-sel { border:2px solid #FF9F1C; box-shadow:none; }
+.mx-tocbtn { flex:none; width:36px; height:36px; border-radius:10px; border:1.5px solid #CFDBF3; background:#fff; color:var(--blue); display:inline-grid; place-items:center; cursor:pointer; }
+.mx-tocbtn:hover { background:#EEF3FD; }
+.mx-toc-bg { position:fixed; inset:0; background:rgba(31,42,68,.35); z-index:50; display:grid; place-items:center; padding:16px; }
+.mx-toc { background:#fff; border-radius:18px; width:min(480px,100%); max-height:80vh; overflow:auto; padding:16px 18px; box-shadow:0 12px 40px rgba(31,42,68,.25); }
+.mx-toc-h { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; } .mx-toc-h b { font-size:1.05rem; }
+.mx-toc-h button { border:0; background:none; font-size:1.1rem; cursor:pointer; color:#7a869c; }
+.mx-toc ul { list-style:none; margin:0; padding:0; display:grid; gap:6px; }
+.mx-toc li button { width:100%; font:inherit; text-align:left; display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid #E1E8F4; border-radius:12px; background:#fff; cursor:pointer; }
+.mx-toc li button:hover { background:#F4F8FF; } .mx-toc li button.on { border:2px solid #FF9F1C; }
+.mx-toc-t { flex:1; font-weight:700; } .mx-toc small { color:#7a869c; }
