@@ -84,7 +84,7 @@ const INST: Record<string, string> = {
 };
 /** 그림을 문항 화면 안에서 직접 그리는 템플릿 (그 밖의 템플릿은 오른쪽 위에 보조 그림으로 보인다) */
 /** 기획안에 보조 그림이 없는 템플릿(쓰기류): 문항에 pic 이 있어도 우상단 그림을 그리지 않는다 */
-const NO_SIDE = ['dreadt', 'sdrill', 'sbuild', 'swrite', 'sfill', 'sscram', 'sscraml', 'sscramlr', 'sscramr', 'sorder', 'mwbank', 'scloze', 'mfree', 'swrt', 'mtext', 'lwrite', 'saykor', 'lspeak', 'raloud', 'present', 'aitalk', 'pread', 'scene', 'lecture', 'wsent', 'lnum', 'tf', 'sqchoice', 'sqtf', 'sqmulti', 'sqset'];
+const NO_SIDE = ['dreadt', 'sdrill', 'sbuild', 'swrite', 'sfill', 'sscram', 'sscraml', 'sscramlr', 'sscramr', 'sorder', 'mwbank', 'scloze', 'mfree', 'swrt', 'mtext', 'lwrite', 'saykor', 'lspeak', 'raloud', 'present', 'aitalk', 'pread', 'scene', 'scenerep', 'lecture', 'wsent', 'lnum', 'tf', 'sqchoice', 'sqtf', 'sqmulti', 'sqset'];
 const VOCAB_BG = ['vcards', 'vtype1', 'vspell', 'vmatch', 'vsound', 'vwrite', 'wchoice', 'wrepeat', 'pchoice'];
 const VOCAB_SKIN: string[] = [];
 /** 말하기 지시문의 '영어로 말해 보세요' 부분을 파랗게 강조 (mango 스킨) */
