@@ -86,7 +86,8 @@ export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUni
               return (
               <div key={l.no} className="mx-dl">
                 <div className="mx-dl-h"><span className="mx-lchip">{`${l.no}차시`}</span><h3>{l.ko || l.en}</h3><span className="mx-muted">{l.en}</span>
-                  {go && showGo && <button className="mx-startbtn" onClick={() => onStart(unit, { no: l.no, idx: go.idx })}>{label} <span aria-hidden>→</span></button>}</div>
+                  {go && showGo && <button className="mx-startbtn" onClick={() => onStart(unit, { no: l.no, idx: go.idx })}>{label} <span aria-hidden>→</span></button>}
+                  {!(go && showGo) && <span className="mx-startbtn" style={{ visibility: 'hidden' }} aria-hidden>학습 시작하기 →</span>}</div>
                 {l.goal && <p className="mx-dl-goal">{l.goal}</p>}
                 <ul className="mx-dl-acts">
                   {l.acts.filter((a) => a.n > 0 && a.study).map((a) => (
