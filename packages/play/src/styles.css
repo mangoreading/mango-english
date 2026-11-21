@@ -949,3 +949,4 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-rv .nv-rv-row b, .nv-setroot .nv-rv-row b { margin:0; } .nv-rv .nv-rv-row small, .nv-setroot .nv-rv-row small { margin-top:0; }
 .nv-rv .nv-ptools, .nv-setroot .nv-rv .nv-ptools, .nv-setroot.nv-sqrev .nv-rv .nv-ptools { position:static; display:flex; justify-content:center; margin:.1em 0 .3em; }
 .nv-rv { margin-top:.6em; } .nv-body.nv-sqrev { padding-top:.9em; }
+.nv-scene-main:has(> .nv-rv) { align-self:flex-start; margin-top:.4em; } /* 해석 쪽이 세로 가운데 정렬로 위 지시문까지 올라가지 않게 */
