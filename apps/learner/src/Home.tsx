@@ -104,7 +104,7 @@ export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUni
                   {l.acts.filter((a) => a.n > 0 && a.study).map((a) => (
                     <li key={a.idx}>
                       <button className={a.done ? 'mx-da mx-da-done' : 'mx-da'} onClick={() => onStart(unit, { no: l.no, idx: a.idx })}>
-                        <span className="mx-da-mark">{a.done ? '✓' : '▶'}</span>
+                        <span className="mx-da-mark">{a.done ? '✓' : ''}</span>
                         <span className="mx-da-t"><b>{a.t}</b><small>{a.ko}{a.study ? '' : ' · 숙제'} · {a.n}문항</small></span>
                         <span className="mx-da-st">{a.done ? stars(a.stars) : (up.current && l.no === up.current.no && up.current.idx === a.idx ? '지금 할 활동' : '')}</span>
                       </button>
