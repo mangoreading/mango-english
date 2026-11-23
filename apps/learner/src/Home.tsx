@@ -88,16 +88,15 @@ export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUni
         <div className="mx-nowbody">
           <section className="mx-detail" aria-label="차시 상세">
             {detailLessons.map((l) => {
-              const todo = l.acts.find((x) => x.study && x.n > 0 && !x.done), first = l.acts.find((x) => x.study && x.n > 0);
+              const todo = l.acts.find((x) => x.study && x.n > 0 && !x.done);
               const isWk = l.no % 2 === 0 || l.no === up.lessons[up.lessons.length - 1]?.no, wkNos = l.no % 2 === 0 ? [l.no - 1, l.no] : [l.no];
               const hw = isWk ? up.lessons.filter((x) => wkNos.includes(x.no)).flatMap((x) => x.acts.filter((a) => a.n > 0 && a.hw).map((a) => ({ ...a, no: x.no }))) : [], hwTodo = hw.find((x) => !x.done), hwDone = hw.length > 0 && !hwTodo, hwGo = hwTodo ?? hw[0], hwMin = hw.reduce((m, x) => m + (x.min || 0), 0) || 10;
-              const prevDone = up.lessons.filter((x) => x.no < l.no && x.studyN > 0).every((x) => x.doneN >= x.studyN);
-              const go = todo ?? first, label = !go ? '' : !todo ? '다시 학습하기' : l.doneN > 0 ? '이어서 학습하기' : '학습 시작하기';
-              const showGo = !!go && (l.doneN > 0 || prevDone);
+              const go = todo, label = l.doneN > 0 ? '이어서 학습하기' : '학습 시작하기';
+              const showGo = !!go && !up.complete && l.no === curNo;
               return (
               <div key={l.no} className="mx-dl">
                 <div className="mx-dl-h"><span className="mx-lchip">{`${l.no}차시`}</span><h3>{l.en || l.ko}</h3><span className="mx-muted">{l.en ? l.ko : ''}</span>
-                  {go && showGo && <button className={'mx-startbtn' + (!up.complete && l.no === curNo ? ' mx-startbtn-now' : '')} onClick={() => onStart(unit, { no: l.no, idx: go.idx })}>{label} <span aria-hidden>→</span></button>}
+                  {go && showGo && <button className={'mx-startbtn' + ' mx-startbtn-now'} onClick={() => onStart(unit, { no: l.no, idx: go.idx })}>{label} <span aria-hidden>→</span></button>}
                   {!(go && showGo) && <span className="mx-startbtn" style={{ visibility: 'hidden' }} aria-hidden>학습 시작하기 →</span>}</div>
                 {l.goal && <p className="mx-dl-goal">{l.goal}</p>}
                 <ul className="mx-dl-acts">
