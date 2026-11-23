@@ -946,3 +946,7 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-scene-main:has(> .nv-rv) { align-self:flex-start; margin-top:.4em; } /* 해석 쪽이 세로 가운데 정렬로 위 지시문까지 올라가지 않게 */
 /* 대화 완성하기(dfill/dfillt) 빈칸 박스만 모서리를 부드럽게 */
 .nv-dfw .nv-bl-box { border-radius:1em; }
+/* 듣고 빈칸 쓰기: 문장이 여러 줄이면 캡슐 안에서 가로로 나란히 놓여 깨지던 것을 세로로 쌓고, 줄이 여러 개면 모서리를 덜 둥글게 */
+.nv-capsule-bl { flex-direction:column; }
+.nv-capsule-bl:has(p + p) { border-radius:2.2em; padding:.7em 2.2em; }
+.nv-capsule-bl p { max-width:100%; }
