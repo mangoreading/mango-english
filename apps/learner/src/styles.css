@@ -242,3 +242,5 @@ input { font:inherit; padding:12px 14px; border:2px solid #CBD6E6; border-radius
 /* 차시 숫자는 제목과 학습목표 두 줄의 세로 가운데에, 조금 더 크게 */
 .mx-now .mx-dl-h { align-items:center; }
 .mx-dl-h .mx-lnum { font-size:3.4rem; }
+/* 차시 숫자 위치 보정: 글자 상자 안에서 아래로 처져 보여, 두 줄(제목+학습목표) 세로 가운데로 끌어올린다 */
+.mx-dl-h .mx-lnum { line-height:.8; transform:translateY(-.2em); }
