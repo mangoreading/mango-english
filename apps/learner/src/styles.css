@@ -230,3 +230,5 @@ input { font:inherit; padding:12px 14px; border:2px solid #CBD6E6; border-radius
 /* 차시 번호: 박스 없이 큰 주황 숫자 (눌러야 하는 버튼과 헷갈리지 않게) */
 .mx-dl-h .mx-lnum { font-family:'Playfair Display','Times New Roman',Georgia,serif; font-weight:800; font-size:2.8rem; line-height:1; color:#FF9F1C; margin-right:2px; align-self:center; }
 .mx-now .mx-dl-h { align-items:center; }
+.mx-dl-h .mx-lnum { font-family:'Playfair Display',Pretendard Variable,Pretendard,Georgia,serif; white-space:nowrap; }
+.mx-dl-h .mx-lnum small { font-family:'Pretendard Variable',Pretendard,system-ui,sans-serif; font-size:.45em; font-weight:800; margin-left:.12em; }
