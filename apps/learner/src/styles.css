@@ -228,7 +228,10 @@ input { font:inherit; padding:12px 14px; border:2px solid #CBD6E6; border-radius
 .mx-startbtn-now:hover { animation:none; }
 @media (prefers-reduced-motion: reduce) { .mx-startbtn-now { animation:none; } }
 /* 차시 번호: 박스 없이 큰 주황 숫자 (눌러야 하는 버튼과 헷갈리지 않게) */
-.mx-dl-h .mx-lnum { font-family:'Playfair Display','Times New Roman',Georgia,serif; font-weight:800; font-size:2.8rem; line-height:1; color:#FF9F1C; margin-right:2px; align-self:center; }
-.mx-now .mx-dl-h { align-items:center; }
+.mx-dl-h .mx-lnum { font-family:'Playfair Display','Times New Roman',Georgia,serif; font-weight:800; font-size:2.8rem; line-height:1; color:#FF9F1C; margin-right:2px; }
+.mx-now .mx-dl-h { align-items:baseline; }
 .mx-dl-h .mx-lnum { font-family:'Playfair Display',Pretendard Variable,Pretendard,Georgia,serif; white-space:nowrap; }
 .mx-dl-h .mx-lnum small { font-family:'Pretendard Variable',Pretendard,system-ui,sans-serif; font-size:.45em; font-weight:800; margin-left:.12em; }
+/* 차시 숫자: 속이 빈 라인 글자 (글자 사이 기준선은 제목과 맞춘다) */
+.mx-dl-h .mx-lnum { color:transparent; -webkit-text-stroke:2px #FF9F1C; letter-spacing:.02em; }
+.mx-dl-h .mx-lnum small { color:#FF9F1C; -webkit-text-stroke:0; }
