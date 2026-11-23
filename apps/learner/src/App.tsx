@@ -300,6 +300,8 @@ function UnitView({ row, onBack, autoStart, startReport, focusNo }: { row: Bundl
     <ReportView title={`Lesson ${b.unit.no} · ${b.unit.title}`} report={report0} practice={(a) => practiceFor(a.area, b.flow, hasItems, report0.reportLesson)}
       onPractice={(_a, list) => { setRep(false); practiceSeq(list); }} onRetry={(r) => { setRep(false); retryStep(r); }} onBack={() => (startReport ? onBack() : setRep(false))} />
   </>);
+  // 홈에서 활동을 눌러 바로 시작하는 경우: 플레이어가 뜨기 전에 차시 목록 화면이 잠깐 비치지 않게 비워 둔다
+  if (autoStart && !nat && !rep) return err ? <p className="mx-err">{err}</p> : null;
   return (
     <>
       {!only && <button className="mx-link" onClick={onBack}>← 목록으로</button>}
