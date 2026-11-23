@@ -239,3 +239,6 @@ input { font:inherit; padding:12px 14px; border:2px solid #CBD6E6; border-radius
 .mx-dl-tt { flex:1; min-width:0; } .mx-dl-t1 { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
 .mx-dl-tt .mx-dl-goal { margin:4px 0 0; }
 .mx-now .mx-dl-h { margin-bottom:12px; }
+/* 차시 숫자는 제목과 학습목표 두 줄의 세로 가운데에, 조금 더 크게 */
+.mx-now .mx-dl-h { align-items:center; }
+.mx-dl-h .mx-lnum { font-size:3.4rem; }
