@@ -70,20 +70,19 @@ export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUni
         <nav className="mx-steps" aria-label="차시 선택">
           {Array.from({ length: 6 }, (_, i) => core[i]).map((l, i) => {
             const info = l ? up.lessons.find((x) => x.no === l.no) : undefined;
-            if (!info) return <div key={i} className="mx-st mx-st-off"><StepRing no={i + 1} frac={0} /><span className="mx-st-no">{i + 1}차시</span><span className="mx-st-t">{l ? (l.en || l.ko) : '준비 중'}</span></div>;
+            if (!info) return <div key={i} className="mx-st mx-st-off"><StepRing no={i + 1} frac={0} /><span className="mx-st-t">{l ? (l.en || l.ko) : '준비 중'}</span></div>;
             const full = info.studyN > 0 && info.doneN >= info.studyN, on = !up.complete && info.no === curNo, selected = shown === info.no;
             return (
               <button key={i} className={'mx-st' + (on ? ' mx-st-cur' : '') + (selected ? ' mx-st-sel' : '') + (full ? ' mx-st-done' : '')} onClick={() => setSel(info.no)} aria-current={selected ? 'true' : undefined}>
                 <StepRing no={info.no} frac={info.studyN ? info.doneN / info.studyN : 0} cur={on} done={full} sel={selected} />
-                <span className="mx-st-no">{info.no}차시</span>
-                <span className="mx-st-t">{info.en || info.ko}</span>
+                                <span className="mx-st-t">{info.en || info.ko}</span>
                 {on && <em className="mx-st-now">지금</em>}
               </button>);
           })}
           <button className={'mx-st mx-st-rep' + (up.complete ? ' mx-st-done' : '')} disabled={!up.complete} onClick={() => onReport(unit)}>
             <svg width="52" height="52" viewBox="0 0 52 52" aria-hidden><circle cx="26" cy="26" r="21" fill="#fff" stroke="#DCE4F2" strokeWidth="3.5" />
               <g fill="none" stroke={up.complete ? '#4F7DF0' : '#9AA5BC'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 16h14v20H19z" /><path d="M23 22h6M23 27h6" /></g></svg>
-            <span className="mx-st-no">결과</span><span className="mx-st-t">Lesson Report</span>
+            <span className="mx-st-t">Lesson Report</span>
           </button>
         </nav>
         <div className="mx-nowbody">
