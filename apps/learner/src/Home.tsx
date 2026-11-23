@@ -65,7 +65,7 @@ export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUni
               return (
                 <button key={i} className={'mx-lrow' + (full ? ' mx-lrow-done' : '') + (on ? ' mx-lrow-cur' : '') + (shown === info.no ? ' mx-lrow-sel' : '')} onClick={() => setSel(info.no)}>
                   <span className="mx-lrow-no">{info.no}차시</span>
-                  <span className="mx-lrow-t"><b>{info.ko || info.en}</b><small>{on ? '지금 할 차시 · ' : ''}{info.doneN}/{info.studyN} 활동</small></span>
+                  <span className="mx-lrow-t"><b>{info.en || info.ko}</b><small>{on ? '지금 할 차시 · ' : ''}{info.en && info.ko ? info.ko + ' · ' : ''}{info.doneN}/{info.studyN} 활동</small></span>
                   <span className="mx-lrow-bar"><i style={{ width: pct(info.doneN, info.studyN) + '%' }} /></span>
                 </button>);
             })}
@@ -85,7 +85,7 @@ export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUni
               const showGo = !!go && (l.doneN > 0 || prevDone);
               return (
               <div key={l.no} className="mx-dl">
-                <div className="mx-dl-h"><span className="mx-lchip">{`${l.no}차시`}</span><h3>{l.ko || l.en}</h3><span className="mx-muted">{l.en}</span>
+                <div className="mx-dl-h"><span className="mx-lchip">{`${l.no}차시`}</span><h3>{l.en || l.ko}</h3><span className="mx-muted">{l.en ? l.ko : ''}</span>
                   {go && showGo && <button className="mx-startbtn" onClick={() => onStart(unit, { no: l.no, idx: go.idx })}>{label} <span aria-hidden>→</span></button>}
                   {!(go && showGo) && <span className="mx-startbtn" style={{ visibility: 'hidden' }} aria-hidden>학습 시작하기 →</span>}</div>
                 {l.goal && <p className="mx-dl-goal">{l.goal}</p>}
