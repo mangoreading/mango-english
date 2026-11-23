@@ -69,7 +69,7 @@ export function NativePlayer({ title, items, vocab, nextLabel, step, quiet, scop
     <div className="nv-overlay" data-bgimg={meta.vocabBg ? "v" : undefined} data-hd={meta.speak ? 'bg' : undefined} data-skin={meta.speak ? 'mango' : meta.bgSkin ? 'mangobg' : undefined}>
       <div className="nv-head">
         <button className="nv-x" onClick={() => onFinish('exit')} aria-label="나가기">‹</button>
-        <b>{title}</b>{step && step.total > 0 && <span className="nv-stepno">활동 {step.cur + 1}/{step.total}</span>}
+        <b>{title}</b>
         {(() => {
           const n = prog ? prog.n : items.length, c = prog ? prog.cur : i;   // 지금 활동 안의 문항 위치
           const inner = n > 10 ? <b className="nv-ind-n">{Math.min(c + 1, n)}/{n}</b> : Array.from({ length: n }, (_, k) => <i key={k} className={'nv-ic ' + (k < c ? 'd1' : k === c ? 'd2' : '')} />);
