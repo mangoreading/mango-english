@@ -111,7 +111,7 @@ export function DFill({ item, pic, onDone }: KindProps) {
   const info = useRef<BInfo | null>(null); const [foc, setFoc] = useState<number | null>(null);
   const bh: string[] = item.blankHints ?? [];
   return (
-    <div className="nv-body nv-wbody">
+    <div className="nv-body nv-wbody nv-dfw">
       {item.k === 'dfillt' && <div className="nv-cue">{item.cue}</div>}
       {item.k !== 'dfillt' && <div className="nv-picwrap nv-dfpic">{src && <img className="nv-img nv-img-md" src={imgSrc(src)} alt="" draggable={false} />}{src && item.tag2 && <span className="nv-price">{item.tag2}</span>}</div>}
       <Blanks lines={item.lines ?? []} ans={item.ans ?? []} big box onDone={onDone} tag="write" info={info} onFoc={setFoc} />

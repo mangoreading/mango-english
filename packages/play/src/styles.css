@@ -944,5 +944,5 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 @media (prefers-reduced-motion: reduce) { .nv-mv { animation:none; transform:none; } }
 .nv-rv-row b.nv-rv-hl { background:#FFF0C9; border-radius:.35em; box-shadow:0 0 0 .2em #FFF0C9; transition:background .2s; }
 .nv-scene-main:has(> .nv-rv) { align-self:flex-start; margin-top:.4em; } /* 해석 쪽이 세로 가운데 정렬로 위 지시문까지 올라가지 않게 */
-/* 빈칸 대화 박스: 모서리를 부드럽게 (Blanks box 를 쓰는 모든 템플릿 공통) */
-.nv-bl-box, .nv-bl-box.nv-bl-fix, .nv-bl.nv-bl-box:not(.nv-bl-fix) { border-radius:1em; }
+/* 대화 완성하기(dfill/dfillt) 빈칸 박스만 모서리를 부드럽게 */
+.nv-dfw .nv-bl-box { border-radius:1em; }
