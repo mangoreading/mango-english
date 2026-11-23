@@ -65,7 +65,7 @@ export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUni
               return (
                 <button key={i} className={'mx-lrow' + (full ? ' mx-lrow-done' : '') + (on ? ' mx-lrow-cur' : '') + (shown === info.no ? ' mx-lrow-sel' : '')} onClick={() => setSel(info.no)}>
                   <span className="mx-lrow-no">{info.no}차시</span>
-                  <span className="mx-lrow-t"><b>{info.en || info.ko}</b><small>{on ? '지금 할 차시 · ' : ''}{info.en && info.ko ? info.ko + ' · ' : ''}{info.doneN}/{info.studyN} 활동</small></span>
+                  <span className="mx-lrow-t"><b>{info.en || info.ko}</b><small>{on ? '지금 할 차시 · ' : ''}{info.en && info.ko ? info.ko : ''}</small></span>
                   <span className="mx-lrow-bar"><i style={{ width: pct(info.doneN, info.studyN) + '%' }} /></span>
                 </button>);
             })}
