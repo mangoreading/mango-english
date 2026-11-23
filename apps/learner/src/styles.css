@@ -227,3 +227,6 @@ input { font:inherit; padding:12px 14px; border:2px solid #CBD6E6; border-radius
 .mx-startbtn-now { animation:mx-pulse 1.6s ease-in-out infinite; }
 .mx-startbtn-now:hover { animation:none; }
 @media (prefers-reduced-motion: reduce) { .mx-startbtn-now { animation:none; } }
+/* 차시 번호: 박스 없이 큰 주황 숫자 (눌러야 하는 버튼과 헷갈리지 않게) */
+.mx-dl-h .mx-lnum { font-family:'Playfair Display','Times New Roman',Georgia,serif; font-weight:800; font-size:2.8rem; line-height:1; color:#FF9F1C; margin-right:2px; align-self:center; }
+.mx-now .mx-dl-h { align-items:center; }
