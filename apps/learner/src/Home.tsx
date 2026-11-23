@@ -95,10 +95,9 @@ export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUni
               const showGo = !!go && !up.complete && l.no === curNo;
               return (
               <div key={l.no} className="mx-dl">
-                <div className="mx-dl-h"><span className="mx-lnum">{l.no}<small>차시</small></span><h3>{l.en || l.ko}</h3><span className="mx-muted">{l.en ? l.ko : ''}</span>
+                <div className="mx-dl-h"><span className="mx-lnum">{l.no}<small>차시</small></span><div className="mx-dl-tt"><div className="mx-dl-t1"><h3>{l.en || l.ko}</h3><span className="mx-muted">{l.en ? l.ko : ''}</span></div>{l.goal && <p className="mx-dl-goal">{l.goal}</p>}</div>
                   {go && showGo && <button className={'mx-startbtn' + ' mx-startbtn-now'} onClick={() => onStart(unit, { no: l.no, idx: go.idx })}>{label} <span aria-hidden>→</span></button>}
                   {!(go && showGo) && <span className="mx-startbtn" style={{ visibility: 'hidden' }} aria-hidden>학습 시작하기 →</span>}</div>
-                {l.goal && <p className="mx-dl-goal">{l.goal}</p>}
                 <ul className="mx-dl-acts">
                   {l.acts.filter((a) => a.n > 0 && a.study).map((a) => (
                     <li key={a.idx}>

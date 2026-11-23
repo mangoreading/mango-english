@@ -235,3 +235,7 @@ input { font:inherit; padding:12px 14px; border:2px solid #CBD6E6; border-radius
 /* 차시 숫자: 속이 빈 라인 글자 (글자 사이 기준선은 제목과 맞춘다) */
 .mx-dl-h .mx-lnum { color:transparent; -webkit-text-stroke:2px #FF9F1C; letter-spacing:.02em; }
 .mx-dl-h .mx-lnum small { color:#FF9F1C; -webkit-text-stroke:0; }
+/* 차시 제목 줄: [1차시] [제목 + 한글 / 학습목표 문장] [버튼] — 학습목표가 제목 글자 시작선에 맞는다 */
+.mx-dl-tt { flex:1; min-width:0; } .mx-dl-t1 { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+.mx-dl-tt .mx-dl-goal { margin:4px 0 0; }
+.mx-now .mx-dl-h { margin-bottom:12px; }
