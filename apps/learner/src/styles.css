@@ -146,17 +146,7 @@ input { font:inherit; padding:12px 14px; border:2px solid #CBD6E6; border-radius
 
 
 /* 교과서 홈: 차시 목록(왼쪽) + 선택한 차시 상세·학습목표(오른쪽) */
-.mx-nowbody { display:grid; grid-template-columns:300px minmax(0,1fr); gap:16px; align-items:start; margin-top:16px; }
-.mx-lside { display:grid; gap:6px; }
-.mx-lrow { font:inherit; text-align:left; display:grid; grid-template-columns:58px 1fr; grid-template-rows:auto 4px; column-gap:10px; row-gap:3px; align-items:center; padding:7px 12px; background:#fff; border:1px solid #E1E8F4; border-radius:14px; cursor:pointer; color:var(--navy); }
-.mx-lrow:hover:not(:disabled) { border-color:var(--blue); }
-.mx-lrow:disabled, .mx-lrow-off { opacity:.5; cursor:default; }
-.mx-lrow-no { grid-row:1; width:58px; height:26px; border-radius:13px; white-space:nowrap; background:#EAF0FB; color:var(--blue); font-weight:800; font-size:.78rem; display:grid; place-items:center; }
-.mx-lrow-t { grid-row:1; display:flex; flex-direction:column; min-width:0; } .mx-lrow-t b { font-size:.92rem; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .mx-lrow-t small { font-size:.72rem; color:#7a869c; }
-.mx-lrow-bar { grid-column:1 / -1; height:4px; border-radius:3px; background:#EEF2F8; overflow:hidden; } .mx-lrow-bar i { display:block; height:100%; background:var(--blue); }
-.mx-lrow-cur .mx-lrow-no { background:var(--blue); color:#fff; }
-.mx-lrow-done .mx-lrow-no { background:#E7F6EC; color:#2FB26B; } .mx-lrow-done .mx-lrow-bar i { background:#2FB26B; }
-.mx-lrow-sel { border-color:var(--blue); background:#F4F8FF; box-shadow:0 0 0 2px rgba(79,125,240,.18); }
+.mx-nowbody { display:grid; grid-template-columns:minmax(0,1fr); gap:16px; align-items:start; margin-top:16px; }
 .mx-detail { background:#F8FAFE; border:1px solid #E1E8F4; border-radius:18px; padding:16px 18px; display:flex; flex-direction:column; gap:14px; min-height:100%; }
 .mx-dl-h { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; } .mx-dl-h h3 { margin:0; font-size:1.15rem; }
 .mx-dl-goal { margin:6px 0 10px; color:#5b6880; font-size:.9rem; }
@@ -178,14 +168,11 @@ input { font:inherit; padding:12px 14px; border:2px solid #CBD6E6; border-radius
 .mx-now-title .mx-lessonpick { margin-top:0; }
 .mx-main-clean .mx-hello h1 { margin:6px 0; }
 .mx-nowbody { margin-top:12px; }
-.mx-lrow { padding:5px 12px; }
 /* 홈: 카드가 남는 높이를 채워 푸터와의 빈 공간을 없앰 */
 .mx-shell > main { display:flex; flex-direction:column; }
 .mx-shell > main > .mx-now { flex:1; display:flex; flex-direction:column; margin-bottom:6px; }
 .mx-now .mx-nowbody { flex:1; align-items:stretch; }
-.mx-now .mx-lside { grid-auto-rows:1fr; }
 .mx-now .mx-detail { align-content:start; }
-.mx-lrow-done .mx-lrow-no::before { content:'✓ '; }
 
 /* 차시 상세 오른쪽 위: 시작/이어하기 주황 버튼 */
 .mx-startbtn { margin-left:auto; font:inherit; font-weight:800; font-size:1rem; background:#FF9F1C; color:#3b2600; border:0; border-radius:999px; padding:10px 22px; cursor:pointer; box-shadow:0 3px 0 #D9830A; align-self:center; }
@@ -205,14 +192,12 @@ input { font:inherit; padding:12px 14px; border:2px solid #CBD6E6; border-radius
 .mx-shell.mx-h800 > main { min-height:0; }
 .mx-shell.mx-h800 > main > .mx-now { min-height:0; }
 .mx-shell.mx-h800 .mx-nowbody { min-height:0; grid-template-rows:minmax(0,1fr); }
-.mx-shell.mx-h800 .mx-lside { min-height:0; overflow-y:auto; grid-auto-rows:minmax(50px,1fr); }
 .mx-shell.mx-h800 .mx-detail { min-height:0; overflow-y:auto; }
 /* 차시 칩은 주황, 이번 주 숙제는 상세 영역 하단에 고정 */
 .mx-dl-h .mx-lchip { background:#FF9F1C; color:#3b2600; border:0; border-radius:999px; padding:6px 14px; font-weight:800; font-size:.9rem; display:inline-block; cursor:default; }
 .mx-now .mx-dl { flex:1; display:flex; flex-direction:column; }
 .mx-now .mx-dl .mx-hw { position:sticky; bottom:0; margin-top:auto; z-index:2; box-shadow:0 -8px 10px #F8FAFE; }
 .mx-hw-h b { display:inline-flex; align-items:center; gap:6px; } .mx-hw-ico { color:var(--blue); flex:none; }
-.mx-lrow.mx-lrow-sel { border:2px solid #FF9F1C; box-shadow:none; }
 .mx-tocbtn { flex:none; width:36px; height:36px; border-radius:10px; border:1.5px solid #CFDBF3; background:#fff; color:var(--blue); display:inline-grid; place-items:center; cursor:pointer; }
 .mx-tocbtn:hover { background:#EEF3FD; }
 .mx-toc-bg { position:fixed; inset:0; background:rgba(31,42,68,.35); z-index:50; display:grid; place-items:center; padding:16px; }
@@ -223,3 +208,16 @@ input { font:inherit; padding:12px 14px; border:2px solid #CBD6E6; border-radius
 .mx-toc li button { width:100%; font:inherit; text-align:left; display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid #E1E8F4; border-radius:12px; background:#fff; cursor:pointer; }
 .mx-toc li button:hover { background:#F4F8FF; } .mx-toc li button.on { border:2px solid #FF9F1C; }
 .mx-toc-t { flex:1; font-weight:700; } .mx-toc small { color:#7a869c; }
+/* 상단 차시 스텝(좌측 목록 대체) */
+.mx-steps { position:relative; display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); margin:16px 0 4px; }
+.mx-steps::before { content:''; position:absolute; left:calc(100% / 14); right:calc(100% / 14); top:25px; height:3px; background:#E1E8F4; }
+.mx-st { position:relative; font:inherit; background:transparent; border:0; padding:0; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:2px; color:#4A5A78; }
+.mx-st svg { background:#fff; border-radius:50%; margin-bottom:6px; }
+.mx-st-no { font-size:.8rem; font-weight:700; color:#7A869C; } .mx-st-t { font-size:.95rem; font-weight:500; text-align:center; line-height:1.2; padding:0 4px; }
+.mx-st:hover:not(:disabled) .mx-st-t { color:var(--blue); }
+.mx-st-cur .mx-st-no, .mx-st-sel .mx-st-no { color:#B86A00; } .mx-st-cur .mx-st-t, .mx-st-sel .mx-st-t { font-weight:800; color:var(--ink); }
+.mx-st-now { font-style:normal; font-size:.72rem; font-weight:700; color:#B86A00; background:#FFE7C2; border-radius:10px; padding:1px 9px; }
+.mx-st:disabled, .mx-st-off { opacity:.55; cursor:default; }
+.mx-dl-acts { grid-template-columns:repeat(3,minmax(0,1fr)); }
+@media (max-width:1100px) { .mx-dl-acts { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:820px) { .mx-dl-acts { grid-template-columns:1fr; } .mx-st-t { font-size:.78rem; } }

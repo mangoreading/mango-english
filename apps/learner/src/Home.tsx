@@ -18,6 +18,18 @@ function BookPick({ books, bookId, onBook }: { books: BookOpt[]; bookId: string;
   return <select className="mx-bookpick" value={bookId} onChange={(e) => onBook(e.target.value)} aria-label="교재">{books.map((b) => <option key={b.id} value={b.id}>{b.label}</option>)}</select>;
 }
 
+/** 상단 차시 스텝의 번호 원: 둘레 선이 진행률, 지금 할 차시는 주황, 보고 있는 차시는 주황 테두리 */
+function StepRing({ no, frac, cur, done, sel }: { no: number; frac: number; cur?: boolean; done?: boolean; sel?: boolean }) {
+  const C = 2 * Math.PI * 21;
+  return (
+    <svg width="52" height="52" viewBox="0 0 52 52" aria-hidden>
+      <circle cx="26" cy="26" r="21" fill={cur ? '#FF9F1C' : sel ? '#FFF3DC' : '#fff'} stroke="#DCE4F2" strokeWidth="3.5" />
+      {(cur || frac > 0 || sel) && <circle cx="26" cy="26" r="21" fill="none" stroke={cur ? '#FFE0A8' : sel ? '#FF9F1C' : done ? '#2FB26B' : '#4F7DF0'} strokeWidth="3.5" strokeLinecap="round" strokeDasharray={`${(sel && !cur ? 1 : cur ? 0.0001 : Math.min(frac, 1)) * C} ${C}`} transform="rotate(-90 26 26)" />}
+      <text x="26" y="33" textAnchor="middle" fontSize="20" fontWeight="800" fill={cur ? '#3B2600' : sel ? '#B86A00' : '#5F6B85'}>{done ? '✓' : no}</text>
+    </svg>
+  );
+}
+
 /** 교과서: 지금 학습 중인 Lesson 의 8개 박스(1~6차시 · Lesson Report). 숙제는 주 단위로 2·4·6차시 상세에 모아 보여 준다 */
 export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUnit, onOpenUnit, onStart, onReport }: {
   name: string; books: BookOpt[]; bookId: string; onBook: (id: string) => void; units: UnitInfo[]; rows: ProgRow[]; unit: UnitInfo | null;
@@ -55,26 +67,26 @@ export function HomeView({ name, books, bookId, onBook, units, rows, unit, onUni
           </div>
           <button className="mx-arrow" disabled={!next} onClick={() => next && onUnit(next.unit_id)} aria-label="다음 Lesson">▶</button>
         </div>
-        <div className="mx-pbar" role="img" aria-label={`진행 ${up.pct}%`}><i style={{ width: up.pct + '%' }} /></div>
+        <nav className="mx-steps" aria-label="차시 선택">
+          {Array.from({ length: 6 }, (_, i) => core[i]).map((l, i) => {
+            const info = l ? up.lessons.find((x) => x.no === l.no) : undefined;
+            if (!info) return <div key={i} className="mx-st mx-st-off"><StepRing no={i + 1} frac={0} /><span className="mx-st-no">{i + 1}차시</span><span className="mx-st-t">{l ? (l.en || l.ko) : '준비 중'}</span></div>;
+            const full = info.studyN > 0 && info.doneN >= info.studyN, on = !up.complete && info.no === curNo, selected = shown === info.no;
+            return (
+              <button key={i} className={'mx-st' + (on ? ' mx-st-cur' : '') + (selected ? ' mx-st-sel' : '') + (full ? ' mx-st-done' : '')} onClick={() => setSel(info.no)} aria-current={selected ? 'true' : undefined}>
+                <StepRing no={info.no} frac={info.studyN ? info.doneN / info.studyN : 0} cur={on} done={full} sel={selected} />
+                <span className="mx-st-no">{info.no}차시</span>
+                <span className="mx-st-t">{info.en || info.ko}</span>
+                {on && <em className="mx-st-now">지금</em>}
+              </button>);
+          })}
+          <button className={'mx-st mx-st-rep' + (up.complete ? ' mx-st-done' : '')} disabled={!up.complete} onClick={() => onReport(unit)}>
+            <svg width="52" height="52" viewBox="0 0 52 52" aria-hidden><circle cx="26" cy="26" r="21" fill="#fff" stroke="#DCE4F2" strokeWidth="3.5" />
+              <g fill="none" stroke={up.complete ? '#4F7DF0' : '#9AA5BC'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 16h14v20H19z" /><path d="M23 22h6M23 27h6" /></g></svg>
+            <span className="mx-st-no">결과</span><span className="mx-st-t">Lesson Report</span>
+          </button>
+        </nav>
         <div className="mx-nowbody">
-          <div className="mx-lside">
-            {Array.from({ length: 6 }, (_, i) => core[i]).map((l, i) => {
-              const info = l ? up.lessons.find((x) => x.no === l.no) : undefined;
-              if (!l || !info) return <div key={i} className="mx-lrow mx-lrow-off"><span className="mx-lrow-no">{i + 1}차시</span><span className="mx-lrow-t"><b>{l ? (l.ko || l.en) : '준비 중'}</b><small>준비 중</small></span></div>;
-              const full = info.doneN >= info.studyN, on = !up.complete && info.no === curNo;
-              return (
-                <button key={i} className={'mx-lrow' + (full ? ' mx-lrow-done' : '') + (on ? ' mx-lrow-cur' : '') + (shown === info.no ? ' mx-lrow-sel' : '')} onClick={() => setSel(info.no)}>
-                  <span className="mx-lrow-no">{info.no}차시</span>
-                  <span className="mx-lrow-t"><b>{info.en || info.ko}</b><small>{on ? '지금 할 차시 · ' : ''}{info.en && info.ko ? info.ko : ''}</small></span>
-                  <span className="mx-lrow-bar"><i style={{ width: pct(info.doneN, info.studyN) + '%' }} /></span>
-                </button>);
-            })}
-            <button className={'mx-lrow mx-lrow-rep' + (up.complete ? ' mx-lrow-done' : '')} disabled={!up.complete} onClick={() => onReport(unit)}>
-              <span className="mx-lrow-no">결과</span>
-              <span className="mx-lrow-t"><b>Lesson Report</b><small>{up.complete ? '결과 리포트 보기' : '차시를 모두 마치면 열려요'}</small></span>
-              <span className="mx-lrow-bar"><i style={{ width: up.pct + '%' }} /></span>
-            </button>
-          </div>
           <section className="mx-detail" aria-label="차시 상세">
             {detailLessons.map((l) => {
               const todo = l.acts.find((x) => x.study && x.n > 0 && !x.done), first = l.acts.find((x) => x.study && x.n > 0);
