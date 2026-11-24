@@ -341,8 +341,6 @@ export function SOrder({ item, onDone }: KindProps) {
 }
 
 /** 보기 단어를 눌러 글의 빈칸 채우기 (모범 글 완성 / 글 빈칸 채우기 공용). 보기 줄은 그대로 두고 쓴 것만 흐리게 */
-/** 삽화가 있을 때만 본문 옆에 나란히 놓는 줄(없으면 아무것도 감싸지 않음) */
-function IllRow({ on, children }: { on: boolean; children: React.ReactNode }) { return on ? <div className="nv-illrow">{children}</div> : <>{children}</>; }
 function WB({ item, onDone, tag }: KindProps & { tag: string }) {
   const ans: string[] = item.ans ?? []; const lines: string[] = item.lines ?? [];
   const bank = useMemo(() => shuffle([...ans, ...(item.extra ?? [])].map((t, id) => ({ id, t }))), [item]); // eslint-disable-line
@@ -367,16 +365,14 @@ function WB({ item, onDone, tag }: KindProps & { tag: string }) {
   return (
     <div className="nv-body nv-wbody">
       <div className="nv-chips nv-chips-bank">{bank.map((c) => <button key={c.id} className="nv-chipb" draggable={!slots.includes(c.id) && !ok} onDragStart={() => setDragId(c.id)} onDragEnd={() => { setDragId(null); setOver(null); }} disabled={slots.includes(c.id)} onClick={() => put(c.id)}>{c.t}</button>)}</div>
-      <IllRow on={!!item.illus}>
-      <div className="nv-bl nv-bl-box nv-bl-fix">
+      <div className={'nv-bl nv-bl-box nv-bl-fix' + (item.illus ? ' nv-bl-ill' : '')}>
         {lines.map((l, li) => (
           <p key={li}>{l.split('{}').map((seg, si, arr) => {
             const idx = si < arr.length - 1 ? bi++ : -1;
             return <span key={si}><Rich text={seg} />{idx >= 0 && <button onDragOver={(e) => { e.preventDefault(); setOver(idx); }} onDragLeave={() => setOver(null)} onDrop={(e) => { e.preventDefault(); if (dragId != null) put(dragId, idx); setDragId(null); setOver(null); }} className={'nv-slotb' + (over === idx ? ' nv-over' : '') + (slots[idx] != null ? ' filled' : '') + (bad[idx] ? ' nv-bbad nv-shake' : '') + (ok ? ' nv-bok' : '')} onClick={() => !ok && slots[idx] != null && setSlots(slots.map((x, k) => (k === idx ? null : x)))}>{txt(slots[idx])}</button>}</span>;
           })}</p>))}
+        {item.illus && <img className="nv-illus-in" src={imgSrc(item.illus)} alt="" draggable={false} />}
       </div>
-      {item.illus && <img className="nv-illus-in" src={imgSrc(item.illus)} alt="" draggable={false} />}
-      </IllRow>
       <HintBox lines={nextEmpty >= 0 && bh[nextEmpty] ? [bh[nextEmpty]] : item.hint?.length ? item.hint : bh.filter(Boolean)} item={item} ctx={() => {
         let q = 0; const text = lines.map((l) => l.split('{}').map((seg, si, arr) => { if (si >= arr.length - 1) return seg; const i = q++; return seg + (slots[i] != null ? `[${txt(slots[i])}]` : i === nextEmpty ? '[__ ← next blank]' : '[__]'); }).join('')).join('\n');
         return { input: `Word bank: ${bank.map((b) => b.t).join(', ')}\nText with the student's choices so far:\n${text}\nNext empty blank: ${nextEmpty >= 0 ? '#' + (nextEmpty + 1) : 'none'}${nextEmpty >= 0 && bh[nextEmpty] ? `\nTeacher hint for it: ${bh[nextEmpty]}` : ''}`, wrong: wcnt.current };

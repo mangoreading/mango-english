@@ -967,3 +967,4 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-illrow > .nv-bl-box { flex:0 1 auto; }
 .nv-illus-in { flex:none; width:10em; height:10em; object-fit:contain; background:#fff; border:.1em solid var(--nv-line); border-radius:1em; padding:.5em; box-shadow:0 .2em .6em rgba(31,42,68,.08); pointer-events:none; }
 .nv-mtwrap .nv-illrow > .nv-illus-in { order:-1; }
+.nv-bl-ill { position:relative; padding-right:13em; } .nv-bl-ill > .nv-illus-in { position:absolute; right:1.4em; top:50%; transform:translateY(-50%); width:9.5em; height:9.5em; background:transparent; border:0; box-shadow:none; padding:0; }
