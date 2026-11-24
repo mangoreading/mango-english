@@ -17,13 +17,14 @@ const DEFAULT_CHARS: Char[] = [
   { name: 'Pablo', desc: 'Cartoon boy about 11 years old, tan skin, dark wavy hair, orange t-shirt, cheerful expression' },
 ];
 const DEFAULT_PROF: Prof = { name: '비상 초5 영어 L9', style: SCENE_STYLE, avoid: SCENE_AVOID, chars: DEFAULT_CHARS };
-type Preset = 'word' | 'scene' | 'free';
+type Preset = 'word' | 'scene' | 'unit' | 'free';
 const PRESETS: Record<Preset, { name: string; style: string; size: string; bg: string }> = {
   word: { name: '단어 그림 (3D 아이콘)', style: WORD_STYLE, size: '300x300', bg: 'transparent' },
   scene: { name: '장면 이미지 (영상용)', style: SCENE_STYLE, size: '1280x720', bg: 'opaque' },
+  unit: { name: '단원 단어·삽화 (DB)', style: WORD_STYLE, size: '300x300', bg: 'transparent' },
   free: { name: '자유', style: '', size: '1024x1024', bg: 'auto' },
 };
-interface Img { id: number; b64: string; name: string; saved?: string; applied?: string }
+interface Img { id: number; b64: string; name: string; saved?: string; applied?: string; up?: { kind: 'word' | 'illus'; key: string } }
 let uid = 0;
 
 /* ----- 로컬 저장: 폴더를 한 번 고르면 기억(IndexedDB)해 두고 거기에 저장. 지원 안 되면 내려받기 ----- */
@@ -46,6 +47,7 @@ async function fileToB64(f: Blob): Promise<string> {
 const SMALL: Record<string, { api: string; w: number; h: number; crop?: boolean }> = {
   '200x200': { api: '1024x1024', w: 200, h: 200 },
   '300x300': { api: '1024x1024', w: 300, h: 300 },
+  '600x600': { api: '1024x1024', w: 600, h: 600 },
   '768x512': { api: '1536x1024', w: 768, h: 512 },
   '512x768': { api: '1024x1536', w: 512, h: 768 },
   /** 16:9: 1536×1024 로 만든 뒤 위·아래를 잘라 맞춘다(장면 영상 화면 비율) */
@@ -62,6 +64,7 @@ async function shrinkTo(b64: string, w0: number, h0: number, crop = false): Prom
 const SIZES: Record<string, [string, string][]> = {
   word: [['200x200', '단어 그림 200×200'], ['300x300', '단어 그림 300×300']],
   scene: [['1280x720', '16:9 가로 1280×720 (위·아래가 잘려요)'], ['768x432', '16:9 가로 768×432 (위·아래가 잘려요)'], ['1536x1024', '3:2 가로 1536×1024'], ['768x512', '3:2 가로 768×512'], ['1024x1536', '2:3 세로 1024×1536'], ['512x768', '2:3 세로 512×768']],
+  unit: [['300x300', '단어 300×300']],
   free: [['300x300', '300×300'], ['1024x1024', '정사각 1024×1024'], ['1280x720', '16:9 가로 1280×720'], ['1536x1024', '3:2 가로 1536×1024'], ['1024x1536', '2:3 세로 1024×1536']],
 };
 const apiSize = (s: string) => SMALL[s]?.api ?? s;
@@ -205,6 +208,73 @@ export function Studio() {
     const rest = all.filter((l) => !used.has(l.n)); if (rest.length) out.push({ head: '그 밖의 대사 (장면에 연결 안 됨)', lines: rest });
     return out;
   }
+
+  /* ----- 단원 단어·삽화: DB(image_prompts)의 프롬프트를 불러와 만들고, 단어는 vocab.image_path · 삽화는 문항 illus 에 적용 ----- */
+  interface UpRow { kind: 'word' | 'illus'; key: string; en: string; ko: string; prompt: string; seq: number }
+  const [upUnits, setUpUnits] = useState<{ id: string; label: string }[]>([]); const [upSel, setUpSel] = useState(''); const [upRows, setUpRows] = useState<UpRow[]>([]); const [upLoaded, setUpLoaded] = useState(false);
+  async function loadUpUnits() {
+    const r = await supabase.from('units').select('id,no,kind,books(title,grade,publishers(name))').eq('kind', 'lesson');
+    if (r.error) { setMsg({ t: 'err', s: '단원 목록을 불러오지 못했어요: ' + r.error.message }); return; }
+    const list = ((r.data ?? []) as any[]).map((u) => ({ id: u.id as string, no: u.no as number, t: u.books ? `${u.books.publishers?.name ?? ''} 초${u.books.grade} 영어`.trim() : '' })).sort((a, b) => a.t.localeCompare(b.t) || a.no - b.no); // eslint-disable-line @typescript-eslint/no-explicit-any
+    setUpUnits(list.map((x) => ({ id: x.id, label: `${x.t} · Lesson ${x.no}` }))); setUpLoaded(true);
+  }
+  useEffect(() => { if (preset === 'unit' && !upLoaded) void loadUpUnits(); }, [preset, upLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+  async function pickUp(id: string) {
+    setUpSel(id); setUpRows([]); if (!id) return;
+    const r = await supabase.from('image_prompts').select('kind,key,en,ko,prompt,seq').eq('unit_id', id).order('kind').order('seq');
+    if (r.error) { setMsg({ t: 'err', s: '프롬프트를 불러오지 못했어요: ' + r.error.message }); return; }
+    const rows = (r.data ?? []) as UpRow[]; setUpRows(rows);
+    setMsg({ t: 'ok', s: rows.length ? `단어 ${rows.filter((x) => x.kind === 'word').length}개 · 삽화 ${rows.filter((x) => x.kind === 'illus').length}개를 불러왔어요.` : '이 단원에는 저장된 단어·삽화 프롬프트가 아직 없어요. 아래 [+ 단어]/[+ 삽화]로 추가하고 [DB에 저장]을 눌러 주세요.' });
+  }
+  async function saveUp() {
+    if (!upSel) return;
+    const rows = upRows.filter((x) => x.key.trim()).map((x, i) => ({ unit_id: upSel, kind: x.kind, key: x.key.trim(), en: x.en, ko: x.ko, prompt: x.prompt, seq: i + 1 }));
+    const del = await supabase.from('image_prompts').delete().eq('unit_id', upSel); if (del.error) { setMsg({ t: 'err', s: '저장하지 못했어요: ' + del.error.message }); return; }
+    if (rows.length) { const up = await supabase.from('image_prompts').insert(rows); if (up.error) { setMsg({ t: 'err', s: '저장하지 못했어요: ' + up.error.message }); return; } }
+    setMsg({ t: 'ok', s: `DB에 저장했어요 (${rows.length}개).` });
+  }
+  const upPrompt = (r: UpRow) => (r.kind === 'word'
+    ? [WORD_STYLE, r.en.trim() ? `Object: "${r.en.trim()}"${r.ko.trim() ? ` (${r.ko.trim()})` : ''}.` : '', r.prompt.trim()].filter(Boolean).join(' ')
+    : [WORD_STYLE.replace('of the object', 'of the subject'), r.prompt.trim()].filter(Boolean).join(' '));
+  async function generateUp(only?: UpRow) {
+    const todo = only ? [only] : upRows.filter((x) => x.key.trim()); if (!todo.length) { setMsg({ t: 'err', s: '만들 항목이 없어요.' }); return; }
+    setBusy(true); setMsg(null); let made = 0, fail = 0;
+    for (let j = 0; j < todo.length; j++) {
+      const r = todo[j]; setProg(todo.length > 1 ? `${j + 1}/${todo.length} 만드는 중… (${r.key})` : '');
+      const sz = r.kind === 'word' ? '300x300' : '600x600';
+      let out = await call({ prompt: upPrompt(r), size: apiSize(sz), quality, background: 'transparent', n: 1, refs: [] });
+      if (!out) { fail++; continue; }
+      out = await shrinkIf(sz, out);
+      const im: Img = { id: ++uid, b64: out[0], name: `${r.kind}-${safe(r.key)}`, up: { kind: r.kind, key: r.key.trim() } };
+      setImgs((xs) => [im, ...xs]); made++; if (auto) await saveLocal(im);
+    }
+    setBusy(false); setProg(''); if (made) setMsg({ t: fail ? 'err' : 'ok', s: `${made}장 만들었어요.` + (fail ? ` (${fail}건 실패)` : '') });
+  }
+  /** 만든 그림을 올리고 단어는 vocab.image_path, 삽화는 이 단원 문항의 illus(파일 이름이 key 와 같은 것)에 연결한다 */
+  async function applyUp(im: Img, quiet = false): Promise<boolean> {
+    const fail = (t: string) => { setMsg({ t: 'err', s: t }); return false; };
+    if (!im.up) return fail('이 이미지는 단원 단어·삽화로 만든 것이 아니에요.'); if (!upSel) return fail('먼저 단원을 골라 주세요.');
+    const bin = atob(im.b64); const u8 = new Uint8Array(bin.length); for (let k = 0; k < bin.length; k++) u8[k] = bin.charCodeAt(k);
+    const path = `${upSel}/${im.up.kind}-${safe(im.up.key)}-${Date.now()}.png`;
+    const upl = await supabase.storage.from('scene-images').upload(path, new Blob([u8], { type: 'image/png' }), { contentType: 'image/png' }); if (upl.error) return fail('이미지를 올리지 못했어요: ' + upl.error.message);
+    const url = supabase.storage.from('scene-images').getPublicUrl(path).data.publicUrl;
+    let label = '';
+    if (im.up.kind === 'word') {
+      const v = await supabase.from('vocab').update({ image_path: url }).eq('key', im.up.key).select('key'); if (v.error) return fail('단어에 연결하지 못했어요: ' + v.error.message);
+      if (!v.data?.length) return fail(`vocab 에 '${im.up.key}' 단어가 없어요.`); label = `단어 ${im.up.key}`;
+    } else {
+      const it = await supabase.from('items').select('id,payload,version').eq('unit_id', upSel); if (it.error) return fail('문항을 불러오지 못했어요: ' + it.error.message);
+      const re = new RegExp('(^|/)' + im.up.key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(-\\d+)?\\.png$');
+      const hit = ((it.data ?? []) as { id: string; payload: { illus?: string }; version: number }[]).filter((x) => typeof x.payload?.illus === 'string' && re.test(x.payload.illus));
+      if (!hit.length) return fail(`문항 중 삽화 칸(illus)이 '${im.up.key}.png' 인 것이 없어요. 문항 편집에서 삽화 칸에 illus/${im.up.key}.png 를 먼저 넣어 주세요.`);
+      for (const x of hit) { const u = await supabase.from('items').update({ payload: { ...x.payload, illus: url }, version: x.version + 1, updated_at: new Date().toISOString() }).eq('id', x.id); if (u.error) return fail('문항에 연결하지 못했어요: ' + u.error.message); }
+      label = `삽화 ${im.up.key} → 문항 ${hit.length}개`;
+    }
+    setImgs((xs) => xs.map((x) => (x.id === im.id ? { ...x, applied: label } : x)));
+    if (!quiet) setMsg({ t: 'ok', s: `적용했어요: ${label}. (문항 승인·발행 후 학습앱에 반영돼요)` });
+    return true;
+  }
+  async function applyAllUp() { let ok = 0, bad = 0; for (const im of imgs) { if (!im.up || im.applied) continue; if (await applyUp(im, true)) ok++; else bad++; } if (!bad) setMsg({ t: 'ok', s: `${ok}장을 적용했어요. (문항 승인·발행 후 학습앱에 반영돼요)` }); }
   function clearAll() {
     const unsaved = imgs.filter((x) => !x.saved).length;
     if (!window.confirm(unsaved ? `저장하지 않은 이미지가 ${unsaved}장 있어요. 그래도 ${imgs.length}장을 모두 지울까요?` : `만든 이미지 ${imgs.length}장을 모두 지울까요? (저장된 파일은 그대로 있어요)`)) return;
@@ -333,7 +403,7 @@ export function Studio() {
       <div className="mx-grid" style={{ gridTemplateColumns: '1fr 1.3fr' }}>
         <div className="mx-card">
           <div className="mx-seg">{(Object.keys(PRESETS) as Preset[]).map((p) => <button key={p} className={preset === p ? 'on' : ''} onClick={() => pickPreset(p)}>{PRESETS[p].name}</button>)}</div>
-          {preset !== 'scene' && <label className="mx-f">스타일 문장 (그림 톤을 맞추는 고정 문장, 고쳐도 돼요)<textarea className="mx-st-ta" rows={5} value={style} onChange={(e) => setStyle(e.target.value)} /></label>}
+          {preset !== 'scene' && preset !== 'unit' && <label className="mx-f">스타일 문장 (그림 톤을 맞추는 고정 문장, 고쳐도 돼요)<textarea className="mx-st-ta" rows={5} value={style} onChange={(e) => setStyle(e.target.value)} /></label>}
           {preset === 'word' && (
             <div className="mx-f">단어 (한 번에 여러 개 — 채운 줄만 만들어요)
               <table className="mx-st-words"><tbody>
@@ -411,10 +481,39 @@ export function Studio() {
               </section>
               <div className="mx-sc-go">{genBlock}</div>
             </>
+          ) : preset === 'unit' ? (
+            <>
+              <section className="mx-sc">
+                <h3><i>1</i>단원 고르기 <span className="mx-muted">프롬프트는 DB에 있어요. 단어 그림은 단어(vocab)에, 삽화는 문항의 삽화 칸에 적용돼요</span></h3>
+                <div className="mx-sc-r"><span className="mx-sc-l">단원</span>
+                  <select value={upSel} onChange={(e) => void pickUp(e.target.value)}><option value="">단원 선택…</option>{upUnits.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}</select>
+                  <button className="mx-btn sec" disabled={!upSel} onClick={saveUp}>DB에 저장</button></div>
+              </section>
+              <section className="mx-sc">
+                <h3><i>2</i>단어·삽화 목록 <span className="mx-muted">단어: 키(vocab key)·영어·한글 / 삽화: 파일 이름(예: l9-5-cat-hat)·설명</span></h3>
+                {!upSel ? <p className="mx-muted" style={{ margin: 0 }}>위에서 단원을 고르면 목록이 보여요.</p> : (
+                  <table className="mx-st-words"><tbody>
+                    {upRows.map((r, i) => (
+                      <tr key={i}><td className="mx-muted">{r.kind === 'word' ? '단어' : '삽화'}</td>
+                        <td><input value={r.key} onChange={(e) => setUpRows((xs) => xs.map((x, k) => (k === i ? { ...x, key: e.target.value } : x)))} placeholder={r.kind === 'word' ? 'key (예: socks)' : '파일 이름'} /></td>
+                        {r.kind === 'word' && <td><input value={r.en} onChange={(e) => setUpRows((xs) => xs.map((x, k) => (k === i ? { ...x, en: e.target.value } : x)))} placeholder="영어" /></td>}
+                        {r.kind === 'word' && <td><input value={r.ko} onChange={(e) => setUpRows((xs) => xs.map((x, k) => (k === i ? { ...x, ko: e.target.value } : x)))} placeholder="한글" /></td>}
+                        <td colSpan={r.kind === 'word' ? 1 : 2}><input value={r.prompt} onChange={(e) => setUpRows((xs) => xs.map((x, k) => (k === i ? { ...x, prompt: e.target.value } : x)))} placeholder={r.kind === 'word' ? '추가 설명(선택)' : '그림 설명 (영어)'} /></td>
+                        <td><button className="mx-btn sec" disabled={busy} onClick={() => void generateUp(r)}>만들기</button> <button className="mx-link" onClick={() => setUpRows((xs) => xs.filter((_, k) => k !== i))} aria-label="지우기">×</button></td></tr>))}
+                  </tbody></table>)}
+                <div className="mx-row" style={{ marginTop: 6 }}><button className="mx-btn sec" disabled={!upSel} onClick={() => setUpRows((xs) => [...xs, { kind: 'word', key: '', en: '', ko: '', prompt: '', seq: xs.length + 1 }])}>+ 단어</button><button className="mx-btn sec" disabled={!upSel} onClick={() => setUpRows((xs) => [...xs, { kind: 'illus', key: '', en: '', ko: '', prompt: '', seq: xs.length + 1 }])}>+ 삽화</button></div>
+              </section>
+              <section className="mx-sc">
+                <h3><i>3</i>만들기 <span className="mx-muted">단어 300×300 · 삽화 600×600 · 투명 배경</span></h3>
+                <div className="mx-row"><label className="mx-f">품질<select value={quality} onChange={(e) => setQuality(e.target.value)}><option value="low">낮음(저렴)</option><option value="medium">보통</option><option value="high">높음(비쌈)</option></select></label></div>
+                <div className="mx-row" style={{ marginTop: 8 }}><button className="mx-btn" disabled={busy || !upSel} onClick={() => void generateUp()}>{busy ? (prog || '만드는 중…') : `전부 ${upRows.filter((x) => x.key.trim()).length}장 만들기`}</button></div>
+                {saveInner}
+              </section>
+            </>
           ) : (
             <label className="mx-f">프롬프트 {preset === 'word' ? '(추가 설명, 선택)' : '(만들 그림 설명)'}<textarea className="mx-st-ta" rows={5} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="예: 파란색 줄무늬 양말" /></label>
           )}
-          {preset !== 'scene' && <>
+          {preset !== 'scene' && preset !== 'unit' && <>
             {refBlock}
             {optBlock}
             {genBlock}
@@ -425,7 +524,7 @@ export function Studio() {
         <div className="mx-card">
           <div className="mx-row" style={{ justifyContent: 'space-between' }}>
             <span><b>만든 이미지 {imgs.length}장</b> <span className="mx-muted">(이 화면을 닫으면 사라져요. 필요한 건 꼭 저장하세요)</span></span>
-            {imgs.length > 0 && <span className="mx-row">{preset === 'scene' && <button className="mx-btn" disabled={!dbSel} onClick={applyAll} title={dbSel ? '' : '① 불러오기에서 Lesson·활동을 먼저 고르세요'}>모두 이 단원에 적용</button>}<button className="mx-btn sec" onClick={clearAll}>모두 지우기</button></span>}
+            {imgs.length > 0 && <span className="mx-row">{preset === 'unit' && <button className="mx-btn" disabled={!upSel} onClick={applyAllUp}>모두 이 단원에 적용</button>}{preset === 'scene' && <button className="mx-btn" disabled={!dbSel} onClick={applyAll} title={dbSel ? '' : '① 불러오기에서 Lesson·활동을 먼저 고르세요'}>모두 이 단원에 적용</button>}<button className="mx-btn sec" onClick={clearAll}>모두 지우기</button></span>}
           </div>
           <div className="mx-st-grid">
             {imgs.map((im) => (
@@ -436,6 +535,7 @@ export function Studio() {
                   <button className="mx-btn" onClick={() => saveLocal(im)}>저장</button>
                   <button className="mx-btn sec" onClick={() => { setEditId(editId === im.id ? null : im.id); setOldT(''); setNewT(''); }}>글자 수정</button>
                   {preset === 'scene' && <button className="mx-btn sec" disabled={!dbSel} onClick={() => void applyImg(im)}>이 단원에 적용</button>}
+                  {im.up && <button className="mx-btn sec" disabled={!upSel} onClick={() => void applyUp(im)}>이 단원에 적용</button>}
                   <button className="mx-link" onClick={() => setImgs((xs) => xs.filter((x) => x.id !== im.id))} aria-label="이 이미지 지우기">지우기</button>
                   <button className="mx-btn sec" disabled={refs.length >= 4} onClick={() => setRefs((xs) => [...xs, { id: ++uid, b64: im.b64 }])}>참고로 쓰기</button>
                 </div>
