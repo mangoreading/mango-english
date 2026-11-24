@@ -955,3 +955,5 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 /* 듣고 번호 고르기: 선택지는 몇 개든 한 줄에 가로로 (개수가 늘면 버튼이 같이 좁아진다) */
 .nv-ln-nums { flex-wrap:nowrap; }
 .nv-ln-nums .nv-ln-num { flex:1 1 0; max-width:7.5em; min-width:0; }
+/* 듣기 막대와 번호 선택지 사이 간격 3배 (1.2em -> 3.6em) */
+.nv-ln-player { margin-bottom:3.6em; }
