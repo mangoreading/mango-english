@@ -962,5 +962,8 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-overlay .nv-picwrap .nv-price { right:auto; left:calc(50% + 6.6em); top:36%; bottom:auto; }  /* 그림 바로 오른쪽 옆, 가격표 화살표가 상품을 가리키게 */
 .nv-overlay .nv-picwrap .nv-pill { left:1.6em; top:1.4em; }
 
-/* 삽화(글 화면 오른쪽, 선택) */
-.nv-overlay .nv-illus, .nv-overlay[data-skin] > .nv-illus { position:absolute; right:2.2em; top:5.4em; width:11em; height:11em; object-fit:contain; background:#fff; border:.1em solid var(--nv-line); border-radius:1em; padding:.5em; box-shadow:0 .2em .6em rgba(31,42,68,.08); pointer-events:none; }
+/* 삽화(본문 바로 옆, 선택) — 없으면 아무 영향 없음 */
+.nv-illrow { display:flex; align-items:center; justify-content:center; gap:1.8em; max-width:100%; }
+.nv-illrow > .nv-bl-box { flex:0 1 auto; }
+.nv-illus-in { flex:none; width:10em; height:10em; object-fit:contain; background:#fff; border:.1em solid var(--nv-line); border-radius:1em; padding:.5em; box-shadow:0 .2em .6em rgba(31,42,68,.08); pointer-events:none; }
+.nv-mtwrap .nv-illrow > .nv-illus-in { order:-1; }

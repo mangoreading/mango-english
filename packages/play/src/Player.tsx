@@ -95,7 +95,6 @@ export function NativePlayer({ title, items, vocab, nextLabel, step, quiet, scop
       </FbSlot.Provider>
       </ProgCtx.Provider>
       {it.pic && !meta.ownPic && !meta.noSide && byKey.get(it.pic)?.image && <img className="nv-sidepic" src={imgSrc(byKey.get(it.pic)!.image)} alt="" draggable={false} />}
-      {it.illus && <img className="nv-illus" src={imgSrc(it.illus)} alt="" draggable={false} />}
       {mt && <MicTest onClose={() => setMt(false)} />}
       <div className="nv-foot"><span className="nv-fbslot" ref={setSlot} /><button className="nv-btn nv-btn-lg" disabled={!done} onClick={next}>{last ? '결과 보기' : '다음'}</button></div>
     </div>
