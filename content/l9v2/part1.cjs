@@ -29,7 +29,7 @@ step(1, 5, 'Key Expressions', '핵심표현 듣고 따라 읽기', 2, 'kexp', 1,
 step(1, 6, 'Sentence Drill', '문장 바꿔 말하기', 3, 'sdrill', 4, true, [
   { pic: 'socks', tpl: 'How much are these {}?', words: ['socks', 'shoes', 'shorts', 'sunglasses'] },
   { pic: 'hat', tpl: 'How much is this {}?', words: ['hat', 'jacket'] },
-  { pic: 'hat', tpl: 'This is {} thousand won.', words: ['ten', 'twenty', 'thirty', 'fifty'] },
+  { pic: 'hat', tpl: "It's {} thousand won.", words: ['ten', 'twenty', 'thirty', 'fifty'] },
   { pic: 'socks', tpl: "They're {} thousand won.", words: ['two', 'thirteen', 'fifteen', 'forty'] }]);
 // 1차시 영상: 교과서 영상과 비슷한 상황·표현으로 다시 쓴 장면 (그림은 이후 추가)
 step(1, 7, 'Scene Story', '장면 영상 보기', 4, 'scene', 2, false, [{ title: '학교 소풍 준비 쇼핑 ①', sub: 'en', replay: 2, review: true, pic: 'sunglasses',
