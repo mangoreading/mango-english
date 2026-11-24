@@ -68,8 +68,8 @@ step(4, 3, 'Passage Read Aloud', '글 듣고 읽기', 5, 'pread', 2, false, [{
   ko: '나는 운동용품 가게에 있어.\n와! 이 신발 멋지다.\n얼마예요?\n지금 세일 중이야.\n겨우 20,000원이야.\n사고 싶어.\n---\n톰, 잠깐! 먼저 생각해 봐.\n정말 필요해?\n아니면 그냥 갖고 싶은 거야?\n사지 마.\n넌 이미 멋진 신발이 있잖아.',
   qs: [{ t: 'mc', q: 'How much are the shoes?', ans: '20,000 won', wrong: ['2,000 won', '12,000 won'] }, { t: 'tf', lines: ['The writer is at a sports shop. | T', 'The shoes are not on sale. | F', 'Tom already has nice shoes. | T'] }] }]);
 step(4, 4, 'Passage Read Aloud', '글 듣고 읽기', 5, 'pread', 2, false, [{
-  text: ["It's my brother's birthday tomorrow.", 'I want to buy a hat for him.', 'How much is it?', "It's 12,000 won.", 'Oh, no! I spent all my money this week.', '---', "That's too bad, Mina.", 'You bought many snacks yesterday.', 'Use a money diary.', 'You can write down and save your money.'],
-  ko: '내일은 내 남동생의 생일이야.\n나는 동생에게 모자를 사 주고 싶어.\n얼마예요?\n12,000원이에요.\n아, 이런! 이번 주에 용돈을 다 썼어.\n---\n안됐구나, 미나야.\n너는 어제 과자를 많이 샀잖아.\n용돈 기입장을 써 봐.\n돈을 적고 모을 수 있어.',
-  qs: [{ t: 'mc', q: 'What does Mina want to buy?', ans: 'A hat.', wrong: ['Shoes.', 'Snacks.'] }, { t: 'tf', lines: ["It's Mina's birthday tomorrow. | F", 'The hat is 12,000 won. | T', 'Mina bought many snacks yesterday. | T'] }] }]);
+  text: ["Today is my brother's birthday.", "I am at a shop.", "May I help you?", "Yes, please. How much is this hat?", "It's 12,000 won.", "---", "And how much are these socks?", "They're 2,000 won.", "I want this hat and these socks.", "Thank you!"],
+  ko: "오늘은 내 남동생의 생일이야.\n나는 가게에 있어.\n도와드릴까요?\n네, 부탁해요. 이 모자는 얼마예요?\n12,000원이에요.\n---\n그리고 이 양말은 얼마예요?\n2,000원이에요.\n이 모자와 이 양말을 갖고 싶어요.\n감사합니다!",
+  qs: [{"t": "mc", "q": "How much is the hat?", "ans": "It's 12,000 won.", "wrong": ["It's 2,000 won.", "It's 20,000 won."]}, {"t": "tf", "lines": ["Today is the writer's brother's birthday. | T", "The hat is 12,000 won. | T", "The socks are 12,000 won. | F"]}] }]);
 
 module.exports = { S };
