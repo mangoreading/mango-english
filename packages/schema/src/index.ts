@@ -121,7 +121,7 @@ export const VWrite = z.object({ ...vbase, k: z.literal('vwrite'), words: VKeys 
 
 /* ===== 1단계: 고르기 · True/False · 듣고 고르기 · 짝짓기 · 글 읽고 답하기 ===== */
 const hint = z.array(z.string()).optional();
-const T1 = { ...base, inst: z.string().optional(), /** 화면 오른쪽 위에 보이는 그림(단원 단어 key, 선택) */ pic: z.string().optional() };
+const T1 = { ...base, inst: z.string().optional(), /** 화면 오른쪽 위에 보이는 그림(단원 단어 key, 선택) */ pic: z.string().optional(), /** 글 화면 오른쪽의 삽화(img/ 아래 경로, 선택) */ illus: z.string().optional() };
 /** 뜻 고르기: 단원 단어 1개 + 오답 보기. dir=ko2en 이면 한글 뜻을 보고 영어를, en2ko 면 반대로 */
 export const WChoice = z.object({ ...T1, k: z.literal('wchoice'), word: z.string().min(1), dir: z.enum(['ko2en', 'en2ko']).optional(), wrong: z.array(z.string().min(1)).min(1).max(5) });
 /** 그림 보고 고르기 */

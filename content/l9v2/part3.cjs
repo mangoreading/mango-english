@@ -15,9 +15,9 @@ step(5, 0, 'Complete the Dialogue (Picture)', '대화 완성하기 (그림)', 4,
   dfp('jacket', '30,000원', SG, ['is', 'this', 'jacket', 'thirty thousand'], bh('30,000 을 영어로 써요.')),
   dfp('shoes', '50,000원', PL, ['are', 'these', 'shoes', 'fifty thousand'], bh('50,000 을 영어로 써요.')),
   dfp('sunglasses', '13,000원', PL, ['are', 'these', 'sunglasses', 'thirteen thousand'], bh('13,000 을 영어로 써요.'))]);
-const MD1 = { title: 'Funny Hat Shop', text: ['Look at this [[Cat Hat]].', 'It has [[two ears]].', 'How much is [[this hat]]?', "It's [[10,000 won]]."],
+const MD1 = { title: 'Funny Hat Shop', illus: 'illus/l9-5-cat-hat.png', text: ['Look at this [[Cat Hat]].', 'It has [[two ears]].', 'How much is [[this hat]]?', "It's [[10,000 won]]."],
   explain: ['{{상품}}을 소개하고 특징을 말합니다.', '가격을 묻는 질문을 하고', '{{가격을 제시}}합니다.'], ko: '이 고양이 모자를 보세요.\n귀가 두 개 있어요.\n이 모자는 얼마예요?\n10,000원이에요.' };
-const MD2 = { title: 'Funny Sunglasses Shop', text: ['Look at these [[Star Sunglasses]].', 'They have [[big stars]].', 'How much are [[these sunglasses]]?', "They're [[13,000 won]]."],
+const MD2 = { title: 'Funny Sunglasses Shop', illus: 'illus/l9-5-star-sunglasses.png', text: ['Look at these [[Star Sunglasses]].', 'They have [[big stars]].', 'How much are [[these sunglasses]]?', "They're [[13,000 won]]."],
   explain: ['{{상품}}을 소개하고 특징을 말합니다.', '가격을 묻는 질문을 하고', '{{가격을 제시}}합니다.', '여러 개일 때는 these / are / They\'re 를 써요.'], ko: '이 별 선글라스를 보세요.\n큰 별이 있어요.\n이 선글라스는 얼마예요?\n13,000원이에요.' };
 step(5, 1, 'Model Text', '모범 글 읽기', 3, 'mtext', 2, false, [MD1, MD2]);
 const sc = (ko, ans, extra) => ({ ko, ans, extra });
@@ -25,12 +25,12 @@ step(5, 2, 'Sentence Scramble', '문장 만들기', 3, 'sscram', 4, true, [
   sc('이 고양이 모자를 보세요.', 'Look at this Cat Hat.', ['these']), sc('귀가 두 개 있어요.', 'It has two ears.', ['have']),
   sc('이 모자는 얼마예요?', 'How much is this hat?', ['are']), sc('10,000원이에요.', "It's 10,000 won.", ['They']) ]);
 step(5, 3, 'Model Writing (Word Bank)', '모범 글 완성 (보기)', 3, 'mwbank', 2, false, [
-  { lines: ['Look at this {} Hat.', 'It has {} ears.', 'How much {} this hat?', "It's {} won."], ans: ['Cat', 'two', 'is', '10,000'], extra: ['These', 'three'], blankHints: ['동물 이름이에요.', '귀의 수예요.', 'this 와 짝이 되는 말이에요.', '가격이에요.'] },
-  { lines: ['Look at these {} sunglasses.', 'They have {} stars.', 'How much {} these sunglasses?', "They're {} won."], ans: ['Star', 'big', 'are', '13,000'], extra: ['Moon', 'is'], blankHints: ['모양 이름이에요.', '별이 어떤지 말해요.', 'these 와 짝이 되는 말이에요.', '가격이에요.'] }]);
+  { illus: 'illus/l9-5-cat-hat.png', lines: ['Look at this {} Hat.', 'It has {} ears.', 'How much {} this hat?', "It's {} won."], ans: ['Cat', 'two', 'is', '10,000'], extra: ['These', 'three'], blankHints: ['동물 이름이에요.', '귀의 수예요.', 'this 와 짝이 되는 말이에요.', '가격이에요.'] },
+  { illus: 'illus/l9-5-star-sunglasses.png', lines: ['Look at these {} sunglasses.', 'They have {} stars.', 'How much {} these sunglasses?', "They're {} won."], ans: ['Star', 'big', 'are', '13,000'], extra: ['Moon', 'is'], blankHints: ['모양 이름이에요.', '별이 어떤지 말해요.', 'these 와 짝이 되는 말이에요.', '가격이에요.'] }]);
 step(5, 4, 'Model Writing (Free)', '나만의 글 쓰기', 4, 'mfree', 2, false, [
-  { topicLabel: '상품', topic: 'hat', lines: ['Look at this {}.', 'It has {}.', 'How much is this hat?', "It's {} won."], lineHints: ['모자 이름을 써요. (예: Cat Hat, Funny Hat)', '모자의 특징을 써요. (예: two ears)', '', '가격을 써요. (예: ten thousand)'], hint: ['Look at this Cat Hat.'] },
-  { topicLabel: '상품', topic: 'sunglasses', lines: ['Look at these {}.', 'They have {}.', 'How much are these sunglasses?', "They're {} won."], lineHints: ['선글라스 이름을 써요. (예: Star Sunglasses)', '선글라스의 특징을 써요. (예: big stars)', '', '가격을 써요. (예: thirteen thousand)'], hint: ['Look at these Star Sunglasses.'] }]);
-step(5, 5, 'Presentation', '발표 영상 찍기', 3, 'present', 1, false, [{ text: ['Look at this [[Funny Hat]].', 'It has [[long ears]].', 'How much is this hat?', "It's [[10,000 won]]."] }]);
+  { illus: 'illus/l9-5-cat-hat.png', topicLabel: '상품', topic: 'hat', lines: ['Look at this {}.', 'It has {}.', 'How much is this hat?', "It's {} won."], lineHints: ['모자 이름을 써요. (예: Cat Hat, Funny Hat)', '모자의 특징을 써요. (예: two ears)', '', '가격을 써요. (예: ten thousand)'], hint: ['Look at this Cat Hat.'] },
+  { illus: 'illus/l9-5-star-sunglasses.png', topicLabel: '상품', topic: 'sunglasses', lines: ['Look at these {}.', 'They have {}.', 'How much are these sunglasses?', "They're {} won."], lineHints: ['선글라스 이름을 써요. (예: Star Sunglasses)', '선글라스의 특징을 써요. (예: big stars)', '', '가격을 써요. (예: thirteen thousand)'], hint: ['Look at these Star Sunglasses.'] }]);
+step(5, 5, 'Presentation', '발표 영상 찍기', 3, 'present', 1, false, [{ text: ['Look at this [[Cat Hat]].', 'It has [[two ears]].', 'How much is this hat?', "It's [[10,000 won]]."] }]);
 step(5, 6, 'AI Free Talk', 'AI 자유대화', 4, 'aitalk', 1, true, [{ situation: '옷 가게에서 점원에게 물건 값을 묻고, 사고 싶은 물건을 말해요', role: '점원 (Clerk)', open: 'Hello! May I help you?', turns: 3,
   hints: ['Yes, please. How much is this jacket?', 'How much are these shorts?', 'Thank you.'], script: [{ ai: "Sure. It's thirty thousand won." }, { ai: "They're fifteen thousand won." }, { ai: 'Great! Thank you!' }] }]);
 

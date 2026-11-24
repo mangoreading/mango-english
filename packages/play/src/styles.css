@@ -961,3 +961,6 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
    (Look & Talk 는 이미 이 모양이었고, Role Play · Look & Speak · Complete the Dialogue(Picture) 도 같게 맞춘다) */
 .nv-overlay .nv-picwrap .nv-price { right:auto; left:calc(50% + 6.6em); top:36%; bottom:auto; }  /* 그림 바로 오른쪽 옆, 가격표 화살표가 상품을 가리키게 */
 .nv-overlay .nv-picwrap .nv-pill { left:1.6em; top:1.4em; }
+
+/* 삽화(글 화면 오른쪽, 선택) */
+.nv-overlay .nv-illus, .nv-overlay[data-skin] > .nv-illus { position:absolute; right:2.2em; top:5.4em; width:11em; height:11em; object-fit:contain; background:#fff; border:.1em solid var(--nv-line); border-radius:1em; padding:.5em; box-shadow:0 .2em .6em rgba(31,42,68,.08); pointer-events:none; }
