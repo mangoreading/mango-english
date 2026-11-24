@@ -952,3 +952,6 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-capsule-bl p { max-width:100%; }
 .nv-capsule-bl.nv-main:has(p + p) { height:auto; min-height:4.6em; gap:.15em; }
 .nv-capsule-bl.nv-main:has(p + p) p { line-height:1.5; }
+/* 듣고 번호 고르기: 선택지는 몇 개든 한 줄에 가로로 (개수가 늘면 버튼이 같이 좁아진다) */
+.nv-ln-nums { flex-wrap:nowrap; }
+.nv-ln-nums .nv-ln-num { flex:1 1 0; max-width:7.5em; min-width:0; }
