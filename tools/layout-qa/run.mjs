@@ -43,5 +43,5 @@ const byId = new Map(); for (const r of fails) { const a = byId.get(r.id) || [];
 md += '\n## 결함 목록 (문항별)\n'; for (const [id, rs] of byId) { md += `\n### ${id}\n`; for (const r of rs) { md += `- \`${r.variant}\` ${r.vp} → shots/${r.name}.png\n`; for (const i of r.issues.filter((x) => x.sev === 'fail')) md += `  - **${i.t}**: ${i.el} (${i.d})\n`; } }
 if (changed.length) md += '\n## 기준 대비 달라진 화면\n' + changed.map((k) => `- ${k}`).join('\n') + '\n';
 md += '\n## 주의(warn) 요약\n'; const wc = {}; for (const r of results) for (const i of r.issues.filter((x) => x.sev === 'warn')) wc[i.t] = (wc[i.t] || 0) + 1; md += Object.entries(wc).map(([k, v]) => `- ${k}: ${v}건`).join('\n') + '\n';
-fs.writeFileSync(path.join(out, 'report.md'), md); console.log(md.split('\n').slice(0, 8).join('\n')); console.log('report:', path.join(out, 'report.md'));
+fs.writeFileSync(path.join(out, 'report.md'), md); try { execFileSync('python3', [path.join(here, 'sheets.py')], { stdio: 'inherit' }); } catch { console.log('(sheets.py 실패: PIL 필요)'); } console.log(md.split('\n').slice(0, 8).join('\n')); console.log('report:', path.join(out, 'report.md'));
 process.exitCode = fails.length ? 1 : 0;
