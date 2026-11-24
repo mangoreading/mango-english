@@ -238,8 +238,8 @@ export function MText({ item, onDone, onNext }: KindProps & { onNext?: { ready: 
   return (
     <div className="nv-body nv-bodyw nv-mtbody">
       <div className="nv-mtwrap">
-      <div className="nv-illrow">
-      <div className="nv-mtgrid">
+      <div className={'nv-mtgrid' + (item.illus ? ' nv-hasill' : '')}>
+        {item.illus && <img className="nv-illus-in nv-illus-grid" style={{ gridRow: `2 / span ${Math.max(n, 1)}` }} src={imgSrc(item.illus)} alt="" draggable={false} />}
         <div className="nv-mtrow nv-mthead">
           <div className="nv-mtl">{item.title && <h3 className="nv-sale">{item.title}</h3>}</div>
           <div className="nv-mtr nv-tabs">{tabs.map(([k, l]) => <button key={k} className={'nv-hintbtn' + (tab === k ? ' on' : '')} onClick={() => setTab(k as 'ex' | 'ko')}>{l}</button>)}</div>
@@ -249,8 +249,6 @@ export function MText({ item, onDone, onNext }: KindProps & { onNext?: { ready: 
             <div className={'nv-mtl' + (rep === i ? ' nv-mtcur' : '')}><p className="nv-p-lg">{lines[i] != null && <Rich text={lines[i]} />}</p></div>
             <div className="nv-mtr nv-mtstack">{[['ex', sideEx], ['ko', sideKo]].map(([k, arr]) => <p key={k as string} className={'nv-p-md' + (tab === k ? '' : ' nv-mtoff')}>{(arr as string[])[i] != null && <Rich text={(arr as string[])[i]} />}</p>)}</div>
           </div>))}
-      </div>
-      {item.illus && <img className="nv-illus-in" src={imgSrc(item.illus)} alt="" draggable={false} />}
       </div>
       <div className="nv-ptools"><button className="nv-listen nv-listen-s" onClick={() => { stopRep(); say(lines.map(plain).join(' ')); }}><i className="nv-sico" aria-hidden="true" /> <b>듣기</b></button><button className={'nv-listen nv-listen-s nv-repbtn' + (rep != null ? ' on' : '')} onClick={toggleRep}><b>{rep != null ? '■ 멈춤' : '🗣 따라 읽기'}</b></button></div>
       </div>

@@ -968,12 +968,10 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-illus-in { flex:none; width:10em; height:10em; object-fit:contain; background:#fff; border:.1em solid var(--nv-line); border-radius:1em; padding:.5em; box-shadow:0 .2em .6em rgba(31,42,68,.08); pointer-events:none; }
 .nv-mtwrap .nv-illrow > .nv-illus-in { order:-1; }
 .nv-bl-ill { position:relative; padding-right:13em; } .nv-bl-ill > .nv-illus-in { position:absolute; right:1.4em; top:50%; transform:translateY(-50%); width:9.5em; height:9.5em; background:transparent; border:0; box-shadow:none; padding:0; }
-/* 삽화가 있는 모범 글: 그림 칸은 고정, 본문·해설은 남은 폭 안에서 줄바꿈(긴 문장도 화면 밖으로 안 나감) */
-.nv-mtwrap:has(.nv-illus-in) { width:100%; max-width:74em; }
-.nv-mtwrap .nv-illrow { width:100%; justify-content:center; align-items:center; }
-.nv-mtwrap .nv-illrow > .nv-mtgrid { flex:0 1 auto; min-width:0; grid-template-columns:minmax(0,max-content) minmax(0,max-content); }
-.nv-mtwrap .nv-illrow > .nv-illus-in { flex:none; width:clamp(7em,13vw,10em); height:clamp(7em,13vw,10em); }
-.nv-mtwrap:has(.nv-illus-in) .nv-mtgrid .nv-mtr { padding-left:1em; }
-.nv-mtwrap:has(.nv-illus-in) .nv-mtl, .nv-mtwrap:has(.nv-illus-in) .nv-mtr, .nv-mtwrap:has(.nv-illus-in) .nv-mtl p, .nv-mtwrap:has(.nv-illus-in) .nv-mtr p { white-space:normal; min-width:0; }
-.nv-mtwrap:has(.nv-illus-in) .nv-mtgrid .nv-sale { white-space:normal; }
-.nv-mtwrap:has(.nv-illus-in) .nv-ptools { align-self:center; }
+/* 삽화가 있는 모범 글: 그림은 표의 첫 칸(글줄 높이에 맞춤), 본문·해설은 남은 폭 안에서 줄바꿈 */
+.nv-mtwrap:has(.nv-illus-in) { width:fit-content; max-width:min(100%,74em); margin:0 auto; --ill:clamp(7em,13vw,10em); }
+.nv-mtgrid.nv-hasill { width:auto; max-width:100%; min-width:0; grid-template-columns:calc(var(--ill) + 1.8em) minmax(0,max-content) minmax(0,max-content); }
+.nv-mtgrid.nv-hasill .nv-mtl { grid-column:2; } .nv-mtgrid.nv-hasill .nv-mtr { grid-column:3; }
+.nv-mtgrid.nv-hasill > .nv-illus-grid { grid-column:1; align-self:center; justify-self:start; width:var(--ill); height:var(--ill); }
+.nv-mtwrap:has(.nv-illus-in) .nv-mtl, .nv-mtwrap:has(.nv-illus-in) .nv-mtr, .nv-mtwrap:has(.nv-illus-in) .nv-mtl p, .nv-mtwrap:has(.nv-illus-in) .nv-mtr p, .nv-mtwrap:has(.nv-illus-in) .nv-mtgrid .nv-sale { white-space:normal; min-width:0; }
+.nv-mtwrap:has(.nv-illus-in) .nv-ptools { align-self:flex-start; margin-left:calc(var(--ill) + 1.8em); }
