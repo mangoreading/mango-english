@@ -98,7 +98,7 @@ step(2, 3, 'Scene Story + Repeat', '장면 영상 보기 + 따라 말하기', 4,
     { who: 'Clerk', en: "They're on sale.", ko: '세일 중이에요.' },
     { who: 'Mia', en: 'Cool.', ko: '좋아요.' },
     { who: 'Mia', en: "I'll take them.", ko: '이걸로 살게요.' }],
-  explain: ['[[May I try them on?]]은 "입어(신어) 봐도 될까요?"라는 뜻이에요.', '허락할 때는 [[Sure, go ahead.]]라고 대답해요.', '[[on sale]]은 "세일 중"이라는 뜻이에요.'],
+  explain: ["[[How much are these shoes?]]는 신발 여러 개의 가격을 묻는 말이에요. these와 are를 써요.", "가격은 [[They're 7,000 won.]]처럼 [[They're … won.]]으로 말해요.", "[[on sale]]은 \"세일 중\"이라는 뜻이에요.", "\"May I try them on?(신어 봐도 될까요?)\", \"Sure, go ahead.(그럼요, 신어 보세요.)\"는 이 장면에서만 나오는 말이에요. 뜻만 알아 두세요."],
   qs: [{ t: 'mc', q: "How much are the shoes?", ans: "They're 7,000 won.", wrong: ["They're 17,000 won.", "They're 70,000 won."] }, { t: 'mc', q: "What does Mia say to ask the price?", ans: "How much are these shoes?", wrong: ["May I try them on?", "I'll take them."] }, { t: 'mc', q: "What does the clerk say about the price?", ans: "They're on sale.", wrong: ["Sure, go ahead.", "You look great."] }] }]);
 step(2, 4, 'Scene Story + Repeat', '장면 영상 보기 + 따라 말하기', 4, 'scenerep', 2, false, [{ title: '반바지를 찾아요', sub: 'en', replay: 2, review: true, pic: 'shorts',
   scenes: [
@@ -110,7 +110,7 @@ step(2, 4, 'Scene Story + Repeat', '장면 영상 보기 + 따라 말하기', 4,
     { who: 'Clerk', en: 'Try on the shorts with this hat.', ko: '이 모자와 같이 입어 보세요.' },
     { who: 'Pablo', en: 'Wow.', ko: '와.' },
     { who: 'Clerk', en: 'You look great.', ko: '정말 멋져 보여요.' }],
-  explain: ['[[I\'m looking for …]]는 "저는 …을 찾고 있어요"라는 뜻이에요.', '[[Try on …]]은 "…을 입어(써) 보세요"라는 뜻이에요.', '[[You look great.]]은 "멋져 보여요"라는 칭찬이에요.'],
+  explain: ["[[May I help you?]]는 점원이 \"도와드릴까요?\"라고 묻는 말이에요.", "도움이 필요하면 [[Yes, please.]]라고 대답해요.", "[[How much are these shorts?]]로 가격을 묻고, [[They're … won.]]으로 대답해요.", "\"I'm looking for shorts.(반바지를 찾고 있어요.)\", \"Try on …(입어 보세요)\", \"You look great.(멋져 보여요)\"는 이 장면에서만 나오는 말이에요. 뜻만 알아 두세요."],
   qs: [{ t: 'mc', q: "What does the clerk say to offer help?", ans: "May I help you?", wrong: ["How much are these shorts?", "You look great."] }, { t: 'mc', q: "What is Pablo looking for?", ans: "Shorts.", wrong: ["A jacket.", "Socks."] }, { t: 'mc', q: "How much are the shorts?", ans: "They're 12,000 won.", wrong: ["They're 2,000 won.", "They're 20,000 won."] }] }]);
 step(2, 5, 'Listen & Match', '듣고 짝짓기', 2, 'lmatch', 4, false, [{ pairs: [
   { left: 'Lily', say: "How much is this hat? It's ten thousand won.", right: 'hat' }, { left: 'Ken', say: "How much are these socks? They're two thousand won.", right: 'socks' },
