@@ -978,3 +978,8 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 
 /* 작은 화면(높이 640 이하): 핵심표현(KExp) 목록을 촘촘히 하고, 마지막 줄이 '결과 보기' 버튼에 가리지 않게 아래 여백 확보 */
 @media (max-height:640px) { .nv-kx { gap:.35em 1.2em; } .nv-kx .nv-tap-kexp { padding:.3em 1.1em; } .nv-kx .nv-tt { gap:0; } .nv-kx { padding-bottom:5.5em; } }
+/* 발표 영상: 카메라 칸을 왼쪽 글 상자와 같은 크기로, 두 칸 사이 간격 유지, 녹화 버튼은 카메라 바로 아래 */
+[data-skin=mango] .nv-wbody .nv-pres { grid-template-columns:minmax(0,33em) minmax(0,33em); grid-template-rows:auto auto; column-gap:2.4em; row-gap:.8em; justify-content:center; align-items:stretch; }
+[data-skin=mango] .nv-pres .nv-script { grid-row:1; grid-column:1; align-self:stretch; }
+[data-skin=mango] .nv-pres .nv-cam { grid-row:1; grid-column:2; aspect-ratio:auto; align-self:stretch; }   /* 높이는 항상 왼쪽 글 상자와 같게 */
+[data-skin=mango] .nv-pres .nv-recrow { grid-row:2; grid-column:2; margin-top:0; align-self:center; }

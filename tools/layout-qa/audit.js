@@ -41,6 +41,14 @@
     if (e.childElementCount === 0 && e.textContent.trim() && parseFloat(cs.fontSize) < 11 && !e.closest(IGNORE)) out.push({ t: 'small-font', sev: 'warn', el: desc(e), d: cs.fontSize });
     if ((e.tagName === 'BUTTON') && Math.min(e.getBoundingClientRect().width, e.getBoundingClientRect().height) < 24) out.push({ t: 'small-target', sev: 'warn', el: desc(e), d: `${Math.round(e.getBoundingClientRect().width)}x${Math.round(e.getBoundingClientRect().height)}` });
   }
+  // 5) 짝을 이루는 칸: 높이가 같고(±4px), 좌우 간격이 충분해야 한다(규칙은 docs/layout-rules.md). 새 짝은 PAIRS 에 추가
+  const PAIRS = [['.nv-pres .nv-script', '.nv-pres .nv-cam', '발표: 글 상자와 카메라']];
+  for (const [la, lb, name] of PAIRS) {
+    const A = root.querySelector(la), B = root.querySelector(lb); if (!A || !B || !shown(A) || !shown(B)) continue;
+    const ra = A.getBoundingClientRect(), rb = B.getBoundingClientRect(), gap = Math.round(Math.max(rb.left - ra.right, ra.left - rb.right));
+    if (Math.abs(ra.height - rb.height) > 4) out.push({ t: 'pair-height', sev: 'fail', el: name, d: `${Math.round(ra.height)} vs ${Math.round(rb.height)}px` });
+    if (gap < 16) out.push({ t: 'pair-gap', sev: 'fail', el: name, d: `간격 ${gap}px (16px 이상 필요)` });
+  }
   // 같은 항목 중복 제거
   const seen = new Set(); return out.filter((o) => { const k = o.t + '|' + o.el; if (seen.has(k)) return false; seen.add(k); return true; });
 })()
