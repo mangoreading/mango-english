@@ -957,3 +957,7 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-ln-nums .nv-ln-num { flex:1 1 0; max-width:7.5em; min-width:0; }
 /* 듣기 막대와 번호 선택지 사이 간격 3배 (1.2em -> 3.6em) */
 .nv-ln-player { margin-bottom:3.6em; }
+/* 단어 그림 + 가격(라벨): 그림 박스 밖으로 나가거나 걸치지 않고 박스 안(가격은 오른쪽 아래, 라벨은 왼쪽 위)에 한 그림처럼 놓는다.
+   (Look & Talk 는 이미 이 모양이었고, Role Play · Look & Speak · Complete the Dialogue(Picture) 도 같게 맞춘다) */
+.nv-overlay .nv-picwrap .nv-price { right:1.6em; top:auto; bottom:1.4em; }
+.nv-overlay .nv-picwrap .nv-pill { left:1.6em; top:1.4em; }
