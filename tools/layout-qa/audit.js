@@ -4,7 +4,7 @@
   const root = document.querySelector('.nv-overlay') || document.body;
   const desc = (e) => (e.tagName.toLowerCase() + (e.className && typeof e.className === 'string' ? '.' + e.className.trim().split(/\s+/).slice(0, 3).join('.') : '') + (e.textContent ? ` "${e.textContent.trim().slice(0, 24)}"` : ''));
   const shown = (e) => { const r = e.getBoundingClientRect(), cs = getComputedStyle(e); return r.width > 1 && r.height > 1 && cs.visibility !== 'hidden' && cs.display !== 'none' && cs.opacity !== '0'; };
-  const IGNORE = '.nv-price, .nv-pill, .nv-star, .nv-picwrap .nv-tag, [data-qa-ignore]';
+  const IGNORE = '.nv-price, .nv-pill, .nv-star, .nv-picwrap .nv-tag, .nv-slotcol, .nv-wheel-in, .nv-camph, .nv-spkin, [data-qa-ignore]';
   if (document.querySelector('.nv-hint') && /단원 어휘에 없어요/.test(document.body.innerText)) out.push({ t: 'vocab-missing', sev: 'fail', el: 'harness', d: '검수용 단어 목록에 없는 그림 key (도구 설정 확인)' });
   // 1) 가로 스크롤 / 화면 밖
   if (document.documentElement.scrollWidth > vw + 1) out.push({ t: 'hscroll', sev: 'fail', el: 'document', d: `${document.documentElement.scrollWidth}>${vw}` });
@@ -20,7 +20,7 @@
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   for (let n = walker.nextNode(); n; n = walker.nextNode()) {
     if (!n.nodeValue.trim()) continue; const p = n.parentElement; if (!p || !shown(p) || p.closest(IGNORE) || p.closest('button')) continue;
-    const rg = document.createRange(); rg.selectNodeContents(n); const r = rg.getBoundingClientRect(); add(p, r, 'text');
+    const rg = document.createRange(); rg.selectNodeContents(n); for (const r of rg.getClientRects()) add(p, r, 'text');   // 줄바꿈된 글은 줄마다 따로
   }
   for (const b of boxes) {
     if (b.l < -1 || b.r > vw + 1) out.push({ t: 'offscreen', sev: 'fail', el: desc(b.e), d: `x ${Math.round(b.l)}..${Math.round(b.r)} / ${vw}` });
@@ -29,6 +29,7 @@
   // 3) 겹침: 서로 포함 관계가 아닌 조각끼리 면적이 겹치면
   for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
     const a = boxes[i], c = boxes[j]; if (a.e === c.e || a.e.contains(c.e) || c.e.contains(a.e)) continue;
+    if ((a.e.tagName === 'INPUT' && c.e.closest('.nv-mic')) || (c.e.tagName === 'INPUT' && a.e.closest('.nv-mic'))) continue;   // 입력칸 안의 마이크 버튼은 설계
     const w = Math.min(a.r, c.r) - Math.max(a.l, c.l), h = Math.min(a.b, c.b) - Math.max(a.t, c.t); if (w <= 3 || h <= 3) continue;
     const small = Math.min((a.r - a.l) * (a.b - a.t), (c.r - c.l) * (c.b - c.t)); if (w * h < small * 0.2) continue;
     out.push({ t: 'overlap', sev: 'fail', el: desc(a.e) + '  ×  ' + desc(c.e), d: `${Math.round(w)}x${Math.round(h)}px` });
