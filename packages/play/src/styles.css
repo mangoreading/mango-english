@@ -513,7 +513,7 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 [data-skin=mango] .nv-spkin i { width:1.75em; height:1.75em; background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233979f3' stroke='%233979f3' stroke-width='2' stroke-linecap='round'><path d='M4 9v6h4l5 4V5L8 9H4z'/><path d='M16 8c2 2 2 6 0 8M19 5c4 4 4 10 0 14' fill='none'/></svg>") center/contain no-repeat; }
 [data-skin=mango] .nv-spkin:active { transform:translateY(-50%) scale(.95); }
 /* 발표 영상 (기획안 p41): 스크립트 상자 41% · 카메라 48%(가로세로 약 3:2), 녹화 버튼은 카메라 바로 아래 가운데 */
-[data-skin=mango] .nv-wbody .nv-pres { width:auto; max-width:none; grid-template-columns:33em 38.5em; grid-template-rows:auto auto; gap:.2em .4em; justify-content:center; }
+[data-skin=mango] .nv-wbody .nv-pres { width:100%; max-width:100%; grid-template-columns:minmax(0,33em) minmax(0,38.5em); grid-template-rows:auto auto; gap:.2em .4em; justify-content:center; }
 [data-skin=mango] .nv-script { width:auto; max-width:none; white-space:nowrap; overflow:hidden; display:flex; flex-direction:column; justify-content:center; }
 [data-skin=mango] .nv-script p { font-size:1.15em; }
 [data-skin=mango] .nv-cam { min-height:0; aspect-ratio:3 / 2.05; }
@@ -975,3 +975,6 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-mtgrid.nv-hasill > .nv-illus-grid { grid-column:1; align-self:center; justify-self:start; width:var(--ill); height:var(--ill); }
 .nv-mtwrap:has(.nv-illus-in) .nv-mtl, .nv-mtwrap:has(.nv-illus-in) .nv-mtr, .nv-mtwrap:has(.nv-illus-in) .nv-mtl p, .nv-mtwrap:has(.nv-illus-in) .nv-mtr p, .nv-mtwrap:has(.nv-illus-in) .nv-mtgrid .nv-sale { white-space:normal; min-width:0; }
 .nv-mtwrap:has(.nv-illus-in) .nv-ptools { align-self:flex-start; margin-left:calc(var(--ill) + 1.8em); }
+
+/* 작은 화면(높이 640 이하): 핵심표현(KExp) 목록을 촘촘히 하고, 마지막 줄이 '결과 보기' 버튼에 가리지 않게 아래 여백 확보 */
+@media (max-height:640px) { .nv-kx { gap:.35em 1.2em; } .nv-kx .nv-tap-kexp { padding:.3em 1.1em; } .nv-kx .nv-tt { gap:0; } .nv-kx { padding-bottom:5.5em; } }
