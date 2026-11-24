@@ -56,6 +56,8 @@ tr.mx-sel { background:var(--soft); } tbody tr.mx-click { cursor:pointer; } tbod
 .mx-grid { display:grid; grid-template-columns:1.3fr 1fr; gap:16px; align-items:start; }
 .mx-grid > .mx-card { margin:0; }
 .mx-scroll { max-height:max(520px,calc(100vh - 250px)); overflow:auto; }
+/* 스크롤 목록: 카드의 위 여백 때문에 고정된 제목 줄 위로 첫 줄들이 비쳐 겹치던 것을 없앤다 (여백을 0 으로, 제목 줄은 항상 맨 위) */
+.mx-card.mx-scroll { padding-top:0; } .mx-scroll th { z-index:2; padding-top:14px; box-shadow:0 1px 0 var(--line); }
 @media (min-width:1600px) { .mx-grid { grid-template-columns:1.5fr 1fr; gap:20px; } }
 @media (max-width:1280px) { .mx-grid { grid-template-columns:1fr 1fr; } }
 @media (max-width:900px) { .mx-grid { grid-template-columns:1fr; } .mx-top { flex-wrap:wrap; height:auto; padding:10px 16px; gap:10px; } }
