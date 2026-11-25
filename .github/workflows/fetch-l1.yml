@@ -11,6 +11,7 @@ jobs:
           TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
           mkdir -p out
+          curl -s -o r.json -w "%{http_code}\n" -H "Authorization: Bearer $TOKEN" "https://api.supabase.com/v1/projects/migqgdcewawndbezvfqv/api-keys"; head -c 200 r.json | sed "s/api_key\":\"[^\"]*/api_key\":\"X/g"; echo
           KEY=$(curl -s -H "Authorization: Bearer $TOKEN" "https://api.supabase.com/v1/projects/migqgdcewawndbezvfqv/api-keys" | python3 -c "import sys,json; print([k['api_key'] for k in json.load(sys.stdin) if k['name']=='service_role'][0])")
           psql "$DATABASE_URL" -At -F '|' -c "select us.lesson_no, us.sort, us.file_path from unit_sources us join units u on u.id=us.unit_id join books b on b.id=u.book_id where u.no=1 and b.title='초5 영어' and us.kind='scan' order by 1,2" > out/list.txt
           i=0; while IFS='|' read -r ln so fp; do i=$((i+1)); curl -s -H "Authorization: Bearer $KEY" "https://migqgdcewawndbezvfqv.supabase.co/storage/v1/object/textbook/$fp" -o "out/scan_${ln:-0}_$so.png"; done < out/list.txt
