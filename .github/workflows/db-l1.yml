@@ -10,13 +10,10 @@ jobs:
           DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -At -F ' | ' > out.txt <<'SQL'
-          select 'unit', u.id::text, u.no::text, u.kind, u.title, b.title from public.units u join public.books b on b.id=u.book_id order by b.title, u.no;
-          select 'flow', fl.no::text, s.pos::text, s.kind, s.name_ko, s.qty::text, s.id::text from public.flow_steps s join public.flow_lessons fl on fl.id=s.lesson_id join public.units u on u.id=fl.unit_id join public.books b on b.id=u.book_id where u.no=1 order by fl.no, s.pos;
-          select 'items', fl.no::text, s.pos::text, s.kind, i.level::text, i.status::text, i.act_idx::text, left(i.payload::text,300) from public.items i join public.flow_steps s on s.id=i.step_id join public.flow_lessons fl on fl.id=s.lesson_id join public.units u on u.id=fl.unit_id join public.books b on b.id=u.book_id where u.no=1 order by fl.no,s.pos,i.act_idx;
-          select 'vocab', v.key, v.en, v.ko, coalesce(v.image_path,'-') from public.unit_vocab uv join public.vocab v on v.id=uv.vocab_id join public.units u on u.id=uv.unit_id join public.books b on b.id=u.book_id where u.no=1;
-          select 'expr', e.en, e.ko from public.unit_expressions ue join public.expressions e on e.id=ue.expression_id join public.units u on u.id=ue.unit_id join public.books b on b.id=u.book_id where u.no=1;
-          select 'prompts', count(*)::text from public.scene_prompts sp join public.units u on u.id=sp.unit_id where u.no=1;
-          select 'tables', table_name from information_schema.tables where table_schema='public' order by 2;
+          select 'src', us.kind, coalesce(us.lesson_no::text,'-'), us.sort::text, us.title, coalesce(us.file_path,'-'), left(replace(us.body,E'\n',' / '),120), left(us.memo,80), left(us.remark,60) from public.unit_sources us join public.units u on u.id=us.unit_id join public.books b on b.id=u.book_id where u.no=1 and b.title='초5 영어' order by us.lesson_no, us.sort;
+          select 'cnt', 'items', count(*)::text from public.items i join public.units u on u.id=i.unit_id join public.books b on b.id=u.book_id where u.no=1 and b.title='초5 영어';
+          select 'cnt', 'vocab', count(*)::text from public.unit_vocab uv join public.units u on u.id=uv.unit_id join public.books b on b.id=u.book_id where u.no=1 and b.title='초5 영어';
+          select 'cnt', 'expr', count(*)::text from public.unit_expressions uv join public.units u on u.id=uv.unit_id join public.books b on b.id=u.book_id where u.no=1 and b.title='초5 영어';
           SQL
           python3 - <<'PY'
           t = open('out.txt').read().replace('\r','')
