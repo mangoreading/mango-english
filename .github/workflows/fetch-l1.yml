@@ -4,7 +4,10 @@ on: workflow_dispatch
 jobs:
   f:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
+      - uses: actions/checkout@v4
       - name: Fetch
         env:
           DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
@@ -16,6 +19,8 @@ jobs:
           while IFS='|' read -r ln so fp; do code=$(curl -s -o "out/scan_${ln}_$so.png" -w "%{http_code}" -H "apikey: $KEY" -H "Authorization: Bearer $KEY" "https://migqgdcewawndbezvfqv.supabase.co/storage/v1/object/textbook/$fp"); echo "$ln $so $code"; done < out/list.txt
           psql "$DATABASE_URL" -At -c "select json_agg(row_to_json(t)) from (select us.title, us.body, us.memo, us.remark, us.sort from unit_sources us join units u on u.id=us.unit_id join books b on b.id=u.book_id where u.no=1 and b.title='초5 영어' and us.kind='script' order by us.sort) t" > out/scripts.json
           ls -la out
-      - if: always()
-        uses: actions/upload-artifact@v4
-        with: { name: l1, path: out }
+      - name: Push to temp branch
+        run: |
+          git config user.name "scan-fetch"; git config user.email "scan-fetch@users.noreply.github.com"
+          git checkout --orphan l1-scans; git rm -rf -q . 2>/dev/null || true
+          mkdir -p l1 && cp out/* l1/ && git add l1 && git commit -qm "l1 scans (temporary)" && git push -f origin l1-scans
