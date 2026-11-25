@@ -1,0 +1,86 @@
+[
+ [
+  1,
+  "음원1",
+  "Where are you from?\nI'm from Tailand",
+  "단원의 주제를 소개하기 위한 영상\n(1차시의 학습목표가 '말을 듣고 이해하기'로 규정)",
+  null
+ ],
+ [
+  1,
+  "음원2",
+  "Where are you from?\nI'm from Brazile\nI'm Pablo.\nHow do you speell your name?\nP-A-B-L-O",
+  null,
+  null
+ ],
+ [
+  1,
+  "영상",
+  "Welcome to Paris.\nLet's say hello to our new friends.\nHello\nMy name is minseo.\nNice to meet you.\nHi, I'm Oliver.\nNice to meet you.\nWhere are you form?\nI'm from Korea.\nWhere are you from?\nI'm from the U.S.\nThis is Minseo.\nShe's from Korea.\nHi, I'm Ebonee.\nI'm from Egypt.\nHello. Ebonee.\nI like your name.\nHow do you spell your name?\nE-B-O-N-E-E.\nIt's a beautiful name.\n3, 2, 1!",
+  null,
+  "유사하게 변경 필요"
+ ],
+ [
+  1,
+  null,
+  "Good morning.\nWe have a new friend today.\nNice to meet you all.\nHi, Minseo.",
+  null,
+  "유사하게 변경 필요"
+ ],
+ [
+  2,
+  "영상 1",
+  "Hello.\nNice to meet you\nNice to meet you, too.\nWhat's your name?\nMy name is Siya.\nHow do you spell your name?\nS-I-Y-A.",
+  null,
+  "유사하게 변경 필요"
+ ],
+ [
+  2,
+  "영상2",
+  "Hi, Jian.\nHi, Minseo.\nThis is my new friend, Siya.\nHi, I'm Minseo.\nWhere are you from?\nI'm from Thailand.\nNice to meet you, Siya.\n\nCome here.\nLet's play badminton together.",
+  null,
+  "유사하게 변경 필요"
+ ],
+ [
+  2,
+  "영상3",
+  null,
+  "Speak more 영상 (교재에 있음)",
+  null
+ ],
+ [
+  5,
+  "음원",
+  "Hello.\nWe are group one.\nLook at these pictures.\nThey are our heroes.\nMy name is Emily.\nI'm from Canada.\nI like donuts.\nI am strong.\nI can fly in the sky.\nThank you very much.",
+  "Watch and think의 샘플영상",
+  "유사하게 변경 필요"
+ ],
+ [
+  6,
+  "1번 음원",
+  "<no. 1>\nA : Where are you from?\nB : I'm from France.\n<no. 2>\nA : Where are you from?\nB : I'm from Brazile",
+  null,
+  null
+ ],
+ [
+  6,
+  "2번 음원",
+  "<no. 1>\nA : Where are you from?\nB : I'm from Tailand.\n<no. 2>\nA : Where are you from?\nB : I'm from Korea.\nA : How do you spell your name?\nB : M-I-N-J-I",
+  null,
+  null
+ ],
+ [
+  6,
+  "3번 음원",
+  "<no. 1>\nA : Where are you from?\nB : I'm from Egypt.\n<no. 2>\nA : Where are you from?\nB : I'm from the U.S.\nA : How do you spell your name?\nB : A-M-Y",
+  null,
+  null
+ ],
+ [
+  6,
+  "4번 음원",
+  "<no. 1>\nA : Where are you from?\nB : I'm from France.\nA : Where are you from?\nB : I'm from Korea.\n<no. 2>\nA : How do you spell your name?\nB : E-M-I-L-Y",
+  null,
+  null
+ ]
+]
