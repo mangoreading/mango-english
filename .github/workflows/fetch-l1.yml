@@ -1,0 +1,29 @@
+name: fetch-l1
+# 읽기 전용: Lesson 1 교과서 스캔과 스크립트를 내려받아 작업 산출물로 올린다
+on: workflow_dispatch
+jobs:
+  f:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          mkdir -p out
+          SEC=$(psql "$DATABASE_URL" -At -c "select coalesce(current_setting('app.settings.jwt_secret', true),'')")
+          echo "secret length: ${#SEC}"
+          if [ -z "$SEC" ]; then echo "::error::jwt secret not readable"; exit 1; fi
+          KEY=$(SEC="$SEC" python3 - <<'PY'
+          import os,hmac,hashlib,base64,json,time
+          b=lambda x: base64.urlsafe_b64encode(x).rstrip(b'=')
+          h=b(json.dumps({"alg":"HS256","typ":"JWT"}).encode()); p=b(json.dumps({"role":"service_role","iss":"supabase","exp":int(time.time())+600}).encode())
+          s=b(hmac.new(os.environ['SEC'].encode(),h+b'.'+p,hashlib.sha256).digest())
+          print((h+b'.'+p+b'.'+s).decode())
+          PY
+          )
+          psql "$DATABASE_URL" -At -F '|' -c "select coalesce(us.lesson_no::text,'0'), us.sort, us.file_path from unit_sources us join units u on u.id=us.unit_id join books b on b.id=u.book_id where u.no=1 and b.title='초5 영어' and us.kind='scan' order by 1,2" > out/list.txt
+          while IFS='|' read -r ln so fp; do code=$(curl -s -o "out/scan_${ln}_$so.png" -w "%{http_code}" -H "Authorization: Bearer $KEY" "https://migqgdcewawndbezvfqv.supabase.co/storage/v1/object/textbook/$fp"); echo "$ln $so $code"; done < out/list.txt
+          psql "$DATABASE_URL" -At -c "select json_agg(row_to_json(t)) from (select title, body, memo, remark, sort from unit_sources us join units u on u.id=us.unit_id join books b on b.id=u.book_id where u.no=1 and b.title='초5 영어' and kind='script' order by sort) t" > out/scripts.json
+          ls -la out
+      - uses: actions/upload-artifact@v4
+        with: { name: l1, path: out }
