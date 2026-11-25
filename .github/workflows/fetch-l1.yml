@@ -1,0 +1,20 @@
+name: fetch-l1
+# 읽기 전용: Lesson 1 교과서 스캔 이미지와 스크립트(unit_sources)를 내려받아 작업 산출물로 올린다
+on: workflow_dispatch
+jobs:
+  f:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+          TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          mkdir -p out
+          KEY=$(curl -s -H "Authorization: Bearer $TOKEN" "https://api.supabase.com/v1/projects/migqgdcewawndbezvfqv/api-keys" | python3 -c "import sys,json; print([k['api_key'] for k in json.load(sys.stdin) if k['name']=='service_role'][0])")
+          psql "$DATABASE_URL" -At -F '|' -c "select us.lesson_no, us.sort, us.file_path from unit_sources us join units u on u.id=us.unit_id join books b on b.id=u.book_id where u.no=1 and b.title='초5 영어' and us.kind='scan' order by 1,2" > out/list.txt
+          i=0; while IFS='|' read -r ln so fp; do i=$((i+1)); curl -s -H "Authorization: Bearer $KEY" "https://migqgdcewawndbezvfqv.supabase.co/storage/v1/object/textbook/$fp" -o "out/scan_${ln:-0}_$so.png"; done < out/list.txt
+          psql "$DATABASE_URL" -At -c "select json_agg(row_to_json(t)) from (select kind, lesson_no, sort, title, body, memo, remark from unit_sources us join units u on u.id=us.unit_id join books b on b.id=u.book_id where u.no=1 and b.title='초5 영어' and kind='script' order by sort) t" > out/scripts.json
+          ls -la out
+      - uses: actions/upload-artifact@v4
+        with: { name: l1, path: out }
