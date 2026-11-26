@@ -12,24 +12,24 @@ step(5, 0, 'dfill', 6, [
   dfp('korea', '한국', FR, ['Where', 'from', 'Korea'], bh), dfp('brazil', '브라질', FR, ['Where', 'from', 'Brazil'], bh), dfp('france', '프랑스', FR, ['Where', 'from', 'France'], bh),
   dfp('egypt', '이집트', FR, ['Where', 'from', 'Egypt'], bh), dfp('thailand', '태국', FR, ['Where', 'from', 'Thailand'], bh),
   dfp('us', '미국', ['A: Where are you {}?', "B: I'm from the {}."], ['from', 'U.S.'], ['질문 끝에 오는 말이에요.', '나라 이름이에요.'])]);
-const MD1 = { title: 'My Hero', text: ['My name is [[Star Girl]].', "I'm from [[Brazil]].", 'I like [[music]].', 'I am [[kind]].', 'I can [[run fast]].'],
-  explain: ['{{이름}}과 {{출신 나라}}를 말합니다.', '좋아하는 것을 말합니다. (I like …)', '나의 특징을 말합니다. (I am …)', '할 수 있는 것을 말합니다. (I can …)'], ko: '내 이름은 스타 걸이야.\n나는 브라질에서 왔어.\n나는 음악을 좋아해.\n나는 친절해.\n나는 빨리 달릴 수 있어.' };
-const MD2 = { title: 'My Hero', text: ['My name is [[Super Leo]].', "I'm from [[Egypt]].", 'I like [[ice cream]].', 'I am [[strong]].', 'I can [[fly in the sky]].'],
-  explain: ['{{이름}}과 {{출신 나라}}를 말합니다.', '좋아하는 것을 말합니다. (I like …)', '나의 특징을 말합니다. (I am …)', '할 수 있는 것을 말합니다. (I can …)'], ko: '내 이름은 슈퍼 레오야.\n나는 이집트에서 왔어.\n나는 아이스크림을 좋아해.\n나는 힘이 세.\n나는 하늘을 날 수 있어.' };
+const MDX = ['먼저 {{이름}}을 말합니다.', '이름의 {{철자}}를 알파벳 하나씩 말합니다.', '{{출신 나라}}를 말합니다.', '처음 만난 친구에게 인사합니다.'];
+const MD1 = { title: 'My Hero', text: ['My name is [[Max]].', '[[M-A-X]].', "I'm from [[Brazil]].", 'Nice to meet you.'], explain: MDX, ko: '내 이름은 맥스야.\nM-A-X야.\n나는 브라질에서 왔어.\n만나서 반가워.' };
+const MD2 = { title: 'My Hero', text: ['My name is [[Zia]].', '[[Z-I-A]].', "I'm from [[Egypt]].", 'Nice to meet you.'], explain: MDX, ko: '내 이름은 지아야.\nZ-I-A야.\n나는 이집트에서 왔어.\n만나서 반가워.' };
 step(5, 1, 'mtext', 2, [MD1, MD2]);
 const sc = (ko, ans, extra) => ({ ko, ans, extra });
 step(5, 2, 'sscram', 4, [
-  sc('내 이름은 스타 걸이야.', 'My name is Star Girl.', ['is a']), sc('나는 브라질에서 왔어.', "I'm from Brazil.", ['in']),
-  sc('나는 음악을 좋아해.', 'I like music.', ['likes']), sc('나는 빨리 달릴 수 있어.', 'I can run fast.', ['am'])]);
+  sc('내 이름은 맥스야.', 'My name is Max.', ['is a']), sc('나는 브라질에서 왔어.', "I'm from Brazil.", ['in']),
+  sc('너의 이름은 철자가 어떻게 되니?', 'How do you spell your name?', ['does']), sc('너는 어느 나라에서 왔니?', 'Where are you from?', ['is'])]);
+const MWL = ['My name is {}.', '{}.', "I'm from {}."];
+const MWH = ['영웅의 이름이에요.', '이름의 철자를 알파벳 하나씩 말해요.', '나라 이름이에요.'];
 step(5, 3, 'mwbank', 2, [
-  { lines: ['My name is {}.', "I'm from {}.", 'I like {}.', 'I am {}.', 'I can {}.'], ans: ['Star Girl', 'Brazil', 'music', 'kind', 'run fast'], extra: ['Egypt', 'strong'], blankHints: ['영웅의 이름이에요.', '나라 이름이에요.', '좋아하는 것이에요.', '성격이나 특징이에요.', '할 수 있는 것이에요.'] },
-  { lines: ['My name is {}.', "I'm from {}.", 'I like {}.', 'I am {}.', 'I can {}.'], ans: ['Super Leo', 'Egypt', 'ice cream', 'strong', 'fly in the sky'], extra: ['Brazil', 'kind'], blankHints: ['영웅의 이름이에요.', '나라 이름이에요.', '좋아하는 것이에요.', '성격이나 특징이에요.', '할 수 있는 것이에요.'] }]);
-const MF = ['My name is {}.', "I'm from {}.", 'I like {}.', 'I am {}.', 'I can {}.'];
-const MFH = ['나의 영웅 이름을 써요. (예: Star Girl)', '나라 이름은 대문자로 시작해요. (예: Brazil)', '좋아하는 것을 써요. (예: music)', '특징을 써요. (예: kind, strong)', '할 수 있는 것을 써요. (예: run fast)'];
+  { lines: MWL, ans: ['Max', 'M-A-X', 'Brazil'], extra: ['Leo', 'France'], blankHints: MWH },
+  { lines: MWL, ans: ['Zia', 'Z-I-A', 'Egypt'], extra: ['Kai', 'Korea'], blankHints: MWH }]);
+const MFH = ['나의 영웅 이름을 써요. (예: Max)', '영웅 이름의 철자를 알파벳 하나씩 - 로 이어 써요. (예: M-A-X)', '나라 이름은 대문자로 시작해요. (예: Brazil)'];
 step(5, 4, 'mfree', 2, [
-  { topicLabel: '나의 영웅', topic: 'brazil', lines: MF, lineHints: MFH, hint: ['My name is Star Girl.'] },
-  { topicLabel: '나의 영웅', topic: 'egypt', lines: MF, lineHints: MFH, hint: ['My name is Super Leo.'] }]);
-step(5, 5, 'present', 1, [{ text: ['My name is [[Star Girl]].', "I'm from [[Brazil]].", 'I like [[music]].', 'I am [[kind]].', 'I can [[run fast]].'] }]);
+  { topicLabel: '나의 영웅', topic: 'brazil', lines: MWL, lineHints: MFH, hint: ['My name is Max.'] },
+  { topicLabel: '나의 영웅', topic: 'egypt', lines: MWL, lineHints: MFH, hint: ['My name is Zia.'] }]);
+step(5, 5, 'present', 1, [{ text: MD1.text }]);
 step(5, 6, 'aitalk', 1, [{ situation: '새로 만난 친구에게 어느 나라에서 왔는지와 이름의 철자를 묻고 답해요', role: '새 친구 (New Friend)', open: "Hi! I'm Alex. Nice to meet you.", turns: 3,
   hints: ["Nice to meet you, too. Where are you from?", 'How do you spell your name?', "I'm from Korea."], script: [{ ai: "I'm from Canada. How about you?" }, { ai: 'A-L-E-X. And how do you spell your name?' }, { ai: 'Great! Nice to meet you!' }] }]);
 
@@ -55,8 +55,8 @@ step(6, 4, 'looktalk', 4, [
   lk('korea', 'Hana', 'Where are you from?', "I'm from Korea."), lk('france', 'Chloe', 'Where are you from?', "I'm from France."),
   lk('egypt', 'Amir', 'Where are you from?', "I'm from Egypt."), lk('us', 'Tom', 'Where are you from?', "I'm from the U.S.")]);
 step(6, 5, 'sscram', 6, [
-  { ans: 'Where are you from?', extra: ['is'] }, { ans: "I'm from Korea.", extra: ['in'] }, { ans: 'How do you spell your name?', extra: ['say'] },
-  { ans: "I'm from Brazil.", extra: ['at'] }, { ans: 'Nice to meet you.', extra: ['see'] }, { ans: "I'm from the U.S.", extra: ['a'] }]);
+  { ans: 'Where are you from, Mina?', extra: ['is'] }, { ans: "I'm from Thailand.", extra: ['in'] }, { ans: 'How do you spell your name?', extra: ['say'] },
+  { ans: 'Nice to meet you, too.', extra: ['see'] }, { ans: "I'm from the U.S.", extra: ['a'] }, { ans: 'My name is Tom.', extra: ['am'] }]);
 const dt = (cue, lines, ans) => ({ cue, lines, ans });
 step(6, 6, 'dfillt', 4, [
   dt('프랑스 • Chloe', ['A: {} are you from?', "B: {} from France."], ['Where', "I'm|I am"]),
@@ -78,8 +78,8 @@ step(6, 8, 'lmatch', 6, [{ pairs: [
   { left: 'Kai', say: "Where are you from? I'm from Thailand.", right: 'thailand' }, { left: 'Tom', say: "Where are you from? I'm from the U.S.", right: 'us' }] }]);
 const sb = (ko, ans, alts, starter) => ({ ko, ans, ...(alts ? { alts } : {}), ...(starter ? { starter } : {}) });
 step(6, 12, 'sbuild', 4, [
-  sb('너는 어느 나라에서 왔니?', 'Where are you from?', null, 'Where'), sb('나는 한국에서 왔어.', "I'm from Korea.", ["I am from Korea."], "I'm"),
-  sb('너의 이름은 철자가 어떻게 되니?', 'How do you spell your name?', null, 'How'), sb('나는 미국에서 왔어.', "I'm from the U.S.", ["I am from the U.S."], "I'm")]);
+  sb('레오, 너는 어느 나라에서 왔니?', 'Where are you from, Leo?', null, 'Where'), sb('나는 이집트에서 왔어.', "I'm from Egypt.", ["I am from Egypt."], "I'm"),
+  sb('내 이름은 카이야.', 'My name is Kai.', null, 'My'), sb('너의 이름은 철자가 어떻게 되니?', 'How do you spell your name?', null, 'How')]);
 const ln = (q, opts, ans) => ({ q, opts, ans, plays: 2, inst: '들려주는 말에 이어질 말을 골라요.' });
 step(6, 13, 'lnum', 3, [
   ln('Where are you from?', ["I'm Leo.", "I'm from Brazil.", 'L-E-O.'], 2),
