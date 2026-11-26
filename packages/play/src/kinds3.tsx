@@ -105,7 +105,7 @@ export function Goal({ item, pic, onDone }: KindProps) {
           <h3 className="nv-gh">학습목표</h3>
           {item.title && <p className="nv-gtext"><Rich text={item.title} /></p>}
           {item.ko && <p className="nv-sub">{item.ko}</p>}
-          {src && <img className="nv-gimg" src={imgSrc(src)} alt="" draggable={false} />}
+          {item.illus ? <img className="nv-gillus" src={imgSrc(item.illus)} alt="" draggable={false} /> : src && <img className="nv-gimg" src={imgSrc(src)} alt="" draggable={false} />}
         </div>
         <div className="nv-goalR">
           <div className="nv-gr-head"><h3 className="nv-gh">{item.head || '핵심표현'}</h3><IconBtns onAll={all} ko={ko} setKo={setKo} /></div>

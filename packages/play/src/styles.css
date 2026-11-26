@@ -249,6 +249,8 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 .nv-gh { margin:0; font-size:1.15em; font-weight:800; color:#111; }
 .nv-gtext { margin:.4em 0 0; color:var(--nv-blue); font-size:1.3em; line-height:1.55; font-weight:500; max-width:15em; }
 .nv-gimg { margin-top:auto; align-self:center; max-width:100%; max-height:13em; object-fit:contain; }
+/* 학습목표 대표 삽화(투명 PNG, 프레임 없음): 기준 화면(1280×800)에서 400×400px */
+.nv-gillus { margin-top:auto; align-self:center; width:25em; height:25em; max-width:100%; object-fit:contain; pointer-events:none; user-select:none; }
 .nv-goalR { border-left:.1em solid var(--nv-line); padding:.2em .4em .2em 1.8em; display:flex; flex-direction:column; gap:.5em; }
 .nv-gr-head { display:flex; justify-content:space-between; align-items:center; }
 .nv-gr-list { display:flex; flex-direction:column; gap:.45em; }
