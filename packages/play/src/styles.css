@@ -987,3 +987,7 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 [data-skin=mango] .nv-pres .nv-script { grid-row:1; grid-column:1; align-self:stretch; }
 [data-skin=mango] .nv-pres .nv-cam { grid-row:1; grid-column:2; aspect-ratio:auto; align-self:stretch; }   /* 높이는 항상 왼쪽 글 상자와 같게 */
 [data-skin=mango] .nv-pres .nv-recrow { grid-row:2; grid-column:2; margin-top:0; align-self:center; }
+
+/* 단어 은행 글쓰기(mwbank): 문장 상자의 글자를 위쪽 단어 박스와 같은 크기·굵기로 */
+.nv-chips-bank ~ .nv-bl-box.nv-bl-fix p { font-size:1.15em; font-weight:600; }
+.nv-chips-bank ~ .nv-bl-box.nv-bl-fix p button { font:inherit; }
