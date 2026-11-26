@@ -1,0 +1,11 @@
+-- 비상 초5 영어 Lesson 1 강의 슬라이드(1차시 pos 1)에 슬라이드 삽화(illus, 투명 PNG 3장)를 달고, 슬라이드 4 예시를 삽화(A-M-Y)와 맞춘다.
+-- 문항은 승인 상태 그대로 내용만 바꾸므로 재발행해야 학생 화면에 반영된다. content/l1/gen4.cjs 로 생성.
+do $do$
+declare v_unit uuid; v_n int;
+begin
+  select u.id into strict v_unit from units u join books b on b.id = u.book_id where u.no = 1 and u.kind = 'lesson' and b.grade = 5 and b.title = '초5 영어';
+  update items i set payload = $j${"tag":"expr","k":"lecture","title":"Lesson 1","slides":[{"head":"새로 만난 친구에게 이렇게 말해요","text":["새 친구를 만나면 어느 나라에서 왔는지 궁금해요.","이번 Lesson에서는 [[출신 나라]]와 [[이름의 철자]]를 묻고 대답하는 말을 배워요."],"illus":"illus/l1-lec-1.png","cards":["Where are you from? | 너는 어느 나라에서 왔니? | 묻는 말","I'm from France. | 나는 프랑스에서 왔어. | 대답"]},{"head":"출신 나라 묻고 답하기","text":["어느 나라에서 왔는지 물을 때는 [[Where are you from?]]이라고 해요.","대답은 [[I'm from]] 뒤에 나라 이름을 붙여요."],"illus":"illus/l1-lec-2.png","cards":["Where are you from? | 너는 어느 나라에서 왔니?","I'm from Korea. | 나는 한국에서 왔어."],"formula":["{{Where}} + are + you + from?","I'm + from + 나라 이름."],"tip":"나라 이름은 항상 [[대문자]]로 시작해요. (Korea, Brazil, Egypt)"},{"head":"나라 이름 알아 두기","text":["이번 Lesson에서 만나는 나라들이에요."],"table":["영어 | 우리말","Brazil | 브라질","Egypt | 이집트","France | 프랑스","Korea | 한국","Thailand | 태국","the U.S. | 미국"],"tip":"미국은 [[I'm from the U.S.]]처럼 앞에 [[the]]를 붙여 말해요."},{"head":"이름의 철자 묻고 답하기","text":["이름을 어떻게 쓰는지 물을 때는 [[How do you spell your name?]]이라고 해요.","대답은 알파벳을 하나씩 읽어요. 글자 사이에 짧게 쉬어요."],"illus":"illus/l1-lec-3.png","cards":["How do you spell your name? | 너의 이름은 철자가 어떻게 되니? | 묻는 말","A-M-Y. | A-M-Y야. | 대답"],"formula":["How + do + you + {{spell}} + your name?","A-M-Y."],"tip":"내 이름은 [[My name is Amy.]] 또는 [[I'm Amy.]]라고 소개해요."},{"head":"정리해요","text":["묻는 말과 대답을 짝지어 기억해요."],"table":["묻는 말 | 대답","Where are you from? | I'm from Egypt.","How do you spell your name? | A-M-I-R."],"tip":"질문을 들으면 [[어느 나라]]인지, [[이름 철자]]인지 먼저 생각해요."}]}$j$::jsonb where i.unit_id = v_unit and i.template = 'lecture' and i.lesson = 1;
+  get diagnostics v_n = row_count;
+  if v_n <> 1 then raise exception 'L1 lecture items updated: % (expected 1)', v_n; end if;
+  raise notice 'L1 lecture: slides updated (% item), status %', v_n, (select string_agg(status::text, ',') from items where unit_id = v_unit and template = 'lecture');
+end $do$;

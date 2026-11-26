@@ -3,7 +3,7 @@ import { useCardProgress } from './fb';
 import { Rich } from './kinds3';
 import { imgSrc, prefetchSay, say, sayScript, stopSeq, type KindProps } from './common';
 
-interface Slide { head: string; text?: string[]; pic?: string; cards?: string[]; formula?: string[]; table?: string[]; tip?: string }
+interface Slide { head: string; text?: string[]; pic?: string; illus?: string; cards?: string[]; formula?: string[]; table?: string[]; tip?: string }
 const plain = (t: string) => t.replace(/\[\[|\]\]|\{\{|\}\}/g, '');
 const cells = (l: string) => l.split('|').map((c) => c.trim());
 
@@ -16,14 +16,14 @@ export function Lecture({ item, pic, onDone }: KindProps) {
   useEffect(() => () => { try { speechSynthesis.cancel(); } catch { /* 소리가 안 되는 환경 */ } }, []);
   const s = slides[Math.min(i, slides.length - 1)]; if (!s) return null;
   const src = (k?: string) => (k ? (/^https?:|^word\//.test(k) ? imgSrc(k) : imgSrc(pic(k))) : '');
-  const img = src(s.pic);
+  const ill = s.illus ? imgSrc(s.illus) : ''; const img = ill || src(s.pic);
   const hear = (t: string) => { setCur(t); say(plain(t)); };
   return (
     <div className="nv-body nv-lec">
       <div className="nv-row nv-lec-row">
         <button type="button" className="nv-arrow" disabled={i === 0} onClick={() => { setI(i - 1); setCur(null); }} aria-label="이전">‹</button>
-      <div className="nv-lec-stage">
-        {img && <div className="nv-lec-pic"><img src={img} alt="" draggable={false} /></div>}
+      <div className={'nv-lec-stage' + (ill ? ' nv-lec-wide' : '')}>
+        {img && <div className={'nv-lec-pic' + (ill ? ' nv-lec-ill' : '')}><img src={img} alt="" draggable={false} /></div>}
         <div className="nv-lec-main">
           <p className="nv-lec-no">{item.title ? item.title + ' · ' : ''}{i + 1} / {slides.length}</p>
           <h2 className="nv-lec-h"><Rich text={s.head} /></h2>

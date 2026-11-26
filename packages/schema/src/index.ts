@@ -173,7 +173,7 @@ export const Scene = z.object({ ...T1, k: z.literal('scene'), title: z.string().
 export const SceneRep = z.object({ ...Scene.shape, k: z.literal('scenerep') });
 /** 강의 슬라이드: 이번 Lesson 의 표현·문법을 강의처럼 짧은 슬라이드로 설명 (cards: "영어 | 한글 | 설명", formula: 한 줄에 한 식(+로 연결), table: 첫 줄이 머리글(| 로 칸 구분)) */
 export const Lecture = z.object({ ...T1, k: z.literal('lecture'), title: z.string().optional(),
-  slides: z.array(z.object({ head: z.string().min(1), text: z.array(z.string()).optional(), pic: z.string().optional(), cards: z.array(z.string()).optional(),
+  slides: z.array(z.object({ head: z.string().min(1), text: z.array(z.string()).optional(), pic: z.string().optional(), /** 슬라이드 삽화(투명 PNG, img/ 아래 경로). 있으면 단어 그림(pic) 대신 프레임 없이 보인다 */ illus: z.string().optional(), cards: z.array(z.string()).optional(),
     formula: z.array(z.string()).optional(), table: z.array(z.string()).optional(), tip: z.string().optional() })).min(1).max(10) });
 /** 단어·문장 듣고 따라 말하기: 카드마다 그림 + 단어(2번 읽기) + 그 단어가 들어간 문장(읽어 주기). 문장 안의 단어는 빨강으로 표시 */
 export const WSent = z.object({ ...T1, k: z.literal('wsent'), cards: z.array(z.object({ word: z.string().min(1), wko: z.string().optional(), sent: z.string().min(1), ko: z.string().optional(), pic: z.string().optional() })).min(1).max(9) });
