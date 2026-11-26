@@ -17,7 +17,6 @@ jobs:
           select 'ref', s.id::text, fl.no||'-'||s.pos||' '||s.kind from flow_steps s join flow_lessons fl on fl.id=s.lesson_id where s.id='f10e280b-c030-4ac1-a884-80765bb0688d';
           select 'l78', fl.no, count(s.id) from flow_lessons fl left join flow_steps s on s.lesson_id=fl.id join units u on u.id=fl.unit_id join books b on b.id=u.book_id where u.no in (1,9) and b.title in ('초5 영어','비상교육 초5 영어') and fl.no in (7,8) group by fl.no, u.no;
           select 'goals9', u.no, u.goals::text, b.title from units u join books b on b.id=u.book_id where u.no in (1,9) and b.grade=5;
-          select 'sp', sp.step_id::text, sp.seq, coalesce(sp.file_name,'-'), coalesce(sp.image_path,'-') from scene_prompts sp join units u on u.id=sp.unit_id join books b on b.id=u.book_id where u.no=1 and b.title='초5 영어' order by sp.seq limit 5;
           SQL
           python3 - <<'PY'
           t = open('out.txt').read().replace('\r','')
