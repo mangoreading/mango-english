@@ -41,8 +41,8 @@ step(3, 12, 'scloze', 3, [
   cz(['A: How do you {} your name?', 'B: {}.'], ['spell', 'H-A-N-A'], ['say', 'H-A-N-O'], ['철자를 묻는 말이에요.', '알파벳을 하나씩 써요.']),
   cz(['A: Where are {} from?', "B: I'm from the {}."], ['you', 'U.S.'], ['we', 'U.K.'], ['상대방을 가리키는 말이에요.', '나라 이름이에요.'])]);
 step(3, 13, 'mfree', 2, [
-  { topicLabel: '나라', topic: 'korea', lines: ['Hello. My name is {}.', '{}.', "I'm from {}."], lineHints: ['내 이름을 써요. (예: Hana)', '내 이름의 철자를 알파벳 하나씩 - 로 이어 써요. (예: H-A-N-A)', '나라 이름은 대문자로 시작해요. (예: Korea)'], hint: ['Hello. My name is Hana.'] },
-  { topicLabel: '나라', topic: 'brazil', lines: ["Hi, I'm {}.", '{}.', "I'm from {}."], lineHints: ['내 이름을 써요. (예: Leo)', '내 이름의 철자를 알파벳 하나씩 - 로 이어 써요. (예: L-E-O)', '나라 이름은 대문자로 시작해요. (예: Brazil)'], hint: ["Hi, I'm Leo."] }]);
+  { topicLabel: '내 이름', topic: 'korea', lines: ['Hello. My name is {}.', '{}.', "I'm from {}."], lineHints: ['위에 쓴 내 이름을 문장에 다시 써요. (예: Hana)', '내 이름의 철자를 알파벳 하나씩 - 로 이어 써요. (예: H-A-N-A)', '나라 이름은 대문자로 시작해요. (예: Korea)'], hint: ['Hello. My name is Hana.'] },
+  { topicLabel: '내 이름', topic: 'brazil', lines: ["Hi, I'm {}.", '{}.', "I'm from {}."], lineHints: ['위에 쓴 내 이름을 문장에 다시 써요. (예: Leo)', '내 이름의 철자를 알파벳 하나씩 - 로 이어 써요. (예: L-E-O)', '나라 이름은 대문자로 시작해요. (예: Brazil)'], hint: ["Hi, I'm Leo."] }]);
 
 /* ===== 4차시 Read & Understand ===== */
 const sf = (ko, tpl, ans) => ({ ko, tpl, ans });

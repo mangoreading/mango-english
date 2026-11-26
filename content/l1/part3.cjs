@@ -23,12 +23,12 @@ step(5, 2, 'sscram', 4, [
 const MWL = ['My name is {}.', '{}.', "I'm from {}."];
 const MWH = ['영웅의 이름이에요.', '이름의 철자를 알파벳 하나씩 말해요.', '나라 이름이에요.'];
 step(5, 3, 'mwbank', 2, [
-  { lines: MWL, ans: ['Max', 'M-A-X', 'Brazil'], extra: ['Leo', 'France'], blankHints: MWH },
-  { lines: MWL, ans: ['Zia', 'Z-I-A', 'Egypt'], extra: ['Kai', 'Korea'], blankHints: MWH }]);
-const MFH = ['나의 영웅 이름을 써요. (예: Max)', '영웅 이름의 철자를 알파벳 하나씩 - 로 이어 써요. (예: M-A-X)', '나라 이름은 대문자로 시작해요. (예: Brazil)'];
+  { inst: 'Max는 브라질에서 온 영웅이에요. 보기에서 알맞은 단어를 골라 글을 완성하세요.', lines: MWL, ans: ['Max', 'M-A-X', 'Brazil'], extra: ['Leo', 'L-E-O', 'France'], blankHints: MWH },
+  { inst: 'Zia는 이집트에서 온 영웅이에요. 보기에서 알맞은 단어를 골라 글을 완성하세요.', lines: MWL, ans: ['Zia', 'Z-I-A', 'Egypt'], extra: ['Kai', 'K-A-I', 'Korea'], blankHints: MWH }]);
+const MFH = ['위에 쓴 영웅 이름을 문장에 다시 써요. (예: Max)', '영웅 이름의 철자를 알파벳 하나씩 - 로 이어 써요. (예: M-A-X)', '나라 이름은 대문자로 시작해요. (예: Brazil)'];
 step(5, 4, 'mfree', 2, [
-  { topicLabel: '나의 영웅', topic: 'brazil', lines: MWL, lineHints: MFH, hint: ['My name is Max.'] },
-  { topicLabel: '나의 영웅', topic: 'egypt', lines: MWL, lineHints: MFH, hint: ['My name is Zia.'] }]);
+  { topicLabel: '나의 영웅 이름', topic: 'brazil', lines: MWL, lineHints: MFH, hint: ['My name is Max.'] },
+  { topicLabel: '나의 영웅 이름', topic: 'egypt', lines: MWL, lineHints: MFH, hint: ['My name is Zia.'] }]);
 step(5, 5, 'present', 1, [{ text: MD1.text }]);
 step(5, 6, 'aitalk', 1, [{ situation: '새로 만난 친구에게 어느 나라에서 왔는지와 이름의 철자를 묻고 답해요', role: '새 친구 (New Friend)', open: "Hi! I'm Alex. Nice to meet you.", turns: 3,
   hints: ["Nice to meet you, too. Where are you from?", 'How do you spell your name?', "I'm from Korea."], script: [{ ai: "I'm from Canada. How about you?" }, { ai: 'A-L-E-X. And how do you spell your name?' }, { ai: 'Great! Nice to meet you!' }] }]);
