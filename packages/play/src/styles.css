@@ -991,3 +991,6 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 /* 단어 은행 글쓰기(mwbank): 문장 상자의 글자를 위쪽 단어 박스와 같은 크기·굵기로 */
 .nv-chips-bank ~ .nv-bl-box.nv-bl-fix p { font-size:1.15em; font-weight:600; }
 .nv-chips-bank ~ .nv-bl-box.nv-bl-fix p button { font:inherit; }
+/* 같은 문장 상자를 쓰는 다른 템플릿(mfree, 빈칸 상자 등)도 동일하게 */
+.nv-bl-box p, .nv-bl-box.nv-bl-fix p { font-size:1.15em; font-weight:600; }
+.nv-bl-box p button { font:inherit; }
