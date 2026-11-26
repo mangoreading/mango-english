@@ -10,8 +10,7 @@ jobs:
           DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -At -F ' | ' > out.txt <<'SQL'
-          select 'step', fl.no||'-'||s.pos, s.kind, coalesce(s.name_ko,'-'), coalesce(s.minutes::text,'-'), coalesce(s.qty::text,'-'), 'study='||s.study, 'hw='||s.homework, coalesce(s.special,'-'), 'ref='||(s.ref_step_id is not null), 'appr='||(select count(*) from items i where i.step_id=s.id and i.status='approved'), 'draft='||(select count(*) from items i where i.step_id=s.id and i.status='draft')
- from flow_lessons fl join flow_steps s on s.lesson_id=fl.id join units u on u.id=fl.unit_id join books b on b.id=u.book_id where u.no=9 and b.grade=5 and u.kind='lesson' order by fl.no, s.pos;
+          select 'step', fl.no||'-'||s.pos, s.kind, coalesce(s.name_ko,'-'), coalesce(s.minutes::text,'-'), coalesce(s.qty::text,'-'), 'study='||s.study, 'hw='||s.homework, coalesce(s.special,'-'), 'ref='||(s.ref_step_id is not null), 'appr='||(select count(*) from items i where i.step_id=s.id and i.status='approved'), 'draft='||(select count(*) from items i where i.step_id=s.id and i.status='draft') from flow_lessons fl join flow_steps s on s.lesson_id=fl.id join units u on u.id=fl.unit_id join books b on b.id=u.book_id where u.no=9 and b.grade=5 and u.kind='lesson' order by fl.no, s.pos;
           select 'les', fl.no, fl.track, fl.en from flow_lessons fl join units u on u.id=fl.unit_id join books b on b.id=u.book_id where u.no=9 and b.grade=5 order by fl.no;
           SQL
           python3 - <<'PY'
