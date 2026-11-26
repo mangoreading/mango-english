@@ -170,7 +170,7 @@ export function Studio() {
   const lineNums = (txt: string): number[] => { const nums: number[] = []; for (const part of String(txt ?? '').split(',')) { const m = part.trim().match(/^(\d+)(?:\s*-\s*(\d+))?$/); if (!m) continue; const a = Number(m[1]); const b = m[2] ? Number(m[2]) : a; for (let k = a; k <= b; k++) nums.push(k); } return nums; };
   /** 만든 이미지를 서버에 올리고, 고른 장면 활동 문항에서 그 장면의 대사 줄 그림 칸(pic)에 주소를 채운다 */
   async function applyImg(im: Img, quiet = false): Promise<boolean> {
-    const fail = (t: string) => { setMsg({ t: 'err', s: t }); return false; };
+    const fail = (t: string) => { setMsg({ t: 'err', s: t }); if (!quiet) setApplyRes({ t: 'err', s: t }); return false; };
     const stp = dbSteps.find((x) => x.id === dbSel); if (!stp) return fail('먼저 위 ① 불러오기에서 Lesson·장면 활동을 골라 주세요.');
     const base = im.name.replace(/_edit$/, '').replace(/_\d+$/, '');
     const row = dbRows.find((x) => x.step_id === dbSel && safe(String(x.file_name ?? '')) === base);
@@ -188,13 +188,19 @@ export function Studio() {
     const next = { ...item.payload, scenes: sc.map((l, i) => (nums.includes(i + 1) ? { ...l, pic: url } : l)) };
     const u = await supabase.from('items').update({ payload: next, version: item.version + 1, updated_at: new Date().toISOString() }).eq('id', item.id); if (u.error) return fail('문항에 연결하지 못했어요: ' + u.error.message);
     setImgs((xs) => xs.map((x) => (x.id === im.id ? { ...x, applied: `대사 ${row.lines}` } : x)));
-    if (!quiet) setMsg({ t: 'ok', s: `적용했어요: 대사 ${row.lines}에 이 그림이 연결됐어요. (문항 발행 후 학습앱에 반영돼요)` });
+    if (!quiet) { const m = { t: 'ok' as const, s: `적용했어요: 대사 ${row.lines}에 이 그림이 연결됐어요. (문항 발행 후 학습앱에 반영돼요)` }; setMsg(m); setApplyRes(m); }
     return true;
   }
-  async function applyAll() {
-    let ok = 0, bad = 0; for (const im of imgs) { if (im.applied) continue; if (await applyImg(im, true)) ok++; else bad++; }
-    if (!bad) setMsg({ t: 'ok', s: `${ok}장을 이 활동의 장면 문항에 적용했어요. (문항 발행 후 학습앱에 반영돼요)` });
+  /** 적용 결과를 이미지 목록 위(버튼 바로 아래)에 보여 준다 */
+  const [applying, setApplying] = useState(''); const [applyRes, setApplyRes] = useState<{ t: 'ok' | 'err'; s: string } | null>(null);
+  async function runApplyAll(label: string, todo: Img[], fn: (im: Img) => Promise<boolean>) {
+    if (!todo.length) { setApplyRes({ t: 'err', s: imgs.length ? '새로 적용할 이미지가 없어요. (이미 적용했거나, 이 화면에서 만든 이미지가 아니에요)' : '적용할 이미지가 없어요.' }); return; }
+    setApplyRes(null); let ok = 0; const fails: string[] = [];
+    for (let i = 0; i < todo.length; i++) { setApplying(`적용 중… ${i + 1}/${todo.length}`); setMsg(null); if (await fn(todo[i])) ok++; else fails.push(todo[i].name); }
+    setApplying('');
+    setApplyRes(fails.length ? { t: 'err', s: `${label}: ${ok}장 적용, ${fails.length}장 실패 (${fails.join(', ')}). 실패 이유는 왼쪽 아래 빨간 글을 확인해 주세요.` } : { t: 'ok', s: `${label}: ${ok}장을 적용했어요. 각 이미지에 '단원에 적용됨'이 표시돼요. (문항 승인·발행 후 학습앱에 반영돼요)` });
   }
+  async function applyAll() { await runApplyAll('장면 이미지', imgs.filter((x) => !x.applied), (im) => applyImg(im, true)); }
   /** 장면 프롬프트의 '대사 줄'(예: 1-3, 5-6) 기준으로 스크립트를 장면별로 묶는다. 어느 장면에도 없는 줄은 '그 밖의 대사'로 */
   function scriptGroups(stepId: string, sc: ScriptLine[]): { head: string; lines: (ScriptLine & { n: number })[] }[] {
     const rows = dbRows.filter((r) => r.step_id === stepId).sort((x, y) => x.seq - y.seq);
@@ -252,7 +258,7 @@ export function Studio() {
   }
   /** 만든 그림을 올리고 단어는 vocab.image_path, 삽화는 이 단원 문항의 illus(파일 이름이 key 와 같은 것)에 연결한다 */
   async function applyUp(im: Img, quiet = false): Promise<boolean> {
-    const fail = (t: string) => { setMsg({ t: 'err', s: t }); return false; };
+    const fail = (t: string) => { setMsg({ t: 'err', s: t }); if (!quiet) setApplyRes({ t: 'err', s: t }); return false; };
     if (!im.up) return fail('이 이미지는 단원 단어·삽화로 만든 것이 아니에요.'); if (!upSel) return fail('먼저 단원을 골라 주세요.');
     const bin = atob(im.b64); const u8 = new Uint8Array(bin.length); for (let k = 0; k < bin.length; k++) u8[k] = bin.charCodeAt(k);
     const path = `${upSel}/${im.up.kind}-${safe(im.up.key)}-${Date.now()}.png`;
@@ -271,10 +277,10 @@ export function Studio() {
       label = `삽화 ${im.up.key} → 문항 ${hit.length}개`;
     }
     setImgs((xs) => xs.map((x) => (x.id === im.id ? { ...x, applied: label } : x)));
-    if (!quiet) setMsg({ t: 'ok', s: `적용했어요: ${label}. (문항 승인·발행 후 학습앱에 반영돼요)` });
+    if (!quiet) { const m = { t: 'ok' as const, s: `적용했어요: ${label}. (문항 승인·발행 후 학습앱에 반영돼요)` }; setMsg(m); setApplyRes(m); }
     return true;
   }
-  async function applyAllUp() { let ok = 0, bad = 0; for (const im of imgs) { if (!im.up || im.applied) continue; if (await applyUp(im, true)) ok++; else bad++; } if (!bad) setMsg({ t: 'ok', s: `${ok}장을 적용했어요. (문항 승인·발행 후 학습앱에 반영돼요)` }); }
+  async function applyAllUp() { await runApplyAll('단원 단어·삽화', imgs.filter((x) => x.up && !x.applied), (im) => applyUp(im, true)); }
   function clearAll() {
     const unsaved = imgs.filter((x) => !x.saved).length;
     if (!window.confirm(unsaved ? `저장하지 않은 이미지가 ${unsaved}장 있어요. 그래도 ${imgs.length}장을 모두 지울까요?` : `만든 이미지 ${imgs.length}장을 모두 지울까요? (저장된 파일은 그대로 있어요)`)) return;
@@ -524,8 +530,11 @@ export function Studio() {
         <div className="mx-card">
           <div className="mx-row" style={{ justifyContent: 'space-between' }}>
             <span><b>만든 이미지 {imgs.length}장</b> <span className="mx-muted">(이 화면을 닫으면 사라져요. 필요한 건 꼭 저장하세요)</span></span>
-            {imgs.length > 0 && <span className="mx-row">{preset === 'unit' && <button className="mx-btn" disabled={!upSel} onClick={applyAllUp}>모두 이 단원에 적용</button>}{preset === 'scene' && <button className="mx-btn" disabled={!dbSel} onClick={applyAll} title={dbSel ? '' : '① 불러오기에서 Lesson·활동을 먼저 고르세요'}>모두 이 단원에 적용</button>}<button className="mx-btn sec" onClick={clearAll}>모두 지우기</button></span>}
+            {imgs.length > 0 && <span className="mx-row">{preset === 'unit' && <button className="mx-btn" disabled={!upSel || !!applying} onClick={applyAllUp}>{applying || '모두 이 단원에 적용'}</button>}{preset === 'scene' && <button className="mx-btn" disabled={!dbSel || !!applying} onClick={applyAll}>{applying || '모두 이 단원에 적용'}</button>}<button className="mx-btn sec" onClick={clearAll}>모두 지우기</button></span>}
           </div>
+          {imgs.length > 0 && ((preset === 'scene' && !dbSel) || (preset === 'unit' && !upSel)) && <p className="mx-muted" style={{ margin: '6px 0 0' }}>적용하려면 왼쪽에서 {preset === 'scene' ? "① 불러오기의 Lesson·활동" : '단원'}을 먼저 고르세요.</p>}
+          {applying && <p className="mx-muted" style={{ margin: '6px 0 0' }}>{applying} (닫지 말고 기다려 주세요)</p>}
+          {applyRes && <p className={applyRes.t === 'ok' ? 'mx-ok' : 'mx-err'} style={{ margin: '6px 0 0' }}>{applyRes.s}</p>}
           <div className="mx-st-grid">
             {imgs.map((im) => (
               <div key={im.id} className="mx-st-card">
