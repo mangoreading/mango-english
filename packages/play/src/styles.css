@@ -994,3 +994,5 @@ p.nv-heard { margin:0; color:var(--nv-sub); font-size:.95em; }
 /* 같은 문장 상자를 쓰는 다른 템플릿(mfree, 빈칸 상자 등)도 동일하게 */
 .nv-bl-box p, .nv-bl-box.nv-bl-fix p { font-size:1.15em; font-weight:600; }
 .nv-bl-box p button { font:inherit; }
+/* 문장 상자: 모서리 더 둥글게, 테두리 더 굵게 */
+.nv-bl-box { border-radius:1em !important; border-width:.2em !important; }
