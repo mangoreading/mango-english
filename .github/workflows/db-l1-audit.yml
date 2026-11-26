@@ -10,9 +10,9 @@ jobs:
           DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -At -F ' | ' > out.txt <<'SQL'
-          select 'goals', u.no, u.goals::text from units u join books b on b.id=u.book_id where u.no in (1,9) and b.grade=5;
-          select 'lo9', i.template, i.payload->>'lo', count(*) from items i join units u on u.id=i.unit_id join books b on b.id=u.book_id where u.no=9 and b.grade=5 and i.status='approved' group by 1,2,3 order by 2,3;
-          select 'lo1', coalesce(i.payload->>'lo','-'), count(*) from items i join units u on u.id=i.unit_id join books b on b.id=u.book_id where u.no=1 and b.grade=5 and b.title='초5 영어' group by 1,2;
+          select 'step', fl.no||'-'||s.pos, s.kind, coalesce(s.name_ko,'-'), coalesce(s.minutes::text,'-'), coalesce(s.qty::text,'-'), 'study='||s.study, 'hw='||s.homework, coalesce(s.special,'-'), 'ref='||(s.ref_step_id is not null), 'appr='||(select count(*) from items i where i.step_id=s.id and i.status='approved'), 'draft='||(select count(*) from items i where i.step_id=s.id and i.status='draft')
+ from flow_lessons fl join flow_steps s on s.lesson_id=fl.id join units u on u.id=fl.unit_id join books b on b.id=u.book_id where u.no=9 and b.grade=5 and u.kind='lesson' order by fl.no, s.pos;
+          select 'les', fl.no, fl.track, fl.en from flow_lessons fl join units u on u.id=fl.unit_id join books b on b.id=u.book_id where u.no=9 and b.grade=5 order by fl.no;
           SQL
           python3 - <<'PY'
           t = open('out.txt').read().replace('\r','')
