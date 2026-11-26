@@ -1,0 +1,39 @@
+name: db-l1-audit
+# 읽기 전용: L1 흐름 단계별 계획 수량·문항 상태·발행 번들 문항 수 대조
+on: workflow_dispatch
+jobs:
+  q:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -At -F ' | ' > out.txt <<'SQL'
+          with u as (select u.id from units u join books b on b.id=u.book_id where u.no=1 and b.title='초5 영어'),
+          lb as (select bundle, version, published_at from unit_bundles where unit_id=(select id from u) order by version desc limit 1)
+          select 'bundle', 'v'||version, published_at::text, (select count(*)::text from jsonb_array_elements(bundle->'flow')) from lb;
+          with u as (select u.id from units u join books b on b.id=u.book_id where u.no=1 and b.title='초5 영어'),
+          lb as (select bundle from unit_bundles where unit_id=(select id from u) order by version desc limit 1)
+          select 'step', fl.no||'-'||s.pos, s.kind, coalesce(s.name_ko,'-'), coalesce(s.minutes::text,'-'), coalesce(s.qty::text,'-'), coalesce(s.special,'-'),
+            'study='||s.study, 'hw='||s.homework, 'ref='||coalesce(s.ref_step_id::text,'-'),
+            'draft='||(select count(*) from items i where i.step_id=s.id and i.status='draft'),
+            'appr='||(select count(*) from items i where i.step_id=s.id and i.status='approved'),
+            'bundle='||coalesce((select jsonb_array_length(lb.bundle->'items'->'CORE'->(fl.no::text)->(s.pos)) ),0)
+          from flow_lessons fl join flow_steps s on s.lesson_id=fl.id cross join lb where fl.unit_id=(select id from u) order by fl.no, s.pos;
+          with u as (select u.id from units u join books b on b.id=u.book_id where u.no=1 and b.title='초5 영어')
+          select 'lesson', fl.no, fl.track, fl.en, fl.ko, coalesce(fl.goal,'-') from flow_lessons fl where fl.unit_id=(select id from u) order by fl.no;
+          with u as (select u.id, u.goals from units u join books b on b.id=u.book_id where u.no=1 and b.title='초5 영어')
+          select 'goals', u.goals::text from u;
+          SQL
+          python3 - <<'PY'
+          t = open('out.txt').read().replace('\r','')
+          chunks, cur = [], ''
+          for ln in t.split('\n'):
+              if len(cur) + len(ln) > 2500 and cur:
+                  chunks.append(cur); cur = ''
+              cur += ln + '\n'
+          if cur: chunks.append(cur)
+          for n, c in enumerate(chunks):
+              print('::notice title=a-%03d::' % n + c.strip().replace('%','%25').replace('\n','%0A'))
+          PY
